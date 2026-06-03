@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brand Dashboard — Pebeto Creator's Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              deep: '#0c4a6e',
+              navy: '#1e3a8a',
+              slate: '#1e293b',
+              sky: '#38bdf8',
+              accent: '#2563eb',
+            },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .stage-pill { font-size: 0.7rem; letter-spacing: 0.04em; }
+    .card-hover { transition: box-shadow 0.15s ease, transform 0.15s ease; }
+    .card-hover:hover { transform: translateY(-1px); }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-slate-950 via-brand-deep to-brand-navy font-sans text-slate-100">
+  <div id="view-only-banner" class="hidden border-b border-amber-500/40 bg-amber-950/60 px-4 py-2 text-center text-sm text-amber-200">
+    View-only mode — you cannot make changes.
+  </div>
+
+  <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+    <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div id="brand-avatar" class="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-brand-sky/60 bg-brand-slate text-lg font-bold text-brand-sky shadow-lg shadow-sky-900/30">B</div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-brand-sky">Brand / Business</p>
+          <h1 id="brand-name" class="text-xl font-bold text-white">Dashboard</h1>
+          <p id="brand-email" class="text-sm text-slate-400"></p>
+        </div>
+      </div>
+      <nav class="flex flex-wrap items-center gap-2">
+        <a href="/" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-brand-sky hover:text-brand-sky">Home</a>
+        <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
+      </nav>
+    </header>
+
+    <div id="global-alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
+
+    <!-- Wallet & financials -->
+    <section class="mb-8 grid gap-4 sm:grid-cols-3">
+      <div class="rounded-2xl border border-brand-sky/30 bg-gradient-to-br from-brand-deep/80 to-brand-slate p-5 shadow-lg card-hover">
+        <p class="text-sm font-medium text-slate-300">Fund wallet (available)</p>
+        <p id="bal-available" class="mt-2 text-3xl font-bold text-white">—</p>
+        <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
+      </div>
+      <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-brand-slate p-5 shadow-lg card-hover">
+        <p class="text-sm font-medium text-slate-300">Escrow balance</p>
+        <p id="bal-escrow" class="mt-2 text-3xl font-bold text-brand-sky">—</p>
+        <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
+      </div>
+      <div class="rounded-2xl border border-brand-accent/40 bg-gradient-to-br from-indigo-950/80 to-brand-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Platform fee on deposits</p>
+        <p class="mt-2 text-2xl font-bold text-brand-sky">10%</p>
+        <p class="text-xs text-slate-500">Charged on top of escrow intent (server-calculated)</p>
+      </div>
+    </section>
+
+    <!-- Create campaign -->
+    <section id="section-create" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5 backdrop-blur">
+      <h2 class="text-lg font-semibold text-white">New campaign</h2>
+      <p class="mt-1 text-sm text-slate-400">Publish a brief, fund escrow (10% fee), then manage creator bids.</p>
+      <form id="create-form" class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-sm font-medium" for="camp-title">Title</label>
+          <input id="camp-title" required class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-sm font-medium" for="camp-desc">Description</label>
+          <textarea id="camp-desc" rows="2" class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none"></textarea>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="camp-budget">Budget (USD)</label>
+          <input id="camp-budget" type="number" min="1" step="0.01" required class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none" />
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="w-full rounded-xl bg-brand-accent px-4 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-blue-600 disabled:opacity-50">Create campaign</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Campaigns -->
+    <section class="rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-lg font-semibold text-white">Your campaigns</h2>
+        <button type="button" id="btn-refresh" class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-400 hover:text-brand-sky">Refresh</button>
+      </div>
+      <p class="mt-1 text-xs text-slate-500">Stages: Active → Submitted for Review → Completed → Paid</p>
+      <div id="campaigns-list" class="mt-4 space-y-4">
+        <p class="text-sm text-slate-500">Loading campaigns…</p>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/pebeto-api.js"></script>
+  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script>
+    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi;
+
+    const params = new URLSearchParams(window.location.search);
+    const viewOnly = params.get('viewOnly') === '1';
+    const viewUserId = params.get('userId') || '';
+
+    const session = requireRole(['business', 'admin'], '/signup.html?login=1');
+    if (!session) throw new Error('unauthorized');
+
+    let rates = { USD: 1 };
+    let currency = 'USD';
+    let campaigns = [];
+
+    function querySuffix() {
+      const q = new URLSearchParams();
+      if (viewUserId && session.user.role === 'admin') q.set('userId', viewUserId);
+      if (viewOnly) q.set('viewOnly', '1');
+      const s = q.toString();
+      return s ? '?' + s : '';
+    }
+
+    function canWrite() {
+      return !viewOnly && (session.user.role === 'business' || !viewUserId);
+    }
+
+    function showAlert(msg, type) {
+      const el = document.getElementById('global-alert');
+      el.textContent = msg;
+      el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      else el.classList.add('border-rose-500/50', 'bg-rose-500/10', 'text-rose-200');
+      setTimeout(() => el.classList.add('hidden'), 6000);
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    function localAmount(usd) {
+      if (currency === 'USD') return '';
+      const n = (Number(usd) || 0) * (rates[currency] || 1);
+      return '≈ ' + n.toLocaleString(undefined, { style: 'currency', currency }) + ' ' + currency;
+    }
+
+    function stageClass(stage) {
+      const map = {
+        Active: 'bg-blue-500/20 text-blue-200 ring-blue-500/40',
+        'Submitted for Review': 'bg-amber-500/20 text-amber-200 ring-amber-500/40',
+        Completed: 'bg-violet-500/20 text-violet-200 ring-violet-500/40',
+        Paid: 'bg-emerald-500/20 text-emerald-200 ring-emerald-500/40',
+      };
+      return map[stage] || 'bg-slate-700 text-slate-300 ring-slate-600';
+    }
+
+    async function loadRates() {
+      const data = await apiFetch('/api/wallet/exchange-rates');
+      rates = data.rates || { USD: 1 };
+    }
+
+    function balanceQuery() {
+      const q = new URLSearchParams();
+      if (viewUserId && session.user.role === 'admin') q.set('userId', viewUserId);
+      const s = q.toString();
+      return s ? '?' + s : '';
+    }
+
+    async function loadBalance() {
+      const data = await apiFetch('/api/wallet/balance' + balanceQuery());
+      const b = data.balances;
+      const d = data.display || {};
+      currency = (getUser() || {}).preferredCurrency || data.display?.currency || 'USD';
+      document.getElementById('bal-available').textContent = formatUsd(b.available);
+      document.getElementById('bal-escrow').textContent = formatUsd(b.escrow);
+      document.getElementById('bal-available-local').textContent = localAmount(b.available) || (d.available ? '≈ ' + d.available + ' ' + currency : '');
+      document.getElementById('bal-escrow-local').textContent = localAmount(b.escrow) || (d.escrow ? '≈ ' + d.escrow + ' ' + currency : '');
+    }
+
+    async function previewDeposit(intentUsd) {
+      if (!intentUsd || intentUsd <= 0) return null;
+      const data = await apiFetch('/api/wallet/deposit/preview', {
+        method: 'POST',
+        body: JSON.stringify({ intentUsd }),
+      });
+      return data.breakdown;
+    }
+
+    async function loadCampaigns() {
+      const data = await apiFetch('/api/campaigns' + querySuffix());
+      campaigns = data.campaigns || [];
+      renderCampaigns();
+    }
+
+    function renderCampaigns() {
+      const root = document.getElementById('campaigns-list');
+      if (!campaigns.length) {
+        root.innerHTML = '<p class="rounded-xl border border-dashed border-slate-600 px-4 py-8 text-center text-sm text-slate-500">No campaigns yet. Create one above.</p>';
+        return;
+      }
+
+      root.innerHTML = campaigns
+        .map((c) => {
+          const stage = c.businessStage || c.status;
+          const bidsHtml = (c.bids || [])
+            .map((b) => {
+              const acceptBtn =
+                canWrite() && b.status === 'pending' && c.status === 'open'
+                  ? '<button type="button" data-accept="' +
+                    c._id +
+                    '" data-bid="' +
+                    b._id +
+                    '" class="accept-bid rounded-lg bg-brand-accent px-2 py-1 text-xs font-semibold text-white hover:bg-blue-600">Accept</button>'
+                  : '<span class="text-xs text-slate-500">' +
+                    escapeHtml(b.status) +
+                    '</span>';
+              return (
+                '<li class="flex items-center justify-between gap-2 rounded-lg bg-slate-900/50 px-3 py-2">' +
+                '<div><p class="font-medium text-slate-200">' +
+                escapeHtml(b.uniqueCode || 'Creator') +
+                '</p><p class="text-xs text-slate-500">' +
+                formatUsd(b.amount) +
+                (b.proposal ? ' · ' + escapeHtml(b.proposal.slice(0, 60)) : '') +
+                '</p></div>' +
+                acceptBtn +
+                '</li>'
+              );
+            })
+            .join('');
+
+          const fundBlock =
+            canWrite() && !['paid', 'cancelled'].includes(c.status)
+              ? '<div class="mt-3 rounded-xl border border-slate-700 bg-slate-900/40 p-3">' +
+                '<p class="text-xs font-medium text-slate-400">Fund escrow (10% platform fee)</p>' +
+                '<div class="mt-2 flex flex-wrap gap-2">' +
+                '<input type="number" min="1" step="0.01" data-fund-intent="' +
+                c._id +
+                '" placeholder="Intent USD" class="w-32 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
+                '<button type="button" data-fund="' +
+                c._id +
+                '" class="fund-btn rounded-lg bg-brand-sky/20 px-3 py-1.5 text-xs font-semibold text-brand-sky ring-1 ring-brand-sky/50 hover:bg-brand-sky/30">Fund</button>' +
+                '</div>' +
+                '<p class="fund-preview mt-1 text-xs text-slate-500" data-preview-for="' +
+                c._id +
+                '"></p>' +
+                '</div>'
+              : '';
+
+          const completeBtn =
+            canWrite() && c.status === 'submitted_for_review'
+              ? '<button type="button" data-complete="' +
+                c._id +
+                '" class="complete-btn mt-3 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-500">Complete &amp; pay creator</button>' +
+                '<p class="mt-1 text-xs text-slate-500">Moves funds from escrow to creator wallet (visible to Admin)</p>'
+              : c.status === 'paid'
+              ? '<p class="mt-3 text-sm text-emerald-400">Paid — escrow released to creator.</p>'
+              : '';
+
+          return (
+            '<article class="card-hover rounded-2xl border border-slate-600/50 bg-slate-900/50 p-4">' +
+            '<div class="flex flex-wrap items-start justify-between gap-2">' +
+            '<div><h3 class="font-semibold text-white">' +
+            escapeHtml(c.title) +
+            '</h3><p class="mt-1 text-xs text-slate-500">Budget ' +
+            formatUsd(c.budget) +
+            ' · Escrow held ' +
+            formatUsd(c.escrowHeld) +
+            '</p></div>' +
+            '<span class="stage-pill rounded-full px-3 py-1 font-semibold uppercase ring-1 ' +
+            stageClass(stage) +
+            '">' +
+            escapeHtml(stage) +
+            '</span></div>' +
+            (c.description ? '<p class="mt-2 text-sm text-slate-400">' + escapeHtml(c.description) + '</p>' : '') +
+            '<ul class="mt-3 space-y-1">' +
+            (bidsHtml || '<li class="text-xs text-slate-500">No bids yet</li>') +
+            '</ul>' +
+            fundBlock +
+            completeBtn +
+            '</article>'
+          );
+        })
+        .join('');
+
+      root.querySelectorAll('.fund-btn').forEach((btn) => {
+        btn.addEventListener('click', () => fundCampaign(btn.dataset.fund));
+      });
+      root.querySelectorAll('input[data-fund-intent]').forEach((inp) => {
+        inp.addEventListener('input', async () => {
+          const id = inp.dataset.fundIntent;
+          const prev = root.querySelector('[data-preview-for="' + id + '"]');
+          const b = await previewDeposit(parseFloat(inp.value));
+          if (b && prev) {
+            prev.textContent =
+              'You pay ' +
+              formatUsd(b.totalChargeUsd) +
+              ' (' +
+              formatUsd(b.intentUsd) +
+              ' escrow + ' +
+              formatUsd(b.feeUsd) +
+              ' fee)';
+          }
+        });
+      });
+      root.querySelectorAll('.accept-bid').forEach((btn) => {
+        btn.addEventListener('click', () => acceptBid(btn.dataset.accept, btn.dataset.bid));
+      });
+      root.querySelectorAll('.complete-btn').forEach((btn) => {
+        btn.addEventListener('click', () => completeCampaign(btn.dataset.complete));
+      });
+    }
+
+    async function fundCampaign(id) {
+      const inp = document.querySelector('input[data-fund-intent="' + id + '"]');
+      const intentUsd = parseFloat(inp?.value);
+      if (!intentUsd || intentUsd <= 0) {
+        showAlert('Enter a valid escrow intent amount (USD).');
+        return;
+      }
+      try {
+        const data = await apiFetch('/api/campaigns/' + id + '/fund' + querySuffix(), {
+          method: 'POST',
+          body: JSON.stringify({ intentUsd }),
+        });
+        showAlert(
+          'Escrow funded. Charged ' +
+            formatUsd(data.breakdown.totalChargeUsd) +
+            ' (incl. 10% fee).',
+          'success'
+        );
+        await Promise.all([loadBalance(), loadCampaigns()]);
+      } catch (e) {
+        showAlert(e.message);
+      }
+    }
+
+    async function acceptBid(campaignId, bidId) {
+      try {
+        await apiFetch('/api/campaigns/' + campaignId + '/bids/' + bidId + '/accept' + querySuffix(), {
+          method: 'POST',
+          body: '{}',
+        });
+        showAlert('Bid accepted. Campaign is now active.', 'success');
+        await loadCampaigns();
+      } catch (e) {
+        showAlert(e.message);
+      }
+    }
+
+    async function completeCampaign(id) {
+      if (!confirm('Release escrow to the creator wallet and mark as Paid?')) return;
+      try {
+        await apiFetch('/api/campaigns/' + id + '/complete' + querySuffix(), {
+          method: 'POST',
+          body: '{}',
+        });
+        showAlert('Campaign completed. Funds moved to creator wallet.', 'success');
+        await Promise.all([loadBalance(), loadCampaigns()]);
+      } catch (e) {
+        showAlert(e.message);
+      }
+    }
+
+    function initHeader() {
+      const user = getUser();
+      document.getElementById('brand-email').textContent = user?.email || '';
+      const name = user?.profile?.companyName || user?.email || 'Brand';
+      document.getElementById('brand-name').textContent = name;
+      const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('brand-avatar').textContent = initials;
+    }
+
+    function applyViewOnly() {
+      if (!viewOnly) return;
+      document.getElementById('view-only-banner').classList.remove('hidden');
+      document.getElementById('section-create').classList.add('opacity-60', 'pointer-events-none');
+    }
+
+    function initSocket() {
+      if (typeof io === 'undefined' || !getToken()) return;
+      const socket = io({ auth: { token: getToken() } });
+      socket.on('connect', () => socket.emit('status:subscribe'));
+      socket.on('platform:activity', () => {
+        loadBalance();
+        loadCampaigns();
+      });
+    }
+
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!canWrite()) return showAlert('View-only mode');
+      try {
+        await apiFetch('/api/campaigns' + querySuffix(), {
+          method: 'POST',
+          body: JSON.stringify({
+            title: document.getElementById('camp-title').value.trim(),
+            description: document.getElementById('camp-desc').value.trim(),
+            budget: parseFloat(document.getElementById('camp-budget').value),
+          }),
+        });
+        showAlert('Campaign created.', 'success');
+        e.target.reset();
+        await loadCampaigns();
+      } catch (err) {
+        showAlert(err.message);
+      }
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', () => {
+      loadBalance();
+      loadCampaigns();
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      clearSession();
+      window.location.href = '/signup.html';
+    });
+
+    (async function init() {
+      if (session.user.role === 'admin' && !viewUserId) {
+        showAlert('Admin: open this dashboard via Search → View only.');
+      }
+      initHeader();
+      applyViewOnly();
+      try {
+        await loadRates();
+        await Promise.all([loadBalance(), loadCampaigns()]);
+        initSocket();
+      } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+          clearSession();
+          window.location.href = '/signup.html?login=1';
+          return;
+        }
+        showAlert(err.message || 'Failed to load dashboard');
+      }
+    })();
+  </script>
+</body>
+</html>
