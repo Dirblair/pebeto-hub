@@ -73,11 +73,11 @@ async function bootstrap() {
   });
 
   app.use(errorHandler);
-
-  server.listen(env.port, () => {
-    console.log(`Pebeto Creator's Hub running on port ${env.port}`);
-  });
-}
+  const PORT = process.env.PORT || 3000;
+  
+  server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Pebeto Creator's Hub running on port ${PORT}`);
+});
 
 bootstrap().catch((err) => {
   console.error('Failed to start server:', err);
