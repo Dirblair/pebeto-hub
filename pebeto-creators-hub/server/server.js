@@ -17,7 +17,9 @@ const adminRoutes = require('./routes/admin.routes');
 const campaignRoutes = require('./routes/campaign.routes');
 
 async function bootstrap() {
+  console.log("DEBUG: Starting bootstrap..."); // Add this line
   await connectDB(env.mongoUri);
+  console.log("DEBUG: Database connected successfully."); // Add this line
 
   const app = express();
   const server = http.createServer(app);
