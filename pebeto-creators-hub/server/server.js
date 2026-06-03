@@ -74,12 +74,14 @@ async function bootstrap() {
 
   app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Pebeto Creator's Hub running on port ${PORT}`);
-});
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Pebeto Creator's Hub running on port ${PORT}`);
+  });
+} // This bracket closes the async function bootstrap()
 
+// This call is now correctly outside the function
 bootstrap().catch((err) => {
   console.error('Failed to start server:', err);
   process.exit(1);
