@@ -56,6 +56,5 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ 'profile.niche': 1 });
 userSchema.index({ 'profile.companyName': 1 });
-userSchema.index({ uniqueCode: 1 });
 
 module.exports = mongoose.model('User', userSchema);
