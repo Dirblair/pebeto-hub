@@ -91,6 +91,9 @@ router.post(
       const user = await User.findOne({ email });
       if (!user) throw new AppError('Invalid credentials', 401);
 
+      console.log("DEBUG: password from frontend:", password);
+console.log("DEBUG: passwordHash from DB:", user.passwordHash);
+      
       const match = await bcrypt.compare(password, user.passwordHash);
       if (!match) throw new AppError('Invalid credentials', 401);
 
