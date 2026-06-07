@@ -349,80 +349,85 @@
     });
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideAlert();
+  e.preventDefault();
+  hideAlert();
 
-      const refereeName = document.getElementById('refereeName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const passwordConfirm = document.getElementById('passwordConfirm').value;
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const passwordConfirm = document.getElementById('passwordConfirm').value;
 
-      if (!refereeName) {
-        showAlert("Referee's name is required.");
-        document.getElementById('refereeName').focus();
-        return;
-      }
-      if (password !== passwordConfirm) {
-        showAlert('Passwords do not match.');
-        return;
-      }
-      if (password.length < 8) {
-        showAlert('Password must be at least 8 characters.');
-        return;
-      }
+  // Validation for mandatory fields
+  if (!email) {
+    showAlert("Email is required.");
+    document.getElementById('email').focus();
+    return;
+  }
+  if (password !== passwordConfirm) {
+    showAlert('Passwords do not match.');
+    return;
+  }
+  if (password.length < 8) {
+    showAlert('Password must be at least 8 characters.');
+    return;
+  }
 
-      const profile = { refereeName };
-      if (selectedRole === 'creator') {
-        const stageName = document.getElementById('stageName').value.trim();
-        const niche = document.getElementById('niche').value.trim();
-        if (stageName) profile.stageName = stageName;
-        if (niche) profile.niche = niche;
-        if (stageName) profile.displayName = stageName;
-      } else {
-        const companyName = document.getElementById('companyName').value.trim();
-        const website = document.getElementById('website').value.trim();
-        if (companyName) {
-          profile.companyName = companyName;
-          profile.displayName = companyName;
-        }
-        if (website) profile.website = website;
-      }
+  const profile = {};
+  if (selectedRole === 'creator') {
+    const stageName = document.getElementById('stageName').value.trim();
+    const niche = document.getElementById('niche').value.trim();
+    
+    if (!stageName || !niche) {
+      showAlert("Stage name and Niche are required.");
+      return;
+    }
+    profile.stageName = stageName;
+    profile.niche = niche;
+    profile.displayName = stageName;
+  } else {
+    const companyName = document.getElementById('companyName').value.trim();
+    const website = document.getElementById('website').value.trim();
+    if (companyName) {
+      profile.companyName = companyName;
+      profile.displayName = companyName;
+    }
+    if (website) profile.website = website;
+  }
 
-      const body = {
-        email,
-        password,
-        role: selectedRole,
-        profile,
-        preferredLanguage: document.getElementById('preferredLanguage').value,
-        preferredCurrency: document.getElementById('preferredCurrency').value,
-      };
+  const body = {
+    email,
+    password,
+    role: selectedRole,
+    profile
+  };
 
-      const btn = document.getElementById('register-submit');
-      btn.disabled = true;
-      btn.textContent = 'Creating account…';
+  const btn = document.getElementById('register-submit');
+  btn.disabled = true;
+  btn.textContent = 'Sending code...';
 
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          throw new Error(data.message || 'Registration failed. Please try again.');
-        }
-
-        saveSession(data.token, data.user);
-        showAlert('Account created. Redirecting…', 'success');
-        setTimeout(() => redirectForRole(data.user.role), 600);
-      } catch (err) {
-        showAlert(err.message || 'Something went wrong.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Create account';
-      }
+  try {
+    // This is where you would call your backend to initiate the OTP
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
+    
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Registration step failed.');
+    }
+
+    // Success: Hide form fields, show OTP field
+    document.getElementById('otp-container').classList.remove('hidden');
+    btn.textContent = 'Verify Account';
+    showAlert('Verification code sent to your email/phone.', 'success');
+  } catch (err) {
+    showAlert(err.message || 'Something went wrong.');
+    btn.disabled = false;
+    btn.textContent = 'Send Verification Code';
+  }
+});
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
