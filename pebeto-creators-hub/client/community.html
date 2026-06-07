@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pebeto Community</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Essential: Lock the scroll and enable snapping */
+        body { margin: 0; background: #000; overflow: hidden; }
+        
+        .feed-container {
+            height: 100vh;
+            width: 100vw;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none; /* Hide scrollbar */
+        }
+        
+        .feed-container::-webkit-scrollbar { display: none; }
+
+        /* The 'House' of each post */
+        .post-card {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            background: #000;
+        }
+
+        .post-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="feed-container" id="feed">
+        <article class="post-card">
+            <video class="post-media" src="video1.mp4" loop muted playsinline></video>
+        </article>
+        
+        <article class="post-card">
+            <video class="post-media" src="video2.mp4" loop muted playsinline></video>
+        </article>
+    </div>
+
+    <script>
+        // Intersection Observer: Only plays the video currently in view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target.querySelector('video');
+                if (entry.isIntersecting) {
+                    video.play();
+                } else {
+                    video.pause();
+                    video.currentTime = 0; // Reset video when off-screen
+                }
+            });
+        }, { threshold: 0.7 });
+
+        document.querySelectorAll('.post-card').forEach(card => observer.observe(card));
+    </script>
+</body>
+</html>
