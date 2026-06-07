@@ -70,20 +70,29 @@
     </section>
 
     <!-- Wallets -->
-    <section class="mb-8 grid gap-4 sm:grid-cols-2">
-      <div class="rounded-2xl border border-creator-mint/30 bg-gradient-to-br from-creator-deep/80 to-creator-slate p-5 shadow-lg">
-        <p class="text-sm font-medium text-slate-300">Wallet balance</p>
-        <p id="bal-available" class="mt-2 text-3xl font-bold text-creator-mint">—</p>
-        <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
-        <p class="mt-2 text-xs text-slate-500">Withdrawable (incl. tips) · 3% fee on withdrawal</p>
-      </div>
-      <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg">
-        <p class="text-sm font-medium text-slate-300">Escrow balance</p>
-        <p id="bal-escrow" class="mt-2 text-3xl font-bold text-white">—</p>
-        <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
-        <p class="mt-2 text-xs text-slate-500">Funds held until brand completes campaign</p>
-      </div>
-    </section>
+    <section class="mb-8 grid gap-4 md:grid-cols-3">
+  <!-- 1. Wallet Balance (Interactive) -->
+  <button type="button" onclick="document.getElementById('section-withdraw').scrollIntoView({behavior:'smooth'})" class="text-left rounded-2xl border border-creator-mint/30 bg-gradient-to-br from-creator-deep/80 to-creator-slate p-5 shadow-lg hover:border-creator-mint transition-all">
+    <p class="text-sm font-medium text-slate-300">Wallet balance</p>
+    <p id="bal-available" class="mt-2 text-3xl font-bold text-creator-mint">—</p>
+    <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
+    <p class="mt-2 text-xs text-slate-500 underline">Click to withdraw funds · 3% fee</p>
+  </button>
+
+  <!-- 2. Escrow Balance (Original Data Preserved) -->
+  <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg">
+    <p class="text-sm font-medium text-slate-300">Escrow balance</p>
+    <p id="bal-escrow" class="mt-2 text-3xl font-bold text-white">—</p>
+    <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
+    <p class="mt-2 text-xs text-slate-500">Funds held until brand completes campaign</p>
+  </div>
+
+  <!-- 3. Withdrawal History (New Interaction) -->
+  <button type="button" id="card-history" class="text-left rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg hover:border-slate-400 transition-all">
+    <p class="text-sm font-medium text-slate-300">Withdrawal History</p>
+    <p class="mt-8 text-sm text-slate-400">View your previous payouts and status</p>
+  </button>
+</section>
 
     <!-- Withdrawal -->
     <section id="section-withdraw" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
