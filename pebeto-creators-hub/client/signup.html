@@ -342,53 +342,60 @@
     });
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideAlert();
+    e.preventDefault();
+    hideAlert();
 
-      const refereeName = document.getElementById('refereeName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const passwordConfirm = document.getElementById('passwordConfirm').value;
+    // 1. Get the basic values
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
 
-      if (!refereeName) {
-        showAlert("Referee's name is required.");
-        document.getElementById('refereeName').focus();
-        return;
-      }
-      if (password !== passwordConfirm) {
-        showAlert('Passwords do not match.');
-        return;
-      }
-      if (password.length < 8) {
-        showAlert('Password must be at least 8 characters.');
-        return;
-      }
+    // 2. Simple validations
+    if (password !== passwordConfirm) {
+        showAlert('Passwords do not match.');
+        return;
+    }
+    if (password.length < 8) {
+        showAlert('Password must be at least 8 characters.');
+        return;
+    }
 
-      const profile = { refereeName };
-      if (selectedRole === 'creator') {
-        const stageName = document.getElementById('stageName').value.trim();
-        const niche = document.getElementById('niche').value.trim();
-        if (stageName) profile.stageName = stageName;
-        if (niche) profile.niche = niche;
-        if (stageName) profile.displayName = stageName;
-      } else {
-        const companyName = document.getElementById('companyName').value.trim();
-        const website = document.getElementById('website').value.trim();
-        if (companyName) {
-          profile.companyName = companyName;
-          profile.displayName = companyName;
-        }
-        if (website) profile.website = website;
-      }
+    // 3. Build profile object based on role
+    const profile = {};
+    if (selectedRole === 'creator') {
+        const stageName = document.getElementById('stageName').value.trim();
+        const niche = document.getElementById('niche').value.trim();
+        
+        if (stageName) {
+            profile.stageName = stageName;
+            profile.displayName = stageName;
+        }
+        if (niche) profile.niche = niche;
+    } else {
+        const companyName = document.getElementById('companyName').value.trim();
+        const website = document.getElementById('website').value.trim();
+        
+        if (companyName) {
+            profile.companyName = companyName;
+            profile.displayName = companyName;
+        }
+        if (website) profile.website = website;
+    }
 
-      const body = {
-        email,
-        password,
-        role: selectedRole,
-        profile,
-        preferredLanguage: document.getElementById('preferredLanguage').value,
-        preferredCurrency: document.getElementById('preferredCurrency').value,
-      };
+    // 4. Final body data
+    const body = {
+        email,
+        password,
+        role: selectedRole,
+        profile
+    };
+
+    // 5. The Bridge: Save the role for goToHub()
+    localStorage.setItem('userRole', selectedRole);
+
+    // Now proceed with your fetch logic (e.g., calling your API)
+    // ... rest of your existing fetch/registration code
+});
 
       const btn = document.getElementById('register-submit');
   btn.disabled = true;
