@@ -64,17 +64,27 @@
     </nav>
 <!-- Hidden Composer Modal -->
 <div id="composer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:200; padding:20px;">
-    <div style="max-width:400px; margin:50px auto;">
-        <h2 style="color:white; font-size:1.5rem; margin-bottom:20px;">Create Post</h2>
-        <textarea id="post-caption" placeholder="What's happening?" style="width:100%; height:100px; background:#222; color:white; padding:10px; border-radius:10px;"></textarea>
-        <input id="post-file" type="file" accept="image/*,video/*" style="width:100%; margin-top:10px; background:#222; color:white; padding:10px; border-radius:10px;">
-        
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button onclick="closeComposer()" style="flex:1; padding:10px; background:#444; color:white; border-radius:10px;">Cancel</button>
-            <button onclick="submitPost()" style="flex:1; padding:10px; background:#4facfe; color:white; border-radius:10px;">Post</button>
+        <div style="max-width:400px; margin:50px auto;">
+            <h2 style="color:white; font-size:1.5rem; margin-bottom:20px;">Create Post</h2>
+            <textarea id="post-caption" placeholder="What's happening?" style="width:100%; height:100px; background:#222; color:white; padding:10px; border-radius:10px;"></textarea>
+            <input id="post-file" type="file" accept="image/*,video/*" style="width:100%; margin-top:10px; background:#222; color:white; padding:10px; border-radius:10px;">
+            
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button onclick="closeComposer()" style="flex:1; padding:10px; background:#444; color:white; border-radius:10px;">Cancel</button>
+                <button onclick="submitPost()" style="flex:1; padding:10px; background:#4facfe; color:white; border-radius:10px;">Post</button>
+            </div>
+        </div> 
+    </div>
+
+    <div id="comment-modal" style="display:none; position:fixed; bottom:0; width:100%; height:50%; background:white; z-index:300; border-radius:20px 20px 0 0; padding:20px;">
+      <button onclick="document.getElementById('comment-modal').style.display='none'" style="float:right;">X</button>  
+        <h3>Comments</h3>
+        <div id="comment-list" style="height:70%; overflow-y:scroll;"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1; padding:10px;">
+            <button onclick="addComment()">Post</button>
         </div>
     </div>
-</div>
     
     <script>
         const observer = new IntersectionObserver((entries) => {
@@ -101,38 +111,51 @@
         }
 
         // --- NEW: This function builds the post card ---
-        function renderPost(videoUrl) {
-            const feed = document.getElementById('feed');
-            const article = document.createElement('article');
-            article.className = 'post-card';
-            article.innerHTML = `
-                <video class="post-media" src="${videoUrl}" loop muted playsinline autoplay></video>
-                <div class="right-sidebar">
-                    <div class="action-item"><img src="avatar.jpg" class="creator-avatar"><button class="follow-btn">+</button></div>
-                    <div class="action-item" onclick="toggleLike(this)">
-                        <i class="ri-heart-fill"></i>
-                        <span class="action-count">0</span>
-                    </div>
-                </div>
-            `;
-            feed.appendChild(article);
-            observer.observe(article); // Make sure the new post plays on scroll
-        }
+        function renderPost(videoUrl, caption) { // Added 'caption' parameter
+    const feed = document.getElementById('feed');
+    const article = document.createElement('article');
+    article.className = 'post-card';
+    article.innerHTML = `
+        <video class="post-media" src="${videoUrl}" loop muted playsinline autoplay></video>
+        <div class="caption-overlay" style="position:absolute; bottom:60px; left:10px; color:white; font-weight:bold;">
+            ${caption}
+        </div>
+        <div class="right-sidebar">
+            <div class="action-item"><img src="avatar.jpg" class="creator-avatar"><button class="follow-btn">+</button></div>
+            <div class="action-item" onclick="toggleLike(this)">
+                <i class="ri-heart-fill"></i>
+                <span class="action-count">0</span>
+            </div>
+            <div class="action-item" onclick="openComments()">
+                <i class="ri-chat-3-fill"></i>
+            </div>
+        </div>
+    `;
+    feed.appendChild(article);
+    observer.observe(article);
+}
 
         // --- UPDATED: This function now uses renderPost ---
         function submitPost() {
-            const fileInput = document.getElementById('post-file');
-            
-            if(fileInput.files.length === 0) {
-                alert('Please select a video file.');
-                return;
-            }
-            
-            const videoUrl = URL.createObjectURL(fileInput.files[0]);
-            renderPost(videoUrl); // Add the video to the feed
-            closeComposer();
-            fileInput.value = ''; // Reset
-        }
+    const caption = document.getElementById('post-caption').value; // Get the text
+    const fileInput = document.getElementById('post-file');
+    
+    if(fileInput.files.length === 0 || !caption) {
+        alert('Please add a caption and a file.');
+        return;
+    }
+    
+    // Show a quick "Uploading..." alert
+    const btn = event.target;
+    btn.textContent = "Posting...";
+    
+    setTimeout(() => {
+        const videoUrl = URL.createObjectURL(fileInput.files[0]);
+        renderPost(videoUrl, caption); // Pass it to the renderer
+        closeComposer();
+        btn.textContent = "Post"; // Reset button
+    }, 1000); // 1-second fake upload delay
+}
 
         function toggleLike(element) {
             const icon = element.querySelector('i');
@@ -146,6 +169,20 @@
                 countSpan.textContent = "1201";
             }
         }
+        function openComments() {
+    document.getElementById('comment-modal').style.display = 'block';
+}
+
+function addComment() {
+    const input = document.getElementById('comment-input');
+    const list = document.getElementById('comment-list');
+    if(input.value) {
+        const p = document.createElement('p');
+        p.textContent = "User: " + input.value;
+        list.appendChild(p);
+        input.value = '';
+    }
+}
     </script>
 </body>
 </html>
