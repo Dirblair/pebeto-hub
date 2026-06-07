@@ -91,15 +91,6 @@
             </button>
           </div>
 
-          <div id="role-instructions" class="mt-4 rounded-xl border border-pebeto-violet/30 bg-pebeto-violet/10 px-4 py-3 text-sm text-violet-100">
-            <p class="font-medium text-white">Creator account</p>
-            <ul class="mt-2 list-inside list-disc space-y-1 text-slate-300">
-              <li>You receive a <strong>unique code</strong> — fans never see your phone or bank details.</li>
-              <li>Browse campaigns, submit work, and withdraw earnings (min $30 USD).</li>
-              <li>Set your stage name and niche so brands can discover you.</li>
-            </ul>
-          </div>
-
           <form id="register-form" class="mt-6 space-y-4" novalidate>
             <input type="hidden" name="role" id="role-input" value="creator" />
 
@@ -351,19 +342,19 @@
       hideAlert();
     }
 
-    function setRole(role) {
-      selectedRole = role;
-      document.getElementById('role-input').value = role;
-      document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
-      document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
+    nction setRole(role) {
+      selectedRole = role;
+      document.getElementById('role-input').value = role;
+      document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
+      document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
 
-      document.querySelectorAll('.role-card').forEach((card) => {
-        const isActive = card.dataset.role === role;
-        card.classList.toggle('border-pebeto-violet', isActive);
-        card.classList.toggle('bg-pebeto-violet/20', isActive);
-        card.classList.toggle('border-white/10', !isActive);
-        card.classList.toggle('bg-white/5', !isActive);
-      });
+      document.querySelectorAll('.role-card').forEach((card) => {
+        const isActive = card.dataset.role === role;
+        card.classList.toggle('border-pebeto-violet', isActive);
+        card.classList.toggle('bg-pebeto-violet/20', isActive);
+        card.classList.toggle('border-white/10', !isActive);
+        card.classList.toggle('bg-white/5', !isActive);
+      });
 
       const info = roleInstructions[role];
       const box = document.getElementById('role-instructions');
