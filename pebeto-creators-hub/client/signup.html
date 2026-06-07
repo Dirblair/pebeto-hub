@@ -306,28 +306,31 @@
     }
 
     function setRole(role) {
-      selectedRole = role;
-      document.getElementById('role-input').value = role;
-      document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
-      document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
+    selectedRole = role;
+    document.getElementById('role-input').value = role;
+    
+    // Toggle the field visibility
+    document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
+    document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
 
-      document.querySelectorAll('.role-card').forEach((card) => {
-        const isActive = card.dataset.role === role;
-        card.classList.toggle('border-pebeto-violet', isActive);
-        card.classList.toggle('bg-pebeto-violet/20', isActive);
-        card.classList.toggle('border-white/10', !isActive);
-        card.classList.toggle('bg-white/5', !isActive);
-      });
+    // Update the visual cards
+    document.querySelectorAll('.role-card').forEach((card) => {
+        const isActive = card.dataset.role === role;
+        card.classList.toggle('border-pebeto-violet', isActive);
+        card.classList.toggle('bg-pebeto-violet/20', isActive);
+        card.classList.toggle('border-white/10', !isActive);
+        card.classList.toggle('bg-white/5', !isActive);
+    });
 
-      const info = roleInstructions[role];
-      const box = document.getElementById('role-instructions');
-      box.innerHTML =
-        '<p class="font-medium text-white">' +
-        info.title +
-        '</p><ul class="mt-2 list-inside list-disc space-y-1 text-slate-300">' +
-        info.items.map((i) => '<li>' + i + '</li>').join('') +
-        '</ul>';
-    }
+    // Safe instruction update
+    const info = roleInstructions[role];
+    const box = document.getElementById('role-instructions');
+    if (box && info) {
+        box.innerHTML = '<p class="font-medium text-white">' + info.title + '</p>' +
+                        '<ul class="mt-2 list-inside list-disc space-y-1 text-slate-300">' +
+                        info.items.map((i) => '<li>' + i + '</li>').join('') + '</ul>';
+    }
+}
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => setActiveTab(btn.dataset.panel));
