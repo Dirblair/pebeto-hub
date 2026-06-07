@@ -326,15 +326,8 @@
         card.classList.toggle('bg-white/5', !isActive);
       });
 
-      const info = roleInstructions[role];
-      const box = document.getElementById('role-instructions');
-      box.innerHTML =
-        '<p class="font-medium text-white">' +
-        info.title +
-        '</p><ul class="mt-2 list-inside list-disc space-y-1 text-slate-300">' +
-        info.items.map((i) => '<li>' + i + '</li>').join('') +
-        '</ul>';
-    }
+      // The box element no longer exists in the HTML, so we remove the logic
+      // to update its innerHTML to prevent errors.
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => setActiveTab(btn.dataset.panel));
