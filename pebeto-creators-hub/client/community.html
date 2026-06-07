@@ -120,16 +120,25 @@
         <div class="caption-overlay" style="position:absolute; bottom:60px; left:10px; color:white; font-weight:bold;">
             ${caption}
         </div>
-        <div class="right-sidebar">
-            <div class="action-item"><img src="avatar.jpg" class="creator-avatar"><button class="follow-btn">+</button></div>
-            <div class="action-item" onclick="toggleLike(this)">
-                <i class="ri-heart-fill"></i>
-                <span class="action-count">0</span>
-            </div>
-            <div class="action-item" onclick="openComments()">
-                <i class="ri-chat-3-fill"></i>
-            </div>
-        </div>
+       <div class="right-sidebar">
+    <div class="action-item">
+        <img src="avatar.jpg" class="creator-avatar">
+        <button class="follow-btn">+</button>
+    </div>
+    
+    <div class="action-item" onclick="toggleLike(this)">
+        <i class="ri-heart-fill"></i>
+        <span class="action-count">0</span>
+    </div>
+    
+    <div class="action-item" onclick="openComments()">
+        <i class="ri-chat-3-fill"></i>
+    </div>
+
+    <div class="action-item" onclick="if(confirm('Delete this post?')) this.parentElement.parentElement.remove()">
+        <i class="ri-delete-bin-line" style="color:white; cursor:pointer;"></i>
+    </div>
+</div>
     `;
     feed.appendChild(article);
     observer.observe(article);
