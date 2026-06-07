@@ -35,7 +35,8 @@
         }
     </style>
 </head>
-<body>
+
+    <body>
 
     <div class="feed-container" id="feed">
         <article class="post-card">
@@ -62,6 +63,71 @@
         }, { threshold: 0.7 });
 
         document.querySelectorAll('.post-card').forEach(card => observer.observe(card));
+   <script>
+    function goToHub() {
+        // You would perform your Auth check here
+        const userRole = localStorage.getItem('userRole'); // Example check
+        if (userRole === 'business') {
+            window.location.href = '/business.html';
+        } else if (userRole === 'creator') {
+            window.location.href = '/creator.html';
+        } else {
+            window.location.href = '/signup.html';
+        }
+    }
+</script>
     </script>
-</body>
+<nav class="bottom-navbar">
+    <div class="nav-item active" onclick="window.location.href='/community.html'">
+        <i class="ri-home-fill"></i>
+        <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" onclick="/* Open Discover */">
+        <i class="ri-compass-line"></i>
+        <span class="nav-label">Discover</span>
+    </div>
+    <div class="create-btn-container" onclick="/* Open Create Modal */">
+        <div class="create-btn-inner">+</div>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/bids.html'">
+        <i class="ri-briefcase-line"></i>
+        <span class="nav-label">Bids</span>
+    </div>
+    <div class="nav-item" onclick="goToHub()">
+        <i class="ri-user-line"></i>
+        <span class="nav-label">Profile</span>
+    </div>
+</nav>
+
+<style>
+    .bottom-navbar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: rgba(0, 0, 0, 0.9);
+        border-top: 1px solid #222;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 100;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #8a8b91; }
+    .nav-item.active { color: #fff; }
+    .nav-item i { font-size: 1.4rem; }
+    .nav-label { font-size: 0.65rem; margin-top: 2px; }
+    
+    .create-btn-container {
+        width: 45px; height: 30px;
+        background: linear-gradient(to right, #00f2fe, #4facfe);
+        border-radius: 8px; display: flex; justify-content: center; align-items: center;
+    }
+    .create-btn-inner {
+        width: 37px; height: 100%; background-color: #fff;
+        border-radius: 8px; display: flex; justify-content: center; align-items: center;
+        color: #000; font-weight: bold; font-size: 1.2rem; cursor: pointer;
+    }
+</style>
+    </body>
 </html>
