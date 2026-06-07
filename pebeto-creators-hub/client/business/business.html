@@ -57,22 +57,26 @@
 
     <!-- Wallet & financials -->
     <section class="mb-8 grid gap-4 sm:grid-cols-3">
-      <div class="rounded-2xl border border-brand-sky/30 bg-gradient-to-br from-brand-deep/80 to-brand-slate p-5 shadow-lg card-hover">
-        <p class="text-sm font-medium text-slate-300">Fund wallet (available)</p>
-        <p id="bal-available" class="mt-2 text-3xl font-bold text-white">—</p>
-        <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
-      </div>
-      <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-brand-slate p-5 shadow-lg card-hover">
-        <p class="text-sm font-medium text-slate-300">Escrow balance</p>
-        <p id="bal-escrow" class="mt-2 text-3xl font-bold text-brand-sky">—</p>
-        <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
-      </div>
-      <div class="rounded-2xl border border-brand-accent/40 bg-gradient-to-br from-indigo-950/80 to-brand-slate p-5 shadow-lg">
-        <p class="text-sm font-medium text-slate-300">Platform fee on deposits</p>
-        <p class="mt-2 text-2xl font-bold text-brand-sky">10%</p>
-        <p class="text-xs text-slate-500">Charged on top of escrow intent (server-calculated)</p>
-      </div>
-    </section>
+  <div class="rounded-2xl border border-brand-sky/30 bg-gradient-to-br from-brand-deep/80 to-brand-slate p-5 shadow-lg">
+    <p class="text-sm font-medium text-slate-300">Wallet balance</p>
+    <p id="bal-available" class="mt-2 text-3xl font-bold text-white">—</p>
+    <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
+    <button onclick="/* Open your Bank Funding Modal here */" class="mt-3 w-full rounded-lg bg-brand-sky/20 px-3 py-1.5 text-xs font-semibold text-brand-sky hover:bg-brand-sky/30">Fund Wallet (Bank)</button>
+  </div>
+
+  <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-brand-slate p-5 shadow-lg">
+    <p class="text-sm font-medium text-slate-300">Escrow balance</p>
+    <p id="bal-escrow" class="mt-2 text-3xl font-bold text-brand-sky">—</p>
+    <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
+    <p class="mt-3 text-xs text-slate-500">Funds held for active campaigns</p>
+  </div>
+
+  <button type="button" onclick="document.getElementById('section-withdraw').scrollIntoView({behavior:'smooth'})" class="text-left rounded-2xl border border-brand-accent/40 bg-gradient-to-br from-indigo-950/80 to-brand-slate p-5 shadow-lg hover:border-brand-sky transition-all">
+    <p class="text-sm font-medium text-slate-300">Withdraw funds</p>
+    <p class="mt-2 text-lg font-bold text-white">3% Fee</p>
+    <p class="mt-1 text-xs text-slate-400 underline">Click to withdraw to bank</p>
+  </button>
+</section>
 
     <!-- Create campaign -->
     <section id="section-create" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5 backdrop-blur">
@@ -98,16 +102,38 @@
     </section>
 
     <!-- Campaigns -->
-    <section class="rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-lg font-semibold text-white">Your campaigns</h2>
-        <button type="button" id="btn-refresh" class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-400 hover:text-brand-sky">Refresh</button>
-      </div>
-      <p class="mt-1 text-xs text-slate-500">Stages: Active → Submitted for Review → Completed → Paid</p>
-      <div id="campaigns-list" class="mt-4 space-y-4">
-        <p class="text-sm text-slate-500">Loading campaigns…</p>
-      </div>
-    </section>
+    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h2 class="text-lg font-semibold text-white">Your campaigns</h2>
+    <button type="button" id="btn-refresh" class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-400 hover:text-brand-sky">Refresh</button>
+  </div>
+  <p class="mt-1 text-xs text-slate-500">Stages: Active → Submitted for Review → Completed → Paid</p>
+  <div id="campaigns-list" class="mt-4 space-y-4">
+    <p class="text-sm text-slate-500">Loading campaigns…</p>
+  </div>
+</section>
+
+<section id="section-create" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5 backdrop-blur">
+  <h2 class="text-lg font-semibold text-white">New campaign</h2>
+  <p class="mt-1 text-sm text-slate-400">Publish a brief, fund escrow (10% fee), then manage creator bids.</p>
+  <form id="create-form" class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div class="sm:col-span-2">
+      <label class="mb-1 block text-sm font-medium" for="camp-title">Title</label>
+      <input id="camp-title" required class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none" />
+    </div>
+    <div class="sm:col-span-2">
+      <label class="mb-1 block text-sm font-medium" for="camp-desc">Description</label>
+      <textarea id="camp-desc" rows="2" class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none"></textarea>
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium" for="camp-budget">Budget (USD)</label>
+      <input id="camp-budget" type="number" min="1" step="0.01" required class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none" />
+    </div>
+    <div class="flex items-end">
+      <button type="submit" class="w-full rounded-xl bg-brand-accent px-4 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-blue-600 disabled:opacity-50">Create campaign</button>
+    </div>
+  </form>
+</section>
   </div>
 
   <script src="/js/pebeto-api.js"></script>
