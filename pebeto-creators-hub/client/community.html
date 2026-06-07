@@ -147,56 +147,44 @@
 }
 
         // --- UPDATED: This function now uses renderPost ---
-       function submitPost() {
-            const caption = document.getElementById('post-caption').value;
-            const fileInput = document.getElementById('post-file');
-            
-            if(fileInput.files.length === 0 || !caption) {
-                alert('Please add a caption and a file.');
-                return;
-            }
+      function submitPost() {
+    const caption = document.getElementById('post-caption').value;
+    const fileInput = document.getElementById('post-file');
+    
+    if(fileInput.files.length === 0 || !caption) {
+        alert('Please add a caption and a file.');
+        return;
+    }
 
-            // 1. Get the local file URL for immediate preview
-            const localVideoUrl = URL.createObjectURL(fileInput.files[0]);
-            
-            // 2. Add locally to your own feed immediately
-            renderPost(localVideoUrl, caption);
-            
-            // 3. Emit to the server so other users see it
-            socket.emit('create-post', {
-                videoUrl: localVideoUrl, 
-                caption: caption
-            });
-            
-            // 4. Clean up
-            closeComposer();
-            fileInput.value = ''; 
-        }
+    // 1. Get the local file URL for immediate preview
+    const localVideoUrl = URL.createObjectURL(fileInput.files[0]);
     
-    // Show a quick "Uploading..." alert
-    const btn = event.target;
-    btn.textContent = "Posting...";
+    // 2. Add locally to your own feed immediately
+    renderPost(localVideoUrl, caption);
     
-    setTimeout(() => {
-        const videoUrl = URL.createObjectURL(fileInput.files[0]);
-        renderPost(videoUrl, caption); // Pass it to the renderer
-        closeComposer();
-        btn.textContent = "Post"; // Reset button
-    }, 1000); // 1-second fake upload delay
+    // 3. Emit to the server so other users see it
+    socket.emit('create-post', {
+        videoUrl: localVideoUrl, 
+        caption: caption
+    });
+    
+    // 4. Clean up
+    closeComposer();
+    fileInput.value = ''; 
 }
 
-        function toggleLike(element) {
-            const icon = element.querySelector('i');
-            const countSpan = element.querySelector('.action-count');
-            
-            if (icon.style.color === 'red') {
-                icon.style.color = 'white';
-                countSpan.textContent = "1200";
-            } else {
-                icon.style.color = 'red';
-                countSpan.textContent = "1201";
-            }
-        }
+function toggleLike(element) {
+    const icon = element.querySelector('i');
+    const countSpan = element.querySelector('.action-count');
+    
+    if (icon.style.color === 'red') {
+        icon.style.color = 'white';
+        countSpan.textContent = "1200";
+    } else {
+        icon.style.color = 'red';
+        countSpan.textContent = "1201";
+    }
+}
         function openComments() {
     document.getElementById('comment-modal').style.display = 'block';
 }
