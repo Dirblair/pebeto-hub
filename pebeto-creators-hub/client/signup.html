@@ -67,164 +67,134 @@
 
         <!-- Register -->
         <section id="panel-register" class="panel rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur sm:p-8">
-          <h1 class="text-2xl font-bold tracking-tight">Get started</h1>
-          <p class="mt-1 text-sm text-slate-400">Choose how you want to use the hub, then complete your profile.</p>
+          <h1 class="text-2xl font-bold tracking-tight">Get started</h1>
+          <p class="mt-1 text-sm text-slate-400">Choose how you want to use the hub, then complete your profile.</p>
 
-          <div class="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              data-role="creator"
-              class="role-card rounded-2xl border-2 border-pebeto-violet bg-pebeto-violet/20 p-4 text-left transition hover:border-pebeto-sky"
-            >
-              <span class="text-2xl" aria-hidden="true">🎬</span>
-              <p class="mt-2 font-semibold">Content creator</p>
-              <p class="mt-1 text-xs text-slate-400">Bid on campaigns, get a unique code, manage your wallet.</p>
-            </button>
-            <button
-              type="button"
-              data-role="business"
-              class="role-card rounded-2xl border-2 border-white/10 bg-white/5 p-4 text-left transition hover:border-pebeto-sky"
-            >
-              <span class="text-2xl" aria-hidden="true">🏢</span>
-              <p class="mt-2 font-semibold">Brand / advertiser</p>
-              <p class="mt-1 text-xs text-slate-400">Post campaigns, fund escrow, and hire creators.</p>
-            </button>
-          </div>
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              data-role="creator"
+              class="role-card rounded-2xl border-2 border-pebeto-violet bg-pebeto-violet/20 p-4 text-left transition hover:border-pebeto-sky"
+            >
+              <span class="text-2xl" aria-hidden="true">🎬</span>
+              <p class="mt-2 font-semibold">Content creator</p>
+              <p class="mt-1 text-xs text-slate-400">Bid on campaigns, get a unique code, manage your wallet.</p>
+            </button>
+            <button
+              type="button"
+              data-role="business"
+              class="role-card rounded-2xl border-2 border-white/10 bg-white/5 p-4 text-left transition hover:border-pebeto-sky"
+            >
+              <span class="text-2xl" aria-hidden="true">🏢</span>
+              <p class="mt-2 font-semibold">Brand / advertiser</p>
+              <p class="mt-1 text-xs text-slate-400">Post campaigns, fund escrow, and hire creators.</p>
+            </button>
+          </div>
 
-          <form id="register-form" class="mt-6 space-y-4" novalidate>
-            <input type="hidden" name="role" id="role-input" value="creator" />
+          <form id="register-form" class="mt-6 space-y-4" novalidate>
+            <input type="hidden" name="role" id="role-input" value="creator" />
 
-            <div>
-              <label for="refereeName" class="mb-1.5 block text-sm font-medium text-slate-200">
-                Referee's name <span class="text-rose-400">*</span>
-              </label>
-              <input
-                id="refereeName"
-                name="refereeName"
-                type="text"
-                required
-                autocomplete="name"
-                placeholder="Full name of person who referred you"
-                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-              />
-              <p class="mt-1 text-xs text-slate-500">Required for all new accounts on Pebeto.</p>
-            </div>
+            <div id="creator-fields" class="space-y-4">
+              <div>
+                <label for="stageName" class="mb-1.5 block text-sm font-medium">Stage name <span class="text-rose-400">*</span></label>
+                <input
+                  id="stageName"
+                  type="text"
+                  required
+                  placeholder="e.g. DJ Nova"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+              <div>
+                <label for="niche" class="mb-1.5 block text-sm font-medium">Niche <span class="text-rose-400">*</span></label>
+                <input
+                  id="niche"
+                  type="text"
+                  required
+                  placeholder="e.g. Comedian, Vlogger, Musician"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+            </div>
 
-            <div id="creator-fields" class="space-y-4">
-              <div>
-                <label for="stageName" class="mb-1.5 block text-sm font-medium">Stage name</label>
-                <input
-                  id="stageName"
-                  type="text"
-                  placeholder="e.g. DJ Nova"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-                />
-              </div>
-              <div>
-                <label for="niche" class="mb-1.5 block text-sm font-medium">Niche</label>
-                <input
-                  id="niche"
-                  type="text"
-                  placeholder="e.g. Comedian, Vlogger, Musician"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-                />
-              </div>
-            </div>
+            <div id="business-fields" class="hidden space-y-4">
+              <div>
+                <label for="companyName" class="mb-1.5 block text-sm font-medium">Company / brand name</label>
+                <input
+                  id="companyName"
+                  type="text"
+                  placeholder="Your business name"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+              <div>
+                <label for="website" class="mb-1.5 block text-sm font-medium">Website <span class="text-slate-500">(optional)</span></label>
+                <input
+                  id="website"
+                  type="url"
+                  placeholder="https://"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+            </div>
 
-            <div id="business-fields" class="hidden space-y-4">
-              <div>
-                <label for="companyName" class="mb-1.5 block text-sm font-medium">Company / brand name</label>
-                <input
-                  id="companyName"
-                  type="text"
-                  placeholder="Your business name"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-                />
-              </div>
-              <div>
-                <label for="website" class="mb-1.5 block text-sm font-medium">Website <span class="text-slate-500">(optional)</span></label>
-                <input
-                  id="website"
-                  type="url"
-                  placeholder="https://"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-                />
-              </div>
-            </div>
+            <div>
+              <label for="email" class="mb-1.5 block text-sm font-medium">Email <span class="text-rose-400">*</span></label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+              />
+            </div>
 
-            <div>
-              <label for="email" class="mb-1.5 block text-sm font-medium">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autocomplete="email"
-                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-              />
-            </div>
+            <div id="otp-container" class="hidden">
+              <label for="otp" class="mb-1.5 block text-sm font-medium">Enter OTP <span class="text-rose-400">*</span></label>
+              <input
+                id="otp"
+                type="text"
+                placeholder="6-digit code"
+                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+              />
+            </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label for="password" class="mb-1.5 block text-sm font-medium">Password</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  minlength="8"
-                  autocomplete="new-password"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-                />
-                <p class="mt-1 text-xs text-slate-500">At least 8 characters</p>
-              </div>
-              <div>
-                <label for="passwordConfirm" class="mb-1.5 block text-sm font-medium">Confirm password</label>
-                <input
-                  id="passwordConfirm"
-                  type="password"
-                  required
-                  autocomplete="new-password"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
-                />
-              </div>
-            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label for="password" class="mb-1.5 block text-sm font-medium">Password <span class="text-rose-400">*</span></label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  minlength="8"
+                  autocomplete="new-password"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+                <p class="mt-1 text-xs text-slate-500">At least 8 characters</p>
+              </div>
+              <div>
+                <label for="passwordConfirm" class="mb-1.5 block text-sm font-medium">Confirm password <span class="text-rose-400">*</span></label>
+                <input
+                  id="passwordConfirm"
+                  type="password"
+                  required
+                  autocomplete="new-password"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+            </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label for="preferredLanguage" class="mb-1.5 block text-sm font-medium">Language</label>
-                <select
-                  id="preferredLanguage"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none"
-                >
-                  <option value="en">English</option>
-                  <option value="sw">Swahili</option>
-                  <option value="fr">French</option>
-                </select>
-              </div>
-              <div>
-                <label for="preferredCurrency" class="mb-1.5 block text-sm font-medium">Display currency</label>
-                <select
-                  id="preferredCurrency"
-                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none"
-                >
-                  <option value="USD">USD</option>
-                  <option value="KES">KES</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              id="register-submit"
-              class="w-full rounded-xl bg-gradient-to-r from-pebeto-violet to-pebeto-sky py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Create account
-            </button>
-          </form>
-        </section>
+            <button
+              type="submit"
+              id="register-submit"
+              class="w-full rounded-xl bg-gradient-to-r from-pebeto-violet to-pebeto-sky py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Send Verification Code
+            </button>
+          </form>
+        </section>
 
         <!-- Login -->
         <section id="panel-login" class="panel hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur sm:p-8">
@@ -342,19 +312,19 @@
       hideAlert();
     }
 
-    nction setRole(role) {
-      selectedRole = role;
-      document.getElementById('role-input').value = role;
-      document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
-      document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
+    function setRole(role) {
+      selectedRole = role;
+      document.getElementById('role-input').value = role;
+      document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
+      document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
 
-      document.querySelectorAll('.role-card').forEach((card) => {
-        const isActive = card.dataset.role === role;
-        card.classList.toggle('border-pebeto-violet', isActive);
-        card.classList.toggle('bg-pebeto-violet/20', isActive);
-        card.classList.toggle('border-white/10', !isActive);
-        card.classList.toggle('bg-white/5', !isActive);
-      });
+      document.querySelectorAll('.role-card').forEach((card) => {
+        const isActive = card.dataset.role === role;
+        card.classList.toggle('border-pebeto-violet', isActive);
+        card.classList.toggle('bg-pebeto-violet/20', isActive);
+        card.classList.toggle('border-white/10', !isActive);
+        card.classList.toggle('bg-white/5', !isActive);
+      });
 
       const info = roleInstructions[role];
       const box = document.getElementById('role-instructions');
