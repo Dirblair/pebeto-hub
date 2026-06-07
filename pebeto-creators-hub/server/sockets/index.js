@@ -20,7 +20,6 @@ function initSockets(io) {
   io.on('connection', (socket) => {
     socket.join(`user:${socket.user._id}`);
 
-    // Your existing DM typing logic
     socket.on('dm:typing', (payload) => {
       const { conversationId } = payload || {};
       if (conversationId) {
@@ -31,9 +30,7 @@ function initSockets(io) {
       }
     });
 
-    // --- NEW: Add this block here ---
     socket.on('create-post', (data) => {
-      // Broadcast the post to all connected users
       io.emit('new-post', {
         videoUrl: data.videoUrl,
         caption: data.caption,
@@ -43,7 +40,6 @@ function initSockets(io) {
         }
       });
     });
-    // --------------------------------
 
     socket.on('status:subscribe', () => {
       socket.join('status:global');
@@ -54,6 +50,7 @@ function initSockets(io) {
     });
 
     socket.broadcast.emit('presence:online', { userId: socket.user._id });
-  });
+  }); // Closes io.on
+} // Closes initSockets
 
 module.exports = { initSockets };
