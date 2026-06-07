@@ -1,158 +1,517 @@
-<!DOCTYPE html>
+we are beginning with the signup code. i want someone creating an account to receive, an acceptance otp codes in their email or phone numbers so that we be sure that the person registering is an actual person and that they agree to be in the platform. then in the page i want us to remove the following, all of that statement that says, Creator account
+You receive a unique code — fans never see your phone or bank details.
+Browse campaigns, submit work, and withdraw earnings (min $30 USD).
+Set your stage name and niche so brands can discover you., i also want us to remove the mandatory referee's name and replace the mandatory to the stage name. which will not accept another name of that kind. the niche should also be a mandatory field. then email should also be mandatory, then remove the language and currency from the signup page. here is the code i currently have as my signup. <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Join — Pebeto Creator's Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            pebeto: {
-              ink: '#0f172a',
-              violet: '#7c3aed',
-              sky: '#0ea5e9',
-              navy: '#1e3a5f',
-            },
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'Segoe UI', 'sans-serif'],
-          },
-        },
-      },
-    };
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join — Pebeto Creator's Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pebeto: {
+              ink: '#0f172a',
+              violet: '#7c3aed',
+              sky: '#0ea5e9',
+              navy: '#1e3a5f',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'Segoe UI', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-950 via-pebeto-ink to-indigo-950 font-sans text-slate-100 antialiased">
-  <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
-    <header class="mb-8 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3">
-        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pebeto-violet to-pebeto-sky text-sm font-bold text-white shadow-lg shadow-violet-500/30">P</span>
-        <div>
-          <p class="text-lg font-semibold tracking-tight">Pebeto Creator's Hub</p>
-          <p class="text-xs text-slate-400">Creators &amp; brands, one secure platform</p>
-        </div>
-      </a>
-    </header>
+  <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+    <header class="mb-8 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pebeto-violet to-pebeto-sky text-sm font-bold text-white shadow-lg shadow-violet-500/30">P</span>
+        <div>
+          <p class="text-lg font-semibold tracking-tight">Pebeto Creator's Hub</p>
+          <p class="text-xs text-slate-400">Creators &amp; brands, one secure platform</p>
+        </div>
+      </a>
+      <a href="/api/health" class="hidden text-xs text-slate-500 hover:text-slate-300 sm:inline">API status</a>
+    </header>
 
-    <main class="flex flex-1 flex-col items-center justify-center">
-      <div class="w-full max-w-lg">
-        <div class="mb-6 flex rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur">
-          <button type="button" id="tab-register" data-panel="panel-register" class="tab-btn flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition bg-white/15 text-white shadow">Create account</button>
-          <button type="button" id="tab-login" data-panel="panel-login" class="tab-btn flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-400 transition hover:text-white">Sign in</button>
-        </div>
+    <main class="flex flex-1 flex-col items-center justify-center">
+      <div class="w-full max-w-lg">
+        <!-- Tab switcher -->
+        <div class="mb-6 flex rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur">
+          <button
+            type="button"
+            id="tab-register"
+            data-panel="panel-register"
+            class="tab-btn flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition bg-white/15 text-white shadow"
+          >
+            Create account
+          </button>
+          <button
+            type="button"
+            id="tab-login"
+            data-panel="panel-login"
+            class="tab-btn flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-400 transition hover:text-white"
+          >
+            Sign in
+          </button>
+        </div>
 
-        <div id="alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
+        <div id="alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
 
-        <section id="panel-register" class="panel rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur sm:p-8">
-          <h1 class="text-2xl font-bold tracking-tight">Get started</h1>
-          <p class="mt-1 text-sm text-slate-400">Choose how you want to use the hub, then complete your profile.</p>
+        <!-- Register -->
+        <section id="panel-register" class="panel rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur sm:p-8">
+          <h1 class="text-2xl font-bold tracking-tight">Get started</h1>
+          <p class="mt-1 text-sm text-slate-400">Choose how you want to use the hub, then complete your profile.</p>
 
-          <div class="mt-6 grid grid-cols-2 gap-3">
-            <button type="button" data-role="creator" class="role-card rounded-2xl border-2 border-pebeto-violet bg-pebeto-violet/20 p-4 text-left transition hover:border-pebeto-sky">
-              <span class="text-2xl" aria-hidden="true">🎬</span>
-              <p class="mt-2 font-semibold">Content creator</p>
-            </button>
-            <button type="button" data-role="business" class="role-card rounded-2xl border-2 border-white/10 bg-white/5 p-4 text-left transition hover:border-pebeto-sky">
-              <span class="text-2xl" aria-hidden="true">🏢</span>
-              <p class="mt-2 font-semibold">Brand / advertiser</p>
-            </button>
-          </div>
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              data-role="creator"
+              class="role-card rounded-2xl border-2 border-pebeto-violet bg-pebeto-violet/20 p-4 text-left transition hover:border-pebeto-sky"
+            >
+              <span class="text-2xl" aria-hidden="true">🎬</span>
+              <p class="mt-2 font-semibold">Content creator</p>
+              <p class="mt-1 text-xs text-slate-400">Bid on campaigns, get a unique code, manage your wallet.</p>
+            </button>
+            <button
+              type="button"
+              data-role="business"
+              class="role-card rounded-2xl border-2 border-white/10 bg-white/5 p-4 text-left transition hover:border-pebeto-sky"
+            >
+              <span class="text-2xl" aria-hidden="true">🏢</span>
+              <p class="mt-2 font-semibold">Brand / advertiser</p>
+              <p class="mt-1 text-xs text-slate-400">Post campaigns, fund escrow, and hire creators.</p>
+            </button>
+          </div>
 
-          <!-- Hidden to keep script functional -->
-          <div id="role-instructions" class="hidden"></div>
+          <div id="role-instructions" class="mt-4 rounded-xl border border-pebeto-violet/30 bg-pebeto-violet/10 px-4 py-3 text-sm text-violet-100">
+            <p class="font-medium text-white">Creator account</p>
+            <ul class="mt-2 list-inside list-disc space-y-1 text-slate-300">
+              <li>You receive a <strong>unique code</strong> — fans never see your phone or bank details.</li>
+              <li>Browse campaigns, submit work, and withdraw earnings (min $30 USD).</li>
+              <li>Set your stage name and niche so brands can discover you.</li>
+            </ul>
+          </div>
 
-          <form id="register-form" class="mt-6 space-y-4" novalidate>
-            <input type="hidden" name="role" id="role-input" value="creator" />
+          <form id="register-form" class="mt-6 space-y-4" novalidate>
+            <input type="hidden" name="role" id="role-input" value="creator" />
 
-            <div id="creator-fields" class="space-y-4">
-              <div>
-                <label for="stageName" class="mb-1.5 block text-sm font-medium">Stage name <span class="text-rose-400">*</span></label>
-                <input id="stageName" type="text" placeholder="e.g. DJ Nova" class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-              </div>
-              <div>
-                <label for="niche" class="mb-1.5 block text-sm font-medium">Niche <span class="text-rose-400">*</span></label>
-                <input id="niche" type="text" placeholder="e.g. Comedian, Vlogger" class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-              </div>
-            </div>
+            <div>
+              <label for="refereeName" class="mb-1.5 block text-sm font-medium text-slate-200">
+                Referee's name <span class="text-rose-400">*</span>
+              </label>
+              <input
+                id="refereeName"
+                name="refereeName"
+                type="text"
+                required
+                autocomplete="name"
+                placeholder="Full name of person who referred you"
+                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+              />
+              <p class="mt-1 text-xs text-slate-500">Required for all new accounts on Pebeto.</p>
+            </div>
 
-            <div id="business-fields" class="hidden space-y-4">
-              <div>
-                <label for="companyName" class="mb-1.5 block text-sm font-medium">Company / brand name <span class="text-rose-400">*</span></label>
-                <input id="companyName" type="text" placeholder="Your business name" class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-              </div>
-              <div>
-                <label for="website" class="mb-1.5 block text-sm font-medium">Website <span class="text-rose-400">*</span></label>
-                <input id="website" type="url" placeholder="https://" class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-              </div>
-            </div>
+            <div id="creator-fields" class="space-y-4">
+              <div>
+                <label for="stageName" class="mb-1.5 block text-sm font-medium">Stage name</label>
+                <input
+                  id="stageName"
+                  type="text"
+                  placeholder="e.g. DJ Nova"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+              <div>
+                <label for="niche" class="mb-1.5 block text-sm font-medium">Niche</label>
+                <input
+                  id="niche"
+                  type="text"
+                  placeholder="e.g. Comedian, Vlogger, Musician"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+            </div>
 
-            <div>
-              <label for="email" class="mb-1.5 block text-sm font-medium">Email <span class="text-rose-400">*</span></label>
-              <input id="email" type="email" required class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-            </div>
+            <div id="business-fields" class="hidden space-y-4">
+              <div>
+                <label for="companyName" class="mb-1.5 block text-sm font-medium">Company / brand name</label>
+                <input
+                  id="companyName"
+                  type="text"
+                  placeholder="Your business name"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+              <div>
+                <label for="website" class="mb-1.5 block text-sm font-medium">Website <span class="text-slate-500">(optional)</span></label>
+                <input
+                  id="website"
+                  type="url"
+                  placeholder="https://"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+            </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label for="password" class="mb-1.5 block text-sm font-medium">Password <span class="text-rose-400">*</span></label>
-                <input id="password" type="password" required minlength="8" class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-              </div>
-              <div>
-                <label for="passwordConfirm" class="mb-1.5 block text-sm font-medium">Confirm <span class="text-rose-400">*</span></label>
-                <input id="passwordConfirm" type="password" required class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none" />
-              </div>
-            </div>
+            <div>
+              <label for="email" class="mb-1.5 block text-sm font-medium">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+              />
+            </div>
 
-            <button type="submit" id="register-submit" class="w-full rounded-xl bg-gradient-to-r from-pebeto-violet to-pebeto-sky py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95">
-              Create account
-            </button>
-          </form>
-        </section>
-        
-        <!-- Login section left as is -->
-        <section id="panel-login" class="panel hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur sm:p-8">
-           <!-- Login form content -->
-        </section>
-      </div>
-    </main>
-  </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label for="password" class="mb-1.5 block text-sm font-medium">Password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  minlength="8"
+                  autocomplete="new-password"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+                <p class="mt-1 text-xs text-slate-500">At least 8 characters</p>
+              </div>
+              <div>
+                <label for="passwordConfirm" class="mb-1.5 block text-sm font-medium">Confirm password</label>
+                <input
+                  id="passwordConfirm"
+                  type="password"
+                  required
+                  autocomplete="new-password"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+                />
+              </div>
+            </div>
 
-  <script>
-    // [PRESERVED SCRIPT LOGIC]
-    const roleInstructions = { /* ... your original object ... */ };
-    let selectedRole = 'creator';
-    // ... (rest of your original functions) ...
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label for="preferredLanguage" class="mb-1.5 block text-sm font-medium">Language</label>
+                <select
+                  id="preferredLanguage"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none"
+                >
+                  <option value="en">English</option>
+                  <option value="sw">Swahili</option>
+                  <option value="fr">French</option>
+                </select>
+              </div>
+              <div>
+                <label for="preferredCurrency" class="mb-1.5 block text-sm font-medium">Display currency</label>
+                <select
+                  id="preferredCurrency"
+                  class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none"
+                >
+                  <option value="USD">USD</option>
+                  <option value="KES">KES</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                </select>
+              </div>
+            </div>
 
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      // Updated validation logic for your requirements
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const passwordConfirm = document.getElementById('passwordConfirm').value;
+            <button
+              type="submit"
+              id="register-submit"
+              class="w-full rounded-xl bg-gradient-to-r from-pebeto-violet to-pebeto-sky py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Create account
+            </button>
+          </form>
+        </section>
 
-      if (password !== passwordConfirm) return showAlert('Passwords do not match.');
-      
-      const profile = {};
-      if (selectedRole === 'creator') {
-        const stageName = document.getElementById('stageName').value.trim();
-        const niche = document.getElementById('niche').value.trim();
-        if (!stageName || !niche) return showAlert('Stage name and Niche are required.');
-        profile.stageName = stageName;
-        profile.niche = niche;
-        profile.displayName = stageName;
-      } else {
-        const companyName = document.getElementById('companyName').value.trim();
-        const website = document.getElementById('website').value.trim();
-        if (!companyName || !website) return showAlert('Company name and Website are required.');
-        profile.companyName = companyName;
-        profile.website = website;
-        profile.displayName = companyName;
-      }
-      
-      // ... (rest of the fetch logic) ...
-    });
-  </script>
+        <!-- Login -->
+        <section id="panel-login" class="panel hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur sm:p-8">
+          <h1 class="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p class="mt-1 text-sm text-slate-400">Sign in to your creator or brand dashboard.</p>
+
+          <form id="login-form" class="mt-6 space-y-4" novalidate>
+            <div>
+              <label for="login-email" class="mb-1.5 block text-sm font-medium">Email</label>
+              <input
+                id="login-email"
+                type="email"
+                required
+                autocomplete="email"
+                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+              />
+            </div>
+            <div>
+              <label for="login-password" class="mb-1.5 block text-sm font-medium">Password</label>
+              <input
+                id="login-password"
+                type="password"
+                required
+                autocomplete="current-password"
+                class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm focus:border-pebeto-sky focus:outline-none focus:ring-2 focus:ring-pebeto-sky/40"
+              />
+            </div>
+            <button
+              type="submit"
+              id="login-submit"
+              class="w-full rounded-xl bg-gradient-to-r from-pebeto-navy to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Sign in
+            </button>
+          </form>
+          <p class="mt-4 text-center text-sm text-slate-400">
+            New here?
+            <button type="button" class="font-medium text-pebeto-sky hover:underline" data-switch="panel-register">Create an account</button>
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="mt-8 text-center text-xs text-slate-600">
+      &copy; Pebeto Creator's Hub &mdash; All amounts are stored in USD on the server.
+    </footer>
+  </div>
+
+  <script>
+    const TOKEN_KEY = 'pebeto_token';
+    const USER_KEY = 'pebeto_user';
+
+    const roleInstructions = {
+      creator: {
+        title: 'Creator account',
+        items: [
+          'You receive a <strong>unique code</strong> — fans never see your phone or bank details.',
+          'Browse campaigns, submit work, and withdraw earnings (min $30 USD).',
+          'Set your stage name and niche so brands can discover you.',
+        ],
+      },
+      business: {
+        title: 'Brand / advertiser account',
+        items: [
+          'Create campaigns and fund escrow (10% platform fee on deposits).',
+          'Review creator bids and release payment when work is complete.',
+          'Tip creators directly; they receive 95% of each tip.',
+        ],
+      },
+    };
+
+    let selectedRole = 'creator';
+
+    function showAlert(message, type = 'error') {
+      const el = document.getElementById('alert');
+      el.textContent = message;
+      el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      if (type === 'success') {
+        el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      } else {
+        el.classList.add('border-rose-500/50', 'bg-rose-500/10', 'text-rose-200');
+      }
+    }
+
+    function hideAlert() {
+      document.getElementById('alert').classList.add('hidden');
+    }
+
+    function saveSession(token, user) {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
+
+    function dashboardPath(role) {
+      if (role === 'admin') return '/admin/admin.html';
+      if (role === 'business') return '/business/business.html';
+      if (role === 'creator') return '/creator/creator.html';
+      return '/';
+    }
+
+    function redirectForRole(role) {
+      window.location.href = dashboardPath(role);
+    }
+
+    function setActiveTab(panelId) {
+      document.querySelectorAll('.panel').forEach((p) => p.classList.add('hidden'));
+      document.getElementById(panelId).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        const active = btn.dataset.panel === panelId;
+        btn.classList.toggle('bg-white/15', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('shadow', active);
+        btn.classList.toggle('text-slate-400', !active);
+      });
+      hideAlert();
+    }
+
+    function setRole(role) {
+      selectedRole = role;
+      document.getElementById('role-input').value = role;
+      document.getElementById('creator-fields').classList.toggle('hidden', role !== 'creator');
+      document.getElementById('business-fields').classList.toggle('hidden', role !== 'business');
+
+      document.querySelectorAll('.role-card').forEach((card) => {
+        const isActive = card.dataset.role === role;
+        card.classList.toggle('border-pebeto-violet', isActive);
+        card.classList.toggle('bg-pebeto-violet/20', isActive);
+        card.classList.toggle('border-white/10', !isActive);
+        card.classList.toggle('bg-white/5', !isActive);
+      });
+
+      const info = roleInstructions[role];
+      const box = document.getElementById('role-instructions');
+      box.innerHTML =
+        '<p class="font-medium text-white">' +
+        info.title +
+        '</p><ul class="mt-2 list-inside list-disc space-y-1 text-slate-300">' +
+        info.items.map((i) => '<li>' + i + '</li>').join('') +
+        '</ul>';
+    }
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => setActiveTab(btn.dataset.panel));
+    });
+
+    document.querySelectorAll('[data-switch]').forEach((btn) => {
+      btn.addEventListener('click', () => setActiveTab(btn.dataset.switch));
+    });
+
+    document.querySelectorAll('.role-card').forEach((card) => {
+      card.addEventListener('click', () => setRole(card.dataset.role));
+    });
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const refereeName = document.getElementById('refereeName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const passwordConfirm = document.getElementById('passwordConfirm').value;
+
+      if (!refereeName) {
+        showAlert("Referee's name is required.");
+        document.getElementById('refereeName').focus();
+        return;
+      }
+      if (password !== passwordConfirm) {
+        showAlert('Passwords do not match.');
+        return;
+      }
+      if (password.length < 8) {
+        showAlert('Password must be at least 8 characters.');
+        return;
+      }
+
+      const profile = { refereeName };
+      if (selectedRole === 'creator') {
+        const stageName = document.getElementById('stageName').value.trim();
+        const niche = document.getElementById('niche').value.trim();
+        if (stageName) profile.stageName = stageName;
+        if (niche) profile.niche = niche;
+        if (stageName) profile.displayName = stageName;
+      } else {
+        const companyName = document.getElementById('companyName').value.trim();
+        const website = document.getElementById('website').value.trim();
+        if (companyName) {
+          profile.companyName = companyName;
+          profile.displayName = companyName;
+        }
+        if (website) profile.website = website;
+      }
+
+      const body = {
+        email,
+        password,
+        role: selectedRole,
+        profile,
+        preferredLanguage: document.getElementById('preferredLanguage').value,
+        preferredCurrency: document.getElementById('preferredCurrency').value,
+      };
+
+      const btn = document.getElementById('register-submit');
+      btn.disabled = true;
+      btn.textContent = 'Creating account…';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Registration failed. Please try again.');
+        }
+
+        saveSession(data.token, data.user);
+        showAlert('Account created. Redirecting…', 'success');
+        setTimeout(() => redirectForRole(data.user.role), 600);
+      } catch (err) {
+        showAlert(err.message || 'Something went wrong.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+      }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-submit');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Invalid email or password.');
+        }
+
+        saveSession(data.token, data.user);
+        redirectForRole(data.user.role);
+      } catch (err) {
+        showAlert(err.message || 'Login failed.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+
+    (function init() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('login') === '1') setActiveTab('panel-login');
+      const token = localStorage.getItem(TOKEN_KEY);
+      const userRaw = localStorage.getItem(USER_KEY);
+      if (token && userRaw) {
+        try {
+          const user = JSON.parse(userRaw);
+          if (user.role) redirectForRole(user.role);
+        } catch (_) {
+          /* ignore */
+        }
+      }
+    })();
+  </script>
 </body>
 </html>
