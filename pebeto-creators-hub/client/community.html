@@ -61,7 +61,10 @@
             <video class="post-media" src="video2.mp4" loop muted playsinline></video>
             <div class="right-sidebar">
                 <div class="action-item"><img src="avatar.jpg" class="creator-avatar"><button class="follow-btn">+</button></div>
-                <div class="action-item"><i class="ri-heart-fill"></i><span class="action-count">1.2K</span></div>
+                <div class="action-item" onclick="toggleLike(this)">
+    <i class="ri-heart-fill" id="like-icon"></i>
+    <span class="action-count" id="like-count">1200</span>
+</div>
             </div>
         </article>
     </div>
@@ -79,7 +82,7 @@
     <div style="max-width:400px; margin:50px auto;">
         <h2 style="color:white; font-size:1.5rem; margin-bottom:20px;">Create Post</h2>
         <textarea id="post-caption" placeholder="What's happening?" style="width:100%; height:100px; background:#222; color:white; padding:10px; border-radius:10px;"></textarea>
-        <input id="post-url" type="url" placeholder="Video/Image URL" style="width:100%; margin-top:10px; background:#222; color:white; padding:10px; border-radius:10px;">
+        <input id="post-file" type="file" accept="image/*,video/*" style="width:100%; margin-top:10px; background:#222; color:white; padding:10px; border-radius:10px;">
         
         <div style="margin-top:20px; display:flex; gap:10px;">
             <button onclick="closeComposer()" style="flex:1; padding:10px; background:#444; color:white; border-radius:10px;">Cancel</button>
@@ -112,18 +115,31 @@
             document.getElementById('composer-modal').style.display = 'none';
         }
 
-        function submitPost() {
+      function submitPost() {
             const caption = document.getElementById('post-caption').value;
-            const url = document.getElementById('post-url').value;
+            const fileInput = document.getElementById('post-file'); // Matches your new file input ID
             
-            if(!caption || !url) {
-                alert('Please fill in both fields.');
+            if(!caption || fileInput.files.length === 0) {
+                alert('Please add a caption and select a video or image.');
                 return;
             }
             
             // For now, this just closes the modal
             alert('Post submitted (Backend connection pending)');
             closeComposer();
+        }
+
+        function toggleLike(element) {
+            const icon = element.querySelector('i');
+            const countSpan = element.querySelector('.action-count');
+            
+            if (icon.style.color === 'red') {
+                icon.style.color = 'white';
+                countSpan.textContent = "1200";
+            } else {
+                icon.style.color = 'red';
+                countSpan.textContent = "1201";
+            }
         }
     </script>
 </body>
