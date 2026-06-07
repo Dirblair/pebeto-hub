@@ -50,33 +50,18 @@
         .create-btn-inner { width: 37px; height: 100%; background-color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: #000; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
     </style>
 </head>
-<body>
 
+    <body>
     <div class="feed-container" id="feed">
-        <article class="post-card">
-            <video class="post-media" src="video1.mp4" loop muted playsinline></video>
-        </article>
-        
-        <article class="post-card">
-            <video class="post-media" src="video2.mp4" loop muted playsinline></video>
-            <div class="right-sidebar">
-                <div class="action-item"><img src="avatar.jpg" class="creator-avatar"><button class="follow-btn">+</button></div>
-                <div class="action-item" onclick="toggleLike(this)">
-    <i class="ri-heart-fill" id="like-icon"></i>
-    <span class="action-count" id="like-count">1200</span>
-</div>
-            </div>
-        </article>
-    </div>
+        </div>
 
     <nav class="bottom-navbar">
         <div class="nav-item active"><i class="ri-home-fill"></i><span class="nav-label">Home</span></div>
         <div class="create-btn-container" onclick="openComposer()">
-        <div class="create-btn-inner">+</div>
-    </div>
-    
-    <div class="nav-item" onclick="goToHub()"><i class="ri-user-line"></i><span class="nav-label">Profile</span></div>
-</nav>
+            <div class="create-btn-inner">+</div>
+        </div>
+        <div class="nav-item" onclick="goToHub()"><i class="ri-user-line"></i><span class="nav-label">Profile</span></div>
+    </nav>
 <!-- Hidden Composer Modal -->
 <div id="composer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:200; padding:20px;">
     <div style="max-width:400px; margin:50px auto;">
@@ -115,18 +100,38 @@
             document.getElementById('composer-modal').style.display = 'none';
         }
 
-      function submitPost() {
-            const caption = document.getElementById('post-caption').value;
-            const fileInput = document.getElementById('post-file'); // Matches your new file input ID
+        // --- NEW: This function builds the post card ---
+        function renderPost(videoUrl) {
+            const feed = document.getElementById('feed');
+            const article = document.createElement('article');
+            article.className = 'post-card';
+            article.innerHTML = `
+                <video class="post-media" src="${videoUrl}" loop muted playsinline autoplay></video>
+                <div class="right-sidebar">
+                    <div class="action-item"><img src="avatar.jpg" class="creator-avatar"><button class="follow-btn">+</button></div>
+                    <div class="action-item" onclick="toggleLike(this)">
+                        <i class="ri-heart-fill"></i>
+                        <span class="action-count">0</span>
+                    </div>
+                </div>
+            `;
+            feed.appendChild(article);
+            observer.observe(article); // Make sure the new post plays on scroll
+        }
+
+        // --- UPDATED: This function now uses renderPost ---
+        function submitPost() {
+            const fileInput = document.getElementById('post-file');
             
-            if(!caption || fileInput.files.length === 0) {
-                alert('Please add a caption and select a video or image.');
+            if(fileInput.files.length === 0) {
+                alert('Please select a video file.');
                 return;
             }
             
-            // For now, this just closes the modal
-            alert('Post submitted (Backend connection pending)');
+            const videoUrl = URL.createObjectURL(fileInput.files[0]);
+            renderPost(videoUrl); // Add the video to the feed
             closeComposer();
+            fileInput.value = ''; // Reset
         }
 
         function toggleLike(element) {
