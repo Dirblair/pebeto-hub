@@ -396,38 +396,34 @@
     // 5. The Bridge: Save the role for goToHub()
     localStorage.setItem('userRole', selectedRole);
 
-    // Now proceed with your fetch logic (e.g., calling your API)
-    // ... rest of your existing fetch/registration code
-});
+    // 6. Registration Logic (MOVED INSIDE)
+    const btn = document.getElementById('register-submit');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
 
-      const btn = document.getElementById('register-submit');
-  btn.disabled = true;
-  btn.textContent = 'Processing...';
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        
+        const data = await res.json().catch(() => ({}));
 
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    
-    const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data.message || 'Registration failed.');
+        }
 
-    if (!res.ok) {
-      throw new Error(data.message || 'Registration failed.');
+        btn.textContent = 'Verification Required';
+        showAlert('Verify to join Pebeto Creators Hub: A confirmation link has been sent to your email.', 'success');
+        document.getElementById('register-form').reset();
+        
+    } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Join Pebeto Creators Hub';
+        showAlert(err.message || 'Something went wrong.');
     }
-
-    // Success response: No redirect, clear form, show notice
-    btn.textContent = 'Verification Required';
-    showAlert('Verify to join Pebeto Creators Hub: A confirmation link has been sent to your email.', 'success');
-    document.getElementById('register-form').reset();
-    
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = 'Join Pebeto Creators Hub';
-    showAlert(err.message || 'Something went wrong.');
-  }
-    });
+});
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
