@@ -88,6 +88,8 @@ async function bootstrap() {
 
 // This call is now correctly outside the function
 bootstrap().catch((err) => {
-  console.error('Failed to start server:', err);
+  console.error('--- CRITICAL STARTUP ERROR ---');
+  console.error(err.message);
+  console.error(err.stack); // This will tell us the exact line number that crashed
   process.exit(1);
 });
