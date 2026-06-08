@@ -7,24 +7,40 @@ const { AppError } = require('../utils/errors');
 const { roundUsd } = require('../middleware/feeService');
 
 async function getOrCreateWallet(userId, walletType = 'standard') {
-  let wallet = await Wallet.findOne({ userId });
-  if (!wallet) {
-    wallet = await Wallet.create({ userId, walletType, currency: 'USD' });
-  }
+  const wallet = await Wallet.findOneAndUpdate(
+    { userId: userId }, // Filter
+    { 
+      $setOnInsert: { 
+        userId: userId, 
+        walletType: walletType, 
+        currency: 'USD',
+        balances: { available: 0, escrow: 0, tips: 0 } // Initialize default balances
+      } 
+    },
+    { 
+      new: true,    // Return the updated document
+      upsert: true  // Create if it doesn't exist
+    }
+  );
   return wallet;
 }
 
 async function getAdminProfitWallet() {
   const admin = await User.findOne({ role: 'admin' });
   if (!admin) throw new AppError('Admin account not configured', 500);
-  let wallet = await Wallet.findOne({ userId: admin._id, walletType: 'profit' });
-  if (!wallet) {
-    wallet = await Wallet.create({
-      userId: admin._id,
-      walletType: 'profit',
-      currency: 'USD',
-    });
-  }
+
+  const wallet = await Wallet.findOneAndUpdate(
+    { userId: admin._id, walletType: 'profit' },
+    { 
+      $setOnInsert: { 
+        userId: admin._id, 
+        walletType: 'profit', 
+        currency: 'USD',
+        balances: { available: 0, escrow: 0, tips: 0 }
+      } 
+    },
+    { new: true, upsert: true }
+  );
   return { admin, wallet };
 }
 
