@@ -7,22 +7,28 @@ const { AppError } = require('../utils/errors');
 const { roundUsd } = require('../middleware/feeService');
 
 async function getOrCreateWallet(userId, walletType = 'standard') {
-  const wallet = await Wallet.findOneAndUpdate(
-    { userId: userId }, // Filter
-    { 
-      $setOnInsert: { 
-        userId: userId, 
-        walletType: walletType, 
+  try {
+    // Try to find it first
+    let wallet = await Wallet.findOne({ userId, walletType });
+    
+    if (!wallet) {
+      // Use create with a try/catch to handle concurrent race conditions
+      wallet = await Wallet.create({ 
+        userId, 
+        walletType, 
         currency: 'USD',
-        balances: { available: 0, escrow: 0, tips: 0 } // Initialize default balances
-      } 
-    },
-    { 
-      new: true,    // Return the updated document
-      upsert: true  // Create if it doesn't exist
+        balances: { available: 0, escrow: 0, tips: 0 } 
+      });
     }
-  );
-  return wallet;
+    return wallet;
+  } catch (err) {
+    if (err.code === 11000) {
+      // If a duplicate key error happens, someone else just created it.
+      // Just find it now.
+      return await Wallet.findOne({ userId, walletType });
+    }
+    throw err;
+  }
 }
 
 async function getAdminProfitWallet() {
