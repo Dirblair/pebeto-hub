@@ -23,15 +23,17 @@ router.post('/deposit', async (req, res, next) => {
     const { method, intentUsd, campaignId, phoneNumber, idempotencyKey } = req.body;
     const businessUser = req.user;
 
+    // IF METHOD IS MPESA: Only trigger the API, do NOT deduct from internal balance
     if (method === 'mpesa') {
       const result = await initiateMpesaDeposit({ businessUser, amount: intentUsd, phoneNumber, campaignId });
       return res.status(200).json({ status: 'pending', ...result });
-    }
+    } 
     
-    // Internal Wallet Deposit
+    // IF METHOD IS WALLET: This is where you process the internal deduction
     if (businessUser.role !== 'business') throw new AppError('Only businesses can fund escrow', 403);
     const result = await processDeposit({ businessUser, intentUsd: Number(intentUsd), campaignId, idempotencyKey });
     return res.status(200).json({ status: 'completed', ...result });
+
   } catch (error) {
     next(error);
   }
