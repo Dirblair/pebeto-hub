@@ -89,6 +89,43 @@ async function runInTransaction(fn) {
     session.endSession();
   }
 }
+// ... existing code ...
+
+async function processTip(senderId, recipientUsername, amount) {
+  return await runInTransaction(async (session) => {
+    // 1. Find sender and recipient
+    const senderWallet = await getOrCreateWallet(senderId);
+    const recipient = await User.findOne({ username: recipientUsername }).session(session);
+    
+    if (!recipient) throw new AppError('Creator not found', 404);
+    if (recipient._id.toString() === senderId.toString()) {
+      throw new AppError('You cannot tip yourself', 400);
+    }
+
+    const recipientWallet = await getOrCreateWallet(recipient._id);
+
+    // 2. Debit sender using your existing logic
+    await debitWithdrawable(senderWallet._id, amount, session);
+
+    // 3. Credit recipient's tips balance
+    await creditWallet(recipientWallet._id, 'tips', amount, session);
+
+    // 4. Record transaction history
+    await recordTransaction({
+      from: senderId,
+      to: recipient._id,
+      amount,
+      type: 'tip',
+      status: 'completed'
+    }, session);
+
+    // Return only masked info for the receipt
+    return {
+      username: recipient.username,
+      uniqueCode: recipient.uniqueCode 
+    };
+  });
+}
 
 module.exports = {
   getOrCreateWallet,
@@ -98,4 +135,5 @@ module.exports = {
   debitWallet,
   debitWithdrawable,
   runInTransaction,
+  processTip // <--- ADD THIS HERE
 };
