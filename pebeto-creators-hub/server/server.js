@@ -17,20 +17,20 @@ const adminRoutes = require('./routes/admin.routes');
 const campaignRoutes = require('./routes/campaign.routes');
 
 async function bootstrap() {
-  console.log("DEBUG: Starting bootstrap..."); // Add this line
-  await connectDB(env.mongoUri);
-  console.log("DEBUG: Database connected successfully."); // Add this line
+  console.log("DEBUG: Starting minimal bootstrap...");
 
   const app = express();
   const server = http.createServer(app);
 
-  const io = new Server(server, {
-    cors: {
-      origin: env.clientOrigin === '*' ? true : env.clientOrigin,
-      methods: ['GET', 'POST'],
-      credentials: true,
-    },
+  app.get('/api/health', (req, res) => {
+    res.json({ status: "alive" });
   });
+
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Minimal server running on port ${PORT}`);
+  });
+}
   initSockets(io);
   app.set('io', io);
 
