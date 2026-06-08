@@ -81,7 +81,7 @@ async function bootstrap() {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`Pebeto Creator's Hub running on port ${PORT}`);
   });
-} // This bracket closes the async function bootstrap()
+}
 
 // This call is now correctly outside the function
 bootstrap().catch((err) => {
