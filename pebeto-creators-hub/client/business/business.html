@@ -109,7 +109,7 @@
   <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
     <h3 class="text-lg font-bold text-white mb-4">Fund Wallet</h3>
     
-    <label class="block text-xs text-slate-400 mb-1">Funding Method</label>
+<label class="block text-xs text-slate-400 mb-1">Funding Method</label>
     <select id="fund-method" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white">
       <option value="mpesa">M-Pesa</option>
       <option value="bank">Bank Transfer</option>
@@ -118,6 +118,10 @@
 
     <label class="block text-xs text-slate-400 mb-1">Source (Phone/Account/Email)</label>
     <input type="text" id="fund-source" placeholder="Enter phone or account details" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
+
+    <label class="block text-xs text-slate-400 mb-1">Amount to Deposit (USD)</label>
+    <input type="number" id="fund-amount" placeholder="Enter amount" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
+    
     <p id="total-charge" class="text-xs text-brand-sky mb-4 font-semibold italic">Total to pay: $0.00 (Incl. 10% fee)</p>
 
     <div class="flex gap-2">
@@ -478,17 +482,30 @@
 
   // Handle Wallet Funding
   document.getElementById('btn-confirm-fund').addEventListener('click', async () => {
-    const amount = document.getElementById('fund-amount').value;
+    // Collect the values in the exact order you arranged them
     const method = document.getElementById('fund-method').value;
+    const source = document.getElementById('fund-source').value;
+    const amount = document.getElementById('fund-amount').value;
+
+    // Simple check to make sure they filled everything out
+    if (!source || !amount) {
+      return alert('Please fill in both the source and the amount.');
+    }
+
     try {
       await apiFetch('/api/wallet/deposit', {
         method: 'POST',
-        body: JSON.stringify({ intentUsd: amount, method, depositType: 'direct' })
+        body: JSON.stringify({ 
+            intentUsd: amount, 
+            method: method, 
+            source: source, // This sends the phone/account info to your backend
+            depositType: 'direct' 
+        })
       });
-      showAlert('Deposit initiated via ' + method, 'success');
+      alert('Deposit request submitted!');
       document.getElementById('modal-fund').classList.add('hidden');
       loadBalance();
-    } catch (err) { showAlert(err.message); }
+    } catch (err) { alert(err.message); }
   });
 
   // Handle Withdrawal
