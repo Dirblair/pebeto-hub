@@ -23,14 +23,19 @@ router.post('/deposit', async (req, res, next) => {
     const { method, intentUsd, campaignId, phoneNumber, idempotencyKey } = req.body;
     const businessUser = req.user;
 
+    // 1. M-Pesa Flow (External)
     if (method === 'mpesa') {
       const result = await initiateMpesaDeposit({ businessUser, amount: intentUsd, phoneNumber, campaignId });
+      // The return here prevents the code from proceeding to the Wallet balance check
       return res.status(200).json({ status: 'pending', ...result });
-    }
+    } 
     
+    // 2. Wallet Flow (Internal)
+    // This code block MUST NOT run if method === 'mpesa'
     if (businessUser.role !== 'business') throw new AppError('Only businesses can fund escrow', 403);
     const result = await processDeposit({ businessUser, intentUsd: Number(intentUsd), campaignId, idempotencyKey });
     return res.status(200).json({ status: 'completed', ...result });
+
   } catch (error) {
     next(error);
   }
