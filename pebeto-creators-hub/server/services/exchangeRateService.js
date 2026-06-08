@@ -30,6 +30,7 @@ async function getRatesMap() {
   let rates;
   try {
     rates = await fetchRatesFromApi();
+    console.log("API Rates received:", Object.keys(rates));
   } catch (err) {
     if (cached && cached.rates) return cached.rates;
     rates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
