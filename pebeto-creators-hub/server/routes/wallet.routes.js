@@ -16,43 +16,31 @@ const router = express.Router();
 const publicRouter = express.Router(); // Defined here
 
 // 1. PROTECTED ROUTES (Require Auth)
-router.use(authenticate, attachFeeService);
+router.use(authenticate);
 
 router.post('/deposit', async (req, res, next) => {
-  try {
-    const { method, intentUsd, campaignId, phoneNumber, idempotencyKey } = req.body;
-    const businessUser = req.user;
+  const { method, intentUsd, campaignId, phoneNumber, idempotencyKey } = req.body;
+  const businessUser = req.user;
 
-    // SCENARIO 1: M-PESA (Adding external funds)
+  console.log("--- DEPOSIT REQUEST RECEIVED ---");
+  console.log("Method:", method);
+
+  try {
     if (method === 'mpesa') {
-      // We ONLY call this. We do NOT call processDeposit.
-      const result = await initiateMpesaDeposit({ 
-        businessUser, 
-        amount: intentUsd, 
-        phoneNumber, 
-        campaignId 
-      });
-      // The 'return' here is CRITICAL. It stops the function from running anything else.
+      console.log("Routing to M-Pesa Service...");
+      const result = await initiateMpesaDeposit({ businessUser, amount: intentUsd, phoneNumber, campaignId });
+      
+      console.log("M-Pesa Service returned successfully.");
       return res.status(200).json({ status: 'pending', ...result });
     } 
-    
-    // SCENARIO 2: WALLET (Internal funds transfer)
-    // This code block is now safely isolated. 
-    // It will ONLY run if method is NOT 'mpesa'.
-    if (businessUser.role !== 'business') {
-      throw new AppError('Only businesses can fund escrow', 403);
-    }
-    
-    const result = await processDeposit({ 
-      businessUser, 
-      intentUsd: Number(intentUsd), 
-      campaignId, 
-      idempotencyKey 
-    });
-    
+
+    // If we reach this line, the code is NOT using M-Pesa
+    console.log("Routing to Wallet Service...");
+    const result = await processDeposit({ businessUser, intentUsd: Number(intentUsd), campaignId, idempotencyKey });
     return res.status(200).json({ status: 'completed', ...result });
 
   } catch (error) {
+    console.error("CRITICAL ERROR IN /deposit:", error.message);
     next(error);
   }
 });
