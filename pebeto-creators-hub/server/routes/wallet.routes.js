@@ -119,17 +119,7 @@ router.post('/deposit', async (req, res, next) => {
   }
 });
 
-router.post('/tip', async (req, res, next) => {
-  try {
-    const grossUsd = Number(req.body.amountUsd);
-    const toCreatorId = req.body.creatorId;
-    if (!toCreatorId) throw new AppError('creatorId is required', 400);
-    const result = await processTip({ fromUser: req.user, toCreatorId, grossUsd });
-    res.json({ success: true, ...result });
-  } catch (err) {
-    next(err);
-  }
-});
+router.post('/tip', sendTip);
 
 router.get('/transactions', async (req, res, next) => {
   try {
