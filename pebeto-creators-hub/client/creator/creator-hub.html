@@ -1,29 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Creator Studio | Pebeto</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-        .dashboard-container { max-width: 1000px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creator Studio — Pebeto Creator's Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            creator: {
+              emerald: '#059669',
+              deep: '#064e3b',
+              slate: '#1e293b',
+              mint: '#34d399',
+              accent: '#10b981',
+            },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .stat-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .stat-card:hover { transform: translateY(-2px); }
+  </style>
 </head>
-<body>
-    <div class="dashboard-container">
-        <h1>Welcome to your Studio</h1>
-        
-        <div class="stats-grid">
-            <div class="card"><h3>Total Earnings</h3><p>KES 12,500</p></div>
-            <div class="card"><h3>Active Bids</h3><p>3</p></div>
-            <div class="card"><h3>Fan Tips</h3><p>24</p></div>
-        </div>
+<body class="min-h-screen bg-gradient-to-b from-slate-950 via-creator-deep to-creator-slate font-sans text-slate-100">
+  <div id="view-only-banner" class="hidden border-b border-amber-500/40 bg-amber-950/60 px-4 py-2 text-center text-sm text-amber-200">
+    View-only mode — you cannot make changes.
+  </div>
 
-        <div class="card">
-            <h2>Manage Your Content</h2>
-            <p>Upload videos, check your campaign status, and view your private analytics here.</p>
+  <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+    <!-- Header -->
+    <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div id="creator-avatar" class="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-creator-mint/60 bg-creator-slate text-lg font-bold text-creator-mint shadow-lg shadow-emerald-900/30">C</div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-creator-mint">Creator Studio</p>
+          <h1 id="creator-name" class="text-xl font-bold text-white">Dashboard</h1>
+          <p id="creator-email" class="text-sm text-slate-400"></p>
         </div>
-    </div>
+      </div>
+      <nav class="flex flex-wrap items-center gap-2">
+        <a href="/community.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-creator-mint hover:text-creator-mint">Home</a>
+        <a href="/creator.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-creator-mint hover:text-creator-mint">Dashboard</a>
+        <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
+      </nav>
+    </header>
+
+    <div id="global-alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
+
+    <!-- Identity Badge -->
+    <section class="mb-6 rounded-2xl border border-creator-emerald/40 bg-gradient-to-r from-emerald-950/50 to-creator-slate/80 p-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-xs font-medium text-slate-300">Your unique code</p>
+          <p id="unique-code" class="font-mono text-xl font-bold tracking-wider text-creator-mint">—</p>
+        </div>
+        <div class="rounded-xl bg-slate-900/60 px-4 py-2 text-center">
+          <p class="text-xs text-slate-500">Stage name</p>
+          <p id="stage-name" class="font-semibold text-white">—</p>
+        </div>
+        <div class="rounded-xl bg-slate-900/60 px-4 py-2 text-center">
+          <p class="text-xs text-slate-500">Role</p>
+          <p class="font-semibold text-creator-mint">Creator</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <section class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Total Earnings -->
+      <div class="stat-card rounded-2xl border border-creator-mint/30 bg-gradient-to-br from-creator-deep/80 to-creator-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Total Earnings</p>
+        <p id="total-earnings" class="mt-2 text-3xl font-bold text-creator-mint">—</p>
+        <p class="mt-1 text-xs text-slate-500">Lifetime earnings (USD)</p>
+      </div>
+
+      <!-- Active Bids -->
+      <div class="stat-card rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Active Bids</p>
+        <p id="active-bids" class="mt-2 text-3xl font-bold text-white">—</p>
+        <p class="mt-1 text-xs text-slate-500">Pending brand decisions</p>
+      </div>
+
+      <!-- Completed Campaigns -->
+      <div class="stat-card rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Completed</p>
+        <p id="completed-campaigns" class="mt-2 text-3xl font-bold text-white">—</p>
+        <p class="mt-1 text-xs text-slate-500">Successfully paid campaigns</p>
+      </div>
+
+      <!-- Fan Tips -->
+      <div class="stat-card rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/50 to-creator-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Fan Tips</p>
+        <p id="fan-tips" class="mt-2 text-3xl font-bold text-amber-400">—</p>
+        <p class="mt-1 text-xs text-slate-500">Total tips received</p>
+      </div>
+    </section>
+
+    <!-- Earnings Chart -->
+    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 class="text-lg font-semibold text-white">Earnings Overview</h2>
+        <div class="flex gap-2">
+          <button type="button" data-period="30" class="period-btn rounded-lg bg-creator-emerald/25 px-3 py-1.5 text-xs font-semibold text-emerald-100 ring-1 ring-creator-mint">30 Days</button>
+          <button type="button" data-period="90" class="period-btn rounded-lg bg-slate-700 px-3 py-1.5 text-xs text-slate-300">90 Days</button>
+          <button type="button" data-period="365" class="period-btn rounded-lg bg-slate-700 px-3 py-1.5 text-xs text-slate-300">Year</button>
+        </div>
+      </div>
+      <canvas id="earnings-chart" height="250"></canvas>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
+      <h2 class="text-lg font-semibold text-white mb-4">Recent Activity</h2>
+      <div id="activity-list" class="space-y-3">
+        <p class="text-center text-slate-500 py-8">Loading activity...</p>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="grid gap-4 sm:grid-cols-2">
+      <a href="/creator.html" class="group rounded-2xl border border-creator-mint/30 bg-gradient-to-br from-creator-deep/60 to-creator-slate/80 p-6 text-center hover:border-creator-mint transition-all">
+        <p class="text-3xl mb-2">🎨</p>
+        <h3 class="font-semibold text-white group-hover:text-creator-mint">Go to Dashboard</h3>
+        <p class="mt-1 text-xs text-slate-500">View campaigns, place bids, withdraw funds</p>
+      </a>
+      <a href="/community.html" class="group rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate/80 p-6 text-center hover:border-creator-mint transition-all">
+        <p class="text-3xl mb-2">🌍</p>
+        <h3 class="font-semibold text-white group-hover:text-creator-mint">Community Hub</h3>
+        <p class="mt-1 text-xs text-slate-500">Connect with brands and other creators</p>
+      </a>
+    </section>
+  </div>
+
+  <script src="/js/pebeto-api.js"></script>
+  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script>
+    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi || {};
+
+    // Safety check
+    if (!requireRole || !apiFetch) {
+      console.error('PebetoApi not loaded properly');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const viewOnly = params.get('viewOnly') === '1';
+    const viewUserId = params.get('userId') || '';
+
+    const session = requireRole ? requireRole(['creator', 'admin'], '/signup.html?login=1') : null;
+    if (!session) throw new Error('unauthorized or API not loaded');
+
+    let earningsChart = null;
+    let currentPeriod = 30;
+    let rates = { USD: 1 };
+
+    function querySuffix() {
+      const q = new URLSearchParams();
+      if (viewUserId && session.user.role === 'admin') q.set('userId', viewUserId);
+      if (viewOnly) q.set('viewOnly', '1');
+      const s = q.toString();
+      return s ? '?' + s : '';
+    }
+
+    function showAlert(msg, type) {
+      const el = document.getElementById('global-alert');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      else el.classList.add('border-rose-500/50', 'bg-rose-500/10', 'text-rose-200');
+      setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    async function loadRates() {
+      try {
+        const data = await apiFetch('/api/wallet/exchange-rates');
+        rates = data.rates || { USD: 1 };
+      } catch (e) {
+        console.warn('Failed to load rates:', e);
+      }
+    }
+
+    async function loadStudioStats() {
+      try {
+        const data = await apiFetch('/api/creator/stats' + querySuffix());
+        
+        const totalEarningsEl = document.getElementById('total-earnings');
+        const activeBidsEl = document.getElementById('active-bids');
+        const completedEl = document.getElementById('completed-campaigns');
+        const fanTipsEl = document.getElementById('fan-tips');
+        
+        if (totalEarningsEl) totalEarningsEl.textContent = formatUsd(data.totalEarnings || 0);
+        if (activeBidsEl) activeBidsEl.textContent = data.activeBids || 0;
+        if (completedEl) completedEl.textContent = data.completedCampaigns || 0;
+        if (fanTipsEl) fanTipsEl.textContent = formatUsd(data.fanTips || 0);
+        
+        return data;
+      } catch (e) {
+        console.error('Load stats failed:', e);
+        showAlert('Failed to load statistics', 'error');
+        return null;
+      }
+    }
+
+    async function loadEarningsData(days = 30) {
+      try {
+        const data = await apiFetch('/api/creator/earnings-history' + querySuffix() + `&days=${days}`);
+        return data.history || [];
+      } catch (e) {
+        console.error('Load earnings history failed:', e);
+        return [];
+      }
+    }
+
+    async function loadRecentActivity() {
+      try {
+        const data = await apiFetch('/api/creator/activity' + querySuffix() + '&limit=10');
+        return data.activities || [];
+      } catch (e) {
+        console.error('Load activity failed:', e);
+        return [];
+      }
+    }
+
+    function renderActivityList(activities) {
+      const container = document.getElementById('activity-list');
+      if (!container) return;
+      
+      if (!activities.length) {
+        container.innerHTML = '<p class="text-center text-slate-500 py-8">No recent activity found.</p>';
+        return;
+      }
+      
+      container.innerHTML = activities.map(activity => {
+        let icon = '📋';
+        let colorClass = 'text-slate-300';
+        
+        switch (activity.type) {
+          case 'bid_placed':
+            icon = '💰';
+            colorClass = 'text-creator-mint';
+            break;
+          case 'bid_accepted':
+            icon = '✅';
+            colorClass = 'text-emerald-400';
+            break;
+          case 'work_submitted':
+            icon = '📤';
+            colorClass = 'text-blue-400';
+            break;
+          case 'payment_received':
+            icon = '💵';
+            colorClass = 'text-amber-400';
+            break;
+          case 'withdrawal':
+            icon = '🏦';
+            colorClass = 'text-slate-400';
+            break;
+          default:
+            icon = '📌';
+        }
+        
+        return `
+          <div class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/40 p-3">
+            <div class="text-2xl">${icon}</div>
+            <div class="flex-1">
+              <p class="text-sm text-slate-200">${escapeHtml(activity.message)}</p>
+              <p class="text-xs text-slate-500">${formatDate ? formatDate(activity.createdAt) : new Date(activity.createdAt).toLocaleString()}</p>
+            </div>
+            ${activity.amount ? `<div class="text-sm font-semibold ${colorClass}">${formatUsd(activity.amount)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function initEarningsChart(days = 30) {
+      const ctx = document.getElementById('earnings-chart');
+      if (!ctx) return;
+      
+      const history = await loadEarningsData(days);
+      
+      const labels = history.map(h => {
+        const d = new Date(h.date);
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      });
+      const values = history.map(h => h.amount || 0);
+      
+      if (earningsChart) earningsChart.destroy();
+      
+      earningsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Earnings (USD)',
+            data: values,
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(52, 211, 153, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: '#34d399',
+            pointBorderColor: '#064e3b',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1' } },
+            tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(2)}` } }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true, 
+              ticks: { color: '#94a3b8', callback: (v) => '$' + v },
+              grid: { color: '#334155' }
+            },
+            x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function initHeader() {
+      const user = getUser ? getUser() : null;
+      const emailEl = document.getElementById('creator-email');
+      const nameEl = document.getElementById('creator-name');
+      const codeEl = document.getElementById('unique-code');
+      const stageNameEl = document.getElementById('stage-name');
+      const avatarEl = document.getElementById('creator-avatar');
+      
+      if (emailEl) emailEl.textContent = user?.email || '';
+      if (codeEl) codeEl.textContent = user?.uniqueCode || '—';
+      const name = user?.profile?.stageName || user?.uniqueCode || 'Creator';
+      if (nameEl) nameEl.textContent = name;
+      if (stageNameEl) stageNameEl.textContent = user?.profile?.stageName || '—';
+      const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+      if (avatarEl) avatarEl.textContent = initials;
+    }
+
+    function applyViewOnly() {
+      if (!viewOnly) return;
+      const banner = document.getElementById('view-only-banner');
+      if (banner) banner.classList.remove('hidden');
+    }
+
+    function initSocket() {
+      if (typeof io === 'undefined' || !getToken) {
+        console.warn('Socket.io or getToken not available');
+        return;
+      }
+      try {
+        const socket = io({ auth: { token: getToken() } });
+        socket.on('connect', () => socket.emit('status:subscribe'));
+        socket.on('platform:activity', () => {
+          loadStudioStats();
+          loadRecentActivity().then(renderActivityList);
+          initEarningsChart(currentPeriod);
+        });
+      } catch (e) {
+        console.warn('Socket initialization failed:', e);
+      }
+    }
+
+    // Event listeners
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (clearSession) clearSession();
+        window.location.href = '/signup.html';
+      });
+    }
+
+    document.querySelectorAll('.period-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const period = parseInt(btn.dataset.period);
+        currentPeriod = period;
+        
+        // Update active button styling
+        document.querySelectorAll('.period-btn').forEach(b => {
+          const isActive = b.dataset.period === String(period);
+          b.classList.toggle('bg-creator-emerald/25', isActive);
+          b.classList.toggle('text-emerald-100', isActive);
+          b.classList.toggle('ring-1', isActive);
+          b.classList.toggle('ring-creator-mint', isActive);
+          b.classList.toggle('bg-slate-700', !isActive);
+          b.classList.toggle('text-slate-300', !isActive);
+        });
+        
+        await initEarningsChart(period);
+      });
+    });
+
+    (async function init() {
+      if (session.user.role === 'admin' && !viewUserId) {
+        showAlert('Admin: viewing creator studio in read-only mode.');
+      }
+      initHeader();
+      applyViewOnly();
+      
+      try {
+        await loadRates();
+        await Promise.all([
+          loadStudioStats(),
+          initEarningsChart(30),
+          loadRecentActivity().then(renderActivityList)
+        ]);
+        initSocket();
+      } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+          if (clearSession) clearSession();
+          window.location.href = '/signup.html?login=1';
+          return;
+        }
+        showAlert(err.message || 'Failed to load studio');
+        console.error('Init error:', err);
+      }
+    })();
+  </script>
 </body>
 </html>
