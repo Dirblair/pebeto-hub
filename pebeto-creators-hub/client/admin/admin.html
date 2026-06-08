@@ -1,563 +1,401 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Pebeto Creator's Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            admin: {
-              slate: '#475569',
-              gold: '#d97706',
-              dark: '#1e293b',
-              panel: '#334155',
-            },
-          },
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+<script src="/js/pebeto-api.js"></script>
+<script>
+  const { requireRole, apiFetch, formatUsd, formatDate, displayLabel, dashboardUrl, clearSession, getUser } =
+    window.PebetoApi || {};
+
+  // Fallbacks in case API methods are missing
+  const safeDisplayLabel = (u) => {
+    if (displayLabel) return displayLabel(u);
+    return u.profile?.displayName || u.profile?.companyName || u.uniqueCode || u.email || 'User';
+  };
+  const safeDashboardUrl = (u) => {
+    if (dashboardUrl) return dashboardUrl(u, true);
+    return u.role === 'creator' ? `/creator-dashboard.html?code=${u.uniqueCode}` : `/brand-dashboard.html?id=${u._id}`;
+  };
+
+  const session = requireRole ? requireRole(['admin'], '/signup.html?login=1') : (() => { throw new Error('API not loaded'); })();
+  if (!session) throw new Error('unauthorized');
+
+  let metricsCache = null;
+  let regCache = null;
+  let chartReg = null;
+  let chartFees = null;
+  let payoutMethod = 'mpesa';
+  let searchTimer = null;
+  let isSubmitting = false;
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('global-alert');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+    if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+    else el.classList.add('border-rose-500/50', 'bg-rose-500/10', 'text-rose-200');
+    setTimeout(() => el.classList.add('hidden'), 5000);
+  }
+
+  function openModal(title, html) {
+    const titleEl = document.getElementById('modal-title');
+    const bodyEl = document.getElementById('modal-body');
+    if (!titleEl || !bodyEl) return;
+    titleEl.textContent = title;
+    bodyEl.innerHTML = html;
+    const modal = document.getElementById('modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function initHeader() {
+    const user = getUser ? getUser() : null;
+    const emailEl = document.getElementById('admin-email');
+    const avatarEl = document.getElementById('admin-avatar');
+    if (emailEl) emailEl.textContent = user?.email || '';
+    const name = user?.profile?.displayName || user?.email || 'Admin';
+    const initials = name
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+    if (avatarEl) avatarEl.textContent = initials;
+    if (user?.profile?.avatarUrl && avatarEl) {
+      const img = document.createElement('img');
+      img.src = user.profile.avatarUrl;
+      img.alt = 'Admin';
+      img.className = 'h-full w-full rounded-2xl object-cover';
+      avatarEl.textContent = '';
+      avatarEl.appendChild(img);
+    }
+  }
+
+  async function loadMetrics() {
+    const data = await apiFetch('/api/admin/metrics');
+    metricsCache = data;
+    const profitEl = document.getElementById('metric-profit');
+    const escrowEl = document.getElementById('metric-escrow');
+    const withdrawnEl = document.getElementById('metric-withdrawn');
+    if (profitEl) profitEl.textContent = formatUsd(data.profitWallet);
+    if (escrowEl) escrowEl.textContent = formatUsd(data.totalEscrow);
+    if (withdrawnEl) withdrawnEl.textContent = formatUsd(data.totalAdminWithdrawals);
+    return data;
+  }
+
+  async function loadRegistrations() {
+    regCache = await apiFetch('/api/admin/registrations');
+    const totalEl = document.getElementById('reg-total');
+    if (totalEl) totalEl.textContent = String(regCache.total);
+    updateRegFilter('all');
+    return regCache;
+  }
+
+  function updateRegFilter(filter) {
+    if (!regCache) return;
+    let value = regCache.total;
+    let label = 'All users';
+    if (filter === 'creator') {
+      value = regCache.creators;
+      label = 'Creators';
+    } else if (filter === 'business') {
+      value = regCache.businesses;
+      label = 'Brands / advertisers';
+    }
+    const filteredEl = document.getElementById('reg-filtered');
+    if (filteredEl) filteredEl.textContent = label + ': ' + value;
+    document.querySelectorAll('.reg-filter').forEach((btn) => {
+      const active = btn.dataset.regFilter === filter;
+      btn.classList.toggle('bg-admin-gold/20', active);
+      btn.classList.toggle('text-amber-200', active);
+      btn.classList.toggle('ring-1', active);
+      btn.classList.toggle('ring-admin-gold/50', active);
+      btn.classList.toggle('bg-slate-700/80', !active);
+      btn.classList.toggle('text-slate-300', !active);
+    });
+  }
+
+  function renderSearchResults(results) {
+    const ul = document.getElementById('search-results');
+    if (!ul) return;
+    if (!results.length) {
+      ul.innerHTML = '<li class="text-sm text-slate-500">No matches.</li>';
+      return;
+    }
+    ul.innerHTML = results
+      .map((u) => {
+        const label = safeDisplayLabel(u);
+        const meta =
+          u.role === 'creator'
+            ? (u.uniqueCode || '—') + (u.profile?.niche ? ' · ' + u.profile.niche : '')
+            : u.profile?.companyName || u.email;
+        const href = safeDashboardUrl(u);
+        return (
+          '<li class="flex items-center justify-between gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2">' +
+          '<div><p class="font-medium text-slate-200">' +
+          escapeHtml(label) +
+          '</p><p class="text-xs text-slate-500">' +
+          escapeHtml(u.role) +
+          ' · ' +
+          escapeHtml(meta) +
+          '</p></div>' +
+          '<a href="' +
+          href +
+          '" class="shrink-0 rounded-lg bg-admin-gold/20 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-admin-gold/35">View only</a>' +
+          '</li>'
+        );
+      })
+      .join('');
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+
+  async function runSearch(q) {
+    if (!q.trim()) {
+      const resultsEl = document.getElementById('search-results');
+      if (resultsEl) resultsEl.innerHTML = '';
+      return;
+    }
+    const data = await apiFetch('/api/admin/search?q=' + encodeURIComponent(q.trim()));
+    renderSearchResults(data.results || []);
+  }
+
+  function feeBreakdownHtml(fb) {
+    if (!fb || !fb.percentages) return '<p class="text-slate-500">No fee data yet.</p>';
+    const p = fb.percentages || {};
+    return (
+      '<div class="mb-4 grid grid-cols-3 gap-2 text-center">' +
+      '<div class="rounded-lg bg-amber-950/50 p-3"><p class="text-xs text-slate-400">Deposits (10%)</p><p class="font-bold text-amber-400">' +
+      formatUsd(fb.deposit || 0) +
+      '</p><p class="text-xs text-slate-500">' +
+      (p.deposit || 10) +
+      '%</p></div>' +
+      '<div class="rounded-lg bg-slate-800 p-3"><p class="text-xs text-slate-400">Tips (5%)</p><p class="font-bold text-white">' +
+      formatUsd(fb.tip || 0) +
+      '</p><p class="text-xs text-slate-500">' +
+      (p.tip || 5) +
+      '%</p></div>' +
+      '<div class="rounded-lg bg-slate-800 p-3"><p class="text-xs text-slate-400">Withdrawals (3%)</p><p class="font-bold text-admin-gold">' +
+      formatUsd(fb.withdrawal || 0) +
+      '</p><p class="text-xs text-slate-500">' +
+      (p.withdrawal || 3) +
+      '%</p></div>' +
+      '</div>'
+    );
+  }
+
+  async function showEscrowHistory() {
+    openModal('Escrow funding history', '<p class="text-slate-500">Loading…</p>');
+    const data = await apiFetch('/api/admin/escrow-history');
+    const rows = (data.history || [])
+      .map((tx) => {
+        const u = tx.fromUserId || {};
+        const who = u.profile?.companyName || u.uniqueCode || u.email || 'Unknown';
+        return (
+          '<tr class="border-b border-slate-800">' +
+          '<td class="py-2 pr-2">' + escapeHtml(who) + '</td>' +
+          '<td class="py-2 pr-2">' + formatUsd(tx.netAmount) + '</td>' +
+          '<td class="py-2 text-slate-500">' + formatDate(tx.createdAt) + '</td>' +
+          '</tr>'
+        );
+      })
+      .join('');
+    document.getElementById('modal-body').innerHTML =
+      '<table class="w-full text-left text-sm"><thead><tr class="text-slate-500"><th class="pb-2">Depositor</th><th>Amount</th><th>When</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="3" class="py-4 text-slate-500">No deposits yet.</td></tr>') +
+      '</tbody></table>';
+  }
+
+  async function showWithdrawalHistory() {
+    openModal('Profit wallet withdrawals', '<p class="text-slate-500">Loading…</p>');
+    const [hist, metrics] = await Promise.all([
+      apiFetch('/api/admin/profit-withdrawal-history'),
+      metricsCache ? Promise.resolve(metricsCache) : loadMetrics(),
+    ]);
+    let html = feeBreakdownHtml(metrics.feeBreakdown);
+    const rows = (hist.history || [])
+      .map(
+        (tx) =>
+          '<tr class="border-b border-slate-800"><td class="py-2">' +
+          formatUsd(tx.grossAmount) +
+          '</td><td class="py-2 text-slate-500">' +
+          formatDate(tx.createdAt) +
+          '</td><td class="py-2 text-slate-500">' +
+          escapeHtml(tx.metadata?.payoutMethod || '—') +
+          '</td></tr>'
+      )
+      .join('');
+    html +=
+      '<table class="w-full text-left"><thead><tr class="text-slate-500"><th>Amount</th><th>When</th><th>Method</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="3" class="py-4 text-slate-500">No withdrawals yet.</td></tr>') +
+      '</tbody></table>';
+    document.getElementById('modal-body').innerHTML = html;
+  }
+
+  function initCharts() {
+    if (!regCache || !metricsCache) return;
+    const regCtx = document.getElementById('chart-registrations');
+    const feeCtx = document.getElementById('chart-fees');
+    if (!regCtx || !feeCtx) return;
+    if (chartReg) chartReg.destroy();
+    if (chartFees) chartFees.destroy();
+
+    chartReg = new Chart(regCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Creators', 'Brands'],
+        datasets: [{
+          label: 'Users',
+          data: [regCache.creators, regCache.businesses],
+          backgroundColor: ['#7c3aed', '#6366f1'],
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+          x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
         },
       },
-    };
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    .metric-card { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
-    .metric-card:hover { transform: translateY(-2px); }
-    .modal-backdrop { background: rgba(15, 23, 42, 0.75); }
-  </style>
-</head>
-<body class="min-h-screen bg-gradient-to-b from-slate-900 via-admin-dark to-slate-950 font-sans text-slate-100">
-  <div id="app" class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
-    <!-- Top bar -->
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <div
-          id="admin-avatar"
-          class="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-admin-gold bg-admin-panel text-lg font-bold text-admin-gold shadow-lg shadow-amber-900/20"
-        >
-          A
-        </div>
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-admin-gold">Administrator</p>
-          <h1 class="text-xl font-bold text-white">Admin</h1>
-          <p id="admin-email" class="text-sm text-slate-400"></p>
-        </div>
-      </div>
-      <nav class="flex flex-wrap items-center gap-2">
-        <a
-          href="/"
-          class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-admin-gold hover:text-admin-gold"
-        >
-          Home
-        </a>
-        <button
-          type="button"
-          id="btn-logout"
-          class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300"
-        >
-          Sign out
-        </button>
-      </nav>
-    </div>
-
-    <div id="global-alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
-
-    <!-- Metric row -->
-    <section class="mb-8 grid gap-4 sm:grid-cols-3">
-      <button type="button" id="card-profit" class="metric-card rounded-2xl border border-amber-700/40 bg-gradient-to-br from-amber-950/80 to-admin-panel p-5 text-left shadow-lg">
-        <p class="text-sm font-medium text-amber-200/90">My Profit Wallet</p>
-        <p id="metric-profit" class="mt-2 text-3xl font-bold text-amber-400">—</p>
-        <p class="mt-2 text-xs text-slate-400">Click to withdraw funds</p>
-      </button>
-      <button type="button" id="card-escrow" class="metric-card rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-admin-panel p-5 text-left shadow-lg">
-        <p class="text-sm font-medium text-slate-300">Total Escrows</p>
-        <p id="metric-escrow" class="mt-2 text-3xl font-bold text-white">—</p>
-        <p class="mt-2 text-xs text-slate-400">Platform-wide · click for history</p>
-      </button>
-      <button type="button" id="card-withdrawn" class="metric-card rounded-2xl border border-admin-gold/30 bg-gradient-to-br from-admin-slate/40 to-admin-panel p-5 text-left shadow-lg">
-        <p class="text-sm font-medium text-slate-300">Total Withdrawal</p>
-        <p id="metric-withdrawn" class="mt-2 text-3xl font-bold text-admin-gold">—</p>
-        <p class="mt-2 text-xs text-slate-400">From profit wallet · click for breakdown</p>
-      </button>
-    </section>
-
-    <!-- Search + registrations -->
-    <section class="mb-8 grid gap-4 lg:grid-cols-3">
-      <div class="lg:col-span-2 rounded-2xl border border-slate-600/60 bg-slate-800/50 p-5 backdrop-blur">
-        <label for="search-input" class="mb-2 block text-sm font-semibold text-slate-200">Search platform</label>
-        <input
-          id="search-input"
-          type="search"
-          placeholder="Unique code, company name, stage name…"
-          class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-admin-gold focus:outline-none focus:ring-2 focus:ring-admin-gold/30"
-        />
-        <p class="mt-2 text-xs text-slate-500">View-only access to creator and brand dashboards.</p>
-        <ul id="search-results" class="mt-4 max-h-64 space-y-2 overflow-y-auto"></ul>
-      </div>
-      <div class="rounded-2xl border border-admin-gold/30 bg-gradient-to-b from-amber-950/30 to-slate-800/50 p-5">
-        <p class="text-sm font-semibold text-admin-gold">Total Registration</p>
-        <p id="reg-total" class="mt-2 text-4xl font-bold text-white">—</p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button type="button" data-reg-filter="all" class="reg-filter rounded-lg bg-admin-gold/20 px-3 py-1.5 text-xs font-semibold text-amber-200 ring-1 ring-admin-gold/50">All</button>
-          <button type="button" data-reg-filter="creator" class="reg-filter rounded-lg bg-slate-700/80 px-3 py-1.5 text-xs font-medium text-slate-300">Creators</button>
-          <button type="button" data-reg-filter="business" class="reg-filter rounded-lg bg-slate-700/80 px-3 py-1.5 text-xs font-medium text-slate-300">Brands</button>
-        </div>
-        <p id="reg-filtered" class="mt-3 text-2xl font-semibold text-slate-200"></p>
-      </div>
-    </section>
-
-    <!-- Complaints -->
-    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
-      <div class="flex items-center justify-between gap-2">
-        <h2 class="text-sm font-semibold text-slate-200">Complaints &amp; messages</h2>
-        <span class="rounded-full bg-slate-700 px-2.5 py-0.5 text-xs text-slate-400" id="complaints-count">0 open</span>
-      </div>
-      <div id="complaints-list" class="mt-4 space-y-3">
-        <p class="rounded-xl border border-dashed border-slate-600 bg-slate-900/40 px-4 py-8 text-center text-sm text-slate-500">
-          No complaints API connected yet. When <code class="text-slate-400">/api/admin/complaints</code> is added, open items will appear here.
-        </p>
-      </div>
-    </section>
-
-    <!-- Demographics -->
-    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
-      <button type="button" id="toggle-demographics" class="flex w-full items-center justify-between text-left">
-        <h2 class="text-sm font-semibold text-slate-200">Platform demographics</h2>
-        <span id="demographics-chevron" class="text-slate-500">▼</span>
-      </button>
-      <div id="demographics-panel" class="mt-4 hidden grid gap-6 md:grid-cols-2">
-        <div class="rounded-xl bg-slate-900/50 p-4">
-          <p class="mb-2 text-xs font-medium text-slate-400">Registrations by role</p>
-          <canvas id="chart-registrations" height="200"></canvas>
-        </div>
-        <div class="rounded-xl bg-slate-900/50 p-4">
-          <p class="mb-2 text-xs font-medium text-slate-400">Profit earned by fee source (10% / 5% / 3%)</p>
-          <canvas id="chart-fees" height="200"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- Withdraw -->
-    <section id="withdraw-section" class="rounded-2xl border-2 border-admin-gold/40 bg-gradient-to-b from-amber-950/40 to-slate-900/80 p-6 shadow-xl">
-      <h2 class="text-lg font-bold text-admin-gold">Withdraw Funds</h2>
-      <p class="mt-1 text-sm text-slate-400">No minimum for admin · fees waived · M-Pesa, PayPal, or bank transfer.</p>
-
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button type="button" data-payout="mpesa" class="payout-tab rounded-lg bg-admin-gold/25 px-4 py-2 text-sm font-semibold text-amber-100 ring-1 ring-admin-gold">M-Pesa</button>
-        <button type="button" data-payout="paypal" class="payout-tab rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300">PayPal</button>
-        <button type="button" data-payout="swift" class="payout-tab rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300">Bank transfer</button>
-      </div>
-
-      <form id="withdraw-form" class="mt-5 space-y-4">
-        <div>
-          <label for="withdraw-amount" class="mb-1 block text-sm font-medium">Amount (USD)</label>
-          <input
-            id="withdraw-amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            required
-            class="w-full max-w-xs rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm focus:border-admin-gold focus:outline-none"
-          />
-        </div>
-        <div id="payout-mpesa" class="payout-fields space-y-3">
-          <input type="tel" id="mpesa-phone" placeholder="M-Pesa phone number" class="w-full max-w-md rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm" />
-        </div>
-        <div id="payout-paypal" class="payout-fields hidden space-y-3">
-          <input type="email" id="paypal-email" placeholder="PayPal email" class="w-full max-w-md rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm" />
-        </div>
-        <div id="payout-swift" class="payout-fields hidden grid max-w-lg gap-3 sm:grid-cols-2">
-          <input type="text" id="swift-bank" placeholder="Bank name" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm" />
-          <input type="text" id="swift-holder" placeholder="Account holder name" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm" />
-          <input type="text" id="swift-account" placeholder="Account number" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm" />
-          <input type="text" id="swift-code" placeholder="SWIFT / BIC" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm" />
-        </div>
-        <p id="withdraw-preview" class="text-sm text-slate-400"></p>
-        <button
-          type="submit"
-          id="withdraw-submit"
-          class="rounded-xl bg-admin-gold px-6 py-3 text-sm font-bold text-slate-900 shadow-lg hover:bg-amber-500 disabled:opacity-50"
-        >
-          Withdraw
-        </button>
-      </form>
-    </section>
-  </div>
-
-  <!-- Modal -->
-  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop" aria-hidden="true">
-    <div class="max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-700 px-5 py-4">
-        <h3 id="modal-title" class="font-semibold text-white"></h3>
-        <button type="button" id="modal-close" class="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close">✕</button>
-      </div>
-      <div id="modal-body" class="max-h-[70vh] overflow-y-auto px-5 py-4 text-sm text-slate-300"></div>
-    </div>
-  </div>
-
-  <script src="/js/pebeto-api.js"></script>
-  <script>
-    const { requireRole, apiFetch, formatUsd, formatDate, displayLabel, dashboardUrl, clearSession, getUser } =
-      window.PebetoApi;
-
-    const session = requireRole(['admin'], '/signup.html?login=1');
-    if (!session) throw new Error('unauthorized');
-
-    let metricsCache = null;
-    let regCache = null;
-    let chartReg = null;
-    let chartFees = null;
-    let payoutMethod = 'mpesa';
-    let searchTimer = null;
-
-    function showAlert(msg, type) {
-      const el = document.getElementById('global-alert');
-      el.textContent = msg;
-      el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
-      if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
-      else el.classList.add('border-rose-500/50', 'bg-rose-500/10', 'text-rose-200');
-      setTimeout(() => el.classList.add('hidden'), 5000);
-    }
-
-    function openModal(title, html) {
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-body').innerHTML = html;
-      const modal = document.getElementById('modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeModal() {
-      const modal = document.getElementById('modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function initHeader() {
-      const user = getUser();
-      document.getElementById('admin-email').textContent = user?.email || '';
-      const name = user?.profile?.displayName || user?.email || 'Admin';
-      const initials = name
-        .split(/\s+/)
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase();
-      document.getElementById('admin-avatar').textContent = initials;
-      if (user?.profile?.avatarUrl) {
-        const img = document.createElement('img');
-        img.src = user.profile.avatarUrl;
-        img.alt = 'Admin';
-        img.className = 'h-full w-full rounded-2xl object-cover';
-        const av = document.getElementById('admin-avatar');
-        av.textContent = '';
-        av.appendChild(img);
-      }
-    }
-
-    async function loadMetrics() {
-      const data = await apiFetch('/api/admin/metrics');
-      metricsCache = data;
-      document.getElementById('metric-profit').textContent = formatUsd(data.profitWallet);
-      document.getElementById('metric-escrow').textContent = formatUsd(data.totalEscrow);
-      document.getElementById('metric-withdrawn').textContent = formatUsd(data.totalAdminWithdrawals);
-      return data;
-    }
-
-    async function loadRegistrations() {
-      regCache = await apiFetch('/api/admin/registrations');
-      document.getElementById('reg-total').textContent = String(regCache.total);
-      updateRegFilter('all');
-      return regCache;
-    }
-
-    function updateRegFilter(filter) {
-      if (!regCache) return;
-      let value = regCache.total;
-      let label = 'All users';
-      if (filter === 'creator') {
-        value = regCache.creators;
-        label = 'Creators';
-      } else if (filter === 'business') {
-        value = regCache.businesses;
-        label = 'Brands / advertisers';
-      }
-      document.getElementById('reg-filtered').textContent = label + ': ' + value;
-      document.querySelectorAll('.reg-filter').forEach((btn) => {
-        const active = btn.dataset.regFilter === filter;
-        btn.classList.toggle('bg-admin-gold/20', active);
-        btn.classList.toggle('text-amber-200', active);
-        btn.classList.toggle('ring-1', active);
-        btn.classList.toggle('ring-admin-gold/50', active);
-        btn.classList.toggle('bg-slate-700/80', !active);
-        btn.classList.toggle('text-slate-300', !active);
-      });
-    }
-
-    function renderSearchResults(results) {
-      const ul = document.getElementById('search-results');
-      if (!results.length) {
-        ul.innerHTML = '<li class="text-sm text-slate-500">No matches.</li>';
-        return;
-      }
-      ul.innerHTML = results
-        .map((u) => {
-          const label = displayLabel(u);
-          const meta =
-            u.role === 'creator'
-              ? (u.uniqueCode || '—') + (u.profile?.niche ? ' · ' + u.profile.niche : '')
-              : u.profile?.companyName || u.email;
-          const href = dashboardUrl(u, true);
-          return (
-            '<li class="flex items-center justify-between gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2">' +
-            '<div><p class="font-medium text-slate-200">' +
-            escapeHtml(label) +
-            '</p><p class="text-xs text-slate-500">' +
-            escapeHtml(u.role) +
-            ' · ' +
-            escapeHtml(meta) +
-            '</p></div>' +
-            '<a href="' +
-            href +
-            '" class="shrink-0 rounded-lg bg-admin-gold/20 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-admin-gold/35">View only</a>' +
-            '</li>'
-          );
-        })
-        .join('');
-    }
-
-    function escapeHtml(s) {
-      const d = document.createElement('div');
-      d.textContent = s == null ? '' : String(s);
-      return d.innerHTML;
-    }
-
-    async function runSearch(q) {
-      if (!q.trim()) {
-        document.getElementById('search-results').innerHTML = '';
-        return;
-      }
-      const data = await apiFetch('/api/admin/search?q=' + encodeURIComponent(q.trim()));
-      renderSearchResults(data.results || []);
-    }
-
-    function feeBreakdownHtml(fb) {
-      if (!fb) return '<p class="text-slate-500">No fee data yet.</p>';
-      const p = fb.percentages || {};
-      return (
-        '<div class="mb-4 grid grid-cols-3 gap-2 text-center">' +
-        '<div class="rounded-lg bg-amber-950/50 p-3"><p class="text-xs text-slate-400">Deposits (10%)</p><p class="font-bold text-amber-400">' +
-        formatUsd(fb.deposit) +
-        '</p><p class="text-xs text-slate-500">' +
-        p.deposit +
-        '%</p></div>' +
-        '<div class="rounded-lg bg-slate-800 p-3"><p class="text-xs text-slate-400">Tips (5%)</p><p class="font-bold text-white">' +
-        formatUsd(fb.tip) +
-        '</p><p class="text-xs text-slate-500">' +
-        p.tip +
-        '%</p></div>' +
-        '<div class="rounded-lg bg-slate-800 p-3"><p class="text-xs text-slate-400">Withdrawals (3%)</p><p class="font-bold text-admin-gold">' +
-        formatUsd(fb.withdrawal) +
-        '</p><p class="text-xs text-slate-500">' +
-        p.withdrawal +
-        '%</p></div>' +
-        '</div>'
-      );
-    }
-
-    async function showEscrowHistory() {
-      openModal('Escrow funding history', '<p class="text-slate-500">Loading…</p>');
-      const data = await apiFetch('/api/admin/escrow-history');
-      const rows = (data.history || [])
-        .map((tx) => {
-          const u = tx.fromUserId || {};
-          const who =
-            u.profile?.companyName || u.uniqueCode || u.email || 'Unknown';
-          return (
-            '<tr class="border-b border-slate-800">' +
-            '<td class="py-2 pr-2">' +
-            escapeHtml(who) +
-            '</td>' +
-            '<td class="py-2 pr-2">' +
-            formatUsd(tx.netAmount) +
-            '</td>' +
-            '<td class="py-2 text-slate-500">' +
-            formatDate(tx.createdAt) +
-            '</td></tr>'
-          );
-        })
-        .join('');
-      document.getElementById('modal-body').innerHTML =
-        '<table class="w-full text-left text-sm"><thead><tr class="text-slate-500"><th class="pb-2">Depositor</th><th>Amount</th><th>When</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="3" class="py-4 text-slate-500">No deposits yet.</td></tr>') +
-        '</tbody></table>';
-    }
-
-    async function showWithdrawalHistory() {
-      openModal('Profit wallet withdrawals', '<p class="text-slate-500">Loading…</p>');
-      const [hist, metrics] = await Promise.all([
-        apiFetch('/api/admin/profit-withdrawal-history'),
-        metricsCache ? Promise.resolve(metricsCache) : loadMetrics(),
-      ]);
-      let html = feeBreakdownHtml(metrics.feeBreakdown);
-      const rows = (hist.history || [])
-        .map(
-          (tx) =>
-            '<tr class="border-b border-slate-800"><td class="py-2">' +
-            formatUsd(tx.grossAmount) +
-            '</td><td class="py-2 text-slate-500">' +
-            formatDate(tx.createdAt) +
-            '</td><td class="py-2 text-slate-500">' +
-            escapeHtml(tx.metadata?.payoutMethod || '—') +
-            '</td></tr>'
-        )
-        .join('');
-      html +=
-        '<table class="w-full text-left"><thead><tr class="text-slate-500"><th>Amount</th><th>When</th><th>Method</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="3" class="py-4 text-slate-500">No withdrawals yet.</td></tr>') +
-        '</tbody></table>';
-      document.getElementById('modal-body').innerHTML = html;
-    }
-
-    function initCharts() {
-      if (!regCache || !metricsCache) return;
-      const regCtx = document.getElementById('chart-registrations');
-      const feeCtx = document.getElementById('chart-fees');
-      if (chartReg) chartReg.destroy();
-      if (chartFees) chartFees.destroy();
-
-      chartReg = new Chart(regCtx, {
-        type: 'bar',
-        data: {
-          labels: ['Creators', 'Brands'],
-          datasets: [
-            {
-              label: 'Users',
-              data: [regCache.creators, regCache.businesses],
-              backgroundColor: ['#7c3aed', '#6366f1'],
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-          },
-        },
-      });
-
-      const fb = metricsCache.feeBreakdown || {};
-      chartFees = new Chart(feeCtx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Deposits 10%', 'Tips 5%', 'Withdrawals 3%'],
-          datasets: [
-            {
-              data: [fb.deposit || 0, fb.tip || 0, fb.withdrawal || 0],
-              backgroundColor: ['#d97706', '#475569', '#f59e0b'],
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { labels: { color: '#cbd5e1' } } },
-        },
-      });
-    }
-
-    function setPayoutTab(method) {
-      payoutMethod = method;
-      document.querySelectorAll('.payout-tab').forEach((btn) => {
-        const on = btn.dataset.payout === method;
-        btn.classList.toggle('bg-admin-gold/25', on);
-        btn.classList.toggle('text-amber-100', on);
-        btn.classList.toggle('ring-1', on);
-        btn.classList.toggle('ring-admin-gold', on);
-        btn.classList.toggle('bg-slate-700', !on);
-        btn.classList.toggle('text-slate-300', !on);
-      });
-      document.querySelectorAll('.payout-fields').forEach((el) => el.classList.add('hidden'));
-      document.getElementById('payout-' + method).classList.remove('hidden');
-    }
-
-    function payoutDetails() {
-      if (payoutMethod === 'mpesa') {
-        return { phoneNumber: document.getElementById('mpesa-phone').value.trim() };
-      }
-      if (payoutMethod === 'paypal') {
-        return { paypalEmail: document.getElementById('paypal-email').value.trim() };
-      }
-      return {
-        bankName: document.getElementById('swift-bank').value.trim(),
-        accountHolderName: document.getElementById('swift-holder').value.trim(),
-        accountNumber: document.getElementById('swift-account').value.trim(),
-        swiftCode: document.getElementById('swift-code').value.trim(),
-      };
-    }
-
-    async function previewWithdraw(amountUsd) {
-      if (!amountUsd || amountUsd <= 0) {
-        document.getElementById('withdraw-preview').textContent = '';
-        return;
-      }
-      try {
-        const data = await apiFetch('/api/wallet/withdraw/preview', {
-          method: 'POST',
-          body: JSON.stringify({ amountUsd }),
-        });
-        const p = data.preview;
-        document.getElementById('withdraw-preview').textContent =
-          'You receive ' +
-          formatUsd(p.netToUserUsd) +
-          (p.feeUsd > 0 ? ' (fee ' + formatUsd(p.feeUsd) + ')' : ' · admin fee waived');
-      } catch (e) {
-        document.getElementById('withdraw-preview').textContent = e.message;
-      }
-    }
-
-    document.getElementById('card-profit').addEventListener('click', () => {
-      document.getElementById('withdraw-section').scrollIntoView({ behavior: 'smooth' });
     });
-    document.getElementById('card-escrow').addEventListener('click', showEscrowHistory);
-    document.getElementById('card-withdrawn').addEventListener('click', showWithdrawalHistory);
 
-    document.getElementById('search-input').addEventListener('input', (e) => {
+    const fb = metricsCache.feeBreakdown || {};
+    chartFees = new Chart(feeCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Deposits 10%', 'Tips 5%', 'Withdrawals 3%'],
+        datasets: [{
+          data: [fb.deposit || 0, fb.tip || 0, fb.withdrawal || 0],
+          backgroundColor: ['#d97706', '#475569', '#f59e0b'],
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { labels: { color: '#cbd5e1' } } },
+      },
+    });
+  }
+
+  function setPayoutTab(method) {
+    payoutMethod = method;
+    document.querySelectorAll('.payout-tab').forEach((btn) => {
+      const on = btn.dataset.payout === method;
+      btn.classList.toggle('bg-admin-gold/25', on);
+      btn.classList.toggle('text-amber-100', on);
+      btn.classList.toggle('ring-1', on);
+      btn.classList.toggle('ring-admin-gold', on);
+      btn.classList.toggle('bg-slate-700', !on);
+      btn.classList.toggle('text-slate-300', !on);
+    });
+    document.querySelectorAll('.payout-fields').forEach((el) => el.classList.add('hidden'));
+    const target = document.getElementById('payout-' + method);
+    if (target) target.classList.remove('hidden');
+  }
+
+  function payoutDetails() {
+    if (payoutMethod === 'mpesa') {
+      return { phoneNumber: document.getElementById('mpesa-phone')?.value.trim() || '' };
+    }
+    if (payoutMethod === 'paypal') {
+      return { paypalEmail: document.getElementById('paypal-email')?.value.trim() || '' };
+    }
+    return {
+      bankName: document.getElementById('swift-bank')?.value.trim() || '',
+      accountHolderName: document.getElementById('swift-holder')?.value.trim() || '',
+      accountNumber: document.getElementById('swift-account')?.value.trim() || '',
+      swiftCode: document.getElementById('swift-code')?.value.trim() || '',
+    };
+  }
+
+  async function previewWithdraw(amountUsd) {
+    const previewEl = document.getElementById('withdraw-preview');
+    if (!previewEl) return;
+    if (!amountUsd || amountUsd <= 0) {
+      previewEl.textContent = '';
+      return;
+    }
+    try {
+      const data = await apiFetch('/api/wallet/withdraw/preview', {
+        method: 'POST',
+        body: JSON.stringify({ amountUsd }),
+      });
+      const p = data.preview;
+      previewEl.textContent = 'You receive ' + formatUsd(p.netToUserUsd) + (p.feeUsd > 0 ? ' (fee ' + formatUsd(p.feeUsd) + ')' : ' · admin fee waived');
+    } catch (e) {
+      previewEl.textContent = e.message;
+    }
+  }
+
+  // Event listeners with null checks
+  const profitCard = document.getElementById('card-profit');
+  if (profitCard) profitCard.addEventListener('click', () => {
+    document.getElementById('withdraw-section')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  const escrowCard = document.getElementById('card-escrow');
+  if (escrowCard) escrowCard.addEventListener('click', showEscrowHistory);
+
+  const withdrawnCard = document.getElementById('card-withdrawn');
+  if (withdrawnCard) withdrawnCard.addEventListener('click', showWithdrawalHistory);
+
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => runSearch(e.target.value), 350);
     });
+  }
 
-    document.querySelectorAll('.reg-filter').forEach((btn) => {
-      btn.addEventListener('click', () => updateRegFilter(btn.dataset.regFilter));
-    });
+  document.querySelectorAll('.reg-filter').forEach((btn) => {
+    btn.addEventListener('click', () => updateRegFilter(btn.dataset.regFilter));
+  });
 
-    document.getElementById('toggle-demographics').addEventListener('click', () => {
+  const toggleBtn = document.getElementById('toggle-demographics');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
       const panel = document.getElementById('demographics-panel');
+      if (!panel) return;
       const open = panel.classList.toggle('hidden');
-      document.getElementById('demographics-chevron').textContent = open ? '▼' : '▲';
+      const chevron = document.getElementById('demographics-chevron');
+      if (chevron) chevron.textContent = open ? '▼' : '▲';
+      toggleBtn.setAttribute('aria-expanded', String(!open));
       if (!open) initCharts();
     });
+    toggleBtn.setAttribute('aria-expanded', 'false');
+  }
 
-    document.querySelectorAll('.payout-tab').forEach((btn) => {
-      btn.addEventListener('click', () => setPayoutTab(btn.dataset.payout));
-    });
+  document.querySelectorAll('.payout-tab').forEach((btn) => {
+    btn.addEventListener('click', () => setPayoutTab(btn.dataset.payout));
+  });
 
-    document.getElementById('withdraw-amount').addEventListener('input', (e) => {
+  const withdrawAmount = document.getElementById('withdraw-amount');
+  if (withdrawAmount) {
+    withdrawAmount.addEventListener('input', (e) => {
       previewWithdraw(parseFloat(e.target.value));
     });
+  }
 
-    document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
+  const withdrawForm = document.getElementById('withdraw-form');
+  if (withdrawForm) {
+    withdrawForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const amountUsd = parseFloat(document.getElementById('withdraw-amount').value);
+      if (isSubmitting) return;
+      const amountUsd = parseFloat(document.getElementById('withdraw-amount')?.value || '0');
       const btn = document.getElementById('withdraw-submit');
-      btn.disabled = true;
+      isSubmitting = true;
+      if (btn) btn.disabled = true;
       try {
         await apiFetch('/api/wallet/withdraw', {
           method: 'POST',
@@ -568,39 +406,48 @@
           }),
         });
         showAlert('Withdrawal completed.', 'success');
-        document.getElementById('withdraw-form').reset();
-        document.getElementById('withdraw-preview').textContent = '';
+        if (withdrawForm) withdrawForm.reset();
+        const previewEl = document.getElementById('withdraw-preview');
+        if (previewEl) previewEl.textContent = '';
         await loadMetrics();
       } catch (err) {
         showAlert(err.message);
       } finally {
-        btn.disabled = false;
+        isSubmitting = false;
+        if (btn) btn.disabled = false;
       }
     });
+  }
 
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    document.getElementById('modal').addEventListener('click', (e) => {
+  const modalClose = document.getElementById('modal-close');
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+
+  const modal = document.getElementById('modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
       if (e.target.id === 'modal') closeModal();
     });
+  }
 
-    document.getElementById('btn-logout').addEventListener('click', () => {
-      clearSession();
+  const logoutBtn = document.getElementById('btn-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (clearSession) clearSession();
       window.location.href = '/signup.html';
     });
+  }
 
-    (async function init() {
-      initHeader();
-      try {
-        await Promise.all([loadMetrics(), loadRegistrations()]);
-      } catch (err) {
-        if (err.status === 401 || err.status === 403) {
-          clearSession();
-          window.location.href = '/signup.html?login=1';
-          return;
-        }
-        showAlert(err.message || 'Failed to load dashboard');
+  (async function init() {
+    initHeader();
+    try {
+      await Promise.all([loadMetrics(), loadRegistrations()]);
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        if (clearSession) clearSession();
+        window.location.href = '/signup.html?login=1';
+        return;
       }
-    })();
-  </script>
-</body>
-</html>
+      showAlert(err.message || 'Failed to load dashboard');
+    }
+  })();
+</script>
