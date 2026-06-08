@@ -100,71 +100,27 @@
         </div>
       </form>
     </section>
-
     <!-- Campaigns -->
-    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
-  <div class="flex flex-wrap items-center justify-between gap-2">
-    <h2 class="text-lg font-semibold text-white">Your campaigns</h2>
-    <button type="button" id="btn-refresh" class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-400 hover:text-brand-sky">Refresh</button>
-  </div>
-  <p class="mt-1 text-xs text-slate-500">Stages: Active → Submitted for Review → Completed → Paid</p>
-  <div id="campaigns-list" class="mt-4 space-y-4">
-    <p class="text-sm text-slate-500">Loading campaigns…</p>
-  </div>
-</section>
-
-<section id="section-create" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5 backdrop-blur">
-  <h2 class="text-lg font-semibold text-white">New campaign</h2>
-  <p class="mt-1 text-sm text-slate-400">Publish a brief, fund escrow (10% fee), then manage creator bids.</p>
-  <form id="create-form" class="mt-4 grid gap-4 sm:grid-cols-2">
-    <div class="sm:col-span-2">
-      <label class="mb-1 block text-sm font-medium" for="camp-title">Title</label>
-      <input id="camp-title" required class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none" />
-    </div>
-    <div class="sm:col-span-2">
-      <label class="mb-1 block text-sm font-medium" for="camp-desc">Description</label>
-      <textarea id="camp-desc" rows="2" class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none"></textarea>
-    </div>
-    <div>
-      <label class="mb-1 block text-sm font-medium" for="camp-budget">Budget (USD)</label>
-      <input id="camp-budget" type="number" min="1" step="0.01" required class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-brand-sky focus:outline-none" />
-    </div>
-    <div class="flex items-end">
-      <button type="submit" class="w-full rounded-xl bg-brand-accent px-4 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-blue-600 disabled:opacity-50">Create campaign</button>
-    </div>
-  </form>
-</section>
-  <div id="modal-fund" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-  <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-    <h3 class="text-lg font-bold text-white mb-4">Fund Wallet</h3>
-    <input type="number" id="fund-amount" placeholder="Amount (USD)" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
-    <div class="flex gap-2">
-      <button onclick="document.getElementById('modal-fund').classList.add('hidden')" class="flex-1 py-2 rounded-xl text-slate-400">Cancel</button>
-      <button id="btn-confirm-fund" class="flex-1 py-2 rounded-xl bg-brand-sky text-slate-950 font-bold">Pay Now</button>
-    </div>
-  </div>
+<div id="campaigns-list" class="mt-4 space-y-4">
+  <p class="text-slate-500">Loading campaigns...</p>
 </div>
-
-<section id="section-withdraw" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
-  <h2 class="text-lg font-semibold text-white">Withdrawal</h2>
-  <div class="mt-4 grid gap-4 sm:grid-cols-2">
-    <input id="withdraw-amount" type="number" placeholder="Amount USD" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2" />
-    <select id="withdraw-method" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2">
-      <option value="mpesa">M-Pesa</option>
-      <option value="paypal">PayPal</option>
-    </select>
-    <button id="btn-withdraw" class="sm:col-span-2 rounded-xl bg-brand-accent py-2.5 font-bold hover:bg-blue-600">Request Withdrawal</button>
-  </div>
-</section>
-  <div id="modal-fund" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+   <!-- Funding Modal -->
+<div id="modal-fund" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
   <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
     <h3 class="text-lg font-bold text-white mb-4">Fund Wallet</h3>
+    
+    <label class="block text-xs text-slate-400 mb-1">Funding Method</label>
     <select id="fund-method" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white">
-      <option value="bank">Bank Transfer</option>
       <option value="mpesa">M-Pesa</option>
+      <option value="bank">Bank Transfer</option>
       <option value="paypal">PayPal</option>
     </select>
-    <input type="number" id="fund-amount" placeholder="Amount (USD)" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
+
+    <label class="block text-xs text-slate-400 mb-1">Amount to Receive (USD)</label>
+    <input type="number" id="fund-amount" placeholder="e.g., 100" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
+    
+    <p id="total-charge" class="text-xs text-brand-sky mb-4 font-semibold italic">Total to pay: $0.00 (Incl. 10% fee)</p>
+
     <div class="flex gap-2">
       <button onclick="document.getElementById('modal-fund').classList.add('hidden')" class="flex-1 py-2 rounded-xl text-slate-400">Cancel</button>
       <button id="btn-confirm-fund" class="flex-1 py-2 rounded-xl bg-brand-sky text-slate-950 font-bold">Pay Now</button>
@@ -172,6 +128,7 @@
   </div>
 </div>
 
+<!-- Withdrawal Section -->
 <section id="section-withdraw" class="mt-12 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
   <h2 class="text-lg font-semibold text-white">Withdrawal</h2>
   <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -183,7 +140,6 @@
     <button id="btn-withdraw" class="sm:col-span-2 rounded-xl bg-brand-accent py-2.5 font-bold hover:bg-blue-600">Request Withdrawal</button>
   </div>
 </section>
-  </div>
 
   <script src="/js/pebeto-api.js"></script>
   <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
@@ -496,86 +452,67 @@
       }
     });
 
-    document.getElementById('btn-refresh').addEventListener('click', () => {
-      loadBalance();
-      loadCampaigns();
-    });
-
     document.getElementById('btn-logout').addEventListener('click', () => {
       clearSession();
       window.location.href = '/signup.html';
     });
 
-    (async function init() {
-      if (session.user.role === 'admin' && !viewUserId) {
-        showAlert('Admin: open this dashboard via Search → View only.');
-      }
-      initHeader();
-      applyViewOnly();
-      try {
-        await loadRates();
-        await Promise.all([loadBalance(), loadCampaigns()]);
-        initSocket();
-      } catch (err) {
-        if (err.status === 401 || err.status === 403) {
-          clearSession();
-          window.location.href = '/signup.html?login=1';
-          return;
-        }
-        showAlert(err.message || 'Failed to load dashboard');
-      }
-      document.getElementById('btn-confirm-fund').addEventListener('click', async () => {
-  const amount = document.getElementById('fund-amount').value;
+   (async function init() {
+  if (session.user.role === 'admin' && !viewUserId) {
+    showAlert('Admin: open this dashboard via Search → View only.');
+  }
+  initHeader();
+  applyViewOnly();
+  
   try {
-    await apiFetch('/api/wallet/deposit', {
-      method: 'POST',
-      body: JSON.stringify({ intentUsd: amount, idempotencyKey: Date.now().toString() })
-    });
-    showAlert('Wallet funded successfully!', 'success');
-    document.getElementById('modal-fund').classList.add('hidden');
-    loadBalance();
-  } catch (err) { showAlert(err.message); }
-});
+    await loadRates();
+    await Promise.all([loadBalance(), loadCampaigns()]);
+    initSocket();
+  } catch (err) {
+    if (err.status === 401 || err.status === 403) {
+      clearSession();
+      window.location.href = '/signup.html?login=1';
+      return;
+    }
+    showAlert(err.message || 'Failed to load dashboard');
+  }
 
-document.getElementById('btn-withdraw').addEventListener('click', async () => {
-  const amount = document.getElementById('withdraw-amount').value;
-  const method = document.getElementById('withdraw-method').value;
-  try {
-    await apiFetch('/api/wallet/withdraw', {
-      method: 'POST',
-      body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails: { account: 'default' } })
-    });
-    showAlert('Withdrawal request submitted', 'success');
-    loadBalance();
-  } catch (err) { showAlert(err.message); }
-});
-      document.getElementById('btn-confirm-fund').addEventListener('click', async () => {
-  const amount = document.getElementById('fund-amount').value;
-  const method = document.getElementById('fund-method').value;
-  try {
-    await apiFetch('/api/wallet/deposit', {
-      method: 'POST',
-      body: JSON.stringify({ intentUsd: amount, method, depositType: 'direct' })
-    });
-    showAlert('Deposit initiated via ' + method, 'success');
-    document.getElementById('modal-fund').classList.add('hidden');
-    loadBalance();
-  } catch (err) { showAlert(err.message); }
-});
+  // Handle Wallet Funding
+  document.getElementById('btn-confirm-fund').addEventListener('click', async () => {
+    const amount = document.getElementById('fund-amount').value;
+    const method = document.getElementById('fund-method').value;
+    try {
+      await apiFetch('/api/wallet/deposit', {
+        method: 'POST',
+        body: JSON.stringify({ intentUsd: amount, method, depositType: 'direct' })
+      });
+      showAlert('Deposit initiated via ' + method, 'success');
+      document.getElementById('modal-fund').classList.add('hidden');
+      loadBalance();
+    } catch (err) { showAlert(err.message); }
+  });
 
-document.getElementById('btn-withdraw').addEventListener('click', async () => {
-  const amount = document.getElementById('withdraw-amount').value;
-  const method = document.getElementById('withdraw-method').value;
-  try {
-    await apiFetch('/api/wallet/withdraw', {
-      method: 'POST',
-      body: JSON.stringify({ amountUsd: amount, payoutMethod: method })
-    });
-    showAlert('Withdrawal request submitted', 'success');
-    loadBalance();
-  } catch (err) { showAlert(err.message); }
-});
-    })();
+  // Handle Withdrawal
+  document.getElementById('btn-withdraw').addEventListener('click', async () => {
+    const amount = document.getElementById('withdraw-amount').value;
+    const method = document.getElementById('withdraw-method').value;
+    try {
+      await apiFetch('/api/wallet/withdraw', {
+        method: 'POST',
+        body: JSON.stringify({ amountUsd: amount, payoutMethod: method })
+      });
+      showAlert('Withdrawal request submitted', 'success');
+      loadBalance();
+    } catch (err) { showAlert(err.message); }
+  });
+
+  // Handle Fee Calculation
+  document.getElementById('fund-amount').addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value) || 0;
+    const total = val * 1.10;
+    document.getElementById('total-charge').textContent = 'Total to pay: $' + total.toFixed(2) + ' (Incl. 10% fee)';
+  });
+})();
   </script>
 </body>
 </html>
