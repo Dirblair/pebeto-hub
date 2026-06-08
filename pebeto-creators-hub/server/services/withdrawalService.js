@@ -33,6 +33,22 @@ function validatePayoutDetails(method, details = {}) {
   return details;
 }
 
+async function dispatchPayoutToProvider({ amount, method, details }) {
+  // You will replace these placeholders with actual API calls to your providers
+  switch (method) {
+    case 'mpesa':
+      // Example: return await mpesaService.sendB2C(details.phoneNumber, amount);
+      return { success: true, reference: 'MPESA_' + Date.now() };
+    case 'paypal':
+      // Example: return await paypalService.payout(details.paypalEmail, amount);
+      return { success: true, reference: 'PAYPAL_' + Date.now() };
+    case 'swift':
+      // Example: return await bankService.wireTransfer(details.accountNumber, details.bankName, amount);
+      return { success: true, reference: 'SWIFT_' + Date.now() };
+    default:
+      throw new AppError('Unsupported payout method', 400);
+  }
+}
 async function processWithdrawal({
   user,
   amountUsd,
@@ -57,13 +73,13 @@ async function processWithdrawal({
   }
   const { admin, wallet: profitWallet } = await getAdminProfitWallet();
 
-  return runInTransaction(async (session) => {
+ return runInTransaction(async (session) => {
     await debitWithdrawable(userWallet._id, grossUsd, session);
 
     const withdrawalTx = await recordTransaction(
       {
         type: 'withdrawal',
-        status: 'completed',
+        status: 'pending',
         fromUserId: user._id,
         toUserId: user._id,
         fromWalletId: userWallet._id,
@@ -84,6 +100,23 @@ async function processWithdrawal({
       },
       session
     );
+
+    // Automation: Dispatch payout and finalize
+    try {
+      const payoutResponse = await dispatchPayoutToProvider({
+        amount: netToUserUsd,
+        method: payoutMethod,
+        details: payoutDetails,
+      });
+
+      if (payoutResponse.success) {
+        withdrawalTx.status = 'completed';
+        withdrawalTx.metadata.providerReference = payoutResponse.reference;
+        await withdrawalTx.save({ session });
+      }
+    } catch (err) {
+      throw new AppError(`Payout failed: ${err.message}`, 502);
+    }
 
     if (feeUsd > 0) {
       await creditWallet(profitWallet._id, 'available', feeUsd, session);
@@ -114,8 +147,8 @@ async function processWithdrawal({
       netToUserUsd,
       message:
         user.role === 'admin'
-          ? 'Admin withdrawal processed (no minimum, no fee).'
-          : `Withdrawal processed. You receive $${netToUserUsd} USD after 3% platform fee.`,
+          ? 'Admin withdrawal processed.'
+          : `Withdrawal processed. You receive $${netToUserUsd} USD.`,
     };
   });
 }
@@ -128,6 +161,21 @@ async function previewWithdrawal({ user, amountUsd, amountLocal, currency }) {
   );
 }
 
+async function dispatchPayoutToProvider({ amount, method, details }) {
+  switch (method) {
+    case 'mpesa':
+      // TODO: Connect M-Pesa B2C SDK here
+      return { success: true, reference: 'MPESA_' + Date.now() };
+    case 'paypal':
+      // TODO: Connect PayPal Payouts SDK here
+      return { success: true, reference: 'PAYPAL_' + Date.now() };
+    case 'swift':
+      // TODO: Connect Bank Wire API here
+      return { success: true, reference: 'SWIFT_' + Date.now() };
+    default:
+      throw new AppError('Unsupported payout method', 400);
+  }
+}
 module.exports = {
   processWithdrawal,
   previewWithdrawal,
