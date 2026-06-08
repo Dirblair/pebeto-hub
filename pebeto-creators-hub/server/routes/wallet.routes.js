@@ -13,6 +13,7 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 
 const router = express.Router();
+const protectedRouter = express.Router();
 
 router.use(authenticate, attachFeeService);
 
@@ -134,4 +135,22 @@ router.get('/transactions', async (req, res, next) => {
   }
 });
 
+publicRouter.post('/mpesa-callback', async (req, res) => {
+  try {
+    const callbackData = req.body.Body?.stkCallback;
+    if (callbackData && callbackData.ResultCode === 0) {
+      const meta = callbackData.CallbackMetadata.Item;
+      const receipt = meta.find(i => i.Name === 'MpesaReceiptNumber').Value;
+      
+      // Update your database
+      await Transaction.findOneAndUpdate(
+        { checkoutRequestId: callbackData.CheckoutRequestID },
+        { status: 'completed', mpesaReceiptNumber: receipt }
+      );
+    }
+    res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
+  } catch (err) {
+    res.status(500).json({ ResultCode: 1, ResultDesc: "Internal Error" });
+  }
+});
 module.exports = router;
