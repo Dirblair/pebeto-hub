@@ -1,15 +1,21 @@
 const axios = require('axios');
 const env = require('../config/env');
 
+async function getMpesaAccessToken() {
+  const auth = Buffer.from(`${env.mpesaConsumerKey}:${env.mpesaConsumerSecret}`).toString('base64');
+  const response = await axios.get(`${env.mpesaApiUrl}/oauth/v1/generate?grant_type=client_credentials`, {
+    headers: { Authorization: `Basic ${auth}` }
+  });
+  return response.data.access_token;
+}
+
 async function sendMpesaB2C(phoneNumber, amount) {
-  // 1. Get Access Token (simplified logic)
   const token = await getMpesaAccessToken();
 
-  // 2. Prepare Payload for B2C (Business to Customer)
   const payload = {
     InitiatorName: env.mpesaInitiatorName,
     SecurityCredential: env.mpesaPassword,
-    CommandID: 'SalaryPayment', // Common for B2C
+    CommandID: 'SalaryPayment',
     Amount: amount,
     PartyA: env.mpesaShortCode,
     PartyB: phoneNumber,
@@ -18,7 +24,6 @@ async function sendMpesaB2C(phoneNumber, amount) {
     ResultURL: env.mpesaResultUrl,
   };
 
-  // 3. Post to Daraja API
   const response = await axios.post(`${env.mpesaApiUrl}/mpesa/b2c/v1/paymentrequest`, payload, {
     headers: { Authorization: `Bearer ${token}` }
   });
