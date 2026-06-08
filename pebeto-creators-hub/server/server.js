@@ -76,11 +76,14 @@ async function bootstrap() {
 
   app.use(errorHandler);
 
-  const PORT = process.env.PORT || 3000;
+  // --- REPLACE THE SECTION BELOW ---
+  const rawPort = process.env.PORT;
+  const PORT = (rawPort && Number(rawPort) > 1024) ? Number(rawPort) : 10000;
 
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`Pebeto Creator's Hub running on port ${PORT}`);
   });
+  // --- END OF REPLACEMENT ---
 }
 
 // This call is now correctly outside the function
