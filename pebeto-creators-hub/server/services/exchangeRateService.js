@@ -6,13 +6,16 @@ const { AppError } = require('../utils/errors');
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 async function fetchRatesFromApi() {
-  if (!env.exchangeRateApiKey) {
-    return { USD: 1 };
-  }
+  if (!env.exchangeRateApiKey) return { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
+  
   const url = `${env.exchangeRateApiUrl}/${env.exchangeRateApiKey}/latest/${BASE_CURRENCY}`;
+  console.log("DEBUG: Fetching from URL:", url); // <--- Add this
+  
   const res = await fetch(url);
-  if (!res.ok) throw new AppError('Failed to fetch exchange rates', 502);
   const data = await res.json();
+  
+  console.log("DEBUG: API Response Keys:", Object.keys(data.conversion_rates || {})); // <--- Add this
+  
   if (data.result !== 'success' || !data.conversion_rates) {
     throw new AppError('Invalid exchange rate API response', 502);
   }
