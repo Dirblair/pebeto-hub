@@ -48,8 +48,8 @@
       </div>
       <nav class="flex flex-wrap items-center gap-2">
         <a href="/community.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-creator-mint hover:text-creator-mint">Home</a>
-    <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
-</nav>
+        <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
+      </nav>
     </header>
 
     <div id="global-alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
@@ -71,30 +71,31 @@
 
     <!-- Wallets -->
     <section class="mb-8 grid gap-4 md:grid-cols-3">
-  <!-- 1. Wallet Balance (Interactive) -->
-  <button type="button" onclick="document.getElementById('section-withdraw').scrollIntoView({behavior:'smooth'})" class="text-left rounded-2xl border border-creator-mint/30 bg-gradient-to-br from-creator-deep/80 to-creator-slate p-5 shadow-lg hover:border-creator-mint transition-all">
-    <p class="text-sm font-medium text-slate-300">Wallet balance</p>
-    <p id="bal-available" class="mt-2 text-3xl font-bold text-creator-mint">—</p>
-    <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
-    <p class="mt-2 text-xs text-slate-500 underline">Click to withdraw funds · 3% fee</p>
-  </button>
+      <!-- 1. Wallet Balance (Interactive) -->
+      <button type="button" onclick="document.getElementById('section-withdraw').scrollIntoView({behavior:'smooth'})" class="text-left rounded-2xl border border-creator-mint/30 bg-gradient-to-br from-creator-deep/80 to-creator-slate p-5 shadow-lg hover:border-creator-mint transition-all">
+        <p class="text-sm font-medium text-slate-300">Wallet balance</p>
+        <p id="bal-available" class="mt-2 text-3xl font-bold text-creator-mint">—</p>
+        <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
+        <p class="mt-2 text-xs text-slate-500 underline">Click to withdraw funds · 3% fee</p>
+      </button>
 
-  <!-- 2. Escrow Balance (Original Data Preserved) -->
-  <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg">
-    <p class="text-sm font-medium text-slate-300">Escrow balance</p>
-    <p id="bal-escrow" class="mt-2 text-3xl font-bold text-white">—</p>
-    <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
-    <p class="mt-2 text-xs text-slate-500">Funds held until brand completes campaign</p>
-  </div>
+      <!-- 2. Escrow Balance -->
+      <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Escrow balance</p>
+        <p id="bal-escrow" class="mt-2 text-3xl font-bold text-white">—</p>
+        <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
+        <p class="mt-2 text-xs text-slate-500">Funds held until brand completes campaign</p>
+      </div>
 
-  <!-- 3. Withdrawal History (New Interaction) -->
-  <button type="button" id="card-history" class="text-left rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg hover:border-slate-400 transition-all">
-    <p class="text-sm font-medium text-slate-300">Withdrawal History</p>
-    <p class="mt-8 text-sm text-slate-400">View your previous payouts and status</p>
-  </button>
+      <!-- 3. Withdrawal History -->
+      <button type="button" id="card-history" class="text-left rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-creator-slate p-5 shadow-lg hover:border-slate-400 transition-all">
+        <p class="text-sm font-medium text-slate-300">Withdrawal History</p>
+        <p class="mt-8 text-sm text-slate-400">View your previous payouts and status</p>
+      </button>
+    </section>
 
-      <!-- Projects -->
-    <section class="rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
+    <!-- Projects -->
+    <section class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-lg font-semibold text-white">Projects &amp; campaigns</h2>
         <button type="button" id="btn-refresh" class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-400 hover:text-creator-mint">Refresh</button>
@@ -103,7 +104,6 @@
       <div id="campaigns-list" class="mt-4 space-y-4">
         <p class="text-sm text-slate-500">Loading…</p>
       </div>
-    </section>
     </section>
 
     <!-- Withdrawal -->
@@ -163,18 +163,34 @@
     </section>
   </div>
 
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80" aria-hidden="true">
+    <div class="max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700 px-5 py-4">
+        <h3 id="modal-title" class="font-semibold text-white">Withdrawal History</h3>
+        <button type="button" id="modal-close" class="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close">✕</button>
+      </div>
+      <div id="modal-body" class="max-h-[70vh] overflow-y-auto px-5 py-4 text-sm text-slate-300">Loading...</div>
+    </div>
+  </div>
+
   <script src="/js/pebeto-api.js"></script>
   <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
   <script>
-    const { requireRole, apiFetch, formatUsd, clearSession, getUser, getToken } = window.PebetoApi;
+    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi || {};
+
+    // Safety check
+    if (!requireRole || !apiFetch) {
+      console.error('PebetoApi not loaded properly');
+    }
 
     const MIN_WITHDRAWAL_USD = 30;
     const params = new URLSearchParams(window.location.search);
     const viewOnly = params.get('viewOnly') === '1';
     const viewUserId = params.get('userId') || '';
 
-    const session = requireRole(['creator', 'admin'], '/signup.html?login=1');
-    if (!session) throw new Error('unauthorized');
+    const session = requireRole ? requireRole(['creator', 'admin'], '/signup.html?login=1') : null;
+    if (!session) throw new Error('unauthorized or API not loaded');
 
     let rates = { USD: 1, KES: 130 };
     let currency = 'USD';
@@ -203,6 +219,7 @@
 
     function showAlert(msg, type) {
       const el = document.getElementById('global-alert');
+      if (!el) return;
       el.textContent = msg;
       el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
       if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
@@ -236,8 +253,21 @@
         'Waiting for Approval': 'bg-amber-500/20 text-amber-200 ring-amber-500/40',
         Completed: 'bg-violet-500/20 text-violet-200 ring-violet-500/40',
         Paid: 'bg-emerald-500/20 text-emerald-200 ring-emerald-500/40',
+        open: 'bg-slate-600/40 text-slate-200 ring-slate-500',
+        in_progress: 'bg-amber-500/20 text-amber-200 ring-amber-500/40',
+        submitted_for_review: 'bg-violet-500/20 text-violet-200 ring-violet-500/40',
+        paid: 'bg-emerald-500/20 text-emerald-200 ring-emerald-500/40',
       };
       return map[label] || 'bg-slate-700 text-slate-300';
+    }
+
+    function getEffectiveStage(campaign) {
+      if (campaign.creatorStage?.label) return campaign.creatorStage.label;
+      if (campaign.status === 'open') return 'Bid';
+      if (campaign.status === 'in_progress') return 'Waiting for Approval';
+      if (campaign.status === 'submitted_for_review') return 'Completed';
+      if (campaign.status === 'paid') return 'Paid';
+      return 'Bid';
     }
 
     function updateWithdrawBar(usdAmount) {
@@ -246,125 +276,146 @@
       const btn = document.getElementById('withdraw-submit');
       const meets = usdAmount >= MIN_WITHDRAWAL_USD;
 
-      bar.style.width = pct + '%';
-      bar.classList.toggle('bg-creator-accent', meets);
-      bar.classList.toggle('bg-slate-600', !meets);
+      if (bar) bar.style.width = pct + '%';
+      if (bar) bar.classList.toggle('bg-creator-accent', meets);
+      if (bar) bar.classList.toggle('bg-slate-600', !meets);
 
-      document.getElementById('threshold-label').textContent =
-        formatUsd(usdAmount || 0) + ' / ' + formatUsd(MIN_WITHDRAWAL_USD);
+      const thresholdEl = document.getElementById('threshold-label');
+      if (thresholdEl) thresholdEl.textContent = formatUsd(usdAmount || 0) + ' / ' + formatUsd(MIN_WITHDRAWAL_USD);
 
       const kesMin = (MIN_WITHDRAWAL_USD * (rates.KES || 130)).toLocaleString(undefined, {
         style: 'currency',
         currency: 'KES',
       });
-      document.getElementById('withdraw-usd-equiv').textContent =
-        meets
+      const usdEquivEl = document.getElementById('withdraw-usd-equiv');
+      if (usdEquivEl) {
+        usdEquivEl.textContent = meets
           ? 'Threshold met — you may withdraw.'
           : 'Minimum ' + formatUsd(MIN_WITHDRAWAL_USD) + ' (e.g. ' + kesMin + ' at current rate)';
+      }
 
-      btn.disabled = !meets || !canWrite();
-      btn.classList.toggle('bg-creator-accent', meets);
-      btn.classList.toggle('text-white', meets);
-      btn.classList.toggle('hover:bg-emerald-500', meets);
-      btn.classList.toggle('bg-slate-600', !meets);
-      btn.classList.toggle('text-slate-400', !meets);
-      btn.textContent = meets ? 'Withdraw now' : 'Withdraw (min $30)';
+      if (btn) {
+        btn.disabled = !meets || !canWrite();
+        btn.classList.toggle('bg-creator-accent', meets);
+        btn.classList.toggle('text-white', meets);
+        btn.classList.toggle('hover:bg-emerald-500', meets);
+        btn.classList.toggle('bg-slate-600', !meets);
+        btn.classList.toggle('text-slate-400', !meets);
+        btn.textContent = meets ? 'Withdraw now' : 'Withdraw (min $30)';
+      }
     }
 
     async function loadRates() {
-      const data = await apiFetch('/api/wallet/exchange-rates');
-      rates = data.rates || { USD: 1, KES: 130 };
+      try {
+        const data = await apiFetch('/api/wallet/exchange-rates');
+        rates = data.rates || { USD: 1, KES: 130 };
+      } catch (e) {
+        console.warn('Failed to load rates:', e);
+        rates = { USD: 1, KES: 130 };
+      }
     }
 
     async function loadBalance() {
-      const data = await apiFetch('/api/wallet/balance' + balanceQuery());
-      const b = data.balances;
-      currency = getUser()?.preferredCurrency || 'USD';
-      document.getElementById('withdraw-currency').value = currency;
-      document.getElementById('bal-available').textContent = formatUsd(b.available + (b.tips || 0));
-      document.getElementById('bal-escrow').textContent = formatUsd(b.escrow);
-      document.getElementById('bal-available-local').textContent = localAmount(b.available + (b.tips || 0));
-      document.getElementById('bal-escrow-local').textContent = localAmount(b.escrow);
+      try {
+        const data = await apiFetch('/api/wallet/balance' + balanceQuery());
+        const b = data.balances || { available: 0, escrow: 0 };
+        const user = getUser ? getUser() : null;
+        currency = user?.preferredCurrency || 'USD';
+        
+        const currencySelect = document.getElementById('withdraw-currency');
+        if (currencySelect) currencySelect.value = currency;
+        
+        const totalAvailable = (b.available || 0) + (b.tips || 0);
+        
+        const availEl = document.getElementById('bal-available');
+        const escrowEl = document.getElementById('bal-escrow');
+        const availLocalEl = document.getElementById('bal-available-local');
+        const escrowLocalEl = document.getElementById('bal-escrow-local');
+        
+        if (availEl) availEl.textContent = formatUsd(totalAvailable);
+        if (escrowEl) escrowEl.textContent = formatUsd(b.escrow || 0);
+        if (availLocalEl) availLocalEl.textContent = localAmount(totalAvailable);
+        if (escrowLocalEl) escrowLocalEl.textContent = localAmount(b.escrow || 0);
+      } catch (e) {
+        console.error('Load balance failed:', e);
+        showAlert('Failed to load balance', 'error');
+      }
     }
 
     async function loadCampaigns() {
-      const data = await apiFetch('/api/campaigns' + querySuffix());
-      campaigns = data.campaigns || [];
-      renderCampaigns();
+      try {
+        const data = await apiFetch('/api/campaigns' + querySuffix());
+        campaigns = data.campaigns || [];
+        renderCampaigns();
+      } catch (e) {
+        console.error('Load campaigns failed:', e);
+        const root = document.getElementById('campaigns-list');
+        if (root) root.innerHTML = '<p class="text-slate-500">Failed to load campaigns.</p>';
+      }
     }
 
     function renderCampaigns() {
       const root = document.getElementById('campaigns-list');
+      if (!root) return;
+      
       if (!campaigns.length) {
-        root.innerHTML =
-          '<p class="rounded-xl border border-dashed border-slate-600 px-4 py-8 text-center text-sm text-slate-500">No open projects. Check back for new brand campaigns.</p>';
+        root.innerHTML = '<p class="rounded-xl border border-dashed border-slate-600 px-4 py-8 text-center text-sm text-slate-500">No open projects. Check back for new brand campaigns.</p>';
         return;
       }
 
+      const userId = (getUser ? getUser() : null)?._id || (getUser ? getUser() : null)?.id;
+      const userUniqueCode = (getUser ? getUser() : null)?.uniqueCode;
+
       root.innerHTML = campaigns
         .map((c) => {
-          const stage = c.creatorStage?.label || 'Bid';
+          const stage = getEffectiveStage(c);
           const isOpen = c.status === 'open';
-          const uid = getUser()?.id || getUser()?._id;
-          const myBid = (c.bids || []).find((b) => String(b.creatorId) === String(uid) || b.uniqueCode === getUser()?.uniqueCode);
-          const assigned = c.assignedCreatorId && uid && String(c.assignedCreatorId) === String(uid);
+          const myBid = (c.bids || []).find((b) => 
+            String(b.creatorId) === String(userId) || 
+            b.uniqueCode === userUniqueCode
+          );
+          const assigned = c.assignedCreatorId && userId && String(c.assignedCreatorId) === String(userId);
+          const isInProgress = c.status === 'in_progress';
+          const isSubmitted = c.status === 'submitted_for_review';
+          const isPaid = c.status === 'paid';
 
-          const bidForm =
-            canWrite() && isOpen && !myBid
-              ? '<div class="mt-3 rounded-xl border border-slate-700 bg-slate-900/40 p-3">' +
-                '<p class="text-xs font-medium text-slate-400">Place bid (your unique code is shown to the brand)</p>' +
-                '<div class="mt-2 flex flex-wrap gap-2">' +
-                '<input type="number" min="1" step="0.01" data-bid-amount="' +
-                c._id +
-                '" placeholder="USD" class="w-28 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
-                '<input type="text" data-bid-proposal="' +
-                c._id +
-                '" placeholder="Short proposal" class="min-w-[12rem] flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
-                '<button type="button" data-bid="' +
-                c._id +
-                '" class="bid-btn rounded-lg bg-creator-accent px-3 py-1.5 text-xs font-semibold text-white">Submit bid</button>' +
-                '</div></div>'
-              : '';
+          const bidForm = (canWrite() && isOpen && !myBid)
+            ? '<div class="mt-3 rounded-xl border border-slate-700 bg-slate-900/40 p-3">' +
+              '<p class="text-xs font-medium text-slate-400">Place bid (your unique code is shown to the brand)</p>' +
+              '<div class="mt-2 flex flex-wrap gap-2">' +
+              '<input type="number" min="1" step="0.01" data-bid-amount="' + c._id + '" placeholder="USD" class="w-28 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
+              '<input type="text" data-bid-proposal="' + c._id + '" placeholder="Short proposal" class="min-w-[12rem] flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
+              '<button type="button" data-bid="' + c._id + '" class="bid-btn rounded-lg bg-creator-accent px-3 py-1.5 text-xs font-semibold text-white">Submit bid</button>' +
+              '</div></div>'
+            : '';
 
-          const submitForm =
-            canWrite() && assigned && c.status === 'in_progress'
-              ? '<div class="mt-3 rounded-xl border border-emerald-800/50 bg-emerald-950/30 p-3">' +
-                '<p class="text-xs font-medium text-emerald-200/80">Submit deliverable</p>' +
-                '<div class="mt-2 flex flex-wrap gap-2">' +
-                '<input type="url" data-work-url="' +
-                c._id +
-                '" placeholder="Work URL (portfolio, drive, etc.)" class="min-w-[14rem] flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
-                '<button type="button" data-submit="' +
-                c._id +
-                '" class="submit-btn rounded-lg bg-creator-emerald px-3 py-1.5 text-xs font-semibold text-white">Submit for review</button>' +
-                '</div></div>'
-              : '';
+          const submitForm = (canWrite() && assigned && isInProgress)
+            ? '<div class="mt-3 rounded-xl border border-emerald-800/50 bg-emerald-950/30 p-3">' +
+              '<p class="text-xs font-medium text-emerald-200/80">Submit deliverable</p>' +
+              '<div class="mt-2 flex flex-wrap gap-2">' +
+              '<input type="url" data-work-url="' + c._id + '" placeholder="Work URL (portfolio, drive, etc.)" class="min-w-[14rem] flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
+              '<button type="button" data-submit="' + c._id + '" class="submit-btn rounded-lg bg-creator-emerald px-3 py-1.5 text-xs font-semibold text-white">Submit for review</button>' +
+              '</div></div>'
+            : '';
 
-          const brandLabel = 'Brand campaign';
+          const statusMessage = isPaid ? '<p class="mt-2 text-sm text-creator-mint">✓ Payment received in your wallet.</p>' : '';
+
           return (
             '<article class="rounded-2xl border border-slate-600/50 bg-slate-900/50 p-4">' +
             '<div class="flex flex-wrap items-start justify-between gap-2">' +
-            '<div><h3 class="font-semibold text-white">' +
-            escapeHtml(c.title) +
-            '</h3><p class="mt-1 text-xs text-slate-500">' +
-            escapeHtml(brandLabel) +
-            ' · Budget ' +
-            formatUsd(c.budget) +
-            '</p></div>' +
-            '<span class="stage-pill rounded-full px-3 py-1 font-semibold uppercase ring-1 ' +
-            stageClass(stage) +
-            '">' +
-            escapeHtml(stage) +
-            '</span></div>' +
+            '<div><h3 class="font-semibold text-white">' + escapeHtml(c.title) + '</h3>' +
+            '<p class="mt-1 text-xs text-slate-500">Brand campaign · Budget ' + formatUsd(c.budget) + '</p></div>' +
+            '<span class="stage-pill rounded-full px-3 py-1 font-semibold uppercase ring-1 ' + stageClass(stage) + '">' + escapeHtml(stage) + '</span></div>' +
             (c.description ? '<p class="mt-2 text-sm text-slate-400">' + escapeHtml(c.description) + '</p>' : '') +
             bidForm +
             submitForm +
-            (c.status === 'paid' ? '<p class="mt-2 text-sm text-creator-mint">Payment received in your wallet.</p>' : '') +
+            statusMessage +
             '</article>'
           );
         })
         .join('');
 
+      // Attach event listeners
       root.querySelectorAll('.bid-btn').forEach((btn) => {
         btn.addEventListener('click', () => placeBid(btn.dataset.bid));
       });
@@ -374,8 +425,15 @@
     }
 
     async function placeBid(campaignId) {
-      const amount = parseFloat(document.querySelector('[data-bid-amount="' + campaignId + '"]')?.value);
-      const proposal = document.querySelector('[data-bid-proposal="' + campaignId + '"]')?.value || '';
+      if (!canWrite()) {
+        showAlert('View-only mode: you cannot place bids');
+        return;
+      }
+      const amountInput = document.querySelector('[data-bid-amount="' + campaignId + '"]');
+      const proposalInput = document.querySelector('[data-bid-proposal="' + campaignId + '"]');
+      const amount = parseFloat(amountInput?.value);
+      const proposal = proposalInput?.value || '';
+      
       if (!amount || amount <= 0) return showAlert('Enter a valid bid amount.');
       try {
         await apiFetch('/api/campaigns/' + campaignId + '/bids' + querySuffix(), {
@@ -390,7 +448,12 @@
     }
 
     async function submitWork(campaignId) {
-      const workUrl = document.querySelector('[data-work-url="' + campaignId + '"]')?.value?.trim();
+      if (!canWrite()) {
+        showAlert('View-only mode: you cannot submit work');
+        return;
+      }
+      const workUrlInput = document.querySelector('[data-work-url="' + campaignId + '"]');
+      const workUrl = workUrlInput?.value?.trim();
       if (!workUrl) return showAlert('Work URL is required.');
       try {
         await apiFetch('/api/campaigns/' + campaignId + '/submit' + querySuffix(), {
@@ -401,6 +464,62 @@
         await loadCampaigns();
       } catch (e) {
         showAlert(e.message);
+      }
+    }
+
+    async function showWithdrawalHistory() {
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalBody = document.getElementById('modal-body');
+      
+      if (!modal || !modalBody) return;
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (modalTitle) modalTitle.textContent = 'Withdrawal History';
+      modalBody.innerHTML = '<p class="text-slate-500">Loading history...</p>';
+      
+      try {
+        const data = await apiFetch('/api/wallet/withdrawals' + querySuffix());
+        const withdrawals = data.withdrawals || [];
+        
+        if (!withdrawals.length) {
+          modalBody.innerHTML = '<p class="text-slate-500">No withdrawal history yet.</p>';
+          return;
+        }
+        
+        modalBody.innerHTML = `
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="text-slate-500 border-b border-slate-700">
+                <th class="pb-2">Amount</th>
+                <th class="pb-2">Method</th>
+                <th class="pb-2">Status</th>
+                <th class="pb-2">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${withdrawals.map(w => `
+                <tr class="border-b border-slate-800">
+                  <td class="py-2">${formatUsd(w.amount || w.grossAmount || 0)}</td>
+                  <td class="py-2">${escapeHtml(w.payoutMethod || w.method || '—')}</td>
+                  <td class="py-2"><span class="rounded-full px-2 py-0.5 text-xs ${w.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${escapeHtml(w.status || 'pending')}</span></td>
+                  <td class="py-2 text-slate-500">${formatDate ? formatDate(w.createdAt) : new Date(w.createdAt).toLocaleDateString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        modalBody.innerHTML = '<p class="text-rose-400">Failed to load history: ' + escapeHtml(e.message) + '</p>';
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
       }
     }
 
@@ -416,30 +535,38 @@
         btn.classList.toggle('text-slate-300', !on);
       });
       document.querySelectorAll('.payout-fields').forEach((el) => el.classList.add('hidden'));
-      document.getElementById('payout-' + method).classList.remove('hidden');
+      const target = document.getElementById('payout-' + method);
+      if (target) target.classList.remove('hidden');
     }
 
     function payoutDetails() {
       if (payoutMethod === 'mpesa') {
-        return { phoneNumber: document.getElementById('mpesa-phone').value.trim() };
+        const phoneInput = document.getElementById('mpesa-phone');
+        return { phoneNumber: phoneInput?.value.trim() || '' };
       }
       if (payoutMethod === 'paypal') {
-        return { paypalEmail: document.getElementById('paypal-email').value.trim() };
+        const emailInput = document.getElementById('paypal-email');
+        return { paypalEmail: emailInput?.value.trim() || '' };
       }
       return {
-        bankName: document.getElementById('swift-bank').value.trim(),
-        accountHolderName: document.getElementById('swift-holder').value.trim(),
-        accountNumber: document.getElementById('swift-account').value.trim(),
-        swiftCode: document.getElementById('swift-code').value.trim(),
+        bankName: document.getElementById('swift-bank')?.value.trim() || '',
+        accountHolderName: document.getElementById('swift-holder')?.value.trim() || '',
+        accountNumber: document.getElementById('swift-account')?.value.trim() || '',
+        swiftCode: document.getElementById('swift-code')?.value.trim() || '',
       };
     }
 
     async function refreshWithdrawPreview() {
-      const cur = document.getElementById('withdraw-currency').value;
-      const local = parseFloat(document.getElementById('withdraw-amount').value);
+      const curSelect = document.getElementById('withdraw-currency');
+      const amountInput = document.getElementById('withdraw-amount');
+      const previewEl = document.getElementById('withdraw-preview');
+      
+      const cur = curSelect?.value || 'USD';
+      const local = parseFloat(amountInput?.value || '0');
+      
       if (!local || local <= 0) {
         updateWithdrawBar(0);
-        document.getElementById('withdraw-preview').textContent = '';
+        if (previewEl) previewEl.textContent = '';
         return;
       }
 
@@ -447,99 +574,148 @@
       updateWithdrawBar(usdLocal);
 
       try {
-        const body =
-          cur === 'USD'
-            ? { amountUsd: local }
-            : { amountLocal: local, currency: cur };
+        const body = cur === 'USD'
+          ? { amountUsd: local }
+          : { amountLocal: local, currency: cur };
         const data = await apiFetch('/api/wallet/withdraw/preview', {
           method: 'POST',
           body: JSON.stringify(body),
         });
         const p = data.preview;
-        document.getElementById('withdraw-preview').textContent =
-          'Server: ' +
-          formatUsd(p.grossUsd) +
-          ' gross → ' +
-          formatUsd(p.netToUserUsd) +
-          ' after 3% fee';
+        if (previewEl) {
+          previewEl.textContent = 'Server: ' + formatUsd(p.grossUsd) + ' gross → ' + formatUsd(p.netToUserUsd) + ' after 3% fee';
+        }
         updateWithdrawBar(p.grossUsd);
       } catch (e) {
-        document.getElementById('withdraw-preview').textContent = e.message;
+        if (previewEl) previewEl.textContent = e.message;
         updateWithdrawBar(usdLocal);
       }
     }
 
     function initHeader() {
-      const user = getUser();
-      document.getElementById('creator-email').textContent = user?.email || '';
-      document.getElementById('unique-code').textContent = user?.uniqueCode || '—';
+      const user = getUser ? getUser() : null;
+      const emailEl = document.getElementById('creator-email');
+      const codeEl = document.getElementById('unique-code');
+      const nameEl = document.getElementById('creator-name');
+      const stageNameEl = document.getElementById('stage-name');
+      const avatarEl = document.getElementById('creator-avatar');
+      
+      if (emailEl) emailEl.textContent = user?.email || '';
+      if (codeEl) codeEl.textContent = user?.uniqueCode || '—';
       const name = user?.profile?.stageName || user?.uniqueCode || 'Creator';
-      document.getElementById('creator-name').textContent = name;
-      document.getElementById('stage-name').textContent = user?.profile?.stageName || '—';
+      if (nameEl) nameEl.textContent = name;
+      if (stageNameEl) stageNameEl.textContent = user?.profile?.stageName || '—';
       const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-      document.getElementById('creator-avatar').textContent = initials;
+      if (avatarEl) avatarEl.textContent = initials;
     }
 
     function applyViewOnly() {
       if (!viewOnly) return;
-      document.getElementById('view-only-banner').classList.remove('hidden');
-      document.getElementById('section-withdraw').classList.add('opacity-60', 'pointer-events-none');
+      const banner = document.getElementById('view-only-banner');
+      const withdrawSection = document.getElementById('section-withdraw');
+      if (banner) banner.classList.remove('hidden');
+      if (withdrawSection) withdrawSection.classList.add('opacity-60', 'pointer-events-none');
     }
 
     function initSocket() {
-      if (typeof io === 'undefined' || !getToken()) return;
-      const socket = io({ auth: { token: getToken() } });
-      socket.on('connect', () => socket.emit('status:subscribe'));
-      socket.on('platform:activity', () => {
-        loadBalance();
-        loadCampaigns();
+      if (typeof io === 'undefined' || !getToken) {
+        console.warn('Socket.io or getToken not available');
+        return;
+      }
+      try {
+        const socket = io({ auth: { token: getToken() } });
+        socket.on('connect', () => socket.emit('status:subscribe'));
+        socket.on('platform:activity', () => {
+          loadBalance();
+          loadCampaigns();
+        });
+      } catch (e) {
+        console.warn('Socket initialization failed:', e);
+      }
+    }
+
+    // Event listeners with null checks
+    const amountInput = document.getElementById('withdraw-amount');
+    if (amountInput) {
+      amountInput.addEventListener('input', () => {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(refreshWithdrawPreview, 300);
       });
     }
 
-    document.getElementById('withdraw-amount').addEventListener('input', () => {
-      clearTimeout(previewTimer);
-      previewTimer = setTimeout(refreshWithdrawPreview, 300);
-    });
-    document.getElementById('withdraw-currency').addEventListener('change', refreshWithdrawPreview);
+    const currencySelect = document.getElementById('withdraw-currency');
+    if (currencySelect) {
+      currencySelect.addEventListener('change', refreshWithdrawPreview);
+    }
 
     document.querySelectorAll('.payout-tab').forEach((btn) => {
       btn.addEventListener('click', () => setPayoutTab(btn.dataset.payout));
     });
 
-    document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!canWrite()) return showAlert('View-only mode');
-      const cur = document.getElementById('withdraw-currency').value;
-      const local = parseFloat(document.getElementById('withdraw-amount').value);
-      const body =
-        cur === 'USD'
+    const withdrawForm = document.getElementById('withdraw-form');
+    if (withdrawForm) {
+      withdrawForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!canWrite()) return showAlert('View-only mode');
+        
+        const curSelect = document.getElementById('withdraw-currency');
+        const amountInputEl = document.getElementById('withdraw-amount');
+        const cur = curSelect?.value || 'USD';
+        const local = parseFloat(amountInputEl?.value || '0');
+        
+        const body = cur === 'USD'
           ? { amountUsd: local, payoutMethod, payoutDetails: payoutDetails() }
           : { amountLocal: local, currency: cur, payoutMethod, payoutDetails: payoutDetails() };
 
-      const btn = document.getElementById('withdraw-submit');
-      btn.disabled = true;
-      try {
-        await apiFetch('/api/wallet/withdraw', { method: 'POST', body: JSON.stringify(body) });
-        showAlert('Withdrawal processed.', 'success');
-        e.target.reset();
-        updateWithdrawBar(0);
-        await loadBalance();
-      } catch (err) {
-        showAlert(err.message);
-      } finally {
-        refreshWithdrawPreview();
-      }
-    });
+        const btn = document.getElementById('withdraw-submit');
+        if (btn) btn.disabled = true;
+        try {
+          await apiFetch('/api/wallet/withdraw', { method: 'POST', body: JSON.stringify(body) });
+          showAlert('Withdrawal processed.', 'success');
+          if (withdrawForm) withdrawForm.reset();
+          updateWithdrawBar(0);
+          await loadBalance();
+        } catch (err) {
+          showAlert(err.message);
+        } finally {
+          if (btn) btn.disabled = false;
+          refreshWithdrawPreview();
+        }
+      });
+    }
 
-    document.getElementById('btn-refresh').addEventListener('click', () => {
-      loadBalance();
-      loadCampaigns();
-    });
+    const refreshBtn = document.getElementById('btn-refresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        loadBalance();
+        loadCampaigns();
+      });
+    }
 
-    document.getElementById('btn-logout').addEventListener('click', () => {
-      clearSession();
-      window.location.href = '/signup.html';
-    });
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (clearSession) clearSession();
+        window.location.href = '/signup.html';
+      });
+    }
+
+    const historyCard = document.getElementById('card-history');
+    if (historyCard) {
+      historyCard.addEventListener('click', showWithdrawalHistory);
+    }
+
+    const modalClose = document.getElementById('modal-close');
+    if (modalClose) {
+      modalClose.addEventListener('click', closeModal);
+    }
+
+    const modal = document.getElementById('modal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
 
     (async function init() {
       if (session.user.role === 'admin' && !viewUserId) {
@@ -555,7 +731,7 @@
         initSocket();
       } catch (err) {
         if (err.status === 401 || err.status === 403) {
-          clearSession();
+          if (clearSession) clearSession();
           window.location.href = '/signup.html?login=1';
           return;
         }
@@ -563,14 +739,5 @@
       }
     })();
   </script>
-<div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80">
-  <div class="max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl">
-    <div class="flex items-center justify-between border-b border-slate-700 px-5 py-4">
-      <h3 id="modal-title" class="font-semibold text-white">Withdrawal History</h3>
-      <button type="button" id="modal-close" class="text-slate-400 hover:text-white">✕</button>
-    </div>
-    <div id="modal-body" class="max-h-[70vh] overflow-y-auto px-5 py-4 text-sm text-slate-300">Loading...</div>
-  </div>
-</div>
 </body>
 </html>
