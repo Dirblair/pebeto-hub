@@ -153,4 +153,4 @@ publicRouter.post('/mpesa-callback', async (req, res) => {
     res.status(500).json({ ResultCode: 1, ResultDesc: "Internal Error" });
   }
 });
-module.exports = router;
+module.exports = { router, publicRouter };
