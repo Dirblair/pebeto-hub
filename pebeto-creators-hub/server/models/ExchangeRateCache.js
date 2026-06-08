@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const exchangeRateCacheSchema = new mongoose.Schema({
   base: { type: String, default: 'USD' },
-  rates: { type: Map, of: Number },
+  rates: { type: mongoose.Schema.Types.Mixed }, // Changed from Map to Mixed
   provider: String,
   fetchedAt: Date,
   expiresAt: Date,
