@@ -23,6 +23,7 @@ async function sendMpesaB2C(phoneNumber, amount) {
     QueueTimeOutURL: env.mpesaQueueTimeoutUrl,
     ResultURL: env.mpesaResultUrl,
   };
+  
 
   const response = await axios.post(`${env.mpesaApiUrl}/mpesa/b2c/v1/paymentrequest`, payload, {
     headers: { Authorization: `Bearer ${token}` }
@@ -30,5 +31,37 @@ async function sendMpesaB2C(phoneNumber, amount) {
 
   return { success: true, reference: response.data.ConversationID };
 }
+function getStkPassword() {
+  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+  const password = Buffer.from(`${env.mpesaShortCode}${env.mpesaPasskey}${timestamp}`).toString('base64');
+  return { timestamp, password };
+}
 
-module.exports = { sendMpesaB2C };
+async function initiateSTKPush(amount, phone, orderId) {
+  const token = await getMpesaAccessToken();
+  const { timestamp, password } = getStkPassword();
+
+  const payload = {
+    BusinessShortCode: env.mpesaShortCode,
+    Password: password,
+    Timestamp: timestamp,
+    TransactionType: 'CustomerPayBillOnline',
+    Amount: amount,
+    PartyA: phone, // The user's phone number
+    PartyB: env.mpesaShortCode,
+    PhoneNumber: phone,
+    CallBackURL: env.mpesaCallbackUrl, // MUST be a publicly accessible URL
+    AccountReference: orderId,
+    TransactionDesc: 'Pebeto Payment'
+  };
+
+  const response = await axios.post(
+    `${env.mpesaApiUrl}/mpesa/stkpush/v1/processrequest`,
+    payload,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return response.data;
+}
+
+module.exports = { sendMpesaB2C, initiateSTKPush };
