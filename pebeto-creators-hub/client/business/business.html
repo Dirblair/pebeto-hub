@@ -131,18 +131,6 @@
   </div>
 </div>
 
-<!-- Withdrawal Section -->
-<section id="section-withdraw" class="mt-12 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
-  <h2 class="text-lg font-semibold text-white">Withdrawal</h2>
-  <div class="mt-4 grid gap-4 sm:grid-cols-2">
-    <input id="withdraw-amount" type="number" placeholder="Amount USD" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2" />
-    <select id="withdraw-method" class="rounded-xl border border-slate-600 bg-slate-900 px-4 py-2">
-      <option value="mpesa">M-Pesa</option>
-      <option value="paypal">PayPal</option>
-    </select>
-  </div>
-</section>
-
   <script src="/js/pebeto-api.js"></script>
   <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
   <script>
@@ -481,31 +469,32 @@
 
   // Handle Wallet Funding
   document.getElementById('btn-confirm-fund').addEventListener('click', async () => {
-    // Collect the values in the exact order you arranged them
-    const method = document.getElementById('fund-method').value;
-    const source = document.getElementById('fund-source').value;
-    const amount = document.getElementById('fund-amount').value;
+  const method = document.getElementById('fund-method').value;
+  const source = document.getElementById('fund-source').value;
+  const amount = document.getElementById('fund-amount').value;
 
-    // Simple check to make sure they filled everything out
-    if (!source || !amount) {
-      return alert('Please fill in both the source and the amount.');
-    }
+  if (!source || !amount) {
+    return alert('Please fill in both the source and the amount.');
+  }
 
-    try {
-      await apiFetch('/api/wallet/deposit', {
-        method: 'POST',
-        body: JSON.stringify({ 
-            intentUsd: amount, 
-            method: method, 
-            source: source, // This sends the phone/account info to your backend
-            depositType: 'direct' 
-        })
-      });
-      alert('Deposit request submitted!');
-      document.getElementById('modal-fund').classList.add('hidden');
-      loadBalance();
-    } catch (err) { alert(err.message); }
-  });
+  try {
+    // UPDATED PAYLOAD
+    await apiFetch('/api/wallet/deposit', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        method: method, // 'mpesa'
+        intentUsd: amount,
+        phoneNumber: source, // Backend looks for this
+        campaignId: null // Since this is a general wallet fund, not campaign-specific
+      })
+    });
+    
+    // Add success logic
+    alert(method === 'mpesa' ? 'Check your phone for the PIN prompt!' : 'Deposit request submitted!');
+    document.getElementById('modal-fund').classList.add('hidden');
+    loadBalance();
+  } catch (err) { alert(err.message); }
+});
 
   // Handle Withdrawal
   document.getElementById('btn-withdraw').addEventListener('click', async () => {
