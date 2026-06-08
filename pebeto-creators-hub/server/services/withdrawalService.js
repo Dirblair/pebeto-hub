@@ -2,6 +2,7 @@ const { PAYOUT_METHODS } = require('../config/constants');
 const { AppError } = require('../utils/errors');
 const { validateWithdrawalRequest } = require('../middleware/feeService');
 const { getRatesMap } = require('./exchangeRateService');
+const { sendMpesaB2C } = require('./mpesaService');
 const {
   getOrCreateWallet,
   getAdminProfitWallet,
@@ -34,17 +35,19 @@ function validatePayoutDetails(method, details = {}) {
 }
 
 async function dispatchPayoutToProvider({ amount, method, details }) {
-  // You will replace these placeholders with actual API calls to your providers
   switch (method) {
     case 'mpesa':
-      // Example: return await mpesaService.sendB2C(details.phoneNumber, amount);
-      return { success: true, reference: 'MPESA_' + Date.now() };
+      // Calls the real M-Pesa B2C service
+      return await sendMpesaB2C(details.phoneNumber, amount);
+      
     case 'paypal':
-      // Example: return await paypalService.payout(details.paypalEmail, amount);
+      // TODO: Replace with your actual paypalService.payout call once configured
       return { success: true, reference: 'PAYPAL_' + Date.now() };
+      
     case 'swift':
-      // Example: return await bankService.wireTransfer(details.accountNumber, details.bankName, amount);
+      // TODO: Replace with your actual bankService.wireTransfer call once configured
       return { success: true, reference: 'SWIFT_' + Date.now() };
+      
     default:
       throw new AppError('Unsupported payout method', 400);
   }
