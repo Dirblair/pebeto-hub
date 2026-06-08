@@ -51,9 +51,17 @@ async function getRatesMap() {
 
 function convertUsdToLocal(usdAmount, currency, rates) {
   if (!currency || currency.toUpperCase() === BASE_CURRENCY) return usdAmount;
-  const rate = rates[currency.toUpperCase()];
-  if (!rate) throw new AppError(`Rate not found for ${currency}`, 400);
+  
+  // Safe lookup: normalize to uppercase just in case
+  const upperCurrency = currency.toUpperCase();
+  const rate = rates[upperCurrency];
+
+  // Specific check to help you debug if a specific currency is missing
+  if (rate === undefined || rate === null) {
+    console.error(`Rate mapping failure for: ${upperCurrency}. Current rates available:`, Object.keys(rates));
+    throw new AppError(`Exchange rate for ${upperCurrency} is currently unavailable.`, 400);
+  }
+
   return Math.round(usdAmount * rate * 100) / 100;
 }
-
 module.exports = { getRatesMap, convertUsdToLocal };
