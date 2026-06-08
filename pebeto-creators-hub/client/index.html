@@ -3,17 +3,424 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pebeto Creator's Hub</title>
+  <meta name="description" content="Pebeto Creator's Hub - Connect brands with creators. Fund campaigns, showcase talent, and grow your influence." />
+  <meta name="keywords" content="creator economy, brand collaboration, influencer marketing, content creator" />
+  <meta name="author" content="Pebeto" />
+  <title>Pebeto Creator's Hub — Connect. Create. Earn.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4facfe',
+            secondary: '#00f2fe',
+            accent: '#ff0050',
+            dark: '#0f0f23',
+            card: '#1a1a2e',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'float': 'float 3s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+  <style>
+    .gradient-text {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    }
+    .hero-gradient {
+      background: radial-gradient(ellipse at top, #1a1a2e, #0f0f23);
+    }
+    .card-hover {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.5);
+    }
+    .glass-card {
+      background: rgba(26, 26, 46, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(79, 172, 254, 0.2);
+    }
+  </style>
 </head>
-<body>
-  <h1>Pebeto Creator's Hub</h1>
-  <p>API is running. Dashboard HTML files coming in the next phase.</p>
-  <p>
-    <a href="/signup.html">Sign up / Sign in</a> ·
-    <a href="/admin/admin.html">Admin</a> ·
-    <a href="/business/business.html">Business</a> ·
-    <a href="/creator/creator.html">Creator</a> ·
-    <a href="/api/health">Health check</a>
-  </p>
+<body class="gradient-bg text-white font-sans">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass-card border-b border-slate-800/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+            <span class="text-white font-bold text-lg">P</span>
+          </div>
+          <span class="font-bold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pebeto</span>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-slate-300 hover:text-primary transition-colors">Features</a>
+          <a href="#how-it-works" class="text-slate-300 hover:text-primary transition-colors">How it Works</a>
+          <a href="#for-creators" class="text-slate-300 hover:text-primary transition-colors">For Creators</a>
+          <a href="#for-brands" class="text-slate-300 hover:text-primary transition-colors">For Brands</a>
+        </div>
+
+        <!-- Auth Buttons (will be updated based on login state) -->
+        <div id="auth-buttons" class="flex items-center gap-3">
+          <!-- Dynamic content loaded via JS -->
+          <div class="w-20 h-9 bg-slate-700 rounded-lg animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-gradient min-h-screen flex items-center justify-center pt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-6">
+          <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+          <span class="text-sm text-primary">The Creator Economy Hub</span>
+        </div>
+        
+        <h1 class="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6">
+          Connect. Create.
+          <span class="gradient-text">Earn.</span>
+        </h1>
+        
+        <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+          The all-in-one platform where brands meet creators. Fund campaigns, 
+          showcase talent, and grow your influence — all in one place.
+        </p>
+        
+        <div class="flex flex-wrap gap-4 justify-center">
+          <a href="/signup.html" class="px-8 py-3 bg-gradient-to-r from-primary to-secondary rounded-full font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/25">
+            Get Started Free
+          </a>
+          <a href="#features" class="px-8 py-3 border border-slate-600 rounded-full font-semibold hover:border-primary hover:text-primary transition-all">
+            Learn More
+          </a>
+        </div>
+        
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20">
+          <div>
+            <p class="text-3xl font-bold text-primary">500+</p>
+            <p class="text-sm text-slate-500">Active Creators</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-primary">100+</p>
+            <p class="text-sm text-slate-500">Brand Partners</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-primary">$50K+</p>
+            <p class="text-sm text-slate-500">Paid to Creators</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-primary">98%</p>
+            <p class="text-sm text-slate-500">Satisfaction Rate</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Everything You Need to Succeed</h2>
+        <p class="text-slate-400 max-w-2xl mx-auto">
+          Powerful tools for creators and brands to collaborate, create amazing content, and grow together.
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="glass-card rounded-2xl p-6 card-hover">
+          <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4">
+            <i class="ri-wallet-3-line text-2xl text-primary"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Secure Escrow</h3>
+          <p class="text-slate-400">Funds are held securely and released only when work is completed. 10% platform fee.</p>
+        </div>
+        
+        <div class="glass-card rounded-2xl p-6 card-hover">
+          <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4">
+            <i class="ri-video-line text-2xl text-primary"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Content Showcase</h3>
+          <p class="text-slate-400">Upload your best work, build your portfolio, and attract top brands.</p>
+        </div>
+        
+        <div class="glass-card rounded-2xl p-6 card-hover">
+          <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4">
+            <i class="ri-hand-coin-line text-2xl text-primary"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Instant Withdrawals</h3>
+          <p class="text-slate-400">Withdraw your earnings via M-Pesa, PayPal, or bank transfer with low fees.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-20 px-4 sm:px-6 lg:px-8 bg-black/30">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
+        <p class="text-slate-400">Simple, transparent, and secure process</p>
+      </div>
+      
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center text-2xl font-bold text-primary mb-4">1</div>
+          <h3 class="font-semibold mb-2">Sign Up</h3>
+          <p class="text-sm text-slate-400">Create your account as a creator or brand</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center text-2xl font-bold text-primary mb-4">2</div>
+          <h3 class="font-semibold mb-2">Connect</h3>
+          <p class="text-sm text-slate-400">Brands post campaigns, creators place bids</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center text-2xl font-bold text-primary mb-4">3</div>
+          <h3 class="font-semibold mb-2">Create</h3>
+          <p class="text-sm text-slate-400">Selected creators produce amazing content</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center text-2xl font-bold text-primary mb-4">4</div>
+          <h3 class="font-semibold mb-2">Get Paid</h3>
+          <p class="text-sm text-slate-400">Complete work, release escrow, withdraw earnings</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Creators -->
+  <section id="for-creators" class="py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-6">
+            <i class="ri-star-line text-primary text-sm"></i>
+            <span class="text-sm text-primary">For Creators</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-bold mb-4">Build Your Brand</h2>
+          <p class="text-slate-400 mb-6">
+            Showcase your talent, connect with leading brands, and turn your passion into a career. 
+            Get paid fairly and transparently for your creative work.
+          </p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Discover paid campaigns</li>
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Build your portfolio</li>
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Get paid via M-Pesa, PayPal, or bank</li>
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Low 3% withdrawal fee</li>
+          </ul>
+          <a href="/signup.html?role=creator" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-secondary rounded-full font-semibold hover:opacity-90">
+            Join as Creator <i class="ri-arrow-right-line"></i>
+          </a>
+        </div>
+        <div class="glass-card rounded-2xl p-8 text-center">
+          <div class="text-6xl mb-4">🎨</div>
+          <p class="text-xl font-semibold mb-2">"Pebeto helped me land 5 brand deals in my first month!"</p>
+          <p class="text-slate-400">— Sarah, Content Creator</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Brands -->
+  <section id="for-brands" class="py-20 px-4 sm:px-6 lg:px-8 bg-black/30">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="order-2 md:order-1">
+          <div class="glass-card rounded-2xl p-8 text-center">
+            <div class="text-6xl mb-4">🏢</div>
+            <p class="text-xl font-semibold mb-2">"Found amazing creators who perfectly represented our brand."</p>
+            <p class="text-slate-400">— Mike, Marketing Director</p>
+          </div>
+        </div>
+        <div class="order-1 md:order-2">
+          <div class="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-6">
+            <i class="ri-building-line text-primary text-sm"></i>
+            <span class="text-sm text-primary">For Brands</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-bold mb-4">Scale Your Influence</h2>
+          <p class="text-slate-400 mb-6">
+            Connect with vetted creators who can bring your vision to life. 
+            Launch campaigns, manage budgets, and track results — all in one dashboard.
+          </p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Post campaigns & receive bids</li>
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Secure escrow payments</li>
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> 10% platform fee on funding</li>
+            <li class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-primary"></i> Analytics & performance tracking</li>
+          </ul>
+          <a href="/signup.html?role=business" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-secondary rounded-full font-semibold hover:opacity-90">
+            Join as Brand <i class="ri-arrow-right-line"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="glass-card rounded-3xl p-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+        <p class="text-slate-400 mb-8">
+          Join thousands of creators and brands already using Pebeto to collaborate and grow.
+        </p>
+        <div class="flex flex-wrap gap-4 justify-center">
+          <a href="/signup.html" class="px-8 py-3 bg-gradient-to-r from-primary to-secondary rounded-full font-semibold hover:opacity-90">
+            Sign Up Free
+          </a>
+          <a href="/community.html" class="px-8 py-3 border border-slate-600 rounded-full font-semibold hover:border-primary hover:text-primary">
+            Explore Community
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+              <span class="text-white font-bold text-lg">P</span>
+            </div>
+            <span class="font-bold text-xl">Pebeto</span>
+          </div>
+          <p class="text-sm text-slate-500">Connecting creators with brands worldwide.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Platform</h4>
+          <ul class="space-y-2 text-sm text-slate-500">
+            <li><a href="#features" class="hover:text-primary">Features</a></li>
+            <li><a href="#how-it-works" class="hover:text-primary">How it Works</a></li>
+            <li><a href="/community.html" class="hover:text-primary">Community</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Resources</h4>
+          <ul class="space-y-2 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-primary">Help Center</a></li>
+            <li><a href="#" class="hover:text-primary">Creator Tips</a></li>
+            <li><a href="#" class="hover:text-primary">Brand Guide</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-primary">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-primary">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-primary">Cookie Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="text-center text-sm text-slate-600 pt-8 mt-8 border-t border-slate-800">
+        &copy; 2024 Pebeto Creator's Hub. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/pebeto-api.js"></script>
+  <script>
+    const { getUser, clearSession } = window.PebetoApi || {};
+
+    async function updateAuthUI() {
+      const authContainer = document.getElementById('auth-buttons');
+      if (!authContainer) return;
+      
+      try {
+        const user = getUser ? getUser() : null;
+        
+        if (user) {
+          // User is logged in - show dashboard link and logout
+          const role = user.role;
+          let dashboardUrl = '/creator-hub.html';
+          if (role === 'business') dashboardUrl = '/business.html';
+          if (role === 'admin') dashboardUrl = '/admin.html';
+          
+          authContainer.innerHTML = `
+            <a href="${dashboardUrl}" class="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
+              Dashboard
+            </a>
+            <button onclick="handleLogout()" class="px-4 py-2 text-sm border border-slate-600 rounded-lg hover:border-rose-500 hover:text-rose-400 transition-colors">
+              Logout
+            </button>
+          `;
+        } else {
+          // User not logged in - show sign in / sign up
+          authContainer.innerHTML = `
+            <a href="/signup.html" class="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
+              Sign In
+            </a>
+            <a href="/signup.html?signup=1" class="px-4 py-2 text-sm bg-gradient-to-r from-primary to-secondary rounded-lg font-semibold hover:opacity-90 transition-opacity">
+              Sign Up
+            </a>
+          `;
+        }
+      } catch (error) {
+        console.error('Auth UI update error:', error);
+        // Fallback to logged-out state
+        authContainer.innerHTML = `
+          <a href="/signup.html" class="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
+            Sign In
+          </a>
+          <a href="/signup.html?signup=1" class="px-4 py-2 text-sm bg-gradient-to-r from-primary to-secondary rounded-lg font-semibold hover:opacity-90 transition-opacity">
+            Sign Up
+          </a>
+        `;
+      }
+    }
+
+    window.handleLogout = function() {
+      if (clearSession) clearSession();
+      window.location.href = '/signup.html';
+    };
+
+    // Update auth UI when page loads
+    updateAuthUI();
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
