@@ -1,27 +1,504 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bids Marketplace</title>
-    <style>
-        body { margin: 0; font-family: sans-serif; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bids Marketplace — Pebeto Creator's Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            creator: {
+              emerald: '#059669',
+              deep: '#064e3b',
+              slate: '#1e293b',
+              mint: '#34d399',
+              accent: '#10b981',
+            },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .campaign-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .campaign-card:hover { transform: translateY(-2px); }
+  </style>
 </head>
-<body>
+<body class="min-h-screen bg-gradient-to-b from-slate-950 via-creator-deep to-creator-slate font-sans text-slate-100">
+  <div id="view-only-banner" class="hidden border-b border-amber-500/40 bg-amber-950/60 px-4 py-2 text-center text-sm text-amber-200">
+    View-only mode — you cannot place bids.
+  </div>
 
-    <div class="bids-container" style="padding: 20px; color: white; background: #000; min-height: 100vh;">
-        <h2 style="margin-bottom: 20px;">Available Campaigns</h2>
-        
-        <div class="campaign-card" style="background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-            <h3 style="margin: 0;">Brand Name: Pebeto TV</h3>
-            <p style="font-size: 0.9rem; color: #ccc;">Need a 30-second promo for our new series.</p>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span style="color: #4facfe; font-weight: bold;">Budget: KES 5,000</span>
-                <button style="background: #ff0050; border: none; padding: 8px 15px; border-radius: 5px; color: white;">Bid Now</button>
-            </div>
+  <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+    <!-- Header -->
+    <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div id="creator-avatar" class="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-creator-mint/60 bg-creator-slate text-lg font-bold text-creator-mint shadow-lg shadow-emerald-900/30">C</div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-creator-mint">Bids Marketplace</p>
+          <h1 class="text-xl font-bold text-white">Available Campaigns</h1>
+          <p id="creator-email" class="text-sm text-slate-400"></p>
         </div>
+      </div>
+      <nav class="flex flex-wrap items-center gap-2">
+        <a href="/community.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-creator-mint hover:text-creator-mint">Home</a>
+        <a href="/creator.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-creator-mint hover:text-creator-mint">Dashboard</a>
+        <a href="/creator-hub.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-creator-mint hover:text-creator-mint">Studio</a>
+        <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
+      </nav>
+    </header>
+
+    <div id="global-alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
+
+    <!-- Search & Filter Bar -->
+    <section class="mb-6 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-4">
+      <div class="flex flex-wrap gap-4 items-center">
+        <div class="flex-1 min-w-[200px]">
+          <input type="text" id="search-input" placeholder="Search campaigns by title or brand..." 
+                 class="w-full rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm focus:border-creator-mint focus:outline-none" />
+        </div>
+        <div class="flex gap-2">
+          <select id="sort-by" class="rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-2.5 text-sm">
+            <option value="newest">Newest First</option>
+            <option value="budget_high">Highest Budget</option>
+            <option value="budget_low">Lowest Budget</option>
+          </select>
+          <button id="btn-refresh" class="rounded-xl bg-creator-emerald/20 px-4 py-2.5 text-sm font-semibold text-creator-mint hover:bg-creator-emerald/30">
+            Refresh
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Summary -->
+    <section class="mb-6 grid gap-4 sm:grid-cols-3">
+      <div class="rounded-xl border border-slate-600/50 bg-slate-800/40 p-3 text-center">
+        <p class="text-xs text-slate-400">Available Campaigns</p>
+        <p id="campaigns-count" class="text-2xl font-bold text-creator-mint">—</p>
+      </div>
+      <div class="rounded-xl border border-slate-600/50 bg-slate-800/40 p-3 text-center">
+        <p class="text-xs text-slate-400">Your Active Bids</p>
+        <p id="my-bids-count" class="text-2xl font-bold text-white">—</p>
+      </div>
+      <div class="rounded-xl border border-slate-600/50 bg-slate-800/40 p-3 text-center">
+        <p class="text-xs text-slate-400">Avg. Budget</p>
+        <p id="avg-budget" class="text-2xl font-bold text-amber-400">—</p>
+      </div>
+    </section>
+
+    <!-- Campaigns List -->
+    <div class="rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5">
+      <h2 class="text-lg font-semibold text-white mb-4">Open Campaigns</h2>
+      <div id="campaigns-list" class="space-y-4">
+        <p class="text-center text-slate-500 py-8">Loading campaigns...</p>
+      </div>
     </div>
 
+    <!-- Bid Modal -->
+    <div id="bid-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-950/80" aria-hidden="true">
+      <div class="max-h-[85vh] w-full max-w-md overflow-hidden rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-700 px-5 py-4">
+          <h3 id="modal-title" class="font-semibold text-white">Place Your Bid</h3>
+          <button type="button" id="modal-close" class="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close">✕</button>
+        </div>
+        <div id="modal-body" class="p-5">
+          <form id="bid-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Campaign</label>
+              <p id="bid-campaign-title" class="text-sm text-creator-mint font-semibold"></p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Your Bid Amount (USD)</label>
+              <input type="number" id="bid-amount" min="1" step="0.01" required 
+                     class="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm focus:border-creator-mint focus:outline-none" />
+              <p class="mt-1 text-xs text-slate-500">Campaign budget: <span id="campaign-budget"></span></p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Proposal (Optional)</label>
+              <textarea id="bid-proposal" rows="3" 
+                        class="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm focus:border-creator-mint focus:outline-none"
+                        placeholder="Briefly explain why you're a good fit for this campaign..."></textarea>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button type="button" id="btn-cancel-bid" class="flex-1 rounded-xl border border-slate-600 px-4 py-2.5 text-sm text-slate-400 hover:bg-slate-800">Cancel</button>
+              <button type="submit" class="flex-1 rounded-xl bg-creator-accent px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600">Submit Bid</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/pebeto-api.js"></script>
+  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script>
+    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi || {};
+
+    // Safety check
+    if (!requireRole || !apiFetch) {
+      console.error('PebetoApi not loaded properly');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const viewOnly = params.get('viewOnly') === '1';
+    const viewUserId = params.get('userId') || '';
+
+    const session = requireRole ? requireRole(['creator', 'admin'], '/signup.html?login=1') : null;
+    if (!session) throw new Error('unauthorized or API not loaded');
+
+    let allCampaigns = [];
+    let myBids = [];
+    let searchTimer = null;
+    let currentBidCampaign = null;
+
+    function querySuffix() {
+      const q = new URLSearchParams();
+      if (viewUserId && session.user.role === 'admin') q.set('userId', viewUserId);
+      if (viewOnly) q.set('viewOnly', '1');
+      const s = q.toString();
+      return s ? '?' + s : '';
+    }
+
+    function canWrite() {
+      return !viewOnly && session.user.role === 'creator';
+    }
+
+    function showAlert(msg, type) {
+      const el = document.getElementById('global-alert');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
+      else el.classList.add('border-rose-500/50', 'bg-rose-500/10', 'text-rose-200');
+      setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    async function loadCampaigns() {
+      try {
+        // Fetch open campaigns (where creator hasn't bid yet or can bid)
+        const data = await apiFetch('/api/campaigns/open' + querySuffix());
+        allCampaigns = data.campaigns || [];
+        await loadMyBids();
+        renderCampaigns();
+      } catch (e) {
+        console.error('Load campaigns failed:', e);
+        const root = document.getElementById('campaigns-list');
+        if (root) root.innerHTML = '<p class="text-center text-rose-400 py-8">Failed to load campaigns: ' + escapeHtml(e.message) + '</p>';
+      }
+    }
+
+    async function loadMyBids() {
+      try {
+        const data = await apiFetch('/api/creator/bids' + querySuffix());
+        myBids = data.bids || [];
+        
+        const countEl = document.getElementById('my-bids-count');
+        if (countEl) countEl.textContent = myBids.length;
+        
+        return myBids;
+      } catch (e) {
+        console.warn('Load my bids failed:', e);
+        myBids = [];
+        return [];
+      }
+    }
+
+    function hasBidOnCampaign(campaignId) {
+      const userId = (getUser ? getUser() : null)?._id || (getUser ? getUser() : null)?.id;
+      return myBids.some(b => 
+        String(b.campaignId) === String(campaignId) || 
+        (b.campaign && String(b.campaign._id) === String(campaignId))
+      );
+    }
+
+    function getCampaignsToShow() {
+      // Only show campaigns that creator hasn't bid on yet
+      return allCampaigns.filter(c => !hasBidOnCampaign(c._id));
+    }
+
+    function sortCampaigns(campaigns, sortBy) {
+      const sorted = [...campaigns];
+      if (sortBy === 'budget_high') {
+        sorted.sort((a, b) => b.budget - a.budget);
+      } else if (sortBy === 'budget_low') {
+        sorted.sort((a, b) => a.budget - b.budget);
+      } else {
+        // newest first
+        sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+      return sorted;
+    }
+
+    function filterCampaigns(campaigns, searchTerm) {
+      if (!searchTerm) return campaigns;
+      const term = searchTerm.toLowerCase();
+      return campaigns.filter(c => 
+        c.title?.toLowerCase().includes(term) ||
+        c.description?.toLowerCase().includes(term) ||
+        c.brandName?.toLowerCase().includes(term)
+      );
+    }
+
+    function renderCampaigns() {
+      const root = document.getElementById('campaigns-list');
+      if (!root) return;
+      
+      const searchTerm = document.getElementById('search-input')?.value || '';
+      const sortBy = document.getElementById('sort-by')?.value || 'newest';
+      
+      let campaignsToShow = getCampaignsToShow();
+      const avgBudget = campaignsToShow.length > 0 
+        ? campaignsToShow.reduce((sum, c) => sum + c.budget, 0) / campaignsToShow.length 
+        : 0;
+      
+      const countEl = document.getElementById('campaigns-count');
+      const avgEl = document.getElementById('avg-budget');
+      if (countEl) countEl.textContent = campaignsToShow.length;
+      if (avgEl) avgEl.textContent = formatUsd(avgBudget);
+      
+      campaignsToShow = filterCampaigns(campaignsToShow, searchTerm);
+      campaignsToShow = sortCampaigns(campaignsToShow, sortBy);
+      
+      if (!campaignsToShow.length) {
+        root.innerHTML = `
+          <div class="text-center py-12">
+            <p class="text-slate-500 mb-2">No available campaigns found.</p>
+            ${searchTerm ? '<p class="text-xs text-slate-600">Try a different search term.</p>' : '<p class="text-xs text-slate-600">Check back later for new opportunities!</p>'}
+          </div>
+        `;
+        return;
+      }
+      
+      root.innerHTML = campaignsToShow.map(campaign => `
+        <div class="campaign-card rounded-2xl border border-slate-600/50 bg-slate-900/50 p-5">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <h3 class="font-semibold text-white text-lg">${escapeHtml(campaign.title)}</h3>
+                <span class="rounded-full bg-creator-emerald/20 px-2 py-0.5 text-xs text-creator-mint">Open for Bids</span>
+              </div>
+              <p class="text-sm text-slate-400 mb-3">${escapeHtml(campaign.description || 'No description provided.')}</p>
+              <div class="flex flex-wrap gap-4 text-sm">
+                <div>
+                  <span class="text-slate-500">Budget:</span>
+                  <span class="font-semibold text-creator-mint ml-1">${formatUsd(campaign.budget)}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500">Posted:</span>
+                  <span class="text-slate-300 ml-1">${formatDate ? formatDate(campaign.createdAt) : new Date(campaign.createdAt).toLocaleDateString()}</span>
+                </div>
+                ${campaign.brandName ? `
+                <div>
+                  <span class="text-slate-500">Brand:</span>
+                  <span class="text-slate-300 ml-1">${escapeHtml(campaign.brandName)}</span>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+            <button type="button" 
+                    data-campaign='${JSON.stringify({ id: campaign._id, title: campaign.title, budget: campaign.budget })}'
+                    class="bid-now-btn rounded-xl bg-creator-accent px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 transition-all">
+              Place Bid →
+            </button>
+          </div>
+        </div>
+      `).join('');
+      
+      // Attach bid button event listeners
+      root.querySelectorAll('.bid-now-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const campaignData = JSON.parse(btn.dataset.campaign);
+          openBidModal(campaignData);
+        });
+      });
+    }
+
+    function openBidModal(campaign) {
+      if (!canWrite()) {
+        showAlert('You cannot place bids in view-only mode.', 'error');
+        return;
+      }
+      
+      currentBidCampaign = campaign;
+      
+      const modal = document.getElementById('bid-modal');
+      const titleEl = document.getElementById('bid-campaign-title');
+      const budgetEl = document.getElementById('campaign-budget');
+      const amountInput = document.getElementById('bid-amount');
+      const proposalInput = document.getElementById('bid-proposal');
+      
+      if (titleEl) titleEl.textContent = campaign.title;
+      if (budgetEl) budgetEl.textContent = formatUsd(campaign.budget);
+      if (amountInput) amountInput.value = '';
+      if (proposalInput) proposalInput.value = '';
+      
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeBidModal() {
+      const modal = document.getElementById('bid-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      currentBidCampaign = null;
+    }
+
+    async function submitBid(amount, proposal) {
+      if (!currentBidCampaign) return;
+      if (!amount || amount <= 0) {
+        showAlert('Please enter a valid bid amount.', 'error');
+        return;
+      }
+      
+      try {
+        await apiFetch('/api/campaigns/' + currentBidCampaign.id + '/bids' + querySuffix(), {
+          method: 'POST',
+          body: JSON.stringify({ 
+            amount: amount, 
+            proposal: proposal || '' 
+          }),
+        });
+        
+        showAlert('Bid submitted successfully!', 'success');
+        closeBidModal();
+        
+        // Refresh data
+        await Promise.all([loadCampaigns(), loadMyBids()]);
+        renderCampaigns();
+      } catch (e) {
+        showAlert(e.message, 'error');
+      }
+    }
+
+    function initHeader() {
+      const user = getUser ? getUser() : null;
+      const emailEl = document.getElementById('creator-email');
+      const avatarEl = document.getElementById('creator-avatar');
+      
+      if (emailEl) emailEl.textContent = user?.email || '';
+      const name = user?.profile?.stageName || user?.uniqueCode || 'Creator';
+      const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+      if (avatarEl) avatarEl.textContent = initials;
+    }
+
+    function applyViewOnly() {
+      if (!viewOnly) return;
+      const banner = document.getElementById('view-only-banner');
+      if (banner) banner.classList.remove('hidden');
+    }
+
+    function initSocket() {
+      if (typeof io === 'undefined' || !getToken) {
+        console.warn('Socket.io or getToken not available');
+        return;
+      }
+      try {
+        const socket = io({ auth: { token: getToken() } });
+        socket.on('connect', () => socket.emit('status:subscribe'));
+        socket.on('platform:activity', () => {
+          loadCampaigns();
+        });
+      } catch (e) {
+        console.warn('Socket initialization failed:', e);
+      }
+    }
+
+    // Event Listeners
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (clearSession) clearSession();
+        window.location.href = '/signup.html';
+      });
+    }
+    
+    const refreshBtn = document.getElementById('btn-refresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        loadCampaigns();
+      });
+    }
+    
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => renderCampaigns(), 300);
+      });
+    }
+    
+    const sortSelect = document.getElementById('sort-by');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => renderCampaigns());
+    }
+    
+    // Modal event listeners
+    const modalClose = document.getElementById('modal-close');
+    if (modalClose) {
+      modalClose.addEventListener('click', closeBidModal);
+    }
+    
+    const cancelBidBtn = document.getElementById('btn-cancel-bid');
+    if (cancelBidBtn) {
+      cancelBidBtn.addEventListener('click', closeBidModal);
+    }
+    
+    const modal = document.getElementById('bid-modal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeBidModal();
+      });
+    }
+    
+    const bidForm = document.getElementById('bid-form');
+    if (bidForm) {
+      bidForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const amountInput = document.getElementById('bid-amount');
+        const proposalInput = document.getElementById('bid-proposal');
+        const amount = parseFloat(amountInput?.value || '0');
+        const proposal = proposalInput?.value || '';
+        await submitBid(amount, proposal);
+      });
+    }
+
+    (async function init() {
+      if (session.user.role === 'admin' && !viewUserId) {
+        showAlert('Admin: viewing marketplace in read-only mode.');
+      }
+      initHeader();
+      applyViewOnly();
+      
+      try {
+        await loadCampaigns();
+        initSocket();
+      } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+          if (clearSession) clearSession();
+          window.location.href = '/signup.html?login=1';
+          return;
+        }
+        showAlert(err.message || 'Failed to load marketplace');
+        console.error('Init error:', err);
+      }
+    })();
+  </script>
 </body>
 </html>
