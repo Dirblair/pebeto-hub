@@ -41,11 +41,12 @@ async function bootstrap() {
     app.use(attachFeeService);
 
     // 4. Routes
-    app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'pebeto-creators-hub' }));
-    app.use('/api/auth', authRoutes);
-    app.use('/api/wallet', walletRoutes);
+   app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'pebeto-creators-hub' }));
+app.use('/api/auth', authRoutes);
+    app.use('/api/wallet', walletRoutes.publicRouter); // Public callback
+app.use('/api/wallet', walletRoutes);              // Your existing protected routes
     app.use('/api/admin', adminRoutes);
-    app.use('/api/campaigns', campaignRoutes);
+app.use('/api/campaigns', campaignRoutes);
 
     // 5. Static Files (Client UI)
     app.use(express.static(path.join(__dirname, '..', 'client')));
