@@ -21,31 +21,37 @@ async function fetchRatesFromApi() {
 
 async function getRatesMap() {
   const now = new Date();
-  let cached = await ExchangeRateCache.findOne({ base: BASE_CURRENCY }).sort({ fetchedAt: -1 });
+  const cached = await ExchangeRateCache.findOne({ base: BASE_CURRENCY });
+
+  // 1. If we have valid cached data, return the rates as a plain object
   if (cached && cached.expiresAt && cached.expiresAt > now) {
-    return Object.fromEntries(cached.rates || []);
+    return cached.rates; // Mongoose stores this as a plain object already
   }
+
   let rates;
   try {
     rates = await fetchRatesFromApi();
   } catch (err) {
     if (cached && cached.rates) {
-      return Object.fromEntries(cached.rates);
+      return cached.rates;
     }
+    // Fallback if API is down and no cache exists
     rates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
   }
-  const ratesMap = new Map(Object.entries(rates));
+
+  // 2. Update cache using a plain object
   await ExchangeRateCache.findOneAndUpdate(
     { base: BASE_CURRENCY },
     {
       base: BASE_CURRENCY,
-      rates: ratesMap,
+      rates: rates, // Store as plain object, NOT a Map
       provider: 'exchangerate-api',
       fetchedAt: now,
       expiresAt: new Date(now.getTime() + CACHE_TTL_MS),
     },
     { upsert: true, new: true }
   );
+
   return rates;
 }
 
