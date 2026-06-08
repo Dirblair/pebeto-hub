@@ -49,34 +49,28 @@
       </div>
       <nav class="flex flex-wrap items-center gap-2">
         <a href="/community.html" class="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:border-brand-sky hover:text-brand-sky">Home</a>
-    <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
-</nav>
+        <button type="button" id="btn-logout" class="rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-400 hover:border-rose-500/50 hover:text-rose-300">Sign out</button>
+      </nav>
     </header>
 
     <div id="global-alert" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm" role="alert"></div>
 
     <!-- Wallet & financials -->
-    <section class="mb-8 grid gap-4 sm:grid-cols-3">
-  <div class="rounded-2xl border border-brand-sky/30 bg-gradient-to-br from-brand-deep/80 to-brand-slate p-5 shadow-lg">
-    <p class="text-sm font-medium text-slate-300">Wallet balance</p>
-    <p id="bal-available" class="mt-2 text-3xl font-bold text-white">—</p>
-    <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
-   <button onclick="document.getElementById('modal-fund').classList.remove('hidden')" class="mt-3 w-full rounded-lg bg-brand-sky/20 px-3 py-1.5 text-xs font-semibold text-brand-sky hover:bg-brand-sky/30">Fund Wallet (Bank)</button> 
-  </div>
+    <section class="mb-8 grid gap-4 sm:grid-cols-2">
+      <div class="rounded-2xl border border-brand-sky/30 bg-gradient-to-br from-brand-deep/80 to-brand-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Wallet balance</p>
+        <p id="bal-available" class="mt-2 text-3xl font-bold text-white">—</p>
+        <p id="bal-available-local" class="mt-1 text-xs text-slate-500"></p>
+        <button onclick="document.getElementById('modal-fund').classList.remove('hidden')" class="mt-3 w-full rounded-lg bg-brand-sky/20 px-3 py-1.5 text-xs font-semibold text-brand-sky hover:bg-brand-sky/30">Fund Wallet</button>
+      </div>
 
-  <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-brand-slate p-5 shadow-lg">
-    <p class="text-sm font-medium text-slate-300">Escrow balance</p>
-    <p id="bal-escrow" class="mt-2 text-3xl font-bold text-brand-sky">—</p>
-    <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
-    <p class="mt-3 text-xs text-slate-500">Funds held for active campaigns</p>
-  </div>
-
-  <button type="button" onclick="document.getElementById('section-withdraw').scrollIntoView({behavior:'smooth'})" class="text-left rounded-2xl border border-brand-accent/40 bg-gradient-to-br from-indigo-950/80 to-brand-slate p-5 shadow-lg hover:border-brand-sky transition-all">
-    <p class="text-sm font-medium text-slate-300">Withdraw funds</p>
-    <p class="mt-2 text-lg font-bold text-white">3% Fee</p>
-    <p class="mt-1 text-xs text-slate-400 underline">Click to withdraw to bank</p>
-  </button>
-</section>
+      <div class="rounded-2xl border border-slate-500/50 bg-gradient-to-br from-slate-800 to-brand-slate p-5 shadow-lg">
+        <p class="text-sm font-medium text-slate-300">Escrow balance</p>
+        <p id="bal-escrow" class="mt-2 text-3xl font-bold text-brand-sky">—</p>
+        <p id="bal-escrow-local" class="mt-1 text-xs text-slate-500"></p>
+        <p class="mt-3 text-xs text-slate-500">Funds held for active campaigns</p>
+      </div>
+    </section>
 
     <!-- Create campaign -->
     <section id="section-create" class="mb-8 rounded-2xl border border-slate-600/60 bg-slate-800/40 p-5 backdrop-blur">
@@ -100,48 +94,56 @@
         </div>
       </form>
     </section>
+
     <!-- Campaigns -->
-<div id="campaigns-list" class="mt-4 space-y-4">
-  <p class="text-slate-500">Loading campaigns...</p>
-</div>
-   <!-- Funding Modal -->
-<div id="modal-fund" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-  <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-    <h3 class="text-lg font-bold text-white mb-4">Fund Wallet</h3>
-    
-<label class="block text-xs text-slate-400 mb-1">Funding Method</label>
-    <select id="fund-method" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white">
-      <option value="mpesa">M-Pesa</option>
-      <option value="bank">Bank Transfer</option>
-      <option value="paypal">PayPal</option>
-    </select>
-
-    <label class="block text-xs text-slate-400 mb-1">Source (Phone/Account/Email)</label>
-    <input type="text" id="fund-source" placeholder="Enter phone or account details" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
-
-    <label class="block text-xs text-slate-400 mb-1">Amount to Deposit (USD)</label>
-    <input type="number" id="fund-amount" placeholder="Enter amount" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
-    
-    <p id="total-charge" class="text-xs text-brand-sky mb-4 font-semibold italic">Total to pay: $0.00 (Incl. 10% fee)</p>
-
-    <div class="flex gap-2">
-      <button onclick="document.getElementById('modal-fund').classList.add('hidden')" class="flex-1 py-2 rounded-xl text-slate-400">Cancel</button>
-      <button id="btn-confirm-fund" class="flex-1 py-2 rounded-xl bg-brand-sky text-slate-950 font-bold">Pay Now</button>
+    <div id="campaigns-list" class="mt-4 space-y-4">
+      <p class="text-slate-500">Loading campaigns...</p>
     </div>
   </div>
-</div>
+
+  <!-- Funding Modal -->
+  <div id="modal-fund" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <h3 class="text-lg font-bold text-white mb-4">Fund Wallet</h3>
+      
+      <label class="block text-xs text-slate-400 mb-1">Funding Method</label>
+      <select id="fund-method" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white">
+        <option value="mpesa">M-Pesa</option>
+        <option value="bank">Bank Transfer</option>
+        <option value="paypal">PayPal</option>
+      </select>
+
+      <label class="block text-xs text-slate-400 mb-1">Source (Phone/Account/Email)</label>
+      <input type="text" id="fund-source" placeholder="Enter phone or account details" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
+
+      <label class="block text-xs text-slate-400 mb-1">Amount to Deposit (USD)</label>
+      <input type="number" id="fund-amount" placeholder="Enter amount" class="w-full rounded-xl bg-slate-950 border border-slate-600 px-4 py-2.5 mb-4 text-white" />
+      
+      <p id="total-charge" class="text-xs text-brand-sky mb-4 font-semibold italic">Total to pay: $0.00 (Incl. 10% fee)</p>
+
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('modal-fund').classList.add('hidden')" class="flex-1 py-2 rounded-xl text-slate-400">Cancel</button>
+        <button id="btn-confirm-fund" class="flex-1 py-2 rounded-xl bg-brand-sky text-slate-950 font-bold">Pay Now</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/js/pebeto-api.js"></script>
   <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
   <script>
-    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi;
+    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi || {};
+
+    // Safety check
+    if (!requireRole || !apiFetch) {
+      console.error('PebetoApi not loaded properly');
+    }
 
     const params = new URLSearchParams(window.location.search);
     const viewOnly = params.get('viewOnly') === '1';
     const viewUserId = params.get('userId') || '';
 
-    const session = requireRole(['business', 'admin'], '/signup.html?login=1');
-    if (!session) throw new Error('unauthorized');
+    const session = requireRole ? requireRole(['business', 'admin'], '/signup.html?login=1') : null;
+    if (!session) throw new Error('unauthorized or API not loaded');
 
     let rates = { USD: 1 };
     let currency = 'USD';
@@ -161,6 +163,7 @@
 
     function showAlert(msg, type) {
       const el = document.getElementById('global-alert');
+      if (!el) return;
       el.textContent = msg;
       el.classList.remove('hidden', 'border-rose-500/50', 'bg-rose-500/10', 'text-rose-200', 'border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
       if (type === 'success') el.classList.add('border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-200');
@@ -186,13 +189,25 @@
         'Submitted for Review': 'bg-amber-500/20 text-amber-200 ring-amber-500/40',
         Completed: 'bg-violet-500/20 text-violet-200 ring-violet-500/40',
         Paid: 'bg-emerald-500/20 text-emerald-200 ring-emerald-500/40',
+        open: 'bg-blue-500/20 text-blue-200 ring-blue-500/40',
+        submitted_for_review: 'bg-amber-500/20 text-amber-200 ring-amber-500/40',
+        paid: 'bg-emerald-500/20 text-emerald-200 ring-emerald-500/40',
       };
       return map[stage] || 'bg-slate-700 text-slate-300 ring-slate-600';
     }
 
+    function getEffectiveStage(campaign) {
+      return campaign.businessStage || campaign.status || 'open';
+    }
+
     async function loadRates() {
-      const data = await apiFetch('/api/wallet/exchange-rates');
-      rates = data.rates || { USD: 1 };
+      try {
+        const data = await apiFetch('/api/wallet/exchange-rates');
+        rates = data.rates || { USD: 1 };
+      } catch (e) {
+        console.warn('Failed to load rates:', e);
+        rates = { USD: 1 };
+      }
     }
 
     function balanceQuery() {
@@ -203,33 +218,56 @@
     }
 
     async function loadBalance() {
-      const data = await apiFetch('/api/wallet/balance' + balanceQuery());
-      const b = data.balances;
-      const d = data.display || {};
-      currency = (getUser() || {}).preferredCurrency || data.display?.currency || 'USD';
-      document.getElementById('bal-available').textContent = formatUsd(b.available);
-      document.getElementById('bal-escrow').textContent = formatUsd(b.escrow);
-      document.getElementById('bal-available-local').textContent = localAmount(b.available) || (d.available ? '≈ ' + d.available + ' ' + currency : '');
-      document.getElementById('bal-escrow-local').textContent = localAmount(b.escrow) || (d.escrow ? '≈ ' + d.escrow + ' ' + currency : '');
+      try {
+        const data = await apiFetch('/api/wallet/balance' + balanceQuery());
+        const b = data.balances || { available: 0, escrow: 0 };
+        const d = data.display || {};
+        currency = (getUser ? (getUser() || {}).preferredCurrency : null) || data.display?.currency || 'USD';
+        
+        const availEl = document.getElementById('bal-available');
+        const escrowEl = document.getElementById('bal-escrow');
+        const availLocalEl = document.getElementById('bal-available-local');
+        const escrowLocalEl = document.getElementById('bal-escrow-local');
+        
+        if (availEl) availEl.textContent = formatUsd(b.available);
+        if (escrowEl) escrowEl.textContent = formatUsd(b.escrow);
+        if (availLocalEl) availLocalEl.textContent = localAmount(b.available) || (d.available ? '≈ ' + d.available + ' ' + currency : '');
+        if (escrowLocalEl) escrowLocalEl.textContent = localAmount(b.escrow) || (d.escrow ? '≈ ' + d.escrow + ' ' + currency : '');
+      } catch (e) {
+        console.error('Load balance failed:', e);
+        showAlert('Failed to load balance', 'error');
+      }
     }
 
     async function previewDeposit(intentUsd) {
       if (!intentUsd || intentUsd <= 0) return null;
-      const data = await apiFetch('/api/wallet/deposit/preview', {
-        method: 'POST',
-        body: JSON.stringify({ intentUsd }),
-      });
-      return data.breakdown;
+      try {
+        const data = await apiFetch('/api/wallet/deposit/preview', {
+          method: 'POST',
+          body: JSON.stringify({ intentUsd }),
+        });
+        return data.breakdown;
+      } catch (e) {
+        return null;
+      }
     }
 
     async function loadCampaigns() {
-      const data = await apiFetch('/api/campaigns' + querySuffix());
-      campaigns = data.campaigns || [];
-      renderCampaigns();
+      try {
+        const data = await apiFetch('/api/campaigns' + querySuffix());
+        campaigns = data.campaigns || [];
+        renderCampaigns();
+      } catch (e) {
+        console.error('Load campaigns failed:', e);
+        const root = document.getElementById('campaigns-list');
+        if (root) root.innerHTML = '<p class="text-slate-500">Failed to load campaigns.</p>';
+      }
     }
 
     function renderCampaigns() {
       const root = document.getElementById('campaigns-list');
+      if (!root) return;
+      
       if (!campaigns.length) {
         root.innerHTML = '<p class="rounded-xl border border-dashed border-slate-600 px-4 py-8 text-center text-sm text-slate-500">No campaigns yet. Create one above.</p>';
         return;
@@ -237,80 +275,52 @@
 
       root.innerHTML = campaigns
         .map((c) => {
-          const stage = c.businessStage || c.status;
+          const stage = getEffectiveStage(c);
+          const isOpen = c.status === 'open' || c.businessStage === 'Active';
+          const isSubmitted = c.status === 'submitted_for_review' || c.businessStage === 'Submitted for Review';
+          const isPaid = c.status === 'paid' || c.businessStage === 'Paid';
+          
           const bidsHtml = (c.bids || [])
             .map((b) => {
-              const acceptBtn =
-                canWrite() && b.status === 'pending' && c.status === 'open'
-                  ? '<button type="button" data-accept="' +
-                    c._id +
-                    '" data-bid="' +
-                    b._id +
-                    '" class="accept-bid rounded-lg bg-brand-accent px-2 py-1 text-xs font-semibold text-white hover:bg-blue-600">Accept</button>'
-                  : '<span class="text-xs text-slate-500">' +
-                    escapeHtml(b.status) +
-                    '</span>';
+              const acceptBtn = (canWrite() && b.status === 'pending' && isOpen)
+                ? '<button type="button" data-accept="' + c._id + '" data-bid="' + b._id + '" class="accept-bid rounded-lg bg-brand-accent px-2 py-1 text-xs font-semibold text-white hover:bg-blue-600">Accept</button>'
+                : '<span class="text-xs text-slate-500">' + escapeHtml(b.status) + '</span>';
               return (
                 '<li class="flex items-center justify-between gap-2 rounded-lg bg-slate-900/50 px-3 py-2">' +
-                '<div><p class="font-medium text-slate-200">' +
-                escapeHtml(b.uniqueCode || 'Creator') +
-                '</p><p class="text-xs text-slate-500">' +
-                formatUsd(b.amount) +
-                (b.proposal ? ' · ' + escapeHtml(b.proposal.slice(0, 60)) : '') +
-                '</p></div>' +
+                '<div><p class="font-medium text-slate-200">' + escapeHtml(b.uniqueCode || 'Creator') + '</p>' +
+                '<p class="text-xs text-slate-500">' + formatUsd(b.amount) + (b.proposal ? ' · ' + escapeHtml(b.proposal.slice(0, 60)) : '') + '</p></div>' +
                 acceptBtn +
                 '</li>'
               );
             })
             .join('');
 
-          const fundBlock =
-            canWrite() && !['paid', 'cancelled'].includes(c.status)
-              ? '<div class="mt-3 rounded-xl border border-slate-700 bg-slate-900/40 p-3">' +
-                '<p class="text-xs font-medium text-slate-400">Fund escrow (10% platform fee)</p>' +
-                '<div class="mt-2 flex flex-wrap gap-2">' +
-                '<input type="number" min="1" step="0.01" data-fund-intent="' +
-                c._id +
-                '" placeholder="Intent USD" class="w-32 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
-                '<button type="button" data-fund="' +
-                c._id +
-                '" class="fund-btn rounded-lg bg-brand-sky/20 px-3 py-1.5 text-xs font-semibold text-brand-sky ring-1 ring-brand-sky/50 hover:bg-brand-sky/30">Fund</button>' +
-                '</div>' +
-                '<p class="fund-preview mt-1 text-xs text-slate-500" data-preview-for="' +
-                c._id +
-                '"></p>' +
-                '</div>'
-              : '';
+          const fundBlock = (canWrite() && !isPaid && stage !== 'cancelled')
+            ? '<div class="mt-3 rounded-xl border border-slate-700 bg-slate-900/40 p-3">' +
+              '<p class="text-xs font-medium text-slate-400">Fund escrow (10% platform fee)</p>' +
+              '<div class="mt-2 flex flex-wrap gap-2">' +
+              '<input type="number" min="1" step="0.01" data-fund-intent="' + c._id + '" placeholder="Intent USD" class="w-32 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm" />' +
+              '<button type="button" data-fund="' + c._id + '" class="fund-btn rounded-lg bg-brand-sky/20 px-3 py-1.5 text-xs font-semibold text-brand-sky ring-1 ring-brand-sky/50 hover:bg-brand-sky/30">Fund</button>' +
+              '</div>' +
+              '<p class="fund-preview mt-1 text-xs text-slate-500" data-preview-for="' + c._id + '"></p>' +
+              '</div>'
+            : '';
 
-          const completeBtn =
-            canWrite() && c.status === 'submitted_for_review'
-              ? '<button type="button" data-complete="' +
-                c._id +
-                '" class="complete-btn mt-3 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-500">Complete &amp; pay creator</button>' +
-                '<p class="mt-1 text-xs text-slate-500">Moves funds from escrow to creator wallet (visible to Admin)</p>'
-              : c.status === 'paid'
-              ? '<p class="mt-3 text-sm text-emerald-400">Paid — escrow released to creator.</p>'
-              : '';
+          const completeBtn = (canWrite() && isSubmitted)
+            ? '<button type="button" data-complete="' + c._id + '" class="complete-btn mt-3 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-500">Complete &amp; pay creator</button>' +
+              '<p class="mt-1 text-xs text-slate-500">Moves funds from escrow to creator wallet</p>'
+            : isPaid
+            ? '<p class="mt-3 text-sm text-emerald-400">✓ Paid — escrow released to creator.</p>'
+            : '';
 
           return (
             '<article class="card-hover rounded-2xl border border-slate-600/50 bg-slate-900/50 p-4">' +
             '<div class="flex flex-wrap items-start justify-between gap-2">' +
-            '<div><h3 class="font-semibold text-white">' +
-            escapeHtml(c.title) +
-            '</h3><p class="mt-1 text-xs text-slate-500">Budget ' +
-            formatUsd(c.budget) +
-            ' · Escrow held ' +
-            formatUsd(c.escrowHeld) +
-            '</p></div>' +
-            '<span class="stage-pill rounded-full px-3 py-1 font-semibold uppercase ring-1 ' +
-            stageClass(stage) +
-            '">' +
-            escapeHtml(stage) +
-            '</span></div>' +
+            '<div><h3 class="font-semibold text-white">' + escapeHtml(c.title) + '</h3>' +
+            '<p class="mt-1 text-xs text-slate-500">Budget ' + formatUsd(c.budget) + ' · Escrow held ' + formatUsd(c.escrowHeld || 0) + '</p></div>' +
+            '<span class="stage-pill rounded-full px-3 py-1 font-semibold uppercase ring-1 ' + stageClass(stage) + '">' + escapeHtml(stage) + '</span></div>' +
             (c.description ? '<p class="mt-2 text-sm text-slate-400">' + escapeHtml(c.description) + '</p>' : '') +
-            '<ul class="mt-3 space-y-1">' +
-            (bidsHtml || '<li class="text-xs text-slate-500">No bids yet</li>') +
-            '</ul>' +
+            '<ul class="mt-3 space-y-1">' + (bidsHtml || '<li class="text-xs text-slate-500">No bids yet</li>') + '</ul>' +
             fundBlock +
             completeBtn +
             '</article>'
@@ -318,6 +328,7 @@
         })
         .join('');
 
+      // Attach event listeners
       root.querySelectorAll('.fund-btn').forEach((btn) => {
         btn.addEventListener('click', () => fundCampaign(btn.dataset.fund));
       });
@@ -325,16 +336,14 @@
         inp.addEventListener('input', async () => {
           const id = inp.dataset.fundIntent;
           const prev = root.querySelector('[data-preview-for="' + id + '"]');
-          const b = await previewDeposit(parseFloat(inp.value));
+          const val = parseFloat(inp.value);
+          if (isNaN(val) || val <= 0) {
+            if (prev) prev.textContent = '';
+            return;
+          }
+          const b = await previewDeposit(val);
           if (b && prev) {
-            prev.textContent =
-              'You pay ' +
-              formatUsd(b.totalChargeUsd) +
-              ' (' +
-              formatUsd(b.intentUsd) +
-              ' escrow + ' +
-              formatUsd(b.feeUsd) +
-              ' fee)';
+            prev.textContent = 'You pay ' + formatUsd(b.totalChargeUsd) + ' (' + formatUsd(b.intentUsd) + ' escrow + ' + formatUsd(b.feeUsd) + ' fee)';
           }
         });
       });
@@ -347,6 +356,10 @@
     }
 
     async function fundCampaign(id) {
+      if (!canWrite()) {
+        showAlert('View-only mode: you cannot fund campaigns');
+        return;
+      }
       const inp = document.querySelector('input[data-fund-intent="' + id + '"]');
       const intentUsd = parseFloat(inp?.value);
       if (!intentUsd || intentUsd <= 0) {
@@ -358,12 +371,7 @@
           method: 'POST',
           body: JSON.stringify({ intentUsd }),
         });
-        showAlert(
-          'Escrow funded. Charged ' +
-            formatUsd(data.breakdown.totalChargeUsd) +
-            ' (incl. 10% fee).',
-          'success'
-        );
+        showAlert('Escrow funded. Charged ' + formatUsd(data.breakdown.totalChargeUsd) + ' (incl. 10% fee).', 'success');
         await Promise.all([loadBalance(), loadCampaigns()]);
       } catch (e) {
         showAlert(e.message);
@@ -371,6 +379,10 @@
     }
 
     async function acceptBid(campaignId, bidId) {
+      if (!canWrite()) {
+        showAlert('View-only mode: you cannot accept bids');
+        return;
+      }
       try {
         await apiFetch('/api/campaigns/' + campaignId + '/bids/' + bidId + '/accept' + querySuffix(), {
           method: 'POST',
@@ -384,6 +396,10 @@
     }
 
     async function completeCampaign(id) {
+      if (!canWrite()) {
+        showAlert('View-only mode: you cannot complete campaigns');
+        return;
+      }
       if (!confirm('Release escrow to the creator wallet and mark as Paid?')) return;
       try {
         await apiFetch('/api/campaigns/' + id + '/complete' + querySuffix(), {
@@ -398,125 +414,184 @@
     }
 
     function initHeader() {
-      const user = getUser();
-      document.getElementById('brand-email').textContent = user?.email || '';
+      const user = getUser ? getUser() : null;
+      const emailEl = document.getElementById('brand-email');
+      const nameEl = document.getElementById('brand-name');
+      const avatarEl = document.getElementById('brand-avatar');
+      
+      if (emailEl) emailEl.textContent = user?.email || '';
       const name = user?.profile?.companyName || user?.email || 'Brand';
-      document.getElementById('brand-name').textContent = name;
+      if (nameEl) nameEl.textContent = name;
       const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-      document.getElementById('brand-avatar').textContent = initials;
+      if (avatarEl) avatarEl.textContent = initials;
     }
 
     function applyViewOnly() {
       if (!viewOnly) return;
-      document.getElementById('view-only-banner').classList.remove('hidden');
-      document.getElementById('section-create').classList.add('opacity-60', 'pointer-events-none');
+      const banner = document.getElementById('view-only-banner');
+      const createSection = document.getElementById('section-create');
+      if (banner) banner.classList.remove('hidden');
+      if (createSection) createSection.classList.add('opacity-60', 'pointer-events-none');
     }
 
     function initSocket() {
-      if (typeof io === 'undefined' || !getToken()) return;
-      const socket = io({ auth: { token: getToken() } });
-      socket.on('connect', () => socket.emit('status:subscribe'));
-      socket.on('platform:activity', () => {
-        loadBalance();
-        loadCampaigns();
-      });
-    }
-
-    document.getElementById('create-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!canWrite()) return showAlert('View-only mode');
-      try {
-        await apiFetch('/api/campaigns' + querySuffix(), {
-          method: 'POST',
-          body: JSON.stringify({
-            title: document.getElementById('camp-title').value.trim(),
-            description: document.getElementById('camp-desc').value.trim(),
-            budget: parseFloat(document.getElementById('camp-budget').value),
-          }),
-        });
-        showAlert('Campaign created.', 'success');
-        e.target.reset();
-        await loadCampaigns();
-      } catch (err) {
-        showAlert(err.message);
+      if (typeof io === 'undefined' || !getToken) {
+        console.warn('Socket.io or getToken not available');
+        return;
       }
-    });
-
-    document.getElementById('btn-logout').addEventListener('click', () => {
-      clearSession();
-      window.location.href = '/signup.html';
-    });
-
-   (async function init() {
-  if (session.user.role === 'admin' && !viewUserId) {
-    showAlert('Admin: open this dashboard via Search → View only.');
-  }
-  initHeader();
-  applyViewOnly();
-  
-  try {
-    await loadRates();
-    await Promise.all([loadBalance(), loadCampaigns()]);
-    initSocket();
-  } catch (err) {
-    if (err.status === 401 || err.status === 403) {
-      clearSession();
-      window.location.href = '/signup.html?login=1';
-      return;
+      try {
+        const socket = io({ auth: { token: getToken() } });
+        socket.on('connect', () => socket.emit('status:subscribe'));
+        socket.on('platform:activity', () => {
+          loadBalance();
+          loadCampaigns();
+        });
+      } catch (e) {
+        console.warn('Socket initialization failed:', e);
+      }
     }
-    showAlert(err.message || 'Failed to load dashboard');
-  }
 
-  // Handle Wallet Funding
-  document.getElementById('btn-confirm-fund').addEventListener('click', async () => {
-  const method = document.getElementById('fund-method').value;
-  const source = document.getElementById('fund-source').value;
-  const amount = document.getElementById('fund-amount').value;
-
-  if (!source || !amount) {
-    return alert('Please fill in both the source and the amount.');
-  }
-
-  try {
-    // UPDATED PAYLOAD
-    await apiFetch('/api/wallet/deposit', {
-      method: 'POST',
-      body: JSON.stringify({ 
-        method: method, // 'mpesa'
-        intentUsd: amount,
-        phoneNumber: source, // Backend looks for this
-        campaignId: null // Since this is a general wallet fund, not campaign-specific
-      })
-    });
-    
-    // Add success logic
-    alert(method === 'mpesa' ? 'Check your phone for the PIN prompt!' : 'Deposit request submitted!');
-    document.getElementById('modal-fund').classList.add('hidden');
-    loadBalance();
-  } catch (err) { alert(err.message); }
-});
-
-  // Handle Withdrawal
-  document.getElementById('btn-withdraw').addEventListener('click', async () => {
-    const amount = document.getElementById('withdraw-amount').value;
-    const method = document.getElementById('withdraw-method').value;
-    try {
-      await apiFetch('/api/wallet/withdraw', {
-        method: 'POST',
-        body: JSON.stringify({ amountUsd: amount, payoutMethod: method })
+    // Initialize event listeners
+    const createForm = document.getElementById('create-form');
+    if (createForm) {
+      createForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!canWrite()) return showAlert('View-only mode: you cannot create campaigns');
+        const titleInput = document.getElementById('camp-title');
+        const descInput = document.getElementById('camp-desc');
+        const budgetInput = document.getElementById('camp-budget');
+        
+        if (!titleInput?.value.trim()) return showAlert('Title is required');
+        if (!budgetInput?.value) return showAlert('Budget is required');
+        
+        try {
+          await apiFetch('/api/campaigns' + querySuffix(), {
+            method: 'POST',
+            body: JSON.stringify({
+              title: titleInput.value.trim(),
+              description: descInput?.value.trim() || '',
+              budget: parseFloat(budgetInput.value),
+            }),
+          });
+          showAlert('Campaign created.', 'success');
+          createForm.reset();
+          await loadCampaigns();
+        } catch (err) {
+          showAlert(err.message);
+        }
       });
-      showAlert('Withdrawal request submitted', 'success');
-      loadBalance();
-    } catch (err) { showAlert(err.message); }
-  });
+    }
 
-  // Handle Fee Calculation
-  document.getElementById('fund-amount').addEventListener('input', (e) => {
-    const val = parseFloat(e.target.value) || 0;
-    const total = val * 1.10;
-    document.getElementById('total-charge').textContent = 'Total to pay: $' + total.toFixed(2) + ' (Incl. 10% fee)';
-  });
-})();
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (clearSession) clearSession();
+        window.location.href = '/signup.html';
+      });
+    }
+
+    // Funding modal handler
+    const confirmFundBtn = document.getElementById('btn-confirm-fund');
+    if (confirmFundBtn) {
+      confirmFundBtn.addEventListener('click', async () => {
+        const methodSelect = document.getElementById('fund-method');
+        const sourceInput = document.getElementById('fund-source');
+        const amountInput = document.getElementById('fund-amount');
+        
+        const method = methodSelect?.value || 'mpesa';
+        const source = sourceInput?.value.trim() || '';
+        const amount = parseFloat(amountInput?.value || '0');
+        
+        if (!source) {
+          showAlert('Please enter your payment source details');
+          return;
+        }
+        if (!amount || amount <= 0) {
+          showAlert('Please enter a valid amount');
+          return;
+        }
+        
+        try {
+          const payload = {
+            method: method,
+            intentUsd: amount,
+            campaignId: null
+          };
+          // Add appropriate field based on payment method
+          if (method === 'mpesa') payload.phoneNumber = source;
+          else if (method === 'paypal') payload.paypalEmail = source;
+          else payload.bankDetails = { source };
+          
+          await apiFetch('/api/wallet/deposit', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          
+          const modal = document.getElementById('modal-fund');
+          if (modal) modal.classList.add('hidden');
+          
+          const msg = method === 'mpesa' ? 'Check your phone for the PIN prompt!' : 'Deposit request submitted!';
+          showAlert(msg, 'success');
+          await loadBalance();
+          
+          if (sourceInput) sourceInput.value = '';
+          if (amountInput) amountInput.value = '';
+        } catch (err) {
+          showAlert(err.message);
+        }
+      });
+    }
+
+    // Fee calculation preview
+    const fundAmountInput = document.getElementById('fund-amount');
+    if (fundAmountInput) {
+      fundAmountInput.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        const total = val * 1.10;
+        const chargeEl = document.getElementById('total-charge');
+        if (chargeEl) chargeEl.textContent = 'Total to pay: $' + total.toFixed(2) + ' (Incl. 10% fee)';
+      });
+    }
+
+    // Close modal when clicking outside
+    const fundModal = document.getElementById('modal-fund');
+    if (fundModal) {
+      fundModal.addEventListener('click', (e) => {
+        if (e.target === fundModal) {
+          fundModal.classList.add('hidden');
+        }
+      });
+    }
+
+    // Cancel button in modal
+    const cancelFundBtn = document.querySelector('#modal-fund button:first-of-type');
+    if (cancelFundBtn) {
+      cancelFundBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modal-fund');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    (async function init() {
+      if (session.user.role === 'admin' && !viewUserId) {
+        showAlert('Admin: open this dashboard via Search → View only.');
+      }
+      initHeader();
+      applyViewOnly();
+      
+      try {
+        await loadRates();
+        await Promise.all([loadBalance(), loadCampaigns()]);
+        initSocket();
+      } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+          if (clearSession) clearSession();
+          window.location.href = '/signup.html?login=1';
+          return;
+        }
+        showAlert(err.message || 'Failed to load dashboard');
+      }
+    })();
   </script>
 </body>
 </html>
