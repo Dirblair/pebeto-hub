@@ -2,10 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Pebeto Creator's Hub - Connect brands with creators. Fund campaigns, showcase talent, and grow your influence." />
   <meta name="keywords" content="creator economy, brand collaboration, influencer marketing, content creator" />
   <meta name="author" content="Pebeto" />
+  <meta name="theme-color" content="#0f0f23" />
+  
+  <!-- PWA Meta Tags for Mobile Installation -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pebeto" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+  
+  <!-- App Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
   <title>Pebeto Creator's Hub — Connect. Create. Earn.</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -65,9 +82,46 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(79, 172, 254, 0.2);
     }
+    
+    /* Install Banner Styles */
+    .install-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body class="gradient-bg text-white font-sans">
+
+  <!-- Install App Banner (PWA) -->
+  <div id="install-banner" class="install-banner hidden">
+    <div class="glass-card rounded-2xl p-4 flex items-center gap-4 shadow-2xl">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+        <span class="text-white font-bold text-xl">P</span>
+      </div>
+      <div>
+        <p class="font-semibold text-white">Install Pebeto App</p>
+        <p class="text-xs text-slate-400">Get faster access and offline support</p>
+      </div>
+      <button id="install-app" class="px-4 py-2 bg-primary rounded-lg text-sm font-semibold hover:bg-primary/80 transition">
+        Install
+      </button>
+      <button id="close-banner" class="text-slate-400 hover:text-white text-xl">&times;</button>
+    </div>
+  </div>
 
   <!-- Navigation -->
   <nav class="fixed top-0 left-0 right-0 z-50 glass-card border-b border-slate-800/50">
@@ -89,14 +143,30 @@
           <a href="#for-brands" class="text-slate-300 hover:text-primary transition-colors">For Brands</a>
         </div>
 
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden text-slate-300 hover:text-primary">
+          <i class="ri-menu-line text-2xl"></i>
+        </button>
+
         <!-- Auth Buttons (will be updated based on login state) -->
-        <div id="auth-buttons" class="flex items-center gap-3">
+        <div id="auth-buttons" class="hidden md:flex items-center gap-3">
           <!-- Dynamic content loaded via JS -->
           <div class="w-20 h-9 bg-slate-700 rounded-lg animate-pulse"></div>
         </div>
       </div>
     </div>
   </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed inset-0 z-40 hidden bg-dark/95 backdrop-blur-lg pt-20 px-6">
+    <div class="flex flex-col gap-4">
+      <a href="#features" class="mobile-nav-link text-lg py-3 border-b border-slate-700">Features</a>
+      <a href="#how-it-works" class="mobile-nav-link text-lg py-3 border-b border-slate-700">How it Works</a>
+      <a href="#for-creators" class="mobile-nav-link text-lg py-3 border-b border-slate-700">For Creators</a>
+      <a href="#for-brands" class="mobile-nav-link text-lg py-3 border-b border-slate-700">For Brands</a>
+      <div id="mobile-auth-buttons" class="pt-4 flex flex-col gap-3"></div>
+    </div>
+  </div>
 
   <!-- Hero Section -->
   <section class="hero-gradient min-h-screen flex items-center justify-center pt-16">
@@ -320,6 +390,7 @@
             <span class="font-bold text-xl">Pebeto</span>
           </div>
           <p class="text-sm text-slate-500">Connecting creators with brands worldwide.</p>
+          <p class="text-xs text-slate-600 mt-2">Install our app for better experience</p>
         </div>
         <div>
           <h4 class="font-semibold mb-4">Platform</h4>
@@ -347,7 +418,7 @@
         </div>
       </div>
       <div class="text-center text-sm text-slate-600 pt-8 mt-8 border-t border-slate-800">
-        &copy; 2024 Pebeto Creator's Hub. All rights reserved.
+        &copy; 2025 Pebeto Creator's Hub. All rights reserved.
       </div>
     </div>
   </footer>
@@ -356,21 +427,72 @@
   <script>
     const { getUser, clearSession } = window.PebetoApi || {};
 
+    // PWA Installation
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').classList.remove('hidden');
+    });
+
+    document.getElementById('install-app')?.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        }
+        deferredPrompt = null;
+        document.getElementById('install-banner').classList.add('hidden');
+      }
+    });
+
+    document.getElementById('close-banner')?.addEventListener('click', () => {
+      document.getElementById('install-banner').classList.add('hidden');
+    });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('Service Worker registered:', reg.scope);
+        }).catch(err => {
+          console.log('Service Worker registration failed:', err);
+        });
+      });
+    }
+
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuBtn?.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Close mobile menu when clicking nav links
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+      });
+    });
+
     async function updateAuthUI() {
       const authContainer = document.getElementById('auth-buttons');
+      const mobileAuthContainer = document.getElementById('mobile-auth-buttons');
       if (!authContainer) return;
       
       try {
         const user = getUser ? getUser() : null;
         
         if (user) {
-          // User is logged in - show dashboard link and logout
           const role = user.role;
           let dashboardUrl = '/creator-hub.html';
           if (role === 'business') dashboardUrl = '/business.html';
           if (role === 'admin') dashboardUrl = '/admin.html';
           
-          authContainer.innerHTML = `
+          const desktopButtons = `
             <a href="${dashboardUrl}" class="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
               Dashboard
             </a>
@@ -378,9 +500,20 @@
               Logout
             </button>
           `;
+          const mobileButtons = `
+            <a href="${dashboardUrl}" class="px-4 py-3 text-center bg-primary/20 rounded-lg text-white hover:bg-primary/30 transition">
+              Dashboard
+            </a>
+            <button onclick="handleLogout()" class="px-4 py-3 text-center border border-slate-600 rounded-lg hover:border-rose-500 hover:text-rose-400 transition">
+              Logout
+            </button>
+          `;
+          
+          authContainer.innerHTML = desktopButtons;
+          if (mobileAuthContainer) mobileAuthContainer.innerHTML = mobileButtons;
+          authContainer.classList.remove('hidden');
         } else {
-          // User not logged in - show sign in / sign up
-          authContainer.innerHTML = `
+          const desktopButtons = `
             <a href="/signup.html" class="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
               Sign In
             </a>
@@ -388,18 +521,21 @@
               Sign Up
             </a>
           `;
+          const mobileButtons = `
+            <a href="/signup.html" class="px-4 py-3 text-center bg-slate-800 rounded-lg text-white hover:bg-slate-700 transition">
+              Sign In
+            </a>
+            <a href="/signup.html?signup=1" class="px-4 py-3 text-center bg-gradient-to-r from-primary to-secondary rounded-lg font-semibold hover:opacity-90 transition">
+              Sign Up
+            </a>
+          `;
+          
+          authContainer.innerHTML = desktopButtons;
+          if (mobileAuthContainer) mobileAuthContainer.innerHTML = mobileButtons;
+          authContainer.classList.remove('hidden');
         }
       } catch (error) {
         console.error('Auth UI update error:', error);
-        // Fallback to logged-out state
-        authContainer.innerHTML = `
-          <a href="/signup.html" class="px-4 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
-            Sign In
-          </a>
-          <a href="/signup.html?signup=1" class="px-4 py-2 text-sm bg-gradient-to-r from-primary to-secondary rounded-lg font-semibold hover:opacity-90 transition-opacity">
-            Sign Up
-          </a>
-        `;
       }
     }
 
@@ -408,7 +544,6 @@
       window.location.href = '/signup.html';
     };
 
-    // Update auth UI when page loads
     updateAuthUI();
 
     // Smooth scroll for anchor links
@@ -417,6 +552,7 @@
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
+          mobileMenu?.classList.add('hidden');
           target.scrollIntoView({ behavior: 'smooth' });
         }
       });
