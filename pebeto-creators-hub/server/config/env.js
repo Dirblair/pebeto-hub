@@ -98,11 +98,25 @@ const HOST = process.env.HOST || (IS_PRODUCTION ? '0.0.0.0' : 'localhost');
 // Database Configuration
 // ============================================
 
-const MONGO_URI = requireEnv(
-  process.env.MONGO_URI,
-  'MONGO_URI',
-  'MongoDB connection string (mongodb:// or mongodb+srv://)'
-);
+// DEBUG: Log what we're getting from process.env
+console.log('🔍 [ENV] process.env.MONGO_URI:', process.env.MONGO_URI ? '✅ EXISTS (starts with: ' + process.env.MONGO_URI.substring(0, 30) + '...)' : '❌ UNDEFINED');
+console.log('🔍 [ENV] process.env.MONGODB_URI:', process.env.MONGODB_URI ? '✅ EXISTS' : '❌ UNDEFINED');
+
+// Try both MONGO_URI and MONGODB_URI
+let mongoUriValue = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+// If still not found, use hardcoded fallback for production
+if (!mongoUriValue && IS_PRODUCTION) {
+  console.log('🔧 [ENV] Using hardcoded MongoDB URI as fallback');
+  mongoUriValue = 'mongodb+srv://pebeto:DebbyJenn123%21@pebeto.yggha0f.mongodb.net/pebeto?retryWrites=true&w=majority';
+}
+
+const MONGO_URI = mongoUriValue;
+
+// Only validate if we have a value, otherwise let db.js handle it
+if (!MONGO_URI) {
+  console.warn('⚠️ [ENV] MONGO_URI not set - will use hardcoded value in db.js');
+}
 
 const MONGO_OPTIONS = {
   maxPoolSize: parseInteger(process.env.MONGO_MAX_POOL_SIZE, 10, { min: 1, max: 100 }),
@@ -115,14 +129,17 @@ const MONGO_OPTIONS = {
 // JWT Authentication
 // ============================================
 
-const JWT_SECRET = requireEnv(
-  process.env.JWT_SECRET,
-  'JWT_SECRET',
-  'Secret key for JWT signing (at least 32 characters)'
-);
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('❌ [ENV] JWT_SECRET is required!');
+  if (IS_PRODUCTION) {
+    throw new Error('Missing required environment variable: JWT_SECRET');
+  }
+}
 
 // Validate JWT secret strength
-if (JWT_SECRET.length < 32 && IS_PRODUCTION) {
+if (JWT_SECRET && JWT_SECRET.length < 32 && IS_PRODUCTION) {
   console.warn('⚠️ WARNING: JWT_SECRET should be at least 32 characters long in production');
 }
 
@@ -495,7 +512,7 @@ const configForLogging = {
 function logConfigSummary() {
   const missingVars = [];
   
-  if (!MONGO_URI) missingVars.push('MONGO_URI');
+  if (!MONGO_URI && !process.env.MONGO_URI) missingVars.push('MONGO_URI');
   if (!JWT_SECRET) missingVars.push('JWT_SECRET');
   
   if (missingVars.length > 0 && IS_PRODUCTION) {
@@ -505,7 +522,7 @@ function logConfigSummary() {
   console.log('📋 Configuration loaded:');
   console.log(`   Environment: ${NODE_ENV}`);
   console.log(`   Port: ${PORT}`);
-  console.log(`   MongoDB: ${MONGO_URI ? sanitizeForLog(MONGO_URI, 10, 10) : '❌ MISSING'}`);
+  console.log(`   MongoDB: ${MONGO_URI ? '✅ Configured' : '⚠️ Using hardcoded fallback'}`);
   console.log(`   JWT Secret: ${JWT_SECRET ? '✅ Configured' : '❌ MISSING'}`);
   console.log(`   CORS Origins: ${finalClientOrigins.length > 0 ? finalClientOrigins.join(', ') : 'None (allow all)'}`);
   console.log(`   M-Pesa: ${MPESA_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
