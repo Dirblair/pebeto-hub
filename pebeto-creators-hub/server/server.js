@@ -56,22 +56,53 @@ const { attachFeeService } = require('./services/feeService');
 const { initSockets } = require('./sockets');
 const logger = require('./utils/logger');
 
-// Route imports with error handling
-let authRoutes, walletRoutes, adminRoutes, campaignRoutes, communityRoutes, exchangeRoutes;
+// ============================================
+// Helper function to safely require routes
+// ============================================
+
+function safeRequire(modulePath, moduleName) {
+  try {
+    const module = require(modulePath);
+    console.log(`✅ Loaded ${moduleName}`);
+    return module;
+  } catch (error) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+      console.warn(`⚠️ ${moduleName} not found - skipping (${modulePath})`);
+      return null;
+    }
+    console.error(`❌ Error loading ${moduleName}:`, error.message);
+    return null;
+  }
+}
+
+// ============================================
+// Route imports with error handling (non-critical routes are optional)
+// ============================================
+
+// Critical routes (must exist)
+let authRoutes, walletRoutes, adminRoutes, campaignRoutes;
 
 try {
   authRoutes = require('./routes/auth.routes');
+  console.log('✅ Loaded auth.routes');
+  
   walletRoutes = require('./routes/wallet.routes');
+  console.log('✅ Loaded wallet.routes');
+  
   adminRoutes = require('./routes/admin.routes');
+  console.log('✅ Loaded admin.routes');
+  
   campaignRoutes = require('./routes/campaign.routes');
-  communityRoutes = require('./routes/community.routes');
-  exchangeRoutes = require('./routes/exchange.routes');
-  console.log('✅ All route modules loaded successfully');
+  console.log('✅ Loaded campaign.routes');
 } catch (error) {
-  console.error('❌ Failed to load route modules:', error.message);
-  console.error('💡 Check that all route files exist and have no syntax errors');
+  console.error('❌ Failed to load critical route module:', error.message);
+  console.error('💡 Make sure all critical route files exist');
   process.exit(1);
 }
+
+// Optional routes (may not exist yet)
+const communityRoutes = safeRequire('./routes/community.routes', 'community.routes');
+const exchangeRoutes = safeRequire('./routes/exchange.routes', 'exchange.routes');
 
 // ============================================
 // Request ID Middleware
@@ -249,11 +280,21 @@ async function bootstrap() {
     // Campaign routes
     app.use('/api/campaigns', campaignRoutes);
     
-    // Community routes
-    app.use('/api/community', communityRoutes);
+    // Community routes (optional - only if file exists)
+    if (communityRoutes) {
+      app.use('/api/community', communityRoutes);
+      console.log('✅ Mounted community routes');
+    } else {
+      console.log('⚠️ Community routes skipped - file not found');
+    }
     
-    // Exchange rate routes
-    app.use('/api/exchange', exchangeRoutes);
+    // Exchange rate routes (optional - only if file exists)
+    if (exchangeRoutes) {
+      app.use('/api/exchange', exchangeRoutes);
+      console.log('✅ Mounted exchange routes');
+    } else {
+      console.log('⚠️ Exchange routes skipped - file not found');
+    }
     
     // 11. Static Files (Client UI)
     // Serve HTML files from root directory
