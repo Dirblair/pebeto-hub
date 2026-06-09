@@ -10,6 +10,12 @@
 const mongoose = require('mongoose');
 
 // ============================================
+// HARDCODED MONGODB URI - TEMPORARY FIX
+// ============================================
+// TODO: Remove this hardcode once environment variable is fixed
+const HARDCODED_MONGO_URI = 'mongodb+srv://pebeto:DebbyJenn123%21@pebeto.yggha0f.mongodb.net/pebeto?retryWrites=true&w=majority';
+
+// ============================================
 // Configuration
 // ============================================
 
@@ -263,15 +269,17 @@ function getDatabaseName(uri) {
 
 /**
  * Connect to MongoDB database with retry logic and event monitoring
- * @param {string} uri - MongoDB connection URI
+ * @param {string} uri - MongoDB connection URI (parameter kept for compatibility, but we use hardcoded)
  * @param {Object} options - Additional mongoose options (will merge with defaults)
  * @returns {Promise<mongoose.Connection>} Mongoose connection instance
  */
 async function connectDB(uri, options = {}) {
-  console.log('🔍 [DB] connectDB called with uri:', uri ? uri.substring(0, 50) + '...' : 'UNDEFINED');
+  // USING HARDCODED URI - IGNORING THE PARAMETER
+  console.log('🔍 [DB] Using HARDCODED MongoDB URI (temporary fix)');
+  console.log('🔍 [DB] Hardcoded URI:', HARDCODED_MONGO_URI.substring(0, 60) + '...');
   
-  // Validate URI
-  const validatedUri = validateUri(uri);
+  // Validate the hardcoded URI
+  const validatedUri = validateUri(HARDCODED_MONGO_URI);
   
   // Check if already connected
   const state = getConnectionState();
