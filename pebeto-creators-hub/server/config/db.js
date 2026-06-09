@@ -218,11 +218,17 @@ async function handleGracefulShutdown(signal) {
  * @throws {Error} If URI is invalid
  */
 function validateUri(uri) {
+  // DEBUG: Log what we received
+  console.log('🔍 [DB] validateUri received:', uri ? uri.substring(0, 60) + '...' : 'UNDEFINED or EMPTY');
+  
   if (!uri) {
+    console.error('❌ [DB] MONGO_URI is missing or empty!');
     throw new Error('MongoDB connection URI is required');
   }
   
   if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    console.error('❌ [DB] Invalid URI format. Must start with mongodb:// or mongodb+srv://');
+    console.error('❌ [DB] Received URI starts with:', uri.substring(0, 20));
     throw new Error('Invalid MongoDB connection URI. Must start with mongodb:// or mongodb+srv://');
   }
   
@@ -231,6 +237,7 @@ function validateUri(uri) {
     logConnectionEvent('WARNING: Using localhost MongoDB in production!', 'warn');
   }
   
+  console.log('✅ [DB] URI validation passed');
   return uri;
 }
 
@@ -261,6 +268,8 @@ function getDatabaseName(uri) {
  * @returns {Promise<mongoose.Connection>} Mongoose connection instance
  */
 async function connectDB(uri, options = {}) {
+  console.log('🔍 [DB] connectDB called with uri:', uri ? uri.substring(0, 50) + '...' : 'UNDEFINED');
+  
   // Validate URI
   const validatedUri = validateUri(uri);
   
@@ -295,7 +304,9 @@ async function connectDB(uri, options = {}) {
   // Create connection promise
   connectionPromise = (async () => {
     try {
-      logConnectionEvent(`Connecting to MongoDB at: ${validatedUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')}`, 'debug');
+      // Mask password in log
+      const maskedUri = validatedUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
+      logConnectionEvent(`Connecting to MongoDB at: ${maskedUri}`, 'debug');
       
       await mongoose.connect(validatedUri, connectionOptions);
       
