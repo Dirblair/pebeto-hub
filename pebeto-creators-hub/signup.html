@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pebeto - Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a1a0e 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 450px;
+      width: 100%;
+    }
+    .card {
+      background: rgba(25, 20, 18, 0.9);
+      border-radius: 32px;
+      padding: 40px;
+      border: 1px solid rgba(255, 140, 66, 0.3);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo h1 {
+      color: #ff8c42;
+      font-size: 32px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    .tab {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid rgba(255, 140, 66, 0.3);
+      border-radius: 50px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      border-color: transparent;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      color: #ffaa77;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 12px;
+      color: white;
+      font-size: 14px;
+    }
+    input:focus {
+      outline: none;
+      border-color: #ff8c42;
+    }
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+    .alert {
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .alert-error {
+      background: rgba(239,68,68,0.2);
+      border: 1px solid #ef4444;
+      color: #ffaaaa;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      color: #a08070;
+      font-size: 13px;
+    }
+    .footer a {
+      color: #ffaa77;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="logo">
+      <h1>🍊 Pebeto</h1>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-creator">🎨 Creator</div>
+      <div class="tab" id="tab-brand">🏢 Brand</div>
+    </div>
+
+    <div id="alert" class="alert" style="display: none;"></div>
+
+    <!-- Creator Form -->
+    <div id="creator-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="c-email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Niche (e.g., Music, Comedy, Fashion)</label>
+        <input type="text" id="c-niche" placeholder="Your niche">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="c-password" placeholder="At least 8 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="c-confirm" placeholder="Confirm password">
+      </div>
+      <button type="button" id="btn-creator">✨ Join as Creator</button>
+    </div>
+
+    <!-- Brand Form -->
+    <div id="brand-form" class="hidden">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="b-email" placeholder="you@company.com">
+      </div>
+      <div class="form-group">
+        <label>Company Name</label>
+        <input type="text" id="b-company" placeholder="Your business name">
+      </div>
+      <div class="form-group">
+        <label>Website (optional)</label>
+        <input type="url" id="b-website" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="b-password" placeholder="At least 8 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="b-confirm" placeholder="Confirm password">
+      </div>
+      <button type="button" id="btn-brand">🏢 Join as Brand</button>
+    </div>
+
+    <div class="footer">
+      Already have an account? <a href="/login.html">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  const tabCreator = document.getElementById('tab-creator');
+  const tabBrand = document.getElementById('tab-brand');
+  const creatorDiv = document.getElementById('creator-form');
+  const brandDiv = document.getElementById('brand-form');
+  const alertDiv = document.getElementById('alert');
+
+  tabCreator.onclick = () => {
+    tabCreator.classList.add('active');
+    tabBrand.classList.remove('active');
+    creatorDiv.classList.remove('hidden');
+    brandDiv.classList.add('hidden');
+    alertDiv.style.display = 'none';
+  };
+
+  tabBrand.onclick = () => {
+    tabBrand.classList.add('active');
+    tabCreator.classList.remove('active');
+    brandDiv.classList.remove('hidden');
+    creatorDiv.classList.add('hidden');
+    alertDiv.style.display = 'none';
+  };
+
+  function showAlert(msg, type) {
+    alertDiv.style.display = 'block';
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.innerHTML = msg;
+    setTimeout(() => alertDiv.style.display = 'none', 4000);
+  }
+
+  function saveSession(token, user) {
+    localStorage.setItem('pebeto_token', token);
+    localStorage.setItem('pebeto_user', JSON.stringify(user));
+  }
+
+  // Creator signup
+  document.getElementById('btn-creator').onclick = async () => {
+    const email = document.getElementById('c-email').value.trim();
+    const niche = document.getElementById('c-niche').value.trim();
+    const password = document.getElementById('c-password').value;
+    const confirm = document.getElementById('c-confirm').value;
+
+    if (!email) return showAlert('Email required', 'error');
+    if (!niche) return showAlert('Niche required', 'error');
+    if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
+    if (password !== confirm) return showAlert('Passwords do not match', 'error');
+
+    const btn = document.getElementById('btn-creator');
+    btn.disabled = true;
+    btn.innerText = 'Creating...';
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, password, role: 'creator',
+          profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Registration failed');
+
+      // Auto login
+      const loginRes = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok) {
+        saveSession(loginData.token, loginData.user);
+        showAlert('Success! Redirecting...', 'success');
+        setTimeout(() => window.location.href = '/creator-hub.html', 1500);
+      } else {
+        showAlert('Account created! Please login.', 'success');
+        setTimeout(() => window.location.href = '/login.html', 1500);
+      }
+    } catch (err) {
+      showAlert(err.message, 'error');
+      btn.disabled = false;
+      btn.innerText = '✨ Join as Creator';
+    }
+  };
+
+  // Brand signup
+  document.getElementById('btn-brand').onclick = async () => {
+    const email = document.getElementById('b-email').value.trim();
+    const company = document.getElementById('b-company').value.trim();
+    const website = document.getElementById('b-website').value.trim();
+    const password = document.getElementById('b-password').value;
+    const confirm = document.getElementById('b-confirm').value;
+
+    if (!email) return showAlert('Email required', 'error');
+    if (!company) return showAlert('Company name required', 'error');
+    if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
+    if (password !== confirm) return showAlert('Passwords do not match', 'error');
+
+    const btn = document.getElementById('btn-brand');
+    btn.disabled = true;
+    btn.innerText = 'Creating...';
+
+    try {
+      const profile = { companyName: company, displayName: company };
+      if (website) profile.website = website;
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: 'business', profile })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Registration failed');
+
+      // Auto login
+      const loginRes = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok) {
+        saveSession(loginData.token, loginData.user);
+        showAlert('Success! Redirecting...', 'success');
+        setTimeout(() => window.location.href = '/business.html', 1500);
+      } else {
+        showAlert('Account created! Please login.', 'success');
+        setTimeout(() => window.location.href = '/login.html', 1500);
+      }
+    } catch (err) {
+      showAlert(err.message, 'error');
+      btn.disabled = false;
+      btn.innerText = '🏢 Join as Brand';
+    }
+  };
+</script>
+</body>
+</html>
