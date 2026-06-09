@@ -37,6 +37,7 @@
     .logo h1 {
       color: #ff8c42;
       font-size: 32px;
+      font-weight: 700;
     }
     .tabs {
       display: flex;
@@ -53,6 +54,7 @@
       font-weight: 600;
       cursor: pointer;
       text-align: center;
+      transition: all 0.2s;
     }
     .tab.active {
       background: linear-gradient(135deg, #ff8c42, #e0662c);
@@ -66,6 +68,7 @@
       font-size: 13px;
       display: block;
       margin-bottom: 6px;
+      font-weight: 500;
     }
     input {
       width: 100%;
@@ -75,12 +78,17 @@
       border-radius: 12px;
       color: white;
       font-size: 14px;
+      transition: all 0.2s;
     }
     input:focus {
       outline: none;
       border-color: #ff8c42;
+      background: rgba(255,140,66,0.1);
     }
-    button[type="submit"] {
+    input::placeholder {
+      color: #6a5040;
+    }
+    button[type="button"] {
       width: 100%;
       padding: 14px;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
@@ -88,8 +96,19 @@
       border-radius: 50px;
       color: white;
       font-weight: bold;
+      font-size: 15px;
       cursor: pointer;
       margin-top: 10px;
+      transition: all 0.2s;
+    }
+    button[type="button"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 140, 66, 0.3);
+    }
+    button[type="button"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
     .hidden {
       display: none;
@@ -105,6 +124,11 @@
       border: 1px solid #ef4444;
       color: #ffaaaa;
     }
+    .alert-success {
+      background: rgba(34,197,94,0.2);
+      border: 1px solid #22c55e;
+      color: #aaffaa;
+    }
     .footer {
       text-align: center;
       margin-top: 25px;
@@ -115,18 +139,21 @@
       color: #ffaa77;
       text-decoration: none;
     }
+    .footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="card">
     <div class="logo">
-      <h1>🍊 Pebeto</h1>
+      <h1>Pebeto</h1>
     </div>
 
     <div class="tabs">
-      <div class="tab active" id="tab-creator">🎨 Creator</div>
-      <div class="tab" id="tab-brand">🏢 Brand</div>
+      <div class="tab active" id="tab-creator">Creator</div>
+      <div class="tab" id="tab-brand">Brand</div>
     </div>
 
     <div id="alert" class="alert" style="display: none;"></div>
@@ -149,7 +176,7 @@
         <label>Confirm Password</label>
         <input type="password" id="c-confirm" placeholder="Confirm password">
       </div>
-      <button type="button" id="btn-creator">✨ Join as Creator</button>
+      <button type="button" id="btn-creator">Join as Creator</button>
     </div>
 
     <!-- Brand Form -->
@@ -174,7 +201,7 @@
         <label>Confirm Password</label>
         <input type="password" id="b-confirm" placeholder="Confirm password">
       </div>
-      <button type="button" id="btn-brand">🏢 Join as Brand</button>
+      <button type="button" id="btn-brand">Join as Brand</button>
     </div>
 
     <div class="footer">
@@ -265,7 +292,7 @@
     } catch (err) {
       showAlert(err.message, 'error');
       btn.disabled = false;
-      btn.innerText = '✨ Join as Creator';
+      btn.innerText = 'Join as Creator';
     }
   };
 
@@ -316,7 +343,7 @@
     } catch (err) {
       showAlert(err.message, 'error');
       btn.disabled = false;
-      btn.innerText = '🏢 Join as Brand';
+      btn.innerText = 'Join as Brand';
     }
   };
 </script>
