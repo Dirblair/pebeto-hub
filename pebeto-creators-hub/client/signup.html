@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Join Pebeto Creator's Hub - Connect with brands and creators" />
-  <title>Join Pebeto — Sign Up or Sign In</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pebeto — Join as Creator or Brand</title>
   
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   
   <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
     * {
@@ -21,7 +20,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d1a0e 50%, #1f1408 100%);
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a1a0e 50%, #1f1408 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -29,38 +28,39 @@
       padding: 20px;
     }
 
-    /* Main Container */
-    .auth-container {
-      max-width: 480px;
+    /* Main Container - Centered */
+    .container {
+      max-width: 500px;
       width: 100%;
+      margin: 0 auto;
     }
 
-    /* Card Style */
-    .auth-card {
-      background: rgba(30, 20, 15, 0.8);
+    /* Card */
+    .card {
+      background: rgba(25, 20, 18, 0.85);
       backdrop-filter: blur(12px);
-      border-radius: 32px;
-      padding: 40px 32px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 140, 50, 0.2);
-      transition: all 0.3s ease;
+      border-radius: 28px;
+      padding: 40px 36px;
+      border: 1px solid rgba(255, 140, 66, 0.25);
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6);
     }
 
-    /* Logo Section */
+    /* Logo */
     .logo {
       text-align: center;
       margin-bottom: 32px;
     }
     
     .logo-icon {
-      width: 56px;
-      height: 56px;
+      width: 60px;
+      height: 60px;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
       border-radius: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 16px;
-      box-shadow: 0 8px 20px rgba(255, 140, 66, 0.3);
+      margin: 0 auto 14px;
+      box-shadow: 0 6px 18px rgba(255, 140, 66, 0.35);
     }
     
     .logo-icon i {
@@ -69,31 +69,31 @@
     }
     
     .logo h1 {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
       color: white;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
     }
     
     .logo p {
-      font-size: 14px;
+      font-size: 13px;
       color: #ffaa77;
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
-    /* Tab Switcher */
-    .tab-container {
+    /* Role Tabs */
+    .role-tabs {
       display: flex;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.05);
+      gap: 14px;
+      background: rgba(0, 0, 0, 0.25);
       padding: 6px;
       border-radius: 60px;
       margin-bottom: 32px;
     }
     
-    .tab-btn {
+    .role-tab {
       flex: 1;
-      padding: 12px 20px;
+      padding: 12px 10px;
       border: none;
       background: transparent;
       font-size: 16px;
@@ -101,18 +101,19 @@
       border-radius: 50px;
       cursor: pointer;
       transition: all 0.25s ease;
-      color: #b8a99a;
+      color: #c0a090;
+      font-family: 'Inter', sans-serif;
     }
     
-    .tab-btn.active {
+    .role-tab.active {
       background: linear-gradient(135deg, #ff8c42, #e0662c);
       color: white;
       box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
     }
 
-    /* Form Elements */
+    /* Form Groups */
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
     
     label {
@@ -121,85 +122,69 @@
       font-weight: 500;
       color: #ffccaa;
       margin-bottom: 8px;
-      letter-spacing: 0.3px;
     }
     
-    .input-wrapper {
+    label i {
+      margin-right: 6px;
+      color: #ffaa77;
+      width: 18px;
+    }
+    
+    .input-with-icon {
       position: relative;
     }
     
-    .input-wrapper i {
+    .input-with-icon i {
       position: absolute;
       left: 16px;
       top: 50%;
       transform: translateY(-50%);
       color: #ffaa77;
-      font-size: 16px;
+      font-size: 15px;
     }
     
-    input, select {
+    input {
       width: 100%;
       padding: 14px 16px 14px 48px;
-      background: rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 140, 66, 0.3);
-      border-radius: 16px;
+      border-radius: 14px;
       font-size: 15px;
       color: white;
       font-family: 'Inter', sans-serif;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
     
-    input:focus, select:focus {
+    input:focus {
       outline: none;
       border-color: #ff8c42;
-      background: rgba(255, 140, 66, 0.1);
-      box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.2);
+      background: rgba(255, 140, 66, 0.08);
+      box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.15);
     }
     
     input::placeholder {
-      color: #7a6a5a;
+      color: #7a6050;
     }
     
-    /* Role Cards */
-    .role-cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
+    /* Password wrapper for toggle visibility */
+    .password-wrapper {
+      position: relative;
     }
     
-    .role-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px solid rgba(255, 140, 66, 0.2);
-      border-radius: 20px;
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
+    .password-wrapper input {
+      padding-right: 48px;
     }
     
-    .role-card.active {
-      background: linear-gradient(135deg, rgba(255, 140, 66, 0.2), rgba(224, 102, 44, 0.15));
-      border-color: #ff8c42;
-    }
-    
-    .role-card i {
-      font-size: 28px;
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
       color: #ffaa77;
-      margin-bottom: 8px;
-      display: block;
-    }
-    
-    .role-card h4 {
-      font-size: 14px;
-      font-weight: 600;
-      color: white;
-      margin-bottom: 4px;
-    }
-    
-    .role-card p {
-      font-size: 11px;
-      color: #b8a99a;
+      cursor: pointer;
+      font-size: 16px;
     }
     
     /* Submit Button */
@@ -214,13 +199,14 @@
       color: white;
       cursor: pointer;
       transition: all 0.25s ease;
-      margin-top: 8px;
-      box-shadow: 0 4px 15px rgba(255, 140, 66, 0.3);
+      margin-top: 12px;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 4px 14px rgba(255, 140, 66, 0.35);
     }
     
     .submit-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 140, 66, 0.4);
+      box-shadow: 0 8px 22px rgba(255, 140, 66, 0.45);
     }
     
     .submit-btn:disabled {
@@ -229,12 +215,12 @@
       transform: none;
     }
     
-    /* Alert Messages */
+    /* Error/Success Messages */
     .alert {
-      padding: 14px 18px;
-      border-radius: 16px;
+      padding: 14px;
+      border-radius: 14px;
       font-size: 13px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -253,28 +239,27 @@
     }
     
     .alert i {
-      font-size: 18px;
+      font-size: 16px;
     }
     
-    /* Footer Links */
-    .auth-footer {
+    /* Footer */
+    .footer-text {
       text-align: center;
       margin-top: 28px;
-      color: #b8a99a;
-      font-size: 13px;
+      color: #a08070;
+      font-size: 12px;
     }
     
-    .auth-footer a {
+    .footer-text a {
       color: #ffaa77;
       text-decoration: none;
-      font-weight: 500;
     }
     
-    .auth-footer a:hover {
+    .footer-text a:hover {
       text-decoration: underline;
     }
     
-    /* Hide/Show Panels */
+    /* Hide panels */
     .panel {
       display: none;
     }
@@ -285,30 +270,11 @@
     }
     
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
     
-    /* Role Instructions Box */
-    .role-info {
-      background: rgba(255, 140, 66, 0.1);
-      border-radius: 16px;
-      padding: 16px;
-      margin-top: 20px;
-      border-left: 3px solid #ff8c42;
-    }
-    
-    .role-info p {
-      font-size: 12px;
-      color: #ffccaa;
-      line-height: 1.5;
-    }
-    
-    .role-info i {
-      color: #ff8c42;
-      margin-right: 8px;
-    }
-    
+    /* Divider */
     hr {
       border: none;
       height: 1px;
@@ -316,25 +282,39 @@
       margin: 20px 0;
     }
     
+    /* Already have account link */
+    .login-link {
+      text-align: center;
+      margin-top: 18px;
+    }
+    
+    .login-link a {
+      color: #ffaa77;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
     /* Responsive */
     @media (max-width: 500px) {
-      .auth-card {
-        padding: 30px 20px;
+      .card {
+        padding: 30px 22px;
       }
       
-      .role-cards {
-        gap: 8px;
+      .role-tabs {
+        gap: 10px;
       }
       
-      .role-card {
-        padding: 12px;
+      .role-tab {
+        padding: 10px 8px;
+        font-size: 14px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-card">
+  <div class="container">
+    <div class="card">
       
       <!-- Logo -->
       <div class="logo">
@@ -345,200 +325,177 @@
         <p>Creator's Hub</p>
       </div>
       
-      <!-- Tab Switcher -->
-      <div class="tab-container">
-        <button class="tab-btn active" data-tab="signup">Create Account</button>
-        <button class="tab-btn" data-tab="login">Sign In</button>
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button class="role-tab active" data-role="creator">🎨 Creator</button>
+        <button class="role-tab" data-role="business">🏢 Brand</button>
       </div>
       
       <!-- Alert Message -->
       <div id="alert" class="alert" style="display: none;"></div>
       
-      <!-- Sign Up Panel -->
-      <div id="panel-signup" class="panel active-panel">
-        <div class="role-cards">
-          <div class="role-card active" data-role="creator">
-            <i class="fas fa-microphone-alt"></i>
-            <h4>Creator</h4>
-            <p>Content creator, artist, influencer</p>
-          </div>
-          <div class="role-card" data-role="business">
-            <i class="fas fa-building"></i>
-            <h4>Brand</h4>
-            <p>Business, agency, advertiser</p>
-          </div>
-        </div>
-        
-        <form id="register-form">
-          <input type="hidden" id="role-input" value="creator" />
-          
-          <!-- Creator Fields -->
-          <div id="creator-fields">
-            <div class="form-group">
-              <label><i class="fas fa-star"></i> Stage Name</label>
-              <div class="input-wrapper">
-                <i class="fas fa-user"></i>
-                <input type="text" id="stageName" placeholder="e.g., DJ Nova, Sarah Creates" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label><i class="fas fa-tag"></i> Niche / Category</label>
-              <div class="input-wrapper">
-                <i class="fas fa-music"></i>
-                <input type="text" id="niche" placeholder="e.g., Music, Comedy, Fashion, Tech" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Business Fields (hidden by default) -->
-          <div id="business-fields" style="display: none;">
-            <div class="form-group">
-              <label><i class="fas fa-building"></i> Company Name</label>
-              <div class="input-wrapper">
-                <i class="fas fa-briefcase"></i>
-                <input type="text" id="companyName" placeholder="Your business name" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label><i class="fas fa-globe"></i> Website (optional)</label>
-              <div class="input-wrapper">
-                <i class="fas fa-link"></i>
-                <input type="url" id="website" placeholder="https://yourcompany.com" />
-              </div>
+      <!-- Creator Signup Panel -->
+      <div id="creator-panel" class="panel active-panel">
+        <form id="creator-form">
+          <div class="form-group">
+            <label><i class="fas fa-envelope"></i> Email Address</label>
+            <div class="input-with-icon">
+              <i class="fas fa-envelope"></i>
+              <input type="email" id="creator-email" placeholder="hello@example.com" required />
             </div>
           </div>
           
           <div class="form-group">
-            <label><i class="fas fa-envelope"></i> Email Address</label>
-            <div class="input-wrapper">
-              <i class="fas fa-envelope"></i>
-              <input type="email" id="reg-email" placeholder="hello@example.com" />
+            <label><i class="fas fa-star"></i> Niche / Category</label>
+            <div class="input-with-icon">
+              <i class="fas fa-tag"></i>
+              <input type="text" id="creator-niche" placeholder="e.g., Music, Comedy, Fashion, Tech, Art" required />
             </div>
           </div>
           
           <div class="form-group">
             <label><i class="fas fa-lock"></i> Password</label>
-            <div class="input-wrapper">
-              <i class="fas fa-lock"></i>
-              <input type="password" id="reg-password" placeholder="At least 8 characters" />
+            <div class="password-wrapper">
+              <i class="fas fa-lock" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
+              <input type="password" id="creator-password" placeholder="At least 8 characters" style="padding-left: 48px;" required />
+              <button type="button" class="toggle-password" data-target="creator-password">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
           </div>
           
           <div class="form-group">
             <label><i class="fas fa-check-circle"></i> Confirm Password</label>
-            <div class="input-wrapper">
-              <i class="fas fa-check"></i>
-              <input type="password" id="reg-confirm-password" placeholder="Confirm your password" />
+            <div class="password-wrapper">
+              <i class="fas fa-check" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
+              <input type="password" id="creator-confirm-password" placeholder="Confirm your password" style="padding-left: 48px;" required />
+              <button type="button" class="toggle-password" data-target="creator-confirm-password">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
           </div>
           
-          <div class="role-info" id="role-info-box">
-            <p><i class="fas fa-info-circle"></i> <strong>Creator Account:</strong> You'll receive a unique code, bid on campaigns, and withdraw earnings (min $30 USD).</p>
-          </div>
-          
-          <button type="submit" class="submit-btn" id="register-btn">
-            <i class="fas fa-rocket"></i> Join Pebeto
+          <button type="submit" class="submit-btn" id="creator-submit">
+            <i class="fas fa-rocket"></i> Join as Creator
           </button>
         </form>
-        
-        <div class="auth-footer">
-          By joining, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
-        </div>
       </div>
       
-      <!-- Login Panel -->
-      <div id="panel-login" class="panel">
-        <form id="login-form">
+      <!-- Brand Signup Panel -->
+      <div id="brand-panel" class="panel">
+        <form id="brand-form">
           <div class="form-group">
             <label><i class="fas fa-envelope"></i> Email Address</label>
-            <div class="input-wrapper">
+            <div class="input-with-icon">
               <i class="fas fa-envelope"></i>
-              <input type="email" id="login-email" placeholder="hello@example.com" />
+              <input type="email" id="brand-email" placeholder="hello@example.com" required />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label><i class="fas fa-building"></i> Company / Business Name</label>
+            <div class="input-with-icon">
+              <i class="fas fa-briefcase"></i>
+              <input type="text" id="brand-company" placeholder="Your business name" required />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label><i class="fas fa-globe"></i> Website URL (optional)</label>
+            <div class="input-with-icon">
+              <i class="fas fa-link"></i>
+              <input type="url" id="brand-website" placeholder="https://yourcompany.com" />
             </div>
           </div>
           
           <div class="form-group">
             <label><i class="fas fa-lock"></i> Password</label>
-            <div class="input-wrapper">
-              <i class="fas fa-lock"></i>
-              <input type="password" id="login-password" placeholder="Your password" />
+            <div class="password-wrapper">
+              <i class="fas fa-lock" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
+              <input type="password" id="brand-password" placeholder="At least 8 characters" style="padding-left: 48px;" required />
+              <button type="button" class="toggle-password" data-target="brand-password">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
           </div>
           
-          <div class="auth-footer" style="text-align: right; margin-top: -10px; margin-bottom: 20px;">
-            <a href="#">Forgot password?</a>
+          <div class="form-group">
+            <label><i class="fas fa-check-circle"></i> Confirm Password</label>
+            <div class="password-wrapper">
+              <i class="fas fa-check" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
+              <input type="password" id="brand-confirm-password" placeholder="Confirm your password" style="padding-left: 48px;" required />
+              <button type="button" class="toggle-password" data-target="brand-confirm-password">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
           </div>
           
-          <button type="submit" class="submit-btn" id="login-btn">
-            <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+          <button type="submit" class="submit-btn" id="brand-submit">
+            <i class="fas fa-building"></i> Join as Brand
           </button>
         </form>
-        
-        <hr />
-        
-        <div class="auth-footer">
-          Don't have an account? <a href="#" id="switch-to-signup">Create one now</a>
-        </div>
+      </div>
+      
+      <!-- Already have account link -->
+      <div class="login-link">
+        <a href="/login.html">Already have an account? Sign in →</a>
+      </div>
+      
+      <div class="footer-text">
+        By joining, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
       </div>
       
     </div>
   </div>
   
   <script>
-    // DOM Elements
-    const signupPanel = document.getElementById('panel-signup');
-    const loginPanel = document.getElementById('panel-login');
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const roleCards = document.querySelectorAll('.role-card');
-    const roleInput = document.getElementById('role-input');
-    const creatorFields = document.getElementById('creator-fields');
-    const businessFields = document.getElementById('business-fields');
-    const roleInfoBox = document.getElementById('role-info-box');
+    // Tab Switching
+    const creatorPanel = document.getElementById('creator-panel');
+    const brandPanel = document.getElementById('brand-panel');
+    const roleTabs = document.querySelectorAll('.role-tab');
     const alertDiv = document.getElementById('alert');
     
     let currentRole = 'creator';
     
-    // Tab Switching
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    roleTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const role = tab.dataset.role;
+        currentRole = role;
         
-        if (tab === 'signup') {
-          signupPanel.classList.add('active-panel');
-          loginPanel.classList.remove('active-panel');
+        roleTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        if (role === 'creator') {
+          creatorPanel.classList.add('active-panel');
+          brandPanel.classList.remove('active-panel');
         } else {
-          loginPanel.classList.add('active-panel');
-          signupPanel.classList.remove('active-panel');
+          brandPanel.classList.add('active-panel');
+          creatorPanel.classList.remove('active-panel');
         }
+        
         hideAlert();
       });
     });
     
-    // Role Selection
-    roleCards.forEach(card => {
-      card.addEventListener('click', () => {
-        const role = card.dataset.role;
-        currentRole = role;
-        roleInput.value = role;
+    // Password visibility toggle
+    document.querySelectorAll('.toggle-password').forEach(button => {
+      button.addEventListener('click', () => {
+        const targetId = button.dataset.target;
+        const input = document.getElementById(targetId);
+        const icon = button.querySelector('i');
         
-        roleCards.forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        
-        if (role === 'creator') {
-          creatorFields.style.display = 'block';
-          businessFields.style.display = 'none';
-          roleInfoBox.innerHTML = `<p><i class="fas fa-info-circle"></i> <strong>Creator Account:</strong> You'll receive a unique code, bid on campaigns, and withdraw earnings (min $30 USD).</p>`;
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
         } else {
-          creatorFields.style.display = 'none';
-          businessFields.style.display = 'block';
-          roleInfoBox.innerHTML = `<p><i class="fas fa-info-circle"></i> <strong>Brand Account:</strong> Create campaigns, fund escrow (10% fee), and hire creators.</p>`;
+          input.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
         }
       });
     });
     
-    // Helper Functions
     function showAlert(message, type = 'error') {
       alertDiv.style.display = 'flex';
       alertDiv.className = `alert alert-${type}`;
@@ -552,53 +509,50 @@
       alertDiv.style.display = 'none';
     }
     
-    // Registration
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
+    // Helper to save session
+    function saveSession(token, user) {
+      localStorage.setItem('pebeto_token', token);
+      localStorage.setItem('pebeto_user', JSON.stringify(user));
+      if (window.PebetoApi && window.PebetoApi.saveSession) {
+        window.PebetoApi.saveSession(token, user);
+      }
+    }
+    
+    // Redirect after login
+    function redirectToDashboard(role) {
+      if (role === 'admin') window.location.href = '/admin.html';
+      else if (role === 'business') window.location.href = '/business.html';
+      else window.location.href = '/creator-hub.html';
+    }
+    
+    // CREATOR SIGNUP
+    document.getElementById('creator-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       hideAlert();
       
-      const email = document.getElementById('reg-email').value.trim();
-      const password = document.getElementById('reg-password').value;
-      const confirmPassword = document.getElementById('reg-confirm-password').value;
+      const email = document.getElementById('creator-email').value.trim();
+      const niche = document.getElementById('creator-niche').value.trim();
+      const password = document.getElementById('creator-password').value;
+      const confirmPassword = document.getElementById('creator-confirm-password').value;
       
-      if (password !== confirmPassword) {
-        showAlert('Passwords do not match!');
+      if (!email) {
+        showAlert('Email address is required');
         return;
       }
-      
+      if (!niche) {
+        showAlert('Please enter your niche/category');
+        return;
+      }
       if (password.length < 8) {
         showAlert('Password must be at least 8 characters');
         return;
       }
-      
-      const profile = {};
-      if (currentRole === 'creator') {
-        const stageName = document.getElementById('stageName').value.trim();
-        const niche = document.getElementById('niche').value.trim();
-        if (!stageName) {
-          showAlert('Stage name is required for creators');
-          return;
-        }
-        if (!niche) {
-          showAlert('Niche is required for creators');
-          return;
-        }
-        profile.stageName = stageName;
-        profile.niche = niche;
-        profile.displayName = stageName;
-      } else {
-        const companyName = document.getElementById('companyName').value.trim();
-        if (!companyName) {
-          showAlert('Company name is required for brands');
-          return;
-        }
-        profile.companyName = companyName;
-        profile.displayName = companyName;
-        const website = document.getElementById('website').value.trim();
-        if (website) profile.website = website;
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match');
+        return;
       }
       
-      const btn = document.getElementById('register-btn');
+      const btn = document.getElementById('creator-submit');
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating account...';
       
@@ -609,7 +563,93 @@
           body: JSON.stringify({
             email,
             password,
-            role: currentRole,
+            role: 'creator',
+            profile: {
+              stageName: email.split('@')[0],
+              niche: niche,
+              displayName: email.split('@')[0]
+            },
+            preferredCurrency: 'USD'
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.message || data.error || 'Registration failed');
+        }
+        
+        showAlert('Account created successfully! Redirecting to your dashboard...', 'success');
+        
+        // Auto-login after registration
+        const loginRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const loginData = await loginRes.json();
+        
+        if (loginRes.ok) {
+          saveSession(loginData.token, loginData.user);
+          setTimeout(() => redirectToDashboard('creator'), 1500);
+        } else {
+          setTimeout(() => window.location.href = '/login.html', 1500);
+        }
+        
+      } catch (err) {
+        showAlert(err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Join as Creator';
+      }
+    });
+    
+    // BRAND SIGNUP
+    document.getElementById('brand-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      
+      const email = document.getElementById('brand-email').value.trim();
+      const companyName = document.getElementById('brand-company').value.trim();
+      const website = document.getElementById('brand-website').value.trim();
+      const password = document.getElementById('brand-password').value;
+      const confirmPassword = document.getElementById('brand-confirm-password').value;
+      
+      if (!email) {
+        showAlert('Email address is required');
+        return;
+      }
+      if (!companyName) {
+        showAlert('Company/Business name is required');
+        return;
+      }
+      if (password.length < 8) {
+        showAlert('Password must be at least 8 characters');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match');
+        return;
+      }
+      
+      const btn = document.getElementById('brand-submit');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating account...';
+      
+      try {
+        const profile = {
+          companyName: companyName,
+          displayName: companyName
+        };
+        if (website) profile.website = website;
+        
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            role: 'business',
             profile,
             preferredCurrency: 'USD'
           })
@@ -621,76 +661,29 @@
           throw new Error(data.message || data.error || 'Registration failed');
         }
         
-        showAlert('Account created! Please check your email to verify your account.', 'success');
-        document.getElementById('register-form').reset();
+        showAlert('Account created successfully! Redirecting to your dashboard...', 'success');
         
-        // Switch to login tab after 2 seconds
-        setTimeout(() => {
-          document.querySelector('.tab-btn[data-tab="login"]').click();
-        }, 2000);
-        
-      } catch (err) {
-        showAlert(err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-rocket"></i> Join Pebeto';
-      }
-    });
-    
-    // Login
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideAlert();
-      
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      const btn = document.getElementById('login-btn');
-      
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Signing in...';
-      
-      try {
-        const res = await fetch('/api/auth/login', {
+        // Auto-login after registration
+        const loginRes = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
         
-        const data = await res.json();
+        const loginData = await loginRes.json();
         
-        if (!res.ok) {
-          throw new Error(data.message || data.error || 'Invalid credentials');
-        }
-        
-        // Save session
-        if (window.PebetoApi && window.PebetoApi.saveSession) {
-          window.PebetoApi.saveSession(data.token, data.user);
+        if (loginRes.ok) {
+          saveSession(loginData.token, loginData.user);
+          setTimeout(() => redirectToDashboard('business'), 1500);
         } else {
-          localStorage.setItem('pebeto_token', data.token);
-          localStorage.setItem('pebeto_user', JSON.stringify(data.user));
+          setTimeout(() => window.location.href = '/login.html', 1500);
         }
-        
-        showAlert('Login successful! Redirecting...', 'success');
-        
-        // Redirect based on role
-        setTimeout(() => {
-          const role = data.user.role;
-          if (role === 'admin') window.location.href = '/admin.html';
-          else if (role === 'business') window.location.href = '/business.html';
-          else window.location.href = '/creator-hub.html';
-        }, 1000);
         
       } catch (err) {
         showAlert(err.message);
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Sign In';
+        btn.innerHTML = '<i class="fas fa-building"></i> Join as Brand';
       }
-    });
-    
-    // Switch to signup
-    document.getElementById('switch-to-signup')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector('.tab-btn[data-tab="signup"]').click();
     });
   </script>
 </body>
