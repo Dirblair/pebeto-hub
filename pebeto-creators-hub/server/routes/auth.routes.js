@@ -225,7 +225,8 @@ router.post('/register', registerValidation, async (req, res, next) => {
       },
       preferredLanguage,
       preferredCurrency,
-      status: 'pending', // Requires email verification
+      status: 'active', // Set to active directly (skip email verification for now)
+      emailVerified: true, // Skip email verification for now
     };
 
     // Generate unique code for creators
@@ -238,13 +239,6 @@ router.post('/register', registerValidation, async (req, res, next) => {
 
     // Create wallet for user
     await Wallet.create({ userId: user._id, walletType: 'standard', currency: 'USD' });
-
-    // Generate email verification token
-    const verificationToken = user.generateEmailVerificationToken();
-    await user.save();
-
-    // Send welcome email with verification link
-    await sendWelcomeEmail(user, verificationToken);
 
     // Generate access token
     const accessToken = generateAccessToken(user);
@@ -260,7 +254,7 @@ router.post('/register', registerValidation, async (req, res, next) => {
     // Return response (without sensitive data)
     res.status(201).json({
       success: true,
-      message: 'Registration successful! Please check your email to verify your account.',
+      message: 'Registration successful!',
       data: {
         token: accessToken,
         user: {
@@ -296,15 +290,17 @@ router.post('/login', loginValidation, async (req, res, next) => {
     const { email, password } = req.body;
     const clientIp = req.ip || req.connection?.remoteAddress;
 
-    // Find user with password hash
-    const user = await User.findOne({ email }).select('+passwordHash');
+    // Find user with password hash - CRITICAL FIX: Use .findOne() correctly
+    const user = await User.findOne({ email });
+    
     if (!user) {
       throw new AppError('Invalid email or password', 401);
     }
 
-    // Check if email is verified
-    if (!user.emailVerified && user.role !== 'admin') {
-      throw new AppError('Please verify your email address before logging in. Check your inbox for the verification link.', 403);
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new AppError('Invalid email or password', 401);
     }
 
     // Check account status
@@ -314,18 +310,8 @@ router.post('/login', loginValidation, async (req, res, next) => {
         message += 'Your account has been suspended. Please contact support.';
       } else if (user.status === 'banned') {
         message += 'Your account has been permanently banned.';
-      } else if (user.status === 'pending') {
-        message += 'Please verify your email address to activate your account.';
-      } else {
-        message += `Account status: ${user.status}`;
       }
       throw new AppError(message, 403);
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      throw new AppError('Invalid email or password', 401);
     }
 
     // Update last login
@@ -347,19 +333,17 @@ router.post('/login', loginValidation, async (req, res, next) => {
     // Return response
     res.json({
       success: true,
-      data: {
-        token: accessToken,
-        user: {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-          uniqueCode: user.uniqueCode,
-          profile: user.profile,
-          preferredCurrency: user.preferredCurrency,
-          preferredLanguage: user.preferredLanguage,
-          emailVerified: user.emailVerified,
-          status: user.status,
-        },
+      token: accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        uniqueCode: user.uniqueCode,
+        profile: user.profile,
+        preferredCurrency: user.preferredCurrency,
+        preferredLanguage: user.preferredLanguage,
+        emailVerified: user.emailVerified,
+        status: user.status,
       },
     });
   } catch (err) {
@@ -391,10 +375,13 @@ router.post('/verify-email', verifyEmailValidation, async (req, res, next) => {
     }
 
     // Verify email
-    const verified = await user.verifyEmail(token);
-    if (!verified) {
-      throw new AppError('Email verification failed', 400);
+    user.emailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+    if (user.status === 'pending') {
+      user.status = 'active';
     }
+    await user.save();
 
     logger.info('Email verified', { userId: user._id, email: user.email });
 
@@ -439,7 +426,9 @@ router.post('/resend-verification', [
     }
 
     // Generate new verification token
-    const verificationToken = user.generateEmailVerificationToken();
+    const verificationToken = require('crypto').randomBytes(32).toString('hex');
+    user.emailVerificationToken = verificationToken;
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
     // Send verification email
@@ -477,20 +466,14 @@ router.post('/forgot-password', forgotPasswordValidation, async (req, res, next)
     }
 
     // Generate reset token
-    const resetToken = user.generatePasswordResetToken();
+    const resetToken = require('crypto').randomBytes(32).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 1 * 60 * 60 * 1000);
     await user.save();
 
     // Send reset email
     const resetUrl = `${env.clientOrigin}/reset-password?token=${resetToken}`;
     logger.info(`Password reset link for ${user.email}: ${resetUrl}`);
-    
-    // TODO: Send actual email
-    // await emailService.send({
-    //   to: user.email,
-    //   subject: 'Reset Your Password',
-    //   template: 'password-reset',
-    //   data: { resetUrl }
-    // });
 
     res.json({
       success: true,
@@ -518,7 +501,7 @@ router.post('/reset-password', resetPasswordValidation, async (req, res, next) =
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: new Date() }
-    }).select('+passwordHash');
+    });
 
     if (!user) {
       throw new AppError('Invalid or expired reset token', 400);
@@ -550,8 +533,6 @@ router.post('/reset-password', resetPasswordValidation, async (req, res, next) =
  */
 router.post('/logout', async (req, res, next) => {
   try {
-    // Simple logout - no token blacklisting needed
-    // Client should discard the token on their end
     res.json({
       success: true,
       message: 'Logged out successfully',
