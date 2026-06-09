@@ -177,7 +177,7 @@ const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || '';
 const MPESA_INITIATOR_NAME = process.env.MPESA_INITIATOR_NAME || '';
 const MPESA_PASSWORD = process.env.MPESA_PASSWORD || '';
 const MPESA_SHORT_CODE = process.env.MPESA_SHORT_CODE || '';
-const MPESA_PASSKEY = process.env.MPESA_PASSKEY || ''; // For STK Push
+const MPESA_PASSKEY = process.env.MPESA_PASSKEY || '';
 const MPESA_API_URL = process.env.MPESA_API_URL || 
   (MPESA_ENVIRONMENT === 'sandbox' 
     ? 'https://sandbox.safaricom.co.ke' 
@@ -210,7 +210,6 @@ const PAYPAL_API_URL = process.env.PAYPAL_API_URL ||
     : 'https://api-m.paypal.com');
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID || '';
 
-// PayPal amount limits
 const PAYPAL_MIN_AMOUNT = parseInteger(process.env.PAYPAL_MIN_AMOUNT, 1, { min: 1, max: 100 });
 const PAYPAL_MAX_AMOUNT = parseInteger(process.env.PAYPAL_MAX_AMOUNT, 10000, { min: 100, max: 50000 });
 
@@ -235,7 +234,6 @@ const WIRE_IBAN = process.env.WIRE_IBAN || '';
 const WIRE_BANK_COUNTRY = process.env.WIRE_BANK_COUNTRY || 'USA';
 const WIRE_CURRENCY = process.env.WIRE_CURRENCY || 'USD';
 
-// Validate Wire Transfer config if enabled
 if (WIRE_ENABLED && IS_PRODUCTION) {
   if (!WIRE_ACCOUNT_NUMBER) {
     console.warn('⚠️ WARNING: WIRE_ACCOUNT_NUMBER not configured. Wire transfers will be unavailable.');
@@ -263,7 +261,7 @@ if (EMAIL_ENABLED && IS_PRODUCTION && (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWOR
 }
 
 // ============================================
-// Redis Configuration (for session store / rate limiting)
+// Redis Configuration
 // ============================================
 
 const REDIS_ENABLED = parseBoolean(process.env.REDIS_ENABLED, false);
@@ -420,6 +418,30 @@ const config = {
   // Features
   features: FEATURES,
 };
+
+// ============================================
+// Direct Access Properties (Backward Compatibility)
+// ============================================
+
+// Add direct references to M-Pesa config for services that expect them
+config.MPESA_CONSUMER_KEY = config.mpesa.consumerKey;
+config.MPESA_CONSUMER_SECRET = config.mpesa.consumerSecret;
+config.MPESA_SHORT_CODE = config.mpesa.shortCode;
+config.MPESA_PASSKEY = config.mpesa.passkey;
+config.MPESA_API_URL = config.mpesa.apiUrl;
+config.MPESA_CALLBACK_URL = config.mpesa.callbackUrl;
+config.MPESA_INITIATOR_NAME = config.mpesa.initiatorName;
+config.MPESA_PASSWORD = config.mpesa.password;
+config.MPESA_ENVIRONMENT = config.mpesa.environment;
+
+// Add direct references to PayPal config
+config.PAYPAL_CLIENT_ID = config.paypal.clientId;
+config.PAYPAL_CLIENT_SECRET = config.paypal.clientSecret;
+config.PAYPAL_API_URL = config.paypal.apiUrl;
+
+// Add direct references to Wire config
+config.WIRE_ACCOUNT_NUMBER = config.wire.accountNumber;
+config.WIRE_SWIFT_CODE = config.wire.swiftCode;
 
 // ============================================
 // Sanitized Config for Logging (Hides Secrets)
