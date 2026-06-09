@@ -1,4 +1,228 @@
+# ============================================
+# Dependencies
+# ============================================
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ============================================
+# Environment Variables
+# ============================================
 .env
-.DS_Store
+.env.local
+.env.production
+.env.development
+.env.test
+.env.*.local
+
+# ============================================
+# Logs
+# ============================================
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pm2-*.log
+pm2.log
+
+# ============================================
+# Runtime Data
+# ============================================
+pids/
+*.pid
+*.seed
+*.pid.lock
+*.lock
+*.lock.json
+
+# ============================================
+# Coverage Directory
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+coverage.json
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+*.backup
+*.mongodb
+dump/
+mongodump/
+
+# ============================================
+# OS Generated Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+desktop.ini
+
+# ============================================
+# IDE / Editor Files
+# ============================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ============================================
+# Testing
+# ============================================
+/test/reports/
+/test/coverage/
+.jest/
+__tests__/coverage/
+*.test.js.snap
+*.spec.js.snap
+
+# ============================================
+# Build Output
+# ============================================
+dist/
+build/
+out/
+temp/
+tmp/
+
+# ============================================
+# Uploads / Storage
+# ============================================
+/uploads/
+/storage/
+/public/uploads/
+/temp-uploads/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# ============================================
+# SSL Certificates
+# ============================================
+*.pem
+*.key
+*.crt
+*.cert
+*.csr
+*.p12
+
+# ============================================
+# Docker
+# ============================================
+Dockerfile
+docker-compose*.yml
+.docker/
+.dockerignore
+
+# ============================================
+# Backup Files
+# ============================================
+*.bak
+*.old
+*.orig
+*.backup
+*-backup.js
+*-backup.json
+
+# ============================================
+# Secrets / Keys
+# ============================================
+*.pem
+*.key
+*.crt
+*.secret
+secrets/
+keys/
+
+# ============================================
+# M-Pesa / Payment Service Logs
+# ============================================
+/mpesa-logs/
+/payment-logs/
+/stk-push-logs/
+b2c-*.log
+
+# ============================================
+# Redis
+# ============================================
+dump.rdb
+appendonly.aof
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+.cache/
+.tmp/
+.temp/
+
+# ============================================
+# Debug Logs
+# ============================================
+debug.log
+*-debug.log
+inspect.log
+
+# ============================================
+# Session Data
+# ============================================
+.sessions/
+session-store/
+
+# ============================================
+# PM2
+# ============================================
+.pm2/
+pm2-deploy.log
+
+# ============================================
+# Next.js / React (if frontend added)
+# ============================================
+.next/
+out/
+build/
+.eslintcache
+*.tsbuildinfo
+
+# ============================================
+# System Files
+# ============================================
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
