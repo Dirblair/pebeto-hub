@@ -14,7 +14,7 @@ const axios = require('axios');
 const moment = require('moment');
 const crypto = require('crypto');
 const env = require('../config/env');
-const { calculateDeposit, previewDeposit } = require('../services/feeService');
+const { calculateDeposit } = require('../services/feeService');
 const {
   getOrCreateWallet,
   getAdminProfitWallet,
@@ -25,6 +25,8 @@ const {
 } = require('./walletService');
 const { AppError } = require('../utils/errors');
 const logger = require('../utils/logger');
+const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 
 // ============================================
 // Constants
@@ -323,13 +325,18 @@ function generateWireInstructions(amountUsd, transactionId, userEmail) {
  * @param {number} intentUsd - Intended deposit amount in USD
  * @returns {Object} Deposit preview
  */
-async function previewDepositService(intentUsd) {
+async function previewDeposit(intentUsd) {
+  if (!intentUsd || intentUsd <= 0) {
+    throw new AppError('Valid deposit amount required', 400);
+  }
+  
   const breakdown = calculateDeposit(intentUsd);
   return {
     intentUsd: breakdown.intentUsd,
     feeUsd: breakdown.feeUsd,
     totalChargeUsd: breakdown.totalChargeUsd,
     escrowCreditUsd: breakdown.escrowCreditUsd,
+    feeRate: breakdown.feeRate,
     feePercentage: breakdown.feePercentage,
     message: `You will pay $${breakdown.totalChargeUsd} to credit $${breakdown.escrowCreditUsd} to escrow.`,
   };
@@ -862,7 +869,7 @@ module.exports = {
   completePayPalDeposit,
   initiateWireDeposit,
   confirmWireDeposit,
-  previewDeposit: previewDepositService,
+  previewDeposit,  // <-- This was missing! Now added
   
   // Helper functions (for testing)
   validateMpesaPhoneNumber,
