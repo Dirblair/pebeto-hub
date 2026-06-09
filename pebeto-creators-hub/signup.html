@@ -6,11 +6,7 @@
   <title>Pebeto - Join or Sign In</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
       background: linear-gradient(135deg, #1a1a1a 0%, #2a1a0e 100%);
@@ -20,146 +16,57 @@
       align-items: center;
       padding: 20px;
     }
-    .container {
-      max-width: 450px;
-      width: 100%;
-    }
+    .container { max-width: 450px; width: 100%; }
     .card {
       background: rgba(25, 20, 18, 0.9);
       border-radius: 32px;
       padding: 40px;
       border: 1px solid rgba(255, 140, 66, 0.3);
     }
-    .logo {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .logo h1 {
-      color: #ff8c42;
-      font-size: 32px;
-      font-weight: 700;
-    }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
+    .logo { text-align: center; margin-bottom: 30px; }
+    .logo h1 { color: #ff8c42; font-size: 32px; font-weight: 700; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
     .tab {
-      flex: 1;
-      padding: 12px;
-      background: transparent;
-      border: 1px solid rgba(255, 140, 66, 0.3);
-      border-radius: 50px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
+      flex: 1; padding: 12px; background: transparent;
+      border: 1px solid rgba(255, 140, 66, 0.3); border-radius: 50px;
+      color: white; font-weight: 600; cursor: pointer; text-align: center;
     }
-    .tab.active {
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      border-color: transparent;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      color: #ffaa77;
-      font-size: 13px;
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
+    .tab.active { background: linear-gradient(135deg, #ff8c42, #e0662c); border-color: transparent; }
+    .form-group { margin-bottom: 20px; }
+    label { color: #ffaa77; font-size: 13px; display: block; margin-bottom: 6px; font-weight: 500; }
     input {
-      width: 100%;
-      padding: 14px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,140,66,0.3);
-      border-radius: 12px;
-      color: white;
-      font-size: 14px;
-      transition: all 0.2s;
+      width: 100%; padding: 14px; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3); border-radius: 12px;
+      color: white; font-size: 14px;
     }
-    input:focus {
-      outline: none;
-      border-color: #ff8c42;
-      background: rgba(255,140,66,0.1);
+    input:focus { outline: none; border-color: #ff8c42; background: rgba(255,140,66,0.1); }
+    button {
+      width: 100%; padding: 14px; background: linear-gradient(135deg, #ff8c42, #e0662c);
+      border: none; border-radius: 50px; color: white; font-weight: bold;
+      font-size: 15px; cursor: pointer; margin-top: 10px;
     }
-    input::placeholder {
-      color: #6a5040;
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 140, 66, 0.3); }
+    .hidden { display: none; }
+    .alert { padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; }
+    .alert-error { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ffaaaa; }
+    .alert-success { background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #aaffaa; }
+    .footer { text-align: center; margin-top: 25px; color: #a08070; font-size: 13px; }
+    .footer a { color: #ffaa77; text-decoration: none; }
+    .forgot-link { text-align: right; margin-top: -16px; margin-bottom: 20px; }
+    .forgot-link a { color: #ffaa77; font-size: 12px; }
+    .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .sub-tab {
+      flex: 1; padding: 10px; background: transparent;
+      border: 1px solid rgba(255, 140, 66, 0.3); border-radius: 50px;
+      color: white; font-weight: 500; cursor: pointer; text-align: center; font-size: 14px;
     }
-    button[type="button"] {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      border: none;
-      border-radius: 50px;
-      color: white;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: all 0.2s;
-    }
-    button[type="button"]:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 140, 66, 0.3);
-    }
-    button[type="button"]:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .hidden {
-      display: none;
-    }
-    .alert {
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-    }
-    .alert-error {
-      background: rgba(239,68,68,0.2);
-      border: 1px solid #ef4444;
-      color: #ffaaaa;
-    }
-    .alert-success {
-      background: rgba(34,197,94,0.2);
-      border: 1px solid #22c55e;
-      color: #aaffaa;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 25px;
-      color: #a08070;
-      font-size: 13px;
-    }
-    .footer a {
-      color: #ffaa77;
-      text-decoration: none;
-    }
-    .footer a:hover {
-      text-decoration: underline;
-    }
-    .forgot-link {
-      text-align: right;
-      margin-top: -16px;
-      margin-bottom: 20px;
-    }
-    .forgot-link a {
-      color: #ffaa77;
-      font-size: 12px;
-      text-decoration: none;
-    }
+    .sub-tab.active { background: linear-gradient(135deg, #ff8c42, #e0662c); }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="card">
-    <div class="logo">
-      <h1>Pebeto</h1>
-    </div>
+    <div class="logo"><h1>Pebeto</h1></div>
 
     <div class="tabs">
       <div class="tab active" id="tab-signin">Sign In</div>
@@ -168,87 +75,49 @@
 
     <div id="alert" class="alert" style="display: none;"></div>
 
-    <!-- SIGN IN PANEL -->
+    <!-- SIGN IN -->
     <div id="signin-panel">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="you@example.com">
-      </div>
-      
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="Your password">
-      </div>
-      
-      <div class="forgot-link">
-        <a href="#">Forgot password?</a>
-      </div>
-      
-      <button type="button" id="btn-signin">Sign In</button>
+      <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Your password"></div>
+      <div class="forgot-link"><a href="#">Forgot password?</a></div>
+      <button id="btn-signin">Sign In</button>
     </div>
 
-    <!-- SIGN UP PANEL -->
+    <!-- SIGN UP -->
     <div id="signup-panel" class="hidden">
-      <div class="tabs" style="margin-bottom: 20px; padding: 0;">
-        <div class="tab active" id="signup-creator-tab" style="flex: 1;">Creator</div>
-        <div class="tab" id="signup-brand-tab" style="flex: 1;">Brand</div>
+      <div class="sub-tabs">
+        <div class="sub-tab active" id="signup-creator-tab">Creator</div>
+        <div class="sub-tab" id="signup-brand-tab">Brand</div>
       </div>
 
-      <!-- Creator Fields -->
       <div id="creator-fields">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="signup-email" placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label>Niche (e.g., Music, Comedy, Fashion)</label>
-          <input type="text" id="signup-niche" placeholder="Your niche">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="signup-password" placeholder="At least 8 characters">
-        </div>
-        <div class="form-group">
-          <label>Confirm Password</label>
-          <input type="password" id="signup-confirm" placeholder="Confirm password">
-        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+        <div class="form-group"><label>Niche</label><input type="text" id="signup-niche" placeholder="Music, Comedy, Fashion..."></div>
+        <div class="form-group"><label>Password</label><input type="password" id="signup-password" placeholder="At least 8 characters"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="signup-confirm" placeholder="Confirm password"></div>
       </div>
 
-      <!-- Brand Fields (hidden by default) -->
       <div id="brand-fields" class="hidden">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="brand-email" placeholder="you@company.com">
-        </div>
-        <div class="form-group">
-          <label>Company Name</label>
-          <input type="text" id="brand-company" placeholder="Your business name">
-        </div>
-        <div class="form-group">
-          <label>Website (optional)</label>
-          <input type="url" id="brand-website" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="brand-password" placeholder="At least 8 characters">
-        </div>
-        <div class="form-group">
-          <label>Confirm Password</label>
-          <input type="password" id="brand-confirm" placeholder="Confirm password">
-        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="brand-email" placeholder="you@company.com"></div>
+        <div class="form-group"><label>Company Name</label><input type="text" id="brand-company" placeholder="Your business name"></div>
+        <div class="form-group"><label>Website (optional)</label><input type="url" id="brand-website" placeholder="https://..."></div>
+        <div class="form-group"><label>Password</label><input type="password" id="brand-password" placeholder="At least 8 characters"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="brand-confirm" placeholder="Confirm password"></div>
       </div>
 
-      <button type="button" id="btn-signup">Join as Creator</button>
+      <button id="btn-signup">Join as Creator</button>
     </div>
+
+    <div class="footer"><a href="#" id="switch-to-signup">Don't have an account? Create one</a></div>
   </div>
 </div>
 
 <script>
-  // Tab switching (Sign In / Sign Up)
   const tabSignin = document.getElementById('tab-signin');
   const tabSignup = document.getElementById('tab-signup');
   const signinPanel = document.getElementById('signin-panel');
   const signupPanel = document.getElementById('signup-panel');
+  const switchLink = document.getElementById('switch-to-signup');
   const alertDiv = document.getElementById('alert');
 
   let signupRole = 'creator';
@@ -269,7 +138,11 @@
     alertDiv.style.display = 'none';
   };
 
-  // Signup role tabs (Creator / Brand)
+  switchLink.onclick = (e) => {
+    e.preventDefault();
+    tabSignup.click();
+  };
+
   const signupCreatorTab = document.getElementById('signup-creator-tab');
   const signupBrandTab = document.getElementById('signup-brand-tab');
   const creatorFields = document.getElementById('creator-fields');
@@ -304,7 +177,6 @@
   function saveSession(token, user) {
     localStorage.setItem('pebeto_token', token);
     localStorage.setItem('pebeto_user', JSON.stringify(user));
-    if (window.PebetoApi?.saveSession) window.PebetoApi.saveSession(token, user);
   }
 
   function redirectToDashboard(role) {
@@ -313,143 +185,70 @@
     else window.location.href = '/creator-hub.html';
   }
 
-  // SIGN IN
+  // Sign In
   document.getElementById('btn-signin').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-
-    if (!email) return showAlert('Email required', 'error');
-    if (!password) return showAlert('Password required', 'error');
-
+    if (!email || !password) return showAlert('Email and password required', 'error');
     const btn = document.getElementById('btn-signin');
-    btn.disabled = true;
-    btn.innerText = 'Signing in...';
-
+    btn.disabled = true; btn.innerText = 'Signing in...';
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Invalid credentials');
-
       saveSession(data.token, data.user);
       showAlert('Login successful! Redirecting...', 'success');
       setTimeout(() => redirectToDashboard(data.user.role), 1000);
-    } catch (err) {
-      showAlert(err.message, 'error');
-      btn.disabled = false;
-      btn.innerText = 'Sign In';
-    }
+    } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Sign In'; }
   };
 
-  // SIGN UP
+  // Sign Up
   document.getElementById('btn-signup').onclick = async () => {
     if (signupRole === 'creator') {
       const email = document.getElementById('signup-email').value.trim();
       const niche = document.getElementById('signup-niche').value.trim();
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
-
       if (!email) return showAlert('Email required', 'error');
       if (!niche) return showAlert('Niche required', 'error');
       if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
       if (password !== confirm) return showAlert('Passwords do not match', 'error');
-
       const btn = document.getElementById('btn-signup');
-      btn.disabled = true;
-      btn.innerText = 'Creating...';
-
+      btn.disabled = true; btn.innerText = 'Creating...';
       try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email, password, role: 'creator',
-            profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] }
-          })
-        });
+        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'creator', profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] } }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
-
-        // Auto login after signup
-        const loginRes = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+        const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
-        if (loginRes.ok) {
-          saveSession(loginData.token, loginData.user);
-          showAlert('Account created! Redirecting...', 'success');
-          setTimeout(() => redirectToDashboard('creator'), 1500);
-        } else {
-          showAlert('Account created! Please sign in.', 'success');
-          setTimeout(() => window.location.reload(), 1500);
-        }
-      } catch (err) {
-        showAlert(err.message, 'error');
-        btn.disabled = false;
-        btn.innerText = 'Join as Creator';
-      }
-    } 
-    
-    else {
+        if (loginRes.ok) { saveSession(loginData.token, loginData.user); showAlert('Account created! Redirecting...', 'success'); setTimeout(() => redirectToDashboard('creator'), 1500); }
+        else { showAlert('Account created! Please sign in.', 'success'); setTimeout(() => tabSignin.click(), 1500); }
+      } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Creator'; }
+    } else {
       const email = document.getElementById('brand-email').value.trim();
       const company = document.getElementById('brand-company').value.trim();
       const website = document.getElementById('brand-website').value.trim();
       const password = document.getElementById('brand-password').value;
       const confirm = document.getElementById('brand-confirm').value;
-
       if (!email) return showAlert('Email required', 'error');
       if (!company) return showAlert('Company name required', 'error');
       if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
       if (password !== confirm) return showAlert('Passwords do not match', 'error');
-
       const btn = document.getElementById('btn-signup');
-      btn.disabled = true;
-      btn.innerText = 'Creating...';
-
+      btn.disabled = true; btn.innerText = 'Creating...';
       try {
         const profile = { companyName: company, displayName: company };
         if (website) profile.website = website;
-
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, role: 'business', profile })
-        });
+        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'business', profile }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
-
-        // Auto login after signup
-        const loginRes = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+        const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
-        if (loginRes.ok) {
-          saveSession(loginData.token, loginData.user);
-          showAlert('Account created! Redirecting...', 'success');
-          setTimeout(() => redirectToDashboard('business'), 1500);
-        } else {
-          showAlert('Account created! Please sign in.', 'success');
-          setTimeout(() => window.location.reload(), 1500);
-        }
-      } catch (err) {
-        showAlert(err.message, 'error');
-        btn.disabled = false;
-        btn.innerText = 'Join as Brand';
-      }
+        if (loginRes.ok) { saveSession(loginData.token, loginData.user); showAlert('Account created! Redirecting...', 'success'); setTimeout(() => redirectToDashboard('business'), 1500); }
+        else { showAlert('Account created! Please sign in.', 'success'); setTimeout(() => tabSignin.click(), 1500); }
+      } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Brand'; }
     }
   };
-
-  // Enter key support for sign in
-  document.getElementById('login-password').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') document.getElementById('btn-signin').click();
-  });
 </script>
 </body>
 </html>
