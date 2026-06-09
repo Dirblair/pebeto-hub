@@ -30,6 +30,7 @@ const {
 const { sendTip } = require('../controllers/wallet.controller');
 const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../services/exchangeRateService');
 const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
+const { processSTKCallback, processB2CCallback } = require('../services/mpesaService');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const logger = require('../utils/logger');
@@ -249,7 +250,6 @@ router.get('/balance', balanceValidation, catchAsync(async (req, res, next) => {
   const { userId } = req.query;
   let targetUserId = req.user._id;
 
-  // Admin can view other users' balances
   if (userId && req.user.role === 'admin') {
     targetUserId = userId;
   } else if (userId && req.user.role !== 'admin') {
@@ -323,7 +323,6 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
 
   const preview = await previewDeposit(usdAmount);
   
-  // Add method-specific notes
   let methodNotes = [];
   if (method === 'mpesa') {
     methodNotes = [
@@ -373,7 +372,6 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res, next) => 
   const { method, intentUsd, intentLocal, currency, campaignId, phoneNumber, idempotencyKey } = req.body;
   const businessUser = req.user;
 
-  // Determine USD amount
   let usdAmount = intentUsd;
   if (intentLocal && currency) {
     const rates = await getRatesMap();
@@ -387,7 +385,6 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res, next) => 
     campaignId,
   });
 
-  // Route to appropriate deposit handler based on method
   if (method === 'mpesa') {
     const result = await initiateMpesaDeposit({
       businessUser,
@@ -410,17 +407,13 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res, next) => 
   }
 
   if (method === 'paypal') {
-    // PayPal requires a separate initiate endpoint with return URLs
-    // This endpoint should not be used directly for PayPal
     throw new AppError('For PayPal deposits, please use /deposit/paypal/initiate endpoint', 400);
   }
 
   if (method === 'wire') {
-    // Wire transfer requires a separate initiate endpoint for instructions
     throw new AppError('For wire transfers, please use /deposit/wire/initiate endpoint', 400);
   }
 
-  // Handle internal wallet deposit (instant)
   const result = await processDeposit({
     businessUser,
     intentUsd: usdAmount,
@@ -672,14 +665,12 @@ router.post('/withdraw', withdrawalValidation, catchAsync(async (req, res, next)
 
   const { amountUsd, amountLocal, currency, payoutMethod, payoutDetails, idempotencyKey } = req.body;
   
-  // Determine USD amount
   let usdAmount = amountUsd;
   if (amountLocal && currency) {
     const rates = await getRatesMap();
     usdAmount = convertLocalToUsd(amountLocal, currency, rates);
   }
 
-  // Check minimum withdrawal
   if (usdAmount < MIN_WITHDRAWAL_USD && req.user.role !== 'admin') {
     throw new AppError(`Minimum withdrawal amount is $${MIN_WITHDRAWAL_USD} USD`, 400);
   }
@@ -770,11 +761,9 @@ router.get('/transactions', transactionsValidation, catchAsync(async (req, res, 
     endDate: endDate ? new Date(endDate) : null,
   });
 
-  // Get exchange rates for display
   const rates = await getRatesMap();
   const preferredCurrency = req.user.preferredCurrency || 'USD';
 
-  // Add formatted amounts to transactions
   const enrichedTransactions = result.transactions.map(tx => ({
     ...tx,
     formattedAmount: convertUsdToLocal(tx.grossAmount, preferredCurrency, rates).toFixed(2),
@@ -806,7 +795,6 @@ router.post('/tip', tipValidation, catchAsync(async (req, res, next) => {
 
   const { recipientUsername, recipientUniqueCode, amount, idempotencyKey } = req.body;
   
-  // Call the tip controller
   req.body.recipientUsername = recipientUsername || recipientUniqueCode;
   await sendTip(req, res, next);
 }));
@@ -844,73 +832,67 @@ router.post('/tip/preview', catchAsync(async (req, res, next) => {
 
 /**
  * POST /api/wallet/mpesa-callback
- * M-Pesa payment callback endpoint (public)
+ * M-Pesa STK Push callback endpoint (public)
  */
 publicRouter.post('/mpesa-callback', catchAsync(async (req, res) => {
-  try {
-    const callbackData = req.body.Body?.stkCallback;
-    
-    if (!callbackData) {
-      logger.warn('M-Pesa callback received with no stkCallback data', { body: req.body });
-      return res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
-    }
-
-    const { ResultCode, ResultDesc, CheckoutRequestID, CallbackMetadata } = callbackData;
-
-    logger.info('M-Pesa callback received', {
-      checkoutRequestId: CheckoutRequestID,
-      resultCode: ResultCode,
-      resultDesc: ResultDesc,
+  const result = processSTKCallback(req.body);
+  
+  if (result.success && result.metadata.mpesaReceiptNumber) {
+    // Update transaction in database
+    const transaction = await Transaction.findOne({ 
+      'metadata.checkoutRequestId': result.checkoutRequestId 
     });
-
-    if (ResultCode === 0 && CallbackMetadata) {
-      // Find transaction by checkoutRequestId
-      const transaction = await Transaction.findOne({ 'metadata.checkoutRequestId': CheckoutRequestID });
+    
+    if (transaction) {
+      transaction.status = 'completed';
+      transaction.referenceId = result.metadata.mpesaReceiptNumber;
+      transaction.metadata.mpesaReceiptNumber = result.metadata.mpesaReceiptNumber;
+      transaction.metadata.mpesaPaidAmount = result.metadata.amount;
+      transaction.completedAt = new Date();
+      await transaction.save();
       
-      if (transaction) {
-        // Extract receipt number from metadata
-        const receiptItem = CallbackMetadata.Item?.find(item => item.Name === 'MpesaReceiptNumber');
-        const receiptNumber = receiptItem?.Value;
-        
-        // Update transaction status
-        transaction.status = 'completed';
-        if (receiptNumber) {
-          transaction.referenceId = receiptNumber;
-          transaction.metadata.mpesaReceiptNumber = receiptNumber;
-        }
-        transaction.completedAt = new Date();
-        await transaction.save();
-
-        logger.info('M-Pesa transaction completed', {
-          transactionId: transaction._id,
-          checkoutRequestId: CheckoutRequestID,
-          receiptNumber,
-        });
-      } else {
-        logger.warn('M-Pesa callback: Transaction not found', { checkoutRequestId: CheckoutRequestID });
-      }
-    } else if (ResultCode !== 0) {
-      // Payment failed
-      const transaction = await Transaction.findOne({ 'metadata.checkoutRequestId': CheckoutRequestID });
-      
-      if (transaction) {
-        transaction.status = 'failed';
-        transaction.errorMessage = ResultDesc;
-        await transaction.save();
-
-        logger.warn('M-Pesa payment failed', {
-          transactionId: transaction._id,
-          checkoutRequestId: CheckoutRequestID,
-          error: ResultDesc,
-        });
-      }
+      logger.info('M-Pesa transaction completed from callback', {
+        transactionId: transaction._id,
+        receiptNumber: result.metadata.mpesaReceiptNumber,
+      });
     }
-
-    res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
-  } catch (err) {
-    logger.error('M-Pesa callback error:', err);
-    res.status(500).json({ ResultCode: 1, ResultDesc: "Internal Error" });
   }
+  
+  res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
+}));
+
+/**
+ * POST /api/wallet/mpesa/b2c-callback
+ * M-Pesa B2C callback endpoint (public)
+ */
+publicRouter.post('/mpesa/b2c-callback', catchAsync(async (req, res) => {
+  const result = processB2CCallback(req.body);
+  
+  if (result.conversationId) {
+    const transaction = await Transaction.findOne({ 
+      'metadata.conversationId': result.conversationId 
+    });
+    
+    if (transaction) {
+      transaction.status = result.success ? 'completed' : 'failed';
+      if (result.success) {
+        transaction.completedAt = new Date();
+        if (result.transactionId) {
+          transaction.referenceId = result.transactionId;
+        }
+      } else {
+        transaction.errorMessage = result.message;
+      }
+      await transaction.save();
+      
+      logger.info('M-Pesa B2C transaction updated from callback', {
+        transactionId: transaction._id,
+        status: transaction.status,
+      });
+    }
+  }
+  
+  res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
 }));
 
 /**
@@ -928,7 +910,8 @@ publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
       maxAmount: 1150,
       feePercentage: 10,
       processingTime: 'Instant',
-      icon: 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/phone-line.svg',
+      icon: 'phone',
+      enabled: true,
     },
     {
       id: 'paypal',
@@ -939,7 +922,8 @@ publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
       maxAmount: 10000,
       feePercentage: 10,
       processingTime: 'Instant',
-      icon: 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/paypal-line.svg',
+      icon: 'paypal',
+      enabled: true,
     },
     {
       id: 'wire',
@@ -950,7 +934,8 @@ publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
       maxAmount: 50000,
       feePercentage: 10,
       processingTime: '2-5 business days',
-      icon: 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/bank-line.svg',
+      icon: 'bank',
+      enabled: true,
     },
     {
       id: 'wallet',
@@ -961,13 +946,41 @@ publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
       maxAmount: null,
       feePercentage: 10,
       processingTime: 'Instant',
-      icon: 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/wallet-line.svg',
+      icon: 'wallet',
+      enabled: true,
     },
   ];
 
   res.json({
     success: true,
     data: methods,
+  });
+}));
+
+/**
+ * GET /api/wallet/currencies
+ * Get supported currencies (public)
+ */
+publicRouter.get('/currencies', catchAsync(async (req, res) => {
+  const { SUPPORTED_CURRENCIES, BASE_CURRENCY } = require('../config/constants');
+  const rates = await getRatesMap();
+  
+  const currencies = Object.keys(SUPPORTED_CURRENCIES).map(code => ({
+    code,
+    name: SUPPORTED_CURRENCIES[code].name,
+    symbol: SUPPORTED_CURRENCIES[code].symbol,
+    rate: rates[code] || SUPPORTED_CURRENCIES[code].rate,
+    region: SUPPORTED_CURRENCIES[code].region,
+    decimals: SUPPORTED_CURRENCIES[code].decimals,
+  }));
+
+  res.json({
+    success: true,
+    data: {
+      base: BASE_CURRENCY,
+      currencies,
+      lastUpdated: new Date().toISOString(),
+    },
   });
 }));
 
