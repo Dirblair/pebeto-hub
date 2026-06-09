@@ -7,6 +7,37 @@
  * @module server
  */
 
+// ============================================
+// PRE-START CHECKS (Must run first)
+// ============================================
+
+// Verify critical environment variables before anything else
+const requiredEnvVars = ['JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(key => !process.env[key]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ CRITICAL: Missing required environment variables:');
+  missingEnvVars.forEach(key => console.error(`   - ${key}`));
+  console.error('\n💡 Please set these variables in your Render dashboard or .env file');
+  process.exit(1);
+}
+
+// Log startup environment (sanitized)
+console.log('='.repeat(60));
+console.log('🚀 PEBBETO CREATOR\'S HUB SERVER STARTING');
+console.log('='.repeat(60));
+console.log(`📁 Directory: ${__dirname}`);
+console.log(`📦 Node Version: ${process.version}`);
+console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+console.log(`🔑 JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Set' : '❌ Missing'}`);
+console.log(`🗄️ MONGO_URI: ${process.env.MONGO_URI ? '✅ Set' : '❌ Missing'}`);
+console.log(`🌐 PORT: ${process.env.PORT || '3000'}`);
+console.log('='.repeat(60));
+
+// ============================================
+// Module Imports
+// ============================================
+
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -25,13 +56,22 @@ const { attachFeeService } = require('./services/feeService');
 const { initSockets } = require('./sockets');
 const logger = require('./utils/logger');
 
-// Route imports
-const authRoutes = require('./routes/auth.routes');
-const walletRoutes = require('./routes/wallet.routes');
-const adminRoutes = require('./routes/admin.routes');
-const campaignRoutes = require('./routes/campaign.routes');
-const communityRoutes = require('./routes/community.routes');
-const exchangeRoutes = require('./routes/exchange.routes');
+// Route imports with error handling
+let authRoutes, walletRoutes, adminRoutes, campaignRoutes, communityRoutes, exchangeRoutes;
+
+try {
+  authRoutes = require('./routes/auth.routes');
+  walletRoutes = require('./routes/wallet.routes');
+  adminRoutes = require('./routes/admin.routes');
+  campaignRoutes = require('./routes/campaign.routes');
+  communityRoutes = require('./routes/community.routes');
+  exchangeRoutes = require('./routes/exchange.routes');
+  console.log('✅ All route modules loaded successfully');
+} catch (error) {
+  console.error('❌ Failed to load route modules:', error.message);
+  console.error('💡 Check that all route files exist and have no syntax errors');
+  process.exit(1);
+}
 
 // ============================================
 // Request ID Middleware
@@ -130,7 +170,7 @@ async function bootstrap() {
     // 1. Database Connection (Critical first step)
     logger.info('Connecting to database...');
     await connectDB(env.mongoUri, env.mongoOptions);
-    logger.info('Database connection established.');
+    logger.info('✅ Database connection established.');
     
     // 2. Create Express App
     const app = express();
@@ -196,10 +236,12 @@ async function bootstrap() {
     app.use('/api/auth', authRoutes);
     
     // Wallet routes (mix of public and protected)
-    if (walletRoutes.publicRouter) {
+    if (walletRoutes && walletRoutes.publicRouter) {
       app.use('/api/wallet', walletRoutes.publicRouter);
     }
-    app.use('/api/wallet', walletRoutes);
+    if (walletRoutes && walletRoutes.router) {
+      app.use('/api/wallet', walletRoutes.router);
+    }
     
     // Admin routes (protected)
     app.use('/api/admin', adminRoutes);
@@ -234,7 +276,22 @@ async function bootstrap() {
         return next();
       }
       // Serve index.html for all other routes (SPA support)
-      res.sendFile(path.join(__dirname, '..', 'index.html'));
+      const indexPath = path.join(__dirname, '..', 'index.html');
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          // If index.html doesn't exist, send a simple message
+          res.status(200).send(`
+            <!DOCTYPE html>
+            <html>
+            <head><title>Pebeto Creator's Hub</title></head>
+            <body>
+              <h1>Pebeto Creator's Hub API</h1>
+              <p>API is running. Visit <a href="/api/health">/api/health</a> to check status.</p>
+            </body>
+            </html>
+          `);
+        }
+      });
     });
     
     // 13. 404 Handler (for unmatched routes)
@@ -244,18 +301,22 @@ async function bootstrap() {
     app.use(errorHandler);
     
     // 15. Start Server
-    const PORT = env.port;
-    const HOST = env.host;
+    const PORT = env.port || process.env.PORT || 3000;
+    const HOST = env.host || '0.0.0.0';
     
     server.listen(PORT, HOST, () => {
       const startupTime = Date.now() - startTime;
+      console.log('='.repeat(60));
       logger.info(`🚀 Pebeto Creator's Hub running on http://${HOST}:${PORT}`);
       logger.info(`   Environment: ${env.nodeEnv}`);
       logger.info(`   Startup time: ${startupTime}ms`);
       logger.info(`   API Health: http://${HOST}:${PORT}/api/health`);
+      console.log('='.repeat(60));
       
       // Log configuration summary (sanitized)
-      env.logConfigSummary();
+      if (env.logConfigSummary) {
+        env.logConfigSummary();
+      }
     });
     
     // 16. Graceful Shutdown
@@ -264,9 +325,10 @@ async function bootstrap() {
     return { app, server, io };
     
   } catch (error) {
-    logger.error('🚨 CRITICAL STARTUP ERROR:', error);
-    console.error('--- FATAL ERROR ---');
+    console.error('='.repeat(60));
+    logger.error('🚨 CRITICAL STARTUP ERROR:');
     console.error(error);
+    console.error('='.repeat(60));
     process.exit(1);
   }
 }
@@ -289,9 +351,11 @@ function setupGracefulShutdown(server) {
     }
     
     isShuttingDown = true;
+    console.log(`\n⚠️ Received ${signal}. Starting graceful shutdown...`);
     logger.warn(`Received ${signal}. Starting graceful shutdown...`);
     
     const shutdownTimeout = setTimeout(() => {
+      console.error('❌ Forced shutdown due to timeout');
       logger.error('Forced shutdown due to timeout');
       process.exit(1);
     }, 30000); // 30 seconds timeout
@@ -299,19 +363,23 @@ function setupGracefulShutdown(server) {
     try {
       // Stop accepting new connections
       server.close(() => {
+        console.log('✅ HTTP server closed');
         logger.info('HTTP server closed');
       });
       
       // Close database connection
       await disconnectDB();
+      console.log('✅ Database connection closed');
       logger.info('Database connection closed');
       
       // Clear timeout
       clearTimeout(shutdownTimeout);
       
+      console.log('✅ Graceful shutdown completed');
       logger.info('Graceful shutdown completed');
       process.exit(0);
     } catch (error) {
+      console.error('❌ Error during graceful shutdown:', error);
       logger.error('Error during graceful shutdown:', error);
       process.exit(1);
     }
@@ -323,15 +391,16 @@ function setupGracefulShutdown(server) {
   
   // Handle uncaught exceptions (as a last resort)
   process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
     logger.error('Uncaught Exception:', error);
     shutdown('uncaughtException');
   });
   
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection:', reason);
     logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
     // Don't exit immediately, let the process continue
-    // But log for monitoring
   });
 }
 
@@ -341,8 +410,10 @@ function setupGracefulShutdown(server) {
 
 // Handle startup errors outside bootstrap
 bootstrap().catch((err) => {
+  console.error('='.repeat(60));
   console.error('--- FATAL STARTUP ERROR ---');
   console.error(err);
+  console.error('='.repeat(60));
   process.exit(1);
 });
 
