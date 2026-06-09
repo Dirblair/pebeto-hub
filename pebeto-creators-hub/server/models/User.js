@@ -451,7 +451,7 @@ userSchema.virtual('displayName').get(function() {
  * Get user's avatar URL or default
  */
 userSchema.virtual('avatar').get(function() {
-  return this.profile?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.displayName)}&background=7c3aed&color=fff`;
+  return this.profile?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.displayName)}&background=ff8c42&color=fff`;
 });
 
 /**
@@ -827,12 +827,14 @@ userSchema.pre('save', function(next) {
 });
 
 // ============================================
-// Exports
+// Create and Export Model
 // ============================================
 
-module.exports = {
-  User: mongoose.model('User', userSchema),
-  USER_ROLES,
-  USER_STATUS,
-  PAYOUT_METHODS
-};
+const UserModel = mongoose.model('User', userSchema);
+
+// Export as both direct and named for compatibility
+module.exports = UserModel;
+module.exports.User = UserModel;
+module.exports.USER_ROLES = USER_ROLES;
+module.exports.USER_STATUS = USER_STATUS;
+module.exports.PAYOUT_METHODS = PAYOUT_METHODS;
