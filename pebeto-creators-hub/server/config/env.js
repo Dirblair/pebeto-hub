@@ -167,7 +167,7 @@ const EXCHANGE_RATE_API_URL = process.env.EXCHANGE_RATE_API_URL || 'https://v6.e
 const EXCHANGE_RATE_CACHE_TTL = parseInteger(process.env.EXCHANGE_RATE_CACHE_TTL, 3600); // 1 hour
 
 // ============================================
-// M-Pesa Configuration
+// M-Pesa Configuration (Kenya)
 // ============================================
 
 const MPESA_ENABLED = parseBoolean(process.env.MPESA_ENABLED, !IS_TEST);
@@ -184,6 +184,7 @@ const MPESA_API_URL = process.env.MPESA_API_URL ||
     : 'https://api.safaricom.co.ke');
 const MPESA_QUEUE_TIMEOUT_URL = process.env.MPESA_QUEUE_TIMEOUT_URL || '';
 const MPESA_RESULT_URL = process.env.MPESA_RESULT_URL || '';
+const MPESA_CALLBACK_URL = process.env.MPESA_CALLBACK_URL || `${CLIENT_ORIGINS[0] || 'https://pebeto.com'}/api/wallet/mpesa-callback`;
 
 // Validate M-Pesa config if enabled
 if (MPESA_ENABLED && IS_PRODUCTION) {
@@ -196,7 +197,7 @@ if (MPESA_ENABLED && IS_PRODUCTION) {
 }
 
 // ============================================
-// PayPal Configuration
+// PayPal Configuration (Global)
 // ============================================
 
 const PAYPAL_ENABLED = parseBoolean(process.env.PAYPAL_ENABLED, true);
@@ -207,9 +208,41 @@ const PAYPAL_API_URL = process.env.PAYPAL_API_URL ||
   (PAYPAL_ENVIRONMENT === 'sandbox'
     ? 'https://api-m.sandbox.paypal.com'
     : 'https://api-m.paypal.com');
+const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID || '';
+
+// PayPal amount limits
+const PAYPAL_MIN_AMOUNT = parseInteger(process.env.PAYPAL_MIN_AMOUNT, 1, { min: 1, max: 100 });
+const PAYPAL_MAX_AMOUNT = parseInteger(process.env.PAYPAL_MAX_AMOUNT, 10000, { min: 100, max: 50000 });
 
 if (PAYPAL_ENABLED && IS_PRODUCTION && (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET)) {
-  console.warn('⚠️ WARNING: PayPal credentials not configured. PayPal payouts will be unavailable.');
+  console.warn('⚠️ WARNING: PayPal credentials not configured. PayPal payments will be unavailable.');
+}
+
+// ============================================
+// Wire Transfer Configuration (International)
+// ============================================
+
+const WIRE_ENABLED = parseBoolean(process.env.WIRE_ENABLED, true);
+const WIRE_MIN_AMOUNT = parseInteger(process.env.WIRE_MIN_AMOUNT, 100, { min: 50, max: 1000 });
+const WIRE_MAX_AMOUNT = parseInteger(process.env.WIRE_MAX_AMOUNT, 50000, { min: 10000, max: 500000 });
+const WIRE_BANK_NAME = process.env.WIRE_BANK_NAME || 'Pebeto Partner Bank';
+const WIRE_BANK_ADDRESS = process.env.WIRE_BANK_ADDRESS || '123 Financial District, New York, NY 10005, USA';
+const WIRE_ACCOUNT_NAME = process.env.WIRE_ACCOUNT_NAME || 'Pebeto Global Holdings Ltd';
+const WIRE_ACCOUNT_NUMBER = process.env.WIRE_ACCOUNT_NUMBER || '';
+const WIRE_ROUTING_NUMBER = process.env.WIRE_ROUTING_NUMBER || '';
+const WIRE_SWIFT_CODE = process.env.WIRE_SWIFT_CODE || '';
+const WIRE_IBAN = process.env.WIRE_IBAN || '';
+const WIRE_BANK_COUNTRY = process.env.WIRE_BANK_COUNTRY || 'USA';
+const WIRE_CURRENCY = process.env.WIRE_CURRENCY || 'USD';
+
+// Validate Wire Transfer config if enabled
+if (WIRE_ENABLED && IS_PRODUCTION) {
+  if (!WIRE_ACCOUNT_NUMBER) {
+    console.warn('⚠️ WARNING: WIRE_ACCOUNT_NUMBER not configured. Wire transfers will be unavailable.');
+  }
+  if (!WIRE_SWIFT_CODE) {
+    console.warn('⚠️ WARNING: WIRE_SWIFT_CODE not configured. International wire transfers may fail.');
+  }
 }
 
 // ============================================
@@ -294,6 +327,7 @@ const config = {
   jwtPasswordResetExpiresIn: JWT_PASSWORD_RESET_EXPIRES_IN,
   
   // CORS
+  clientOrigin: CLIENT_ORIGIN_RAW,
   clientOrigins: CORS_CONFIG.origins,
   corsAllowAll: CORS_CONFIG.allowAll,
   
@@ -308,7 +342,7 @@ const config = {
   exchangeRateApiUrl: EXCHANGE_RATE_API_URL,
   exchangeRateCacheTtl: EXCHANGE_RATE_CACHE_TTL,
   
-  // M-Pesa
+  // M-Pesa (Kenya)
   mpesa: {
     enabled: MPESA_ENABLED,
     environment: MPESA_ENVIRONMENT,
@@ -321,15 +355,35 @@ const config = {
     apiUrl: MPESA_API_URL,
     queueTimeoutUrl: MPESA_QUEUE_TIMEOUT_URL,
     resultUrl: MPESA_RESULT_URL,
+    callbackUrl: MPESA_CALLBACK_URL,
   },
   
-  // PayPal
+  // PayPal (Global)
   paypal: {
     enabled: PAYPAL_ENABLED,
     environment: PAYPAL_ENVIRONMENT,
     clientId: PAYPAL_CLIENT_ID,
     clientSecret: PAYPAL_CLIENT_SECRET,
     apiUrl: PAYPAL_API_URL,
+    webhookId: PAYPAL_WEBHOOK_ID,
+    minAmount: PAYPAL_MIN_AMOUNT,
+    maxAmount: PAYPAL_MAX_AMOUNT,
+  },
+  
+  // Wire Transfer (International)
+  wire: {
+    enabled: WIRE_ENABLED,
+    minAmount: WIRE_MIN_AMOUNT,
+    maxAmount: WIRE_MAX_AMOUNT,
+    bankName: WIRE_BANK_NAME,
+    bankAddress: WIRE_BANK_ADDRESS,
+    accountName: WIRE_ACCOUNT_NAME,
+    accountNumber: WIRE_ACCOUNT_NUMBER,
+    routingNumber: WIRE_ROUTING_NUMBER,
+    swiftCode: WIRE_SWIFT_CODE,
+    iban: WIRE_IBAN,
+    bankCountry: WIRE_BANK_COUNTRY,
+    currency: WIRE_CURRENCY,
   },
   
   // Email
@@ -386,6 +440,13 @@ const configForLogging = {
     clientId: config.paypal.clientId ? sanitizeForLog(config.paypal.clientId) : undefined,
     clientSecret: config.paypal.clientSecret ? '***' : undefined,
   },
+  wire: {
+    ...config.wire,
+    accountNumber: config.wire.accountNumber ? sanitizeForLog(config.wire.accountNumber) : undefined,
+    routingNumber: config.wire.routingNumber ? sanitizeForLog(config.wire.routingNumber) : undefined,
+    swiftCode: config.wire.swiftCode ? sanitizeForLog(config.wire.swiftCode) : undefined,
+    iban: config.wire.iban ? sanitizeForLog(config.wire.iban) : undefined,
+  },
   email: {
     ...config.email,
     smtpPassword: config.email.smtpPassword ? '***' : undefined,
@@ -417,6 +478,7 @@ function logConfigSummary() {
   console.log(`   JWT Secret: ${JWT_SECRET ? '✅ Configured' : '❌ MISSING'}`);
   console.log(`   M-Pesa: ${MPESA_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   console.log(`   PayPal: ${PAYPAL_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
+  console.log(`   Wire Transfer: ${WIRE_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   console.log(`   Email: ${EMAIL_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   console.log(`   Redis: ${REDIS_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   console.log(`   Features: Community=${FEATURES.COMMUNITY_ENABLED}, Withdrawals=${FEATURES.WITHDRAWALS_ENABLED}, Tips=${FEATURES.TIPS_ENABLED}`);
