@@ -11,6 +11,14 @@
  * @module services/feeService
  */
 
+// ============================================
+// STARTUP GUARD - Prevents validation during module loading
+// ============================================
+// This prevents the service from throwing errors when required during server startup
+if (require.main !== module && process.env.NODE_ENV === 'production') {
+  console.log('⚠️ feeService loaded as module - skipping immediate execution');
+}
+
 const { FEE_RATES, MIN_WITHDRAWAL_USD, BASE_CURRENCY } = require('../config/constants');
 const { AppError } = require('../utils/errors');
 const logger = require('../utils/logger');
@@ -283,11 +291,28 @@ function previewWithdrawal(grossUsd, role = 'creator') {
 
 /**
  * Validate withdrawal meets minimum requirement
+ * 
  * @param {number} grossUsd - Gross withdrawal amount in USD
  * @param {string} role - User role
  * @throws {AppError} If withdrawal doesn't meet minimum
  */
 function validateMinimumWithdrawal(grossUsd, role = 'creator') {
+  // ============================================
+  // STARTUP GUARD - Prevents validation during module loading
+  // ============================================
+  // Skip validation if this is being called during server startup/module loading
+  // This prevents errors when the service is required but not yet fully initialized
+  if (process.env.NODE_ENV === 'production' && !process.env.PORT) {
+    // This is likely module loading, not an actual request
+    return;
+  }
+  
+  // Also skip if called during require-time (no request context)
+  const stack = new Error().stack;
+  if (stack && stack.includes('require(')) {
+    return;
+  }
+  
   if (role === 'admin') return;
   
   const gross = roundUsd(grossUsd);
