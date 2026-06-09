@@ -25,14 +25,39 @@ const BASE_CURRENCY = 'USD';
 
 /** Supported currencies for display and conversion */
 const SUPPORTED_CURRENCIES = {
-  USD: { symbol: '$', name: 'US Dollar', decimals: 2, rate: 1 },
-  KES: { symbol: 'KSh', name: 'Kenyan Shilling', decimals: 2, rate: 130 },
-  EUR: { symbol: '€', name: 'Euro', decimals: 2, rate: 0.92 },
-  GBP: { symbol: '£', name: 'British Pound', decimals: 2, rate: 0.79 },
-  NGN: { symbol: '₦', name: 'Nigerian Naira', decimals: 2, rate: 750 },
-  ZAR: { symbol: 'R', name: 'South African Rand', decimals: 2, rate: 18.5 },
-  GHS: { symbol: '₵', name: 'Ghanaian Cedi', decimals: 2, rate: 12.5 },
+  USD: { symbol: '$', name: 'US Dollar', decimals: 2, rate: 1, region: 'Global' },
+  KES: { symbol: 'KSh', name: 'Kenyan Shilling', decimals: 2, rate: 130, region: 'Kenya' },
+  EUR: { symbol: '€', name: 'Euro', decimals: 2, rate: 0.92, region: 'Europe' },
+  GBP: { symbol: '£', name: 'British Pound', decimals: 2, rate: 0.79, region: 'United Kingdom' },
+  NGN: { symbol: '₦', name: 'Nigerian Naira', decimals: 2, rate: 750, region: 'Nigeria' },
+  ZAR: { symbol: 'R', name: 'South African Rand', decimals: 2, rate: 18.5, region: 'South Africa' },
+  GHS: { symbol: '₵', name: 'Ghanaian Cedi', decimals: 2, rate: 12.5, region: 'Ghana' },
+  TZS: { symbol: 'TSh', name: 'Tanzanian Shilling', decimals: 2, rate: 2600, region: 'Tanzania' },
+  UGX: { symbol: 'USh', name: 'Ugandan Shilling', decimals: 0, rate: 3800, region: 'Uganda' },
+  JPY: { symbol: '¥', name: 'Japanese Yen', decimals: 0, rate: 148, region: 'Japan' },
+  CNY: { symbol: '¥', name: 'Chinese Yuan', decimals: 2, rate: 7.24, region: 'China' },
+  INR: { symbol: '₹', name: 'Indian Rupee', decimals: 2, rate: 83, region: 'India' },
+  CHF: { symbol: 'Fr', name: 'Swiss Franc', decimals: 2, rate: 0.91, region: 'Switzerland' },
+  CAD: { symbol: 'C$', name: 'Canadian Dollar', decimals: 2, rate: 1.35, region: 'Canada' },
+  AUD: { symbol: 'A$', name: 'Australian Dollar', decimals: 2, rate: 1.52, region: 'Australia' },
+  SEK: { symbol: 'kr', name: 'Swedish Krona', decimals: 2, rate: 10.5, region: 'Sweden' },
+  NZD: { symbol: 'NZ$', name: 'New Zealand Dollar', decimals: 2, rate: 1.65, region: 'New Zealand' },
+  BRL: { symbol: 'R$', name: 'Brazilian Real', decimals: 2, rate: 5.10, region: 'Brazil' },
+  MXN: { symbol: '$', name: 'Mexican Peso', decimals: 2, rate: 17.5, region: 'Mexico' },
+  SGD: { symbol: 'S$', name: 'Singapore Dollar', decimals: 2, rate: 1.35, region: 'Singapore' },
+  MYR: { symbol: 'RM', name: 'Malaysian Ringgit', decimals: 2, rate: 4.70, region: 'Malaysia' },
+  THB: { symbol: '฿', name: 'Thai Baht', decimals: 2, rate: 35.5, region: 'Thailand' },
+  VND: { symbol: '₫', name: 'Vietnamese Dong', decimals: 0, rate: 24500, region: 'Vietnam' },
+  PHP: { symbol: '₱', name: 'Philippine Peso', decimals: 2, rate: 56, region: 'Philippines' },
+  IDR: { symbol: 'Rp', name: 'Indonesian Rupiah', decimals: 0, rate: 15500, region: 'Indonesia' },
+  PKR: { symbol: '₨', name: 'Pakistani Rupee', decimals: 2, rate: 278, region: 'Pakistan' },
+  BDT: { symbol: '৳', name: 'Bangladeshi Taka', decimals: 2, rate: 110, region: 'Bangladesh' },
+  LKR: { symbol: 'Rs', name: 'Sri Lankan Rupee', decimals: 2, rate: 320, region: 'Sri Lanka' },
+  NPR: { symbol: 'Rs', name: 'Nepalese Rupee', decimals: 2, rate: 133, region: 'Nepal' },
 };
+
+/** Array of currency codes for easy iteration */
+const CURRENCY_CODES = Object.keys(SUPPORTED_CURRENCIES);
 
 // ============================================
 // Fee Structure
@@ -91,6 +116,86 @@ function calculateGrossAmount(netAmount, feeType) {
 }
 
 // ============================================
+// Deposit Methods Configuration
+// ============================================
+
+/** Supported deposit methods with their configurations */
+const DEPOSIT_METHODS_CONFIG = {
+  mpesa: {
+    name: 'M-Pesa',
+    enabled: true,
+    region: 'Kenya',
+    type: 'mobile_money',
+    requiredFields: ['phoneNumber'],
+    phoneRegex: /^(254|\+254|0)[7-9][0-9]{8}$/,
+    minAmount: 1,
+    maxAmount: 1150, // USD equivalent (~150,000 KES)
+    processingTime: 'Instant',
+    additionalFee: 0,
+    feePercentage: 10,
+    icon: 'phone',
+  },
+  paypal: {
+    name: 'PayPal',
+    enabled: true,
+    region: 'Global',
+    type: 'digital_wallet',
+    requiredFields: ['paypalEmail'],
+    emailRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    minAmount: 1,
+    maxAmount: 10000,
+    processingTime: 'Instant',
+    additionalFee: 0,
+    feePercentage: 10,
+    icon: 'paypal',
+  },
+  wire: {
+    name: 'Wire Transfer',
+    enabled: true,
+    region: 'International',
+    type: 'bank_transfer',
+    requiredFields: ['bankName', 'accountNumber', 'accountHolderName'],
+    minAmount: 100,
+    maxAmount: 50000,
+    processingTime: '2-5 business days',
+    additionalFee: 0,
+    feePercentage: 10,
+    icon: 'bank',
+  },
+  card: {
+    name: 'Credit/Debit Card',
+    enabled: false, // Coming soon
+    region: 'Global',
+    type: 'card',
+    requiredFields: ['cardNumber', 'expiryDate', 'cvv'],
+    minAmount: 10,
+    maxAmount: 10000,
+    processingTime: 'Instant',
+    additionalFee: 2.9,
+    feePercentage: 10,
+    icon: 'card',
+  },
+  crypto: {
+    name: 'Cryptocurrency',
+    enabled: false, // Coming soon
+    region: 'Global',
+    type: 'crypto',
+    requiredFields: ['walletAddress', 'currency'],
+    minAmount: 50,
+    maxAmount: 50000,
+    processingTime: '10-30 minutes',
+    additionalFee: 0,
+    feePercentage: 10,
+    icon: 'crypto',
+  },
+};
+
+/** List of enabled deposit methods */
+const DEPOSIT_METHODS = Object.keys(DEPOSIT_METHODS_CONFIG).filter(
+  method => DEPOSIT_METHODS_CONFIG[method].enabled
+);
+
+// ============================================
 // Withdrawal Configuration
 // ============================================
 
@@ -109,6 +214,14 @@ const MIN_WITHDRAWAL_BY_CURRENCY = {
   NGN: 45000,
   ZAR: 550,
   GHS: 400,
+  TZS: 78000,
+  UGX: 110000,
+  JPY: 4500,
+  CNY: 215,
+  INR: 2500,
+  CAD: 40,
+  AUD: 45,
+  NZD: 48,
 };
 
 /** Supported payout methods with their configurations */
@@ -116,40 +229,48 @@ const PAYOUT_METHODS_CONFIG = {
   mpesa: {
     name: 'M-Pesa',
     enabled: true,
+    region: 'Kenya',
     requiredFields: ['phoneNumber'],
-    phoneRegex: /^(254|\+254|0)?[7-9][0-9]{8}$/,
+    phoneRegex: /^(254|\+254|0)[7-9][0-9]{8}$/,
     minAmount: 1,
-    maxAmount: 150000, // M-Pesa transaction limit in USD equivalent
+    maxAmount: 1150,
     processingTime: 'Instant to 1 hour',
     additionalFee: 0,
+    feePercentage: 3,
   },
   paypal: {
     name: 'PayPal',
     enabled: true,
+    region: 'Global',
     requiredFields: ['paypalEmail'],
     emailRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     minAmount: 1,
     maxAmount: 10000,
     processingTime: '1-3 business days',
     additionalFee: 0.02, // 2% PayPal fee (estimate)
+    feePercentage: 3,
   },
   swift: {
-    name: 'Bank Transfer (SWIFT)',
+    name: 'Wire Transfer (SWIFT)',
     enabled: true,
+    region: 'International',
     requiredFields: ['bankName', 'accountHolderName', 'accountNumber', 'swiftCode'],
     minAmount: 100,
-    maxAmount: null,
+    maxAmount: 50000,
     processingTime: '3-5 business days',
     additionalFee: 15, // Fixed international wire fee in USD
+    feePercentage: 3,
   },
   bank_transfer: {
     name: 'Local Bank Transfer',
     enabled: true,
+    region: 'Local',
     requiredFields: ['bankName', 'accountNumber', 'accountHolderName'],
     minAmount: 10,
     maxAmount: null,
     processingTime: '1-2 business days',
     additionalFee: 0,
+    feePercentage: 3,
   },
 };
 
@@ -176,6 +297,7 @@ const MAX_CAMPAIGN_DURATION_DAYS = 90;
 
 /** Campaign statuses */
 const CAMPAIGN_STATUS = {
+  DRAFT: 'draft',
   OPEN: 'open',
   IN_PROGRESS: 'in_progress',
   SUBMITTED_FOR_REVIEW: 'submitted_for_review',
@@ -183,6 +305,7 @@ const CAMPAIGN_STATUS = {
   PAID: 'paid',
   CANCELLED: 'cancelled',
   EXPIRED: 'expired',
+  DISPUTED: 'disputed',
 };
 
 /** Campaign stages for creators */
@@ -238,6 +361,16 @@ const RATE_LIMITS = {
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 50, // 50 bids per hour per user
   },
+  // Deposits
+  deposit: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 20, // 20 deposit attempts per hour per user
+  },
+  // Withdrawals
+  withdrawal: {
+    windowMs: 24 * 60 * 60 * 1000, // 24 hours
+    max: 5, // 5 withdrawal requests per day per user
+  },
 };
 
 // ============================================
@@ -252,6 +385,8 @@ const CACHE_TTL = {
   EXCHANGE_RATES: 3600, // 1 hour
   BALANCE: 30, // 30 seconds
   STATS: 300, // 5 minutes
+  PAYMENT_METHODS: 3600, // 1 hour
+  CURRENCY_RATES: 3600, // 1 hour
 };
 
 // ============================================
@@ -320,7 +455,49 @@ const EMAIL_TEMPLATES = {
   CAMPAIGN_COMPLETED: 'campaign-completed',
   WITHDRAWAL_PROCESSED: 'withdrawal-processed',
   NEW_CAMPAIGN: 'new-campaign',
+  DEPOSIT_CONFIRMED: 'deposit-confirmed',
+  PAYMENT_RECEIVED: 'payment-received',
 };
+
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Get currency details by code
+ * @param {string} currencyCode - Currency code (e.g., 'USD')
+ * @returns {Object|null} Currency details or null if not found
+ */
+function getCurrencyDetails(currencyCode) {
+  return SUPPORTED_CURRENCIES[currencyCode?.toUpperCase()] || null;
+}
+
+/**
+ * Get deposit method details by method ID
+ * @param {string} methodId - Method ID (e.g., 'mpesa')
+ * @returns {Object|null} Method details or null if not found
+ */
+function getDepositMethodDetails(methodId) {
+  return DEPOSIT_METHODS_CONFIG[methodId?.toLowerCase()] || null;
+}
+
+/**
+ * Get payout method details by method ID
+ * @param {string} methodId - Method ID (e.g., 'paypal')
+ * @returns {Object|null} Method details or null if not found
+ */
+function getPayoutMethodDetails(methodId) {
+  return PAYOUT_METHODS_CONFIG[methodId?.toLowerCase()] || null;
+}
+
+/**
+ * Check if a currency is supported
+ * @param {string} currencyCode - Currency code to check
+ * @returns {boolean}
+ */
+function isCurrencySupported(currencyCode) {
+  return !!SUPPORTED_CURRENCIES[currencyCode?.toUpperCase()];
+}
 
 // ============================================
 // Export Configuration
@@ -336,6 +513,9 @@ module.exports = {
   // Currency
   BASE_CURRENCY,
   SUPPORTED_CURRENCIES,
+  CURRENCY_CODES,
+  getCurrencyDetails,
+  isCurrencySupported,
   
   // Fees
   FEE_RATES,
@@ -344,12 +524,18 @@ module.exports = {
   calculateNetAmount,
   calculateGrossAmount,
   
+  // Deposit Methods
+  DEPOSIT_METHODS_CONFIG,
+  DEPOSIT_METHODS,
+  getDepositMethodDetails,
+  
   // Withdrawals
   MIN_WITHDRAWAL_USD,
   MAX_WITHDRAWAL_USD,
   MIN_WITHDRAWAL_BY_CURRENCY,
   PAYOUT_METHODS,
   PAYOUT_METHODS_CONFIG,
+  getPayoutMethodDetails,
   
   // Campaigns
   MIN_CAMPAIGN_BUDGET_USD,
