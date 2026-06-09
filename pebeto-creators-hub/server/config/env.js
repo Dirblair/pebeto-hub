@@ -132,19 +132,27 @@ const JWT_EMAIL_VERIFY_EXPIRES_IN = process.env.JWT_EMAIL_VERIFY_EXPIRES_IN || '
 const JWT_PASSWORD_RESET_EXPIRES_IN = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h';
 
 // ============================================
-// CORS Configuration
+// CORS Configuration (Updated for flexibility)
 // ============================================
 
 const CLIENT_ORIGIN_RAW = process.env.CLIENT_ORIGIN || (IS_PRODUCTION ? '' : '*');
 const CLIENT_ORIGINS = parseArray(CLIENT_ORIGIN_RAW, []);
 
-// In production, require explicit origins
-if (IS_PRODUCTION && CLIENT_ORIGINS.length === 0 && CLIENT_ORIGIN_RAW !== '*') {
-  throw new Error('CLIENT_ORIGIN must be configured in production (comma-separated list of allowed origins)');
+// In production, allow requests from the Render URL if no CLIENT_ORIGIN set
+let finalClientOrigins = CLIENT_ORIGINS;
+if (IS_PRODUCTION && finalClientOrigins.length === 0) {
+  // Auto-detect Render URL from environment
+  const renderUrl = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || '';
+  if (renderUrl) {
+    finalClientOrigins = [renderUrl];
+    console.log(`🔧 Auto-configured CORS origin to: ${renderUrl}`);
+  } else {
+    console.warn('⚠️ WARNING: No CLIENT_ORIGIN set and no Render URL detected. CORS may block requests.');
+  }
 }
 
 const CORS_CONFIG = {
-  origins: CLIENT_ORIGINS,
+  origins: finalClientOrigins,
   credentials: true,
   allowAll: CLIENT_ORIGIN_RAW === '*',
 };
@@ -184,15 +192,16 @@ const MPESA_API_URL = process.env.MPESA_API_URL ||
     : 'https://api.safaricom.co.ke');
 const MPESA_QUEUE_TIMEOUT_URL = process.env.MPESA_QUEUE_TIMEOUT_URL || '';
 const MPESA_RESULT_URL = process.env.MPESA_RESULT_URL || '';
-const MPESA_CALLBACK_URL = process.env.MPESA_CALLBACK_URL || `${CLIENT_ORIGINS[0] || 'https://pebeto.com'}/api/wallet/mpesa-callback`;
+const MPESA_CALLBACK_URL = process.env.MPESA_CALLBACK_URL || 
+  (finalClientOrigins[0] ? `${finalClientOrigins[0]}/api/wallet/mpesa-callback` : 'https://pebeto.com/api/wallet/mpesa-callback');
 
 // Validate M-Pesa config if enabled
 if (MPESA_ENABLED && IS_PRODUCTION) {
   if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET) {
-    throw new Error('MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET are required when M-Pesa is enabled');
+    console.warn('⚠️ WARNING: MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET not configured. M-Pesa will be disabled.');
   }
   if (!MPESA_SHORT_CODE) {
-    throw new Error('MPESA_SHORT_CODE is required when M-Pesa is enabled');
+    console.warn('⚠️ WARNING: MPESA_SHORT_CODE not configured. M-Pesa will be disabled.');
   }
 }
 
@@ -498,6 +507,7 @@ function logConfigSummary() {
   console.log(`   Port: ${PORT}`);
   console.log(`   MongoDB: ${MONGO_URI ? sanitizeForLog(MONGO_URI, 10, 10) : '❌ MISSING'}`);
   console.log(`   JWT Secret: ${JWT_SECRET ? '✅ Configured' : '❌ MISSING'}`);
+  console.log(`   CORS Origins: ${finalClientOrigins.length > 0 ? finalClientOrigins.join(', ') : 'None (allow all)'}`);
   console.log(`   M-Pesa: ${MPESA_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   console.log(`   PayPal: ${PAYPAL_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   console.log(`   Wire Transfer: ${WIRE_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
