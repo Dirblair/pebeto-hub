@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pebeto — Join as Creator or Brand</title>
+  <title>Pebeto — Join the Creator Economy</title>
   
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  
-  <!-- Font Awesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
@@ -20,7 +17,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a1a0e 50%, #1f1408 100%);
+      background: linear-gradient(135deg, #0f0c0a 0%, #1f1408 50%, #0f0c0a 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -28,154 +25,177 @@
       padding: 20px;
     }
 
-    /* Main Container - Centered */
-    .container {
-      max-width: 500px;
+    /* Split Layout */
+    .auth-wrapper {
+      max-width: 1200px;
       width: 100%;
-      margin: 0 auto;
+      display: flex;
+      background: rgba(20, 15, 12, 0.7);
+      backdrop-filter: blur(20px);
+      border-radius: 48px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 140, 66, 0.2);
     }
 
-    /* Card */
-    .card {
-      background: rgba(25, 20, 18, 0.85);
-      backdrop-filter: blur(12px);
-      border-radius: 28px;
-      padding: 40px 36px;
-      border: 1px solid rgba(255, 140, 66, 0.25);
-      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6);
+    /* Left Side - Hero Section */
+    .hero-section {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(255, 140, 66, 0.15), rgba(224, 102, 44, 0.08));
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    /* Logo */
-    .logo {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    
-    .logo-icon {
-      width: 60px;
-      height: 60px;
+    .hero-icon {
+      width: 70px;
+      height: 70px;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
-      border-radius: 18px;
+      border-radius: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 14px;
-      box-shadow: 0 6px 18px rgba(255, 140, 66, 0.35);
-    }
-    
-    .logo-icon i {
-      font-size: 28px;
-      color: white;
-    }
-    
-    .logo h1 {
-      font-size: 26px;
-      font-weight: 700;
-      color: white;
-      letter-spacing: -0.3px;
-    }
-    
-    .logo p {
-      font-size: 13px;
-      color: #ffaa77;
-      margin-top: 5px;
+      margin-bottom: 32px;
     }
 
-    /* Role Tabs */
-    .role-tabs {
+    .hero-icon i {
+      font-size: 32px;
+      color: white;
+    }
+
+    .hero-section h2 {
+      font-size: 32px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero-section p {
+      font-size: 16px;
+      color: #c0a090;
+      margin-bottom: 40px;
+      line-height: 1.5;
+    }
+
+    .features-list {
+      list-style: none;
+    }
+
+    .features-list li {
       display: flex;
-      gap: 14px;
-      background: rgba(0, 0, 0, 0.25);
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: #d0b0a0;
+      font-size: 14px;
+    }
+
+    .features-list li i {
+      width: 24px;
+      color: #ffaa77;
+      font-size: 18px;
+    }
+
+    /* Right Side - Form Section */
+    .form-section {
+      flex: 1;
+      padding: 48px 48px;
+    }
+
+    .form-section h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .form-section > p {
+      color: #c0a090;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    /* Role Selector */
+    .role-selector {
+      display: flex;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.3);
       padding: 6px;
       border-radius: 60px;
       margin-bottom: 32px;
     }
-    
-    .role-tab {
+
+    .role-btn {
       flex: 1;
-      padding: 12px 10px;
+      padding: 12px;
       border: none;
       background: transparent;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       border-radius: 50px;
       cursor: pointer;
-      transition: all 0.25s ease;
       color: #c0a090;
       font-family: 'Inter', sans-serif;
-    }
-    
-    .role-tab.active {
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      color: white;
-      box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+      transition: all 0.2s;
     }
 
-    /* Form Groups */
-    .form-group {
-      margin-bottom: 22px;
+    .role-btn.active {
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      color: white;
     }
-    
-    label {
+
+    /* Form Inputs */
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       color: #ffccaa;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
-    
-    label i {
+
+    .input-group label i {
       margin-right: 6px;
-      color: #ffaa77;
-      width: 18px;
+      font-size: 11px;
     }
-    
-    .input-with-icon {
-      position: relative;
-    }
-    
-    .input-with-icon i {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #ffaa77;
-      font-size: 15px;
-    }
-    
-    input {
+
+    .input-group input {
       width: 100%;
-      padding: 14px 16px 14px 48px;
+      padding: 14px 16px;
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 140, 66, 0.3);
-      border-radius: 14px;
-      font-size: 15px;
+      border: 1px solid rgba(255, 140, 66, 0.25);
+      border-radius: 16px;
+      font-size: 14px;
       color: white;
       font-family: 'Inter', sans-serif;
       transition: all 0.2s;
     }
-    
-    input:focus {
+
+    .input-group input:focus {
       outline: none;
       border-color: #ff8c42;
       background: rgba(255, 140, 66, 0.08);
-      box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.15);
     }
-    
-    input::placeholder {
-      color: #7a6050;
+
+    .input-group input::placeholder {
+      color: #6a5040;
     }
-    
-    /* Password wrapper for toggle visibility */
-    .password-wrapper {
+
+    /* Password with toggle */
+    .password-input {
       position: relative;
     }
-    
-    .password-wrapper input {
+
+    .password-input input {
       padding-right: 48px;
     }
-    
-    .toggle-password {
+
+    .toggle-pwd {
       position: absolute;
       right: 16px;
       top: 50%;
@@ -184,9 +204,8 @@
       border: none;
       color: #ffaa77;
       cursor: pointer;
-      font-size: 16px;
     }
-    
+
     /* Submit Button */
     .submit-btn {
       width: 100%;
@@ -194,182 +213,182 @@
       background: linear-gradient(135deg, #ff8c42, #e0662c);
       border: none;
       border-radius: 50px;
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 600;
       color: white;
       cursor: pointer;
-      transition: all 0.25s ease;
       margin-top: 12px;
       font-family: 'Inter', sans-serif;
-      box-shadow: 0 4px 14px rgba(255, 140, 66, 0.35);
+      transition: all 0.2s;
     }
-    
+
     .submit-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 22px rgba(255, 140, 66, 0.45);
+      box-shadow: 0 8px 25px rgba(255, 140, 66, 0.35);
     }
-    
-    .submit-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    /* Error/Success Messages */
+
+    /* Alert */
     .alert {
-      padding: 14px;
+      padding: 12px 16px;
       border-radius: 14px;
-      font-size: 13px;
-      margin-bottom: 22px;
+      font-size: 12px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    
+
     .alert-error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
       color: #ffaaaa;
     }
-    
+
     .alert-success {
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
       color: #aaffaa;
     }
-    
-    .alert i {
-      font-size: 16px;
-    }
-    
-    /* Footer */
-    .footer-text {
-      text-align: center;
-      margin-top: 28px;
-      color: #a08070;
-      font-size: 12px;
-    }
-    
-    .footer-text a {
-      color: #ffaa77;
-      text-decoration: none;
-    }
-    
-    .footer-text a:hover {
-      text-decoration: underline;
-    }
-    
-    /* Hide panels */
-    .panel {
+
+    /* Panels */
+    .signup-panel {
       display: none;
     }
-    
-    .panel.active-panel {
+
+    .signup-panel.active {
       display: block;
-      animation: fadeIn 0.3s ease;
     }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
+
     /* Divider */
-    hr {
-      border: none;
+    .divider {
+      text-align: center;
+      margin: 24px 0;
+      color: #6a5040;
+      font-size: 12px;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 45%;
       height: 1px;
       background: rgba(255, 140, 66, 0.2);
-      margin: 20px 0;
     }
-    
-    /* Already have account link */
+
+    .divider::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      width: 45%;
+      height: 1px;
+      background: rgba(255, 140, 66, 0.2);
+    }
+
     .login-link {
       text-align: center;
-      margin-top: 18px;
+      margin-top: 20px;
     }
-    
+
     .login-link a {
       color: #ffaa77;
       text-decoration: none;
       font-size: 13px;
       font-weight: 500;
     }
-    
+
     /* Responsive */
-    @media (max-width: 500px) {
-      .card {
-        padding: 30px 22px;
+    @media (max-width: 900px) {
+      .auth-wrapper {
+        flex-direction: column;
+        max-width: 500px;
       }
       
-      .role-tabs {
-        gap: 10px;
+      .hero-section {
+        padding: 32px 32px;
+        text-align: center;
       }
       
-      .role-tab {
-        padding: 10px 8px;
-        font-size: 14px;
+      .hero-icon {
+        margin: 0 auto 24px;
+      }
+      
+      .features-list {
+        text-align: left;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+      
+      .form-section {
+        padding: 32px 32px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
+  <div class="auth-wrapper">
+    
+    <!-- Left Side - Hero -->
+    <div class="hero-section">
+      <div class="hero-icon">
+        <i class="fas fa-hand-peace"></i>
+      </div>
+      <h2>Start your creator journey</h2>
+      <p>Join thousands of creators and brands already growing together on Pebeto.</p>
       
-      <!-- Logo -->
-      <div class="logo">
-        <div class="logo-icon">
-          <i class="fas fa-hand-peace"></i>
-        </div>
-        <h1>Pebeto</h1>
-        <p>Creator's Hub</p>
+      <ul class="features-list">
+        <li><i class="fas fa-check-circle"></i> Connect with brands</li>
+        <li><i class="fas fa-wallet"></i> Secure escrow payments</li>
+        <li><i class="fas fa-chart-line"></i> Grow your influence</li>
+        <li><i class="fas fa-globe"></i> Global payment options</li>
+      </ul>
+    </div>
+    
+    <!-- Right Side - Form -->
+    <div class="form-section">
+      <h3>Create an account</h3>
+      <p>Choose how you want to use Pebeto</p>
+      
+      <!-- Role Selector -->
+      <div class="role-selector">
+        <button class="role-btn active" data-role="creator">🎨 I'm a Creator</button>
+        <button class="role-btn" data-role="business">🏢 I'm a Brand</button>
       </div>
       
-      <!-- Role Tabs -->
-      <div class="role-tabs">
-        <button class="role-tab active" data-role="creator">🎨 Creator</button>
-        <button class="role-tab" data-role="business">🏢 Brand</button>
-      </div>
-      
-      <!-- Alert Message -->
+      <!-- Alert -->
       <div id="alert" class="alert" style="display: none;"></div>
       
-      <!-- Creator Signup Panel -->
-      <div id="creator-panel" class="panel active-panel">
-        <form id="creator-form">
-          <div class="form-group">
-            <label><i class="fas fa-envelope"></i> Email Address</label>
-            <div class="input-with-icon">
-              <i class="fas fa-envelope"></i>
-              <input type="email" id="creator-email" placeholder="hello@example.com" required />
-            </div>
+      <!-- Creator Form -->
+      <div id="creator-form-container" class="signup-panel active">
+        <form id="creator-signup">
+          <div class="input-group">
+            <label><i class="fas fa-envelope"></i> Email address</label>
+            <input type="email" id="creator-email" placeholder="you@example.com" required />
           </div>
           
-          <div class="form-group">
-            <label><i class="fas fa-star"></i> Niche / Category</label>
-            <div class="input-with-icon">
-              <i class="fas fa-tag"></i>
-              <input type="text" id="creator-niche" placeholder="e.g., Music, Comedy, Fashion, Tech, Art" required />
-            </div>
+          <div class="input-group">
+            <label><i class="fas fa-tag"></i> Niche / Category</label>
+            <input type="text" id="creator-niche" placeholder="Music, Comedy, Fashion, Tech..." required />
           </div>
           
-          <div class="form-group">
+          <div class="input-group">
             <label><i class="fas fa-lock"></i> Password</label>
-            <div class="password-wrapper">
-              <i class="fas fa-lock" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
-              <input type="password" id="creator-password" placeholder="At least 8 characters" style="padding-left: 48px;" required />
-              <button type="button" class="toggle-password" data-target="creator-password">
+            <div class="password-input">
+              <input type="password" id="creator-password" placeholder="Create a password" required />
+              <button type="button" class="toggle-pwd" data-target="creator-password">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
           
-          <div class="form-group">
-            <label><i class="fas fa-check-circle"></i> Confirm Password</label>
-            <div class="password-wrapper">
-              <i class="fas fa-check" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
-              <input type="password" id="creator-confirm-password" placeholder="Confirm your password" style="padding-left: 48px;" required />
-              <button type="button" class="toggle-password" data-target="creator-confirm-password">
+          <div class="input-group">
+            <label><i class="fas fa-check-circle"></i> Confirm password</label>
+            <div class="password-input">
+              <input type="password" id="creator-confirm" placeholder="Confirm your password" required />
+              <button type="button" class="toggle-pwd" data-target="creator-confirm">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
@@ -381,50 +400,39 @@
         </form>
       </div>
       
-      <!-- Brand Signup Panel -->
-      <div id="brand-panel" class="panel">
-        <form id="brand-form">
-          <div class="form-group">
-            <label><i class="fas fa-envelope"></i> Email Address</label>
-            <div class="input-with-icon">
-              <i class="fas fa-envelope"></i>
-              <input type="email" id="brand-email" placeholder="hello@example.com" required />
-            </div>
+      <!-- Brand Form -->
+      <div id="brand-form-container" class="signup-panel">
+        <form id="brand-signup">
+          <div class="input-group">
+            <label><i class="fas fa-envelope"></i> Email address</label>
+            <input type="email" id="brand-email" placeholder="you@company.com" required />
           </div>
           
-          <div class="form-group">
-            <label><i class="fas fa-building"></i> Company / Business Name</label>
-            <div class="input-with-icon">
-              <i class="fas fa-briefcase"></i>
-              <input type="text" id="brand-company" placeholder="Your business name" required />
-            </div>
+          <div class="input-group">
+            <label><i class="fas fa-building"></i> Company / Brand name</label>
+            <input type="text" id="brand-company" placeholder="Your business name" required />
           </div>
           
-          <div class="form-group">
-            <label><i class="fas fa-globe"></i> Website URL (optional)</label>
-            <div class="input-with-icon">
-              <i class="fas fa-link"></i>
-              <input type="url" id="brand-website" placeholder="https://yourcompany.com" />
-            </div>
+          <div class="input-group">
+            <label><i class="fas fa-globe"></i> Website (optional)</label>
+            <input type="url" id="brand-website" placeholder="https://yourcompany.com" />
           </div>
           
-          <div class="form-group">
+          <div class="input-group">
             <label><i class="fas fa-lock"></i> Password</label>
-            <div class="password-wrapper">
-              <i class="fas fa-lock" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
-              <input type="password" id="brand-password" placeholder="At least 8 characters" style="padding-left: 48px;" required />
-              <button type="button" class="toggle-password" data-target="brand-password">
+            <div class="password-input">
+              <input type="password" id="brand-password" placeholder="Create a password" required />
+              <button type="button" class="toggle-pwd" data-target="brand-password">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
           
-          <div class="form-group">
-            <label><i class="fas fa-check-circle"></i> Confirm Password</label>
-            <div class="password-wrapper">
-              <i class="fas fa-check" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 1;"></i>
-              <input type="password" id="brand-confirm-password" placeholder="Confirm your password" style="padding-left: 48px;" required />
-              <button type="button" class="toggle-password" data-target="brand-confirm-password">
+          <div class="input-group">
+            <label><i class="fas fa-check-circle"></i> Confirm password</label>
+            <div class="password-input">
+              <input type="password" id="brand-confirm" placeholder="Confirm your password" required />
+              <button type="button" class="toggle-pwd" data-target="brand-confirm">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
@@ -436,54 +444,45 @@
         </form>
       </div>
       
-      <!-- Already have account link -->
+      <div class="divider"></div>
+      
       <div class="login-link">
         <a href="/login.html">Already have an account? Sign in →</a>
       </div>
-      
-      <div class="footer-text">
-        By joining, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-      </div>
-      
     </div>
+    
   </div>
   
   <script>
-    // Tab Switching
-    const creatorPanel = document.getElementById('creator-panel');
-    const brandPanel = document.getElementById('brand-panel');
-    const roleTabs = document.querySelectorAll('.role-tab');
+    // Role switching
+    const roleBtns = document.querySelectorAll('.role-btn');
+    const creatorPanel = document.getElementById('creator-form-container');
+    const brandPanel = document.getElementById('brand-form-container');
     const alertDiv = document.getElementById('alert');
     
-    let currentRole = 'creator';
-    
-    roleTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const role = tab.dataset.role;
-        currentRole = role;
-        
-        roleTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+    roleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const role = btn.dataset.role;
+        roleBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         
         if (role === 'creator') {
-          creatorPanel.classList.add('active-panel');
-          brandPanel.classList.remove('active-panel');
+          creatorPanel.classList.add('active');
+          brandPanel.classList.remove('active');
         } else {
-          brandPanel.classList.add('active-panel');
-          creatorPanel.classList.remove('active-panel');
+          brandPanel.classList.add('active');
+          creatorPanel.classList.remove('active');
         }
-        
-        hideAlert();
+        alertDiv.style.display = 'none';
       });
     });
     
-    // Password visibility toggle
-    document.querySelectorAll('.toggle-password').forEach(button => {
-      button.addEventListener('click', () => {
-        const targetId = button.dataset.target;
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-pwd').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
         const input = document.getElementById(targetId);
-        const icon = button.querySelector('i');
-        
+        const icon = btn.querySelector('i');
         if (input.type === 'password') {
           input.type = 'text';
           icon.classList.remove('fa-eye');
@@ -496,191 +495,117 @@
       });
     });
     
-    function showAlert(message, type = 'error') {
+    function showAlert(msg, type) {
       alertDiv.style.display = 'flex';
       alertDiv.className = `alert alert-${type}`;
-      alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}`;
-      setTimeout(() => {
-        alertDiv.style.display = 'none';
-      }, 5000);
+      alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${msg}`;
+      setTimeout(() => { alertDiv.style.display = 'none'; }, 5000);
     }
     
-    function hideAlert() {
-      alertDiv.style.display = 'none';
-    }
-    
-    // Helper to save session
     function saveSession(token, user) {
       localStorage.setItem('pebeto_token', token);
       localStorage.setItem('pebeto_user', JSON.stringify(user));
-      if (window.PebetoApi && window.PebetoApi.saveSession) {
-        window.PebetoApi.saveSession(token, user);
-      }
+      if (window.PebetoApi?.saveSession) window.PebetoApi.saveSession(token, user);
     }
     
-    // Redirect after login
-    function redirectToDashboard(role) {
-      if (role === 'admin') window.location.href = '/admin.html';
-      else if (role === 'business') window.location.href = '/business.html';
-      else window.location.href = '/creator-hub.html';
-    }
-    
-    // CREATOR SIGNUP
-    document.getElementById('creator-form').addEventListener('submit', async (e) => {
+    // Creator Signup
+    document.getElementById('creator-signup').addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideAlert();
-      
       const email = document.getElementById('creator-email').value.trim();
       const niche = document.getElementById('creator-niche').value.trim();
       const password = document.getElementById('creator-password').value;
-      const confirmPassword = document.getElementById('creator-confirm-password').value;
+      const confirm = document.getElementById('creator-confirm').value;
       
-      if (!email) {
-        showAlert('Email address is required');
-        return;
-      }
-      if (!niche) {
-        showAlert('Please enter your niche/category');
-        return;
-      }
-      if (password.length < 8) {
-        showAlert('Password must be at least 8 characters');
-        return;
-      }
-      if (password !== confirmPassword) {
-        showAlert('Passwords do not match');
-        return;
-      }
+      if (!email) return showAlert('Email required', 'error');
+      if (!niche) return showAlert('Niche required', 'error');
+      if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
+      if (password !== confirm) return showAlert('Passwords do not match', 'error');
       
       const btn = document.getElementById('creator-submit');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating account...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating...';
       
       try {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email,
-            password,
-            role: 'creator',
-            profile: {
-              stageName: email.split('@')[0],
-              niche: niche,
-              displayName: email.split('@')[0]
-            },
-            preferredCurrency: 'USD'
+            email, password, role: 'creator',
+            profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] }
           })
         });
-        
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Registration failed');
         
-        if (!res.ok) {
-          throw new Error(data.message || data.error || 'Registration failed');
-        }
-        
-        showAlert('Account created successfully! Redirecting to your dashboard...', 'success');
-        
-        // Auto-login after registration
         const loginRes = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        
         const loginData = await loginRes.json();
         
         if (loginRes.ok) {
           saveSession(loginData.token, loginData.user);
-          setTimeout(() => redirectToDashboard('creator'), 1500);
+          showAlert('Account created! Redirecting...', 'success');
+          setTimeout(() => window.location.href = '/creator-hub.html', 1500);
         } else {
+          showAlert('Account created! Please sign in.', 'success');
           setTimeout(() => window.location.href = '/login.html', 1500);
         }
-        
       } catch (err) {
-        showAlert(err.message);
+        showAlert(err.message, 'error');
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-rocket"></i> Join as Creator';
       }
     });
     
-    // BRAND SIGNUP
-    document.getElementById('brand-form').addEventListener('submit', async (e) => {
+    // Brand Signup
+    document.getElementById('brand-signup').addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideAlert();
-      
       const email = document.getElementById('brand-email').value.trim();
-      const companyName = document.getElementById('brand-company').value.trim();
+      const company = document.getElementById('brand-company').value.trim();
       const website = document.getElementById('brand-website').value.trim();
       const password = document.getElementById('brand-password').value;
-      const confirmPassword = document.getElementById('brand-confirm-password').value;
+      const confirm = document.getElementById('brand-confirm').value;
       
-      if (!email) {
-        showAlert('Email address is required');
-        return;
-      }
-      if (!companyName) {
-        showAlert('Company/Business name is required');
-        return;
-      }
-      if (password.length < 8) {
-        showAlert('Password must be at least 8 characters');
-        return;
-      }
-      if (password !== confirmPassword) {
-        showAlert('Passwords do not match');
-        return;
-      }
+      if (!email) return showAlert('Email required', 'error');
+      if (!company) return showAlert('Company name required', 'error');
+      if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
+      if (password !== confirm) return showAlert('Passwords do not match', 'error');
       
       const btn = document.getElementById('brand-submit');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating account...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating...';
       
       try {
-        const profile = {
-          companyName: companyName,
-          displayName: companyName
-        };
+        const profile = { companyName: company, displayName: company };
         if (website) profile.website = website;
         
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            password,
-            role: 'business',
-            profile,
-            preferredCurrency: 'USD'
-          })
+          body: JSON.stringify({ email, password, role: 'business', profile })
         });
-        
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Registration failed');
         
-        if (!res.ok) {
-          throw new Error(data.message || data.error || 'Registration failed');
-        }
-        
-        showAlert('Account created successfully! Redirecting to your dashboard...', 'success');
-        
-        // Auto-login after registration
         const loginRes = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        
         const loginData = await loginRes.json();
         
         if (loginRes.ok) {
           saveSession(loginData.token, loginData.user);
-          setTimeout(() => redirectToDashboard('business'), 1500);
+          showAlert('Account created! Redirecting...', 'success');
+          setTimeout(() => window.location.href = '/business.html', 1500);
         } else {
+          showAlert('Account created! Please sign in.', 'success');
           setTimeout(() => window.location.href = '/login.html', 1500);
         }
-        
       } catch (err) {
-        showAlert(err.message);
+        showAlert(err.message, 'error');
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-building"></i> Join as Brand';
       }
