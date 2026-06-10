@@ -177,21 +177,22 @@
   function saveSession(token, user) {
     localStorage.setItem('pebeto_token', token);
     localStorage.setItem('pebeto_user', JSON.stringify(user));
+    console.log('✅ Session saved. Role:', user.role);
   }
 
-  // FIXED: Redirect to the correct dashboard files
+  // FIXED: Direct redirect to dashboard files
   function redirectToDashboard(role) {
-  console.log('Redirecting role:', role);
-  if (role === 'admin') {
-    window.location.href = '/admin-dashboard.html';
-  } else if (role === 'business') {
-    window.location.href = '/business-dashboard.html';
-  } else if (role === 'creator') {
-    window.location.href = '/creator-dashboard.html';
-  } else {
-    window.location.href = '/';
+    console.log('🔄 Redirecting role:', role);
+    if (role === 'admin') {
+      window.location.replace('/admin-dashboard.html');
+    } else if (role === 'business') {
+      window.location.replace('/business-dashboard.html');
+    } else if (role === 'creator') {
+      window.location.replace('/creator-dashboard.html');
+    } else {
+      window.location.replace('/');
+    }
   }
-}
 
   // SIGN IN
   document.getElementById('btn-signin').onclick = async () => {
@@ -227,7 +228,6 @@
         const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'creator', profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] } }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
-        // Auto login after registration
         const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
         if (loginRes.ok) {
@@ -258,7 +258,6 @@
         const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'business', profile }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
-        // Auto login after registration
         const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
         if (loginRes.ok) {
