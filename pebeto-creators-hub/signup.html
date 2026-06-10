@@ -179,21 +179,20 @@
     localStorage.setItem('pebeto_user', JSON.stringify(user));
   }
 
-  // FIXED: Direct redirect without setTimeout
+  // FIXED: Redirect to the correct dashboard files
   function redirectToDashboard(role) {
-    console.log('Redirecting role:', role);
     if (role === 'admin') {
-      window.location.href = '/admin.html';
+      window.location.href = '/admin-dashboard.html';
     } else if (role === 'business') {
-      window.location.href = '/business.html';
+      window.location.href = '/business-dashboard.html';
     } else if (role === 'creator') {
-      window.location.href = '/creator-hub.html';
+      window.location.href = '/creator-dashboard.html';
     } else {
       window.location.href = '/';
     }
   }
 
-  // SIGN IN - FIXED redirect
+  // SIGN IN
   document.getElementById('btn-signin').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
@@ -206,12 +205,11 @@
       if (!res.ok) throw new Error(data.message || 'Invalid credentials');
       saveSession(data.token, data.user);
       showAlert('Login successful!', 'success');
-      // DIRECT REDIRECT - NO TIMEOUT
       redirectToDashboard(data.user.role);
     } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Sign In'; }
   };
 
-  // SIGN UP - Creator - FIXED redirect
+  // SIGN UP - Creator
   document.getElementById('btn-signup').onclick = async () => {
     if (signupRole === 'creator') {
       const email = document.getElementById('signup-email').value.trim();
