@@ -17,72 +17,42 @@ const logger = require('../utils/logger');
 
 /**
  * Authenticate user using JWT token from Authorization header
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
 async function authenticate(req, res, next) {
   try {
-    // Extract token from header
     const header = req.headers.authorization;
     if (!header || !header.startsWith('Bearer ')) {
-      throw new AppError('Authentication required. Please provide a valid token.', 401);
+      throw new AppError('Authentication required', 401);
     }
     
     const token = header.split(' ')[1];
     
-    // Check token format (basic validation)
-    if (!token || token.length < 20) {
+    if (!token) {
       throw new AppError('Invalid token format', 401);
     }
     
-    // Verify JWT token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, env.jwtSecret, {
-        algorithms: ['HS256'],
-      });
-    } catch (jwtError) {
-      if (jwtError.name === 'TokenExpiredError') {
-        throw new AppError('Token has expired. Please log in again.', 401);
-      }
-      if (jwtError.name === 'JsonWebTokenError') {
-        throw new AppError('Invalid token signature.', 401);
-      }
-      throw new AppError('Token verification failed.', 401);
-    }
+    const decoded = jwt.verify(token, env.jwtSecret);
     
-    // Validate required claims
     if (!decoded.userId) {
-      throw new AppError('Invalid token payload: missing userId', 401);
+      throw new AppError('Invalid token payload', 401);
     }
     
-    // Attach user and token info to request
     req.user = {
       _id: decoded.userId,
-      role: decoded.role,
-      ...decoded
+      role: decoded.role || 'user'
     };
     req.token = token;
-    req.tokenDecoded = decoded;
-    
-    logger.debug('Authentication successful', {
-      userId: req.user._id,
-      role: req.user.role,
-    });
     
     next();
     
   } catch (error) {
-    if (error.statusCode === 401 || error.statusCode === 403) {
-      logger.warn('Authentication failed', {
-        path: req.path,
-        method: req.method,
-        error: error.message,
-      });
+    if (error.name === 'TokenExpiredError') {
+      next(new AppError('Token expired. Please login again.', 401));
+    } else if (error.name === 'JsonWebTokenError') {
+      next(new AppError('Invalid token', 401));
+    } else {
+      next(error);
     }
-    next(error);
   }
 }
 
@@ -92,28 +62,15 @@ async function authenticate(req, res, next) {
 
 /**
  * Authorize user based on role(s)
- * 
- * @param {...string} roles - Allowed roles
- * @returns {Function} Express middleware
  */
 function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user) {
-      return next(new AppError('Authentication required before authorization', 401));
+      return next(new AppError('Authentication required', 401));
     }
     
     if (!roles.includes(req.user.role)) {
-      logger.warn('Authorization failed', {
-        userId: req.user._id,
-        userRole: req.user.role,
-        requiredRoles: roles,
-        path: req.path,
-      });
-      
-      return next(new AppError(
-        `Access denied. Required role: ${roles.join(' or ')}. Your role: ${req.user.role}`,
-        403
-      ));
+      return next(new AppError(`Access denied. Required role: ${roles.join(' or ')}`, 403));
     }
     
     next();
@@ -121,16 +78,11 @@ function authorize(...roles) {
 }
 
 // ============================================
-// Optional Authentication (doesn't fail if no token)
+// Optional Authentication
 // ============================================
 
 /**
- * Optional authentication - doesn't throw error if no token
- * Useful for routes that work for both authenticated and unauthenticated users
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
+ * Optional authentication - doesn't fail if no token
  */
 async function optionalAuthenticate(req, res, next) {
   try {
@@ -145,28 +97,14 @@ async function optionalAuthenticate(req, res, next) {
     
     req.user = {
       _id: decoded.userId,
-      role: decoded.role,
-      ...decoded
+      role: decoded.role || 'user'
     };
     
     next();
   } catch (error) {
-    // Don't fail on auth errors for optional auth
     req.user = null;
     next();
   }
-}
-
-// ============================================
-// Simple logout helper
-// ============================================
-
-/**
- * Logout helper - client should discard the token
- */
-function logout() {
-  // Simple logout - client discards token
-  return { success: true, message: 'Logged out successfully' };
 }
 
 // ============================================
@@ -176,6 +114,5 @@ function logout() {
 module.exports = {
   authenticate,
   authorize,
-  optionalAuthenticate,
-  logout,
+  optionalAuthenticate
 };
