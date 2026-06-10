@@ -177,12 +177,23 @@
   function saveSession(token, user) {
     localStorage.setItem('pebeto_token', token);
     localStorage.setItem('pebeto_user', JSON.stringify(user));
+    console.log('✅ Session saved for:', user.email, 'Role:', user.role);
   }
 
   function redirectToDashboard(role) {
-    if (role === 'admin') window.location.href = '/admin.html';
-    else if (role === 'business') window.location.href = '/business.html';
-    else window.location.href = '/creator-hub.html';
+    console.log('🔄 Redirecting with role:', role);
+    
+    let url = '/';
+    if (role === 'admin') {
+      url = '/admin.html';
+    } else if (role === 'business') {
+      url = '/business.html';
+    } else if (role === 'creator') {
+      url = '/creator-hub.html';
+    }
+    
+    console.log('🔗 Redirecting to:', url);
+    window.location.href = url;
   }
 
   // Sign In
