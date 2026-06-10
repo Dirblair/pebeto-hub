@@ -61,6 +61,15 @@
       color: white; font-weight: 500; cursor: pointer; text-align: center; font-size: 14px;
     }
     .sub-tab.active { background: linear-gradient(135deg, #ff8c42, #e0662c); }
+    .debug-panel {
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      font-size: 11px;
+      color: #aaa;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
@@ -109,10 +118,31 @@
     </div>
 
     <div class="footer"><a href="#" id="switch-to-signup">Don't have an account? Create one</a></div>
+    
+    <!-- Debug Panel - Shows what's in localStorage -->
+    <div class="debug-panel" id="debug-panel">
+      Loading...
+    </div>
   </div>
 </div>
 
 <script>
+  // Display debug info
+  function updateDebugPanel() {
+    const token = localStorage.getItem('pebeto_token');
+    const userStr = localStorage.getItem('pebeto_user');
+    const panel = document.getElementById('debug-panel');
+    if (panel) {
+      panel.innerHTML = `
+        <strong>🔍 Debug Info:</strong><br>
+        Token exists: ${token ? '✅ Yes' : '❌ No'}<br>
+        User data: ${userStr || '❌ None'}<br>
+        ${userStr ? `Role: ${JSON.parse(userStr).role || 'undefined'}` : ''}
+      `;
+    }
+  }
+  updateDebugPanel();
+
   const tabSignin = document.getElementById('tab-signin');
   const tabSignup = document.getElementById('tab-signup');
   const signinPanel = document.getElementById('signin-panel');
@@ -177,20 +207,26 @@
   function saveSession(token, user) {
     localStorage.setItem('pebeto_token', token);
     localStorage.setItem('pebeto_user', JSON.stringify(user));
+    updateDebugPanel();
     console.log('✅ Session saved. Role:', user.role);
   }
 
-  // FIXED: Direct redirect to dashboard files
   function redirectToDashboard(role) {
-    console.log('🔄 Redirecting role:', role);
+    console.log('🔄 REDIRECT - Role received:', role);
+    updateDebugPanel();
+    
     if (role === 'admin') {
-      window.location.replace('/admin-dashboard.html');
+      console.log('Going to admin-dashboard.html');
+      window.location.href = '/admin-dashboard.html';
     } else if (role === 'business') {
-      window.location.replace('/business-dashboard.html');
+      console.log('Going to business-dashboard.html');
+      window.location.href = '/business-dashboard.html';
     } else if (role === 'creator') {
-      window.location.replace('/creator-dashboard.html');
+      console.log('Going to creator-dashboard.html');
+      window.location.href = '/creator-dashboard.html';
     } else {
-      window.location.replace('/');
+      console.log('⚠️ Unknown role, going to /');
+      window.location.href = '/';
     }
   }
 
@@ -204,11 +240,17 @@
     try {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const data = await res.json();
+      console.log('📡 Login response:', data);
       if (!res.ok) throw new Error(data.message || 'Invalid credentials');
       saveSession(data.token, data.user);
       showAlert('Login successful!', 'success');
       redirectToDashboard(data.user.role);
-    } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Sign In'; }
+    } catch (err) { 
+      console.error('Login error:', err);
+      showAlert(err.message, 'error'); 
+      btn.disabled = false; 
+      btn.innerText = 'Sign In'; 
+    }
   };
 
   // SIGN UP - Creator
