@@ -181,16 +181,17 @@
 
   // FIXED: Redirect to the correct dashboard files
   function redirectToDashboard(role) {
-    if (role === 'admin') {
-      window.location.href = '/admin-dashboard.html';
-    } else if (role === 'business') {
-      window.location.href = '/business-dashboard.html';
-    } else if (role === 'creator') {
-      window.location.href = '/creator-dashboard.html';
-    } else {
-      window.location.href = '/';
-    }
+  console.log('Redirecting role:', role);
+  if (role === 'admin') {
+    window.location.href = '/admin-dashboard.html';
+  } else if (role === 'business') {
+    window.location.href = '/business-dashboard.html';
+  } else if (role === 'creator') {
+    window.location.href = '/creator-dashboard.html';
+  } else {
+    window.location.href = '/';
   }
+}
 
   // SIGN IN
   document.getElementById('btn-signin').onclick = async () => {
