@@ -625,11 +625,13 @@ walletSchema.pre('save', function(next) {
 });
 
 // ============================================
-// Exports
+// Create and Export Model
 // ============================================
 
-module.exports = {
-  Wallet: mongoose.model('Wallet', walletSchema),
-  WALLET_TYPES,
-  TRANSACTION_DIRECTIONS
-};
+const WalletModel = mongoose.model('Wallet', walletSchema);
+
+// Export as both direct and named for compatibility
+module.exports = WalletModel;
+module.exports.Wallet = WalletModel;
+module.exports.WALLET_TYPES = WALLET_TYPES;
+module.exports.TRANSACTION_DIRECTIONS = TRANSACTION_DIRECTIONS;
