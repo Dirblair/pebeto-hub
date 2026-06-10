@@ -177,26 +177,23 @@
   function saveSession(token, user) {
     localStorage.setItem('pebeto_token', token);
     localStorage.setItem('pebeto_user', JSON.stringify(user));
-    console.log('✅ Session saved for:', user.email, 'Role:', user.role);
   }
 
+  // FIXED: Direct redirect without setTimeout
   function redirectToDashboard(role) {
-    console.log('🔄 Redirecting with role:', role);
-    
-    let url = '/';
+    console.log('Redirecting role:', role);
     if (role === 'admin') {
-      url = '/admin.html';
+      window.location.href = '/admin.html';
     } else if (role === 'business') {
-      url = '/business.html';
+      window.location.href = '/business.html';
     } else if (role === 'creator') {
-      url = '/creator-hub.html';
+      window.location.href = '/creator-hub.html';
+    } else {
+      window.location.href = '/';
     }
-    
-    console.log('🔗 Redirecting to:', url);
-    window.location.href = url;
   }
 
-  // Sign In
+  // SIGN IN - FIXED redirect
   document.getElementById('btn-signin').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
@@ -208,12 +205,13 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Invalid credentials');
       saveSession(data.token, data.user);
-      showAlert('Login successful! Redirecting...', 'success');
-      setTimeout(() => redirectToDashboard(data.user.role), 1000);
+      showAlert('Login successful!', 'success');
+      // DIRECT REDIRECT - NO TIMEOUT
+      redirectToDashboard(data.user.role);
     } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Sign In'; }
   };
 
-  // Sign Up
+  // SIGN UP - Creator - FIXED redirect
   document.getElementById('btn-signup').onclick = async () => {
     if (signupRole === 'creator') {
       const email = document.getElementById('signup-email').value.trim();
@@ -230,12 +228,20 @@
         const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'creator', profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] } }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
+        // Auto login after registration
         const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
-        if (loginRes.ok) { saveSession(loginData.token, loginData.user); showAlert('Account created! Redirecting...', 'success'); setTimeout(() => redirectToDashboard('creator'), 1500); }
-        else { showAlert('Account created! Please sign in.', 'success'); setTimeout(() => tabSignin.click(), 1500); }
+        if (loginRes.ok) {
+          saveSession(loginData.token, loginData.user);
+          showAlert('Account created!', 'success');
+          redirectToDashboard('creator');
+        } else {
+          showAlert('Account created! Please sign in.', 'success');
+          tabSignin.click();
+        }
       } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Creator'; }
     } else {
+      // BRAND SIGN UP
       const email = document.getElementById('brand-email').value.trim();
       const company = document.getElementById('brand-company').value.trim();
       const website = document.getElementById('brand-website').value.trim();
@@ -253,10 +259,17 @@
         const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'business', profile }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
+        // Auto login after registration
         const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
-        if (loginRes.ok) { saveSession(loginData.token, loginData.user); showAlert('Account created! Redirecting...', 'success'); setTimeout(() => redirectToDashboard('business'), 1500); }
-        else { showAlert('Account created! Please sign in.', 'success'); setTimeout(() => tabSignin.click(), 1500); }
+        if (loginRes.ok) {
+          saveSession(loginData.token, loginData.user);
+          showAlert('Account created!', 'success');
+          redirectToDashboard('business');
+        } else {
+          showAlert('Account created! Please sign in.', 'success');
+          tabSignin.click();
+        }
       } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Brand'; }
     }
   };
