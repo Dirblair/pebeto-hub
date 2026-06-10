@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Dashboard - Pebeto</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a1a0e 100%);
+      color: white;
+    }
+    .header {
+      background: rgba(0,0,0,0.5);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo { color: #ff8c42; font-size: 24px; font-weight: bold; }
+    .logout-btn {
+      background: #ff8c42;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+    }
+    .container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+    .card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h2 { color: #ff8c42; }
+    button {
+      background: #ff8c42;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Pebeto</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+  <div class="container">
+    <h1>Business Dashboard</h1>
+    <div class="card">
+      <h2>Welcome, Business!</h2>
+      <p>Your Business Dashboard is ready. Campaign management features coming soon.</p>
+      <button onclick="alert('Feature coming soon')">Create Campaign</button>
+    </div>
+  </div>
+  <script>
+    function logout() {
+      localStorage.removeItem('pebeto_token');
+      localStorage.removeItem('pebeto_user');
+      window.location.href = '/signup.html';
+    }
+    const user = localStorage.getItem('pebeto_user');
+    if (!user) {
+      window.location.href = '/signup.html';
+    }
+  </script>
+</body>
+</html>
