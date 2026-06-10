@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard Test</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; background: #2a1a0e; color: white; }
+    .box { background: rgba(255,140,66,0.2); padding: 30px; border-radius: 20px; }
+    button { background: #ff8c42; padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h1>✅ Dashboard Test Page</h1>
+  <p>If you see this, the redirect is working!</p>
+  <p id="role"></p>
+  <button onclick="logout()">Logout</button>
+</div>
+<script>
+  const user = localStorage.getItem('pebeto_user');
+  if (user) {
+    const userData = JSON.parse(user);
+    document.getElementById('role').innerHTML = 'Logged in as: <strong>' + userData.role + '</strong><br>Email: ' + userData.email;
+  } else {
+    document.getElementById('role').innerHTML = 'Not logged in. <a href="/signup.html">Login here</a>';
+  }
+  
+  function logout() {
+    localStorage.removeItem('pebeto_token');
+    localStorage.removeItem('pebeto_user');
+    window.location.href = '/signup.html';
+  }
+</script>
+</body>
+</html>
