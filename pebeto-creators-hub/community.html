@@ -283,16 +283,38 @@
     document.getElementById(id).style.display = 'none'; 
   }
   
+  // FIXED: goToDashboard - sends user to correct dashboard based on role
   function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
-    if (token) window.location.href = '/dashboard.html';
-    else window.location.href = '/signup.html';
+    if (!token) {
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    const userStr = localStorage.getItem('pebeto_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === 'creator') {
+          window.location.href = '/dashboard.html';
+        } else if (user.role === 'business') {
+          window.location.href = '/business-dashboard.html';
+        } else if (user.role === 'admin') {
+          window.location.href = '/admin-dashboard.html';
+        } else {
+          window.location.href = '/dashboard.html';
+        }
+      } catch(e) {
+        window.location.href = '/dashboard.html';
+      }
+    } else {
+      window.location.href = '/dashboard.html';
+    }
   }
 
   // Load all creators and their social links
   async function loadCreators() {
     try {
-      // First, try to get creators from your API
       const response = await fetch('/api/creators');
       const data = await response.json();
       
@@ -300,12 +322,10 @@
         allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
         renderFeed();
       } else {
-        // If no creators in DB, show sample data for demonstration
         showSampleCreators();
       }
     } catch (error) {
       console.error('Error loading creators:', error);
-      // Show sample data if API fails
       showSampleCreators();
     }
   }
@@ -371,7 +391,6 @@
       container.appendChild(card);
     });
 
-    // Re-trigger TikTok embed script for new elements
     if (window.tiktokEmbedLoad) {
       window.tiktokEmbedLoad();
     }
@@ -388,7 +407,6 @@
     const username = creator.profile?.stageName ? `@${creator.profile.stageName.toLowerCase().replace(/\s/g, '')}` : '@creator';
     const niche = creator.profile?.niche || 'Creator';
     
-    // Generate embed HTML based on social links
     let embedHtml = '';
     
     if (creator.socialLinks?.tiktok) {
@@ -404,7 +422,6 @@
         </div>
       `;
     } else if (creator.socialLinks?.youtube) {
-      // Extract channel ID or handle for YouTube embed
       let youtubeEmbedUrl = '';
       if (creator.socialLinks.youtube.includes('/@')) {
         const handle = creator.socialLinks.youtube.split('/@')[1];
@@ -510,6 +527,7 @@
         alert(`💝 Tip of ${currency} ${amount} sent successfully!`);
         closeModal('tip-modal');
         document.getElementById('tip-amount').value = '';
+        // Refresh wallet balance if user is on dashboard
       } else {
         alert('Failed to send tip: ' + (data.message || 'Unknown error'));
       }
@@ -519,8 +537,9 @@
     }
   }
 
-  // View profile
+  // FIXED: View profile - stores creator ID and goes to profile page
   function viewCreatorProfile(creatorId) {
+    localStorage.setItem('viewingCreatorId', creatorId);
     window.location.href = `/creator-profile.html?id=${creatorId}`;
   }
 
@@ -550,16 +569,20 @@
     }
   }
 
-  // Load user data
+  // Load user data for avatar
   function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) {
-      currentUser = JSON.parse(userStr);
-      const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
-      document.getElementById('nav-avatar').innerHTML = initial;
-      if (currentUser.profile?.avatarUrl) {
-        document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
-        document.getElementById('nav-avatar').innerHTML = '';
+      try {
+        currentUser = JSON.parse(userStr);
+        const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'U').toUpperCase();
+        document.getElementById('nav-avatar').innerHTML = initial;
+        if (currentUser.profile?.avatarUrl) {
+          document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
+          document.getElementById('nav-avatar').innerHTML = '';
+        }
+      } catch(e) {
+        console.error('Error parsing user data:', e);
       }
     }
   }
