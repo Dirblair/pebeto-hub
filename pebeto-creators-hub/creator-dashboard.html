@@ -28,7 +28,7 @@
       gap: 15px;
       z-index: 100;
     }
-    .logo { font-size: 24px; font-weight: 800; color: #ff8c42; }
+    .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
     .nav-icons { display: flex; gap: 20px; align-items: center; }
     .nav-icons i { font-size: 22px; color: #b8a99a; cursor: pointer; transition: 0.2s; }
     .nav-icons i:hover { color: #ffaa77; }
@@ -37,13 +37,48 @@
       background: linear-gradient(135deg, #ff8c42, #e0662c);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
+      font-weight: bold;
     }
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    
+    /* Profile Banner */
+    .profile-banner {
+      background: linear-gradient(135deg, rgba(255,140,66,0.15), rgba(0,0,0,0.3));
+      border-radius: 28px;
+      padding: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
+    .profile-info p { color: #a08070; font-size: 14px; }
+    .unique-code {
+      background: rgba(255,140,66,0.15);
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-family: monospace;
+      font-size: 14px;
+      margin-top: 10px;
+      display: inline-block;
+    }
     
     /* Stats Row */
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -54,94 +89,99 @@
       padding: 20px;
       cursor: pointer;
       transition: all 0.2s;
+      text-align: center;
     }
     .stat-card:hover { border-color: rgba(255,140,66,0.4); transform: translateY(-2px); }
-    .stat-card h3 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
-    .stat-card .amount { font-size: 32px; font-weight: 700; color: #ff8c42; }
-    .stat-card .sub { font-size: 12px; color: #6a6050; margin-top: 8px; }
-    .fee-note { font-size: 11px; color: #6a6050; margin-top: 5px; }
+    .stat-card h3 { font-size: 14px; color: #a08070; margin-bottom: 8px; }
+    .stat-card .amount { font-size: 28px; font-weight: 700; color: #ff8c42; }
+    .stat-card .sub { font-size: 11px; color: #6a6050; margin-top: 5px; }
     
-    .section-title {
+    /* Tabs */
+    .tabs {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 30px 0 20px;
-    }
-    .section-title h2 { font-size: 20px; font-weight: 600; }
-    .section-title a { color: #ffaa77; font-size: 13px; text-decoration: none; cursor: pointer; }
-    
-    .projects-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    .project-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,140,66,0.15);
-      border-radius: 20px;
-      padding: 20px;
-      transition: all 0.2s;
-    }
-    .project-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 12px;
+      margin: 30px 0 20px;
+      border-bottom: 1px solid rgba(255,140,66,0.2);
+      flex-wrap: wrap;
     }
-    .project-title { font-weight: 600; font-size: 18px; }
-    .project-budget { color: #ff8c42; font-weight: 600; }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 12px 24px;
+      color: #b8a99a;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+      border-radius: 40px 40px 0 0;
+    }
+    .tab-btn.active {
+      color: #ff8c42;
+      border-bottom: 2px solid #ff8c42;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-table th, .data-table td {
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .data-table th { color: #a08070; font-weight: 500; font-size: 13px; }
+    .data-table tr { cursor: pointer; transition: 0.2s; }
+    .data-table tr:hover { background: rgba(255,140,66,0.05); }
     .status-badge {
       background: rgba(255,140,66,0.2);
-      padding: 4px 12px;
+      padding: 4px 10px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
     }
-    .status-badge.bid { background: rgba(59,130,246,0.2); color: #60a5fa; }
-    .status-badge.review { background: rgba(245,158,11,0.2); color: #fbbf24; }
-    .status-badge.completed { background: rgba(34,197,94,0.2); color: #4ade80; }
-    .status-badge.paid { background: rgba(255,140,66,0.3); color: #ffaa77; }
-    .btn-submit {
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      border: none;
-      padding: 8px 20px;
-      border-radius: 30px;
-      color: white;
-      cursor: pointer;
-      font-size: 13px;
-      transition: 0.2s;
+    .status-badge.paid { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .status-badge.pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
     }
-    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,140,66,0.3); }
-    .work-url-input {
+    .modal-content {
+      background: #1a1510;
+      border-radius: 28px;
+      padding: 30px;
+      max-width: 550px;
+      width: 90%;
+      border: 1px solid rgba(255,140,66,0.3);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
-      padding: 10px 15px;
+      padding: 12px;
       border-radius: 30px;
+      margin-bottom: 15px;
       color: white;
-      width: 250px;
-      margin-right: 10px;
     }
-    
-    /* Tips Section */
-    .tips-section {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,140,66,0.2);
-      border-radius: 24px;
-      padding: 24px;
-      margin: 30px 0;
-    }
-    .tips-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
-    .tip-code {
-      background: rgba(255,140,66,0.15);
-      padding: 12px 20px;
-      border-radius: 40px;
-      font-family: monospace;
-      font-size: 18px;
-      letter-spacing: 1px;
-    }
-    .tip-stats { display: flex; gap: 20px; flex-wrap: wrap; }
-    .tip-stat { background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 20px; }
+    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
+    .save-btn { background: #ff8c42; color: white; }
+    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
     
     /* Withdrawal Section */
     .withdraw-section {
@@ -151,14 +191,6 @@
       padding: 24px;
       margin-top: 30px;
     }
-    .fee-warning {
-      background: rgba(255,140,66,0.1);
-      padding: 10px 15px;
-      border-radius: 16px;
-      margin: 15px 0;
-      font-size: 13px;
-      border-left: 3px solid #ff8c42;
-    }
     .progress-bar {
       height: 8px;
       background: rgba(255,255,255,0.1);
@@ -166,13 +198,7 @@
       overflow: hidden;
       margin: 15px 0;
     }
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: #ff8c42;
-      border-radius: 10px;
-      transition: width 0.3s;
-    }
+    .progress-fill { height: 100%; width: 0%; background: #ff8c42; transition: width 0.3s; }
     .withdraw-input-group {
       display: flex;
       gap: 15px;
@@ -206,7 +232,6 @@
       border-radius: 30px;
       width: 100%;
       margin-bottom: 10px;
-      color: white;
     }
     .withdraw-btn {
       background: #6a6050;
@@ -219,89 +244,46 @@
       cursor: not-allowed;
       transition: 0.2s;
     }
-    .withdraw-btn.active {
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      cursor: pointer;
-    }
-    .withdraw-btn.active:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,140,66,0.3); }
-    
-    /* Modals */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #1a1510;
-      border-radius: 28px;
-      padding: 30px;
-      max-width: 500px;
-      width: 90%;
-      border: 1px solid rgba(255,140,66,0.3);
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select {
-      width: 100%;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,140,66,0.3);
-      padding: 12px;
-      border-radius: 30px;
-      margin-bottom: 15px;
-      color: white;
-    }
-    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
-    .save-btn { background: #ff8c42; color: white; }
-    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
-    .txn-item {
-      padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      display: flex;
-      justify-content: space-between;
-    }
+    .withdraw-btn.active { background: linear-gradient(135deg, #ff8c42, #e0662c); cursor: pointer; }
     
     @media (max-width: 768px) {
-      .container { padding: 16px; }
       .stats-row { grid-template-columns: 1fr; }
-      .project-header { flex-direction: column; align-items: flex-start; }
-      .work-url-input { width: 100%; margin-bottom: 10px; }
-      .tip-code { font-size: 14px; }
+      .profile-banner { flex-direction: column; text-align: center; }
+      .data-table th, .data-table td { padding: 10px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo">Pebeto</div>
+  <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
   <div class="nav-icons">
     <i class="ri-home-line" onclick="window.location.href='/community.html'"></i>
     <i class="ri-settings-4-line" onclick="openSettings()"></i>
     <i class="ri-translate-2" onclick="switchLanguage()"></i>
-    <div class="avatar" onclick="openSettings()">
-      <i class="ri-user-3-line"></i>
-    </div>
+    <div class="avatar" onclick="openSettings()" id="avatar-initial">C</div>
   </div>
 </div>
 
 <div class="container">
-  <!-- Stats Row - Clickable -->
+  <!-- Profile Banner -->
+  <div class="profile-banner">
+    <div class="profile-avatar" id="profile-avatar">C</div>
+    <div class="profile-info">
+      <h2 id="profile-name">Creator Name</h2>
+      <p id="profile-email">email@example.com</p>
+      <div class="unique-code" id="unique-code">Loading...</div>
+      <div style="margin-top: 8px;"><span id="profile-niche">Niche: </span> • <span id="profile-currency">Currency: USD</span> • <span id="profile-language">Language: English</span></div>
+    </div>
+  </div>
+
+  <!-- Stats Row (Clickable) -->
   <div class="stats-row">
-    <div class="stat-card" onclick="scrollToWithdraw()">
-      <h3>💰 Available Wallet Balance</h3>
+    <div class="stat-card" onclick="showWalletDetails()">
+      <h3>💰 Available Wallet</h3>
       <div class="amount" id="wallet-balance">$0.00</div>
       <div class="sub" id="local-balance"></div>
-      <div class="fee-note">Withdrawal fee: 3%</div>
-      <div class="sub">👇 Click to withdraw</div>
+      <div class="sub">👇 Click for details</div>
     </div>
     <div class="stat-card" onclick="showTransactions()">
       <h3>📜 Transaction History</h3>
@@ -309,76 +291,97 @@
       <div class="sub">Total Transactions</div>
       <div class="sub">👇 Click to view</div>
     </div>
-    <div class="stat-card" onclick="showEscrow()">
+    <div class="stat-card" onclick="showEscrowDetails()">
       <h3>⏳ Pending Escrow</h3>
       <div class="amount" id="escrow-balance">$0.00</div>
       <div class="sub">Awaiting release</div>
-      <div class="sub">👇 Click to view</div>
+      <div class="sub">👇 Click for details</div>
     </div>
   </div>
 
-  <!-- Tips Section -->
-  <div class="tips-section">
-    <div class="tips-header">
-      <h3>💝 Receive Tips from Fans</h3>
-      <div class="tip-code" id="creator-code">Loading...</div>
-    </div>
-    <div class="tip-stats">
-      <div class="tip-stat">💰 Total Tips Received: <strong id="total-tips">$0</strong></div>
-      <div class="tip-stat">📊 Platform Fee (5%): <strong id="tips-fee">$0</strong></div>
-      <div class="tip-stat">🤝 You Keep: <strong id="tips-net">$0</strong></div>
-    </div>
-    <div class="fee-warning">
-      <i class="ri-information-line"></i> When fans tip you, 5% goes to platform fees. You receive 95%.
+  <!-- Tabs for Projects -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="active">📋 Active Projects</button>
+    <button class="tab-btn" data-tab="review">⏳ Under Review</button>
+    <button class="tab-btn" data-tab="completed">✅ Completed Works</button>
+    <button class="tab-btn" data-tab="tips">💝 Tips Received</button>
+    <button class="tab-btn" data-tab="demographics">📊 Demographics</button>
+  </div>
+
+  <!-- Active Projects Tab -->
+  <div id="tab-active" class="tab-content active">
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="active-table">
+        <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="4">Loading...</td></tr></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- My Active Projects -->
-  <div class="section-title">
-    <h2>📋 My Active Projects</h2>
-    <a onclick="refreshProjects()">Refresh ↻</a>
-  </div>
-  <div class="projects-grid" id="active-projects">
-    <div style="text-align: center; padding: 40px;">Loading projects...</div>
-  </div>
-
-  <!-- Work Under Review -->
-  <div class="section-title">
-    <h2>⏳ Work Under Review</h2>
-  </div>
-  <div class="projects-grid" id="review-projects">
-    <div style="text-align: center; padding: 20px;">No projects under review</div>
+  <!-- Under Review Tab -->
+  <div id="tab-review" class="tab-content">
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="review-table">
+        <thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead>
+        <tbody><tr><td colspan="4">No projects under review</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Completed Works (History) -->
-  <div class="section-title">
-    <h2>✅ Completed Works</h2>
+  <!-- Completed Works Tab -->
+  <div id="tab-completed" class="tab-content">
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="completed-table">
+        <thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead>
+        <tbody><tr><td colspan="4">No completed works</td></tr></tbody>
+      </table>
+    </div>
   </div>
-  <div class="projects-grid" id="completed-projects">
-    <div style="text-align: center; padding: 20px;">No completed works yet</div>
+
+  <!-- Tips Received Tab -->
+  <div id="tab-tips" class="tab-content">
+    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
+      <p style="font-size: 14px; color: #a08070;">Share your unique code with fans to receive tips!</p>
+      <div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div>
+      <div class="tip-stats" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
+        <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
+        <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
+        <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demographics Tab -->
+  <div id="tab-demographics" class="tab-content">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+      <div class="stat-card" style="text-align: center;"><h3>👥 Followers</h3><div class="amount" id="dem-followers">0</div></div>
+      <div class="stat-card" style="text-align: center;"><h3>❤️ Total Likes</h3><div class="amount" id="dem-likes">0</div></div>
+      <div class="stat-card" style="text-align: center;"><h3>💬 Total Comments</h3><div class="amount" id="dem-comments">0</div></div>
+      <div class="stat-card" style="text-align: center;"><h3>🌍 Top Country</h3><div class="amount" id="dem-country">—</div></div>
+      <div class="stat-card" style="text-align: center;"><h3>📈 Engagement Rate</h3><div class="amount" id="dem-engagement">0%</div></div>
+      <div class="stat-card" style="text-align: center;"><h3>🎯 Campaigns Completed</h3><div class="amount" id="dem-campaigns">0</div></div>
+    </div>
   </div>
 
   <!-- Withdrawal Section -->
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
-    <p>Minimum $30 USD | Withdrawal fee: <strong>3%</strong></p>
-    <div class="fee-warning">
-      <i class="ri-information-line"></i> Example: Withdraw $100 → You receive $97, Platform fee $3
-    </div>
+    <p>Minimum $30 USD (or equivalent in your currency) | Withdrawal fee: <strong>3%</strong></p>
     
-    <div class="progress-bar">
-      <div class="progress-fill" id="progress-fill"></div>
-    </div>
-    <div id="threshold-text" style="font-size: 13px; color: #a08070;">$0 / $30</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div id="threshold-text" style="font-size: 13px;">$0 / $30</div>
     <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-top: 5px;"></div>
     
     <div class="withdraw-input-group">
-      <input type="number" id="withdraw-amount" placeholder="Amount" step="0.01">
+      <input type="number" id="withdraw-amount" placeholder="Amount">
       <select id="withdraw-currency">
         <option value="USD">USD ($)</option>
         <option value="KES">KES (KSh)</option>
         <option value="EUR">EUR (€)</option>
         <option value="GBP">GBP (£)</option>
+        <option value="NGN">NGN (₦)</option>
+        <option value="ZAR">ZAR (R)</option>
+        <option value="GHS">GHS (₵)</option>
       </select>
     </div>
     
@@ -401,7 +404,27 @@
     </div>
     
     <button id="withdraw-btn" class="withdraw-btn">Withdraw (min $30)</button>
-    <div id="withdraw-message" style="font-size: 12px; margin-top: 10px; color: #a08070;"></div>
+  </div>
+</div>
+
+<!-- Project Details Modal -->
+<div id="project-modal" class="modal">
+  <div class="modal-content">
+    <h3 id="project-title">Project Details</h3>
+    <div id="project-details"></div>
+    <div id="project-work-section" style="margin-top: 15px;"></div>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Wallet Details Modal -->
+<div id="wallet-modal" class="modal">
+  <div class="modal-content">
+    <h3>Wallet Balance</h3>
+    <p>Available: <strong id="wallet-detail-available">$0</strong></p>
+    <p>Tips Received: <strong id="wallet-detail-tips">$0</strong></p>
+    <p>Escrow Held: <strong id="wallet-detail-escrow">$0</strong></p>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div>
   </div>
 </div>
 
@@ -414,7 +437,7 @@
   </div>
 </div>
 
-<!-- Escrow Modal -->
+<!-- Escrow Details Modal -->
 <div id="escrow-modal" class="modal">
   <div class="modal-content">
     <h3>Pending Escrow</h3>
@@ -427,22 +450,26 @@
 <div id="settings-modal" class="modal">
   <div class="modal-content">
     <h3>⚙️ Profile Settings</h3>
-    <input type="text" id="display-name" placeholder="Display Name">
-    <input type="text" id="username" placeholder="Username">
-    <input type="text" id="user-niche" placeholder="Niche (e.g., Music, Comedy)">
-    <input type="url" id="avatar-url" placeholder="Avatar URL">
-    <select id="pref-language">
-      <option value="en">English</option>
-      <option value="sw">Swahili</option>
-      <option value="fr">French</option>
-    </select>
-    <select id="pref-currency">
+    <input type="text" id="setting-stageName" placeholder="Stage Name / Display Name">
+    <input type="text" id="setting-niche" placeholder="Niche (e.g., Music, Comedy, Fashion)">
+    <select id="setting-currency">
       <option value="USD">USD ($)</option>
       <option value="KES">KES (KSh)</option>
       <option value="EUR">EUR (€)</option>
+      <option value="GBP">GBP (£)</option>
+      <option value="NGN">NGN (₦)</option>
+      <option value="ZAR">ZAR (R)</option>
+      <option value="GHS">GHS (₵)</option>
     </select>
+    <select id="setting-language">
+      <option value="en">English</option>
+      <option value="sw">Swahili</option>
+      <option value="fr">French</option>
+      <option value="es">Spanish</option>
+    </select>
+    <input type="url" id="setting-avatar" placeholder="Avatar Image URL">
     <div class="modal-buttons">
-      <button class="save-btn" onclick="saveSettings()">Save</button>
+      <button class="save-btn" onclick="saveSettings()">Save Changes</button>
       <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
     </div>
   </div>
@@ -450,9 +477,10 @@
 
 <script>
   let currentUser = null;
-  let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
+  let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79, NGN: 750, ZAR: 18.5, GHS: 12.5 };
   let selectedMethod = 'mpesa';
   let projectsData = [];
+  let allTransactions = [];
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -467,14 +495,32 @@
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   }
 
+  function convertToUSD(amount, currency) {
+    if (currency === 'USD') return amount;
+    const rate = exchangeRates[currency];
+    if (!rate) return amount;
+    return amount / rate;
+  }
+
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (!userStr) { window.location.href = '/signup.html'; return; }
     currentUser = JSON.parse(userStr);
-    document.getElementById('display-name').value = currentUser.profile?.displayName || '';
-    document.getElementById('username').value = currentUser.profile?.stageName || currentUser.email.split('@')[0];
-    document.getElementById('user-niche').value = currentUser.profile?.niche || '';
-    document.getElementById('creator-code').innerText = currentUser.uniqueCode || 'Loading...';
+    document.getElementById('profile-name').innerText = currentUser.profile?.stageName || currentUser.email.split('@')[0];
+    document.getElementById('profile-email').innerText = currentUser.email;
+    document.getElementById('unique-code').innerText = currentUser.uniqueCode || 'Not assigned';
+    document.getElementById('tip-code').innerText = currentUser.uniqueCode || 'Share your code';
+    document.getElementById('profile-niche').innerHTML = `Niche: ${currentUser.profile?.niche || 'Not set'}`;
+    document.getElementById('profile-currency').innerHTML = `Currency: ${currentUser.preferredCurrency || 'USD'}`;
+    document.getElementById('profile-language').innerHTML = `Language: ${currentUser.preferredLanguage || 'English'}`;
+    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email?.[0] || 'C').toUpperCase();
+    document.getElementById('avatar-initial').innerText = initial;
+    document.getElementById('profile-avatar').innerText = initial;
+    
+    document.getElementById('setting-stageName').value = currentUser.profile?.stageName || '';
+    document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
+    document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
+    document.getElementById('setting-language').value = currentUser.preferredLanguage || 'en';
   }
 
   async function loadWallet() {
@@ -483,24 +529,19 @@
       if (data.success) {
         const available = data.data?.balances?.available || 0;
         const escrow = data.data?.balances?.escrow || 0;
-        document.getElementById('wallet-balance').innerHTML = formatMoney(available, 'USD');
-        document.getElementById('escrow-balance').innerHTML = formatMoney(escrow, 'USD');
-        document.getElementById('local-balance').innerHTML = `≈ ${formatMoney(available * (exchangeRates.KES || 130), 'KES')}`;
-        updateWithdrawUI(available);
-      }
-    } catch(e) { console.error(e); }
-  }
-
-  async function loadTips() {
-    try {
-      const data = await fetchJSON('/api/wallet/balance');
-      if (data.success) {
         const tips = data.data?.balances?.tips || 0;
+        document.getElementById('wallet-balance').innerHTML = formatMoney(available);
+        document.getElementById('escrow-balance').innerHTML = formatMoney(escrow);
+        document.getElementById('local-balance').innerHTML = `≈ ${formatMoney(available * 130, 'KES')}`;
+        document.getElementById('wallet-detail-available').innerText = formatMoney(available);
+        document.getElementById('wallet-detail-tips').innerText = formatMoney(tips);
+        document.getElementById('wallet-detail-escrow').innerText = formatMoney(escrow);
+        document.getElementById('total-tips').innerHTML = formatMoney(tips);
         const fee = tips * 0.05;
         const net = tips - fee;
-        document.getElementById('total-tips').innerHTML = formatMoney(tips);
         document.getElementById('tips-fee').innerHTML = formatMoney(fee);
         document.getElementById('tips-net').innerHTML = formatMoney(net);
+        updateWithdrawUI(available);
       }
     } catch(e) { console.error(e); }
   }
@@ -508,38 +549,39 @@
   function updateWithdrawUI(available) {
     const minUSD = 30;
     const amountInput = document.getElementById('withdraw-amount');
+    const currencySelect = document.getElementById('withdraw-currency');
     const progressFill = document.getElementById('progress-fill');
     const thresholdText = document.getElementById('threshold-text');
     const withdrawBtn = document.getElementById('withdraw-btn');
     const previewDiv = document.getElementById('withdrawal-preview');
     
-    const updatePreview = () => {
-      let usdAmount = parseFloat(amountInput.value) || 0;
-      const currency = document.getElementById('withdraw-currency').value;
-      if (currency !== 'USD') usdAmount = usdAmount / (exchangeRates[currency] || 1);
+    const update = () => {
+      let localAmount = parseFloat(amountInput.value) || 0;
+      const currency = currencySelect.value;
+      let usdAmount = convertToUSD(localAmount, currency);
       const fee = usdAmount * 0.03;
       const net = usdAmount - fee;
       const percent = Math.min(100, (usdAmount / minUSD) * 100);
       progressFill.style.width = percent + '%';
-      thresholdText.innerText = `$${usdAmount.toFixed(2)} / $${minUSD}`;
+      thresholdText.innerText = `${formatMoney(usdAmount)} / ${formatMoney(minUSD)}`;
+      
       if (usdAmount > 0) {
-        previewDiv.innerHTML = `You withdraw $${usdAmount.toFixed(2)} → Fee (3%): $${fee.toFixed(2)} → You receive: $${net.toFixed(2)}`;
-      } else {
-        previewDiv.innerHTML = '';
-      }
+        previewDiv.innerHTML = `Withdraw ${formatMoney(usdAmount)} → Fee (3%): ${formatMoney(fee)} → You receive: ${formatMoney(net)}`;
+      } else { previewDiv.innerHTML = ''; }
+      
       if (usdAmount >= minUSD && usdAmount <= available) {
         withdrawBtn.classList.add('active');
         withdrawBtn.disabled = false;
-        withdrawBtn.innerText = `Withdraw $${net.toFixed(2)} (after 3% fee)`;
+        withdrawBtn.innerText = `Withdraw ${formatMoney(net)} (after 3% fee)`;
       } else {
         withdrawBtn.classList.remove('active');
         withdrawBtn.disabled = true;
-        withdrawBtn.innerText = usdAmount >= minUSD ? `Insufficient balance ($${available.toFixed(2)})` : `Withdraw (min $${minUSD})`;
+        withdrawBtn.innerText = usdAmount >= minUSD ? `Insufficient balance (${formatMoney(available)})` : `Withdraw (min ${formatMoney(minUSD)})`;
       }
     };
-    amountInput.addEventListener('input', updatePreview);
-    document.getElementById('withdraw-currency').addEventListener('change', updatePreview);
-    updatePreview();
+    amountInput.addEventListener('input', update);
+    currencySelect.addEventListener('change', update);
+    update();
   }
 
   async function loadCampaigns() {
@@ -547,70 +589,76 @@
       const data = await fetchJSON('/api/campaigns');
       if (data.success) {
         projectsData = data.campaigns || [];
-        renderProjects();
+        renderTables();
       }
     } catch(e) { console.error(e); }
   }
 
-  function renderProjects() {
+  function renderTables() {
     const userId = currentUser?._id;
     const myProjects = projectsData.filter(p => p.assignedCreatorId === userId || p.bids?.some(b => b.creatorId === userId));
     const active = myProjects.filter(p => p.status === 'in_progress');
     const review = myProjects.filter(p => p.status === 'submitted_for_review');
     const completed = myProjects.filter(p => p.status === 'paid');
-    renderActiveProjects(active);
-    renderReviewProjects(review);
-    renderCompletedProjects(completed);
-  }
-
-  function renderActiveProjects(projects) {
-    const container = document.getElementById('active-projects');
-    if (projects.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px;">No active projects</div>'; return; }
-    container.innerHTML = projects.map(p => `
-      <div class="project-card">
-        <div class="project-header">
-          <span class="project-title">${escapeHtml(p.title)}</span>
-          <span class="project-budget">💰 ${formatMoney(p.budget)}</span>
-          <span class="status-badge bid">In Progress</span>
-        </div>
-        <div style="margin: 10px 0; font-size:14px;">${escapeHtml(p.description?.substring(0, 100)) || ''}</div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <input type="text" placeholder="Work URL (Google Drive, YouTube, etc)" id="work-url-${p._id}" class="work-url-input">
-          <button class="btn-submit" onclick="submitWork('${p._id}')">Submit Work</button>
-        </div>
-      </div>
+    
+    // Active table
+    const activeBody = document.querySelector('#active-table tbody');
+    if (active.length === 0) activeBody.innerHTML = '<tr><td colspan="4">No active projects</td></tr>';
+    else activeBody.innerHTML = active.map(p => `
+      <tr onclick="showProjectDetails('${p._id}')">
+        <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
+        <td><span class="status-badge">In Progress</span></td>
+        <td><button class="btn-submit" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit Work</button></td>
+      </tr>
+    `).join('');
+    
+    // Review table
+    const reviewBody = document.querySelector('#review-table tbody');
+    if (review.length === 0) reviewBody.innerHTML = '<tr><td colspan="4">No projects under review</td></tr>';
+    else reviewBody.innerHTML = review.map(p => `
+      <tr onclick="showProjectDetails('${p._id}')">
+        <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
+        <td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td>
+        <td><span class="status-badge pending">Under Review</span></td>
+      </tr>
+    `).join('');
+    
+    // Completed table
+    const completedBody = document.querySelector('#completed-table tbody');
+    if (completed.length === 0) completedBody.innerHTML = '<tr><td colspan="4">No completed works</td></tr>';
+    else completedBody.innerHTML = completed.map(p => `
+      <tr onclick="showProjectDetails('${p._id}')">
+        <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
+        <td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td>
+        <td><span class="status-badge paid">Paid ✅</span></td>
+      </tr>
     `).join('');
   }
 
-  function renderReviewProjects(projects) {
-    const container = document.getElementById('review-projects');
-    if (projects.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px;">No projects under review</div>'; return; }
-    container.innerHTML = projects.map(p => `
-      <div class="project-card">
-        <div class="project-header">
-          <span class="project-title">${escapeHtml(p.title)}</span>
-          <span class="project-budget">💰 ${formatMoney(p.budget)}</span>
-          <span class="status-badge review">Under Review</span>
-        </div>
-        <div style="margin-top:10px; font-size:13px; color:#a08070;">⏳ Waiting for brand approval</div>
-      </div>
-    `).join('');
+  async function showProjectDetails(campaignId) {
+    const project = projectsData.find(p => p._id === campaignId);
+    if (!project) return;
+    const modal = document.getElementById('project-modal');
+    document.getElementById('project-title').innerText = project.title;
+    document.getElementById('project-details').innerHTML = `
+      <p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p>
+      <p><strong>Budget:</strong> ${formatMoney(project.budget)}</p>
+      <p><strong>Status:</strong> ${project.status}</p>
+      <p><strong>Escrow Held:</strong> ${formatMoney(project.escrowHeld || 0)}</p>
+      <p><strong>Created:</strong> ${new Date(project.createdAt).toLocaleDateString()}</p>
+    `;
+    if (project.status === 'in_progress') {
+      document.getElementById('project-work-section').innerHTML = `
+        <input type="text" id="work-url-${project._id}" placeholder="Work URL (Google Drive, YouTube, etc)" style="width:100%; padding:10px; margin-bottom:10px; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;">
+        <button class="btn-submit" onclick="submitWork('${project._id}')">Submit Work</button>
+      `;
+    } else {
+      document.getElementById('project-work-section').innerHTML = '';
+    }
+    modal.style.display = 'flex';
   }
 
-  function renderCompletedProjects(projects) {
-    const container = document.getElementById('completed-projects');
-    if (projects.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px;">No completed works yet</div>'; return; }
-    container.innerHTML = projects.map(p => `
-      <div class="project-card">
-        <div class="project-header">
-          <span class="project-title">${escapeHtml(p.title)}</span>
-          <span class="project-budget">✅ Earned: ${formatMoney(p.budget)}</span>
-          <span class="status-badge paid">Paid</span>
-        </div>
-        <div style="margin-top:10px; font-size:13px;">Completed on: ${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</div>
-      </div>
-    `).join('');
-  }
+  function showSubmitWork(campaignId) { showProjectDetails(campaignId); }
 
   async function submitWork(campaignId) {
     const workUrl = document.getElementById(`work-url-${campaignId}`)?.value;
@@ -623,22 +671,65 @@
         body: JSON.stringify({ workUrl })
       });
       const data = await res.json();
-      if (data.success) { alert('Work submitted! Waiting for review.'); loadCampaigns(); }
+      if (data.success) { alert('Work submitted! Waiting for review.'); loadCampaigns(); closeModal('project-modal'); }
       else alert(data.message || 'Submission failed');
     } catch(e) { alert('Error submitting work'); }
+  }
+
+  async function showTransactions() {
+    const modal = document.getElementById('txn-modal');
+    const listDiv = document.getElementById('txn-list');
+    listDiv.innerHTML = '<div style="text-align:center; padding:20px;">Loading transactions...</div>';
+    modal.style.display = 'flex';
+    try {
+      const data = await fetchJSON('/api/wallet/transactions');
+      if (data.success && data.data?.transactions) {
+        allTransactions = data.data.transactions;
+        document.getElementById('txn-count').innerText = allTransactions.length;
+        if (allTransactions.length === 0) listDiv.innerHTML = '<div style="text-align:center; padding:20px;">No transactions yet</div>';
+        else listDiv.innerHTML = allTransactions.slice(0, 20).map(t => `
+          <div class="txn-item" style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span>${t.type}</span>
+            <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
+            <span style="font-size:11px;">${new Date(t.createdAt).toLocaleDateString()}</span>
+          </div>
+        `).join('');
+      }
+    } catch(e) { listDiv.innerHTML = '<div style="text-align:center; padding:20px;">Error loading transactions</div>'; }
+  }
+
+  function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
+  function showEscrowDetails() { alert('Escrow details: Funds held for active campaigns. They will be released when brands approve your work.'); }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function refreshProjects() { loadCampaigns(); }
+  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+  function switchLanguage() { alert('Language switching will be available soon'); }
+
+  async function saveSettings() {
+    const updates = {
+      stageName: document.getElementById('setting-stageName').value,
+      niche: document.getElementById('setting-niche').value,
+      preferredCurrency: document.getElementById('setting-currency').value,
+      preferredLanguage: document.getElementById('setting-language').value,
+      avatarUrl: document.getElementById('setting-avatar').value
+    };
+    alert('Settings saved! Page will refresh.');
+    closeModal('settings-modal');
+    location.reload();
   }
 
   async function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
     const currency = document.getElementById('withdraw-currency').value;
     const method = selectedMethod;
+    let usdAmount = convertToUSD(amount, currency);
     let payoutDetails = {};
     if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
     else if (method === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
     else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value, swiftCode: document.getElementById('wire-swift').value };
     
     if (!amount || amount <= 0) { alert('Enter amount'); return; }
-    if (currency !== 'USD') amount = amount / (exchangeRates[currency] || 1);
+    if (usdAmount < 30) { alert(`Minimum withdrawal is $30 USD. You entered ${formatMoney(usdAmount)}`); return; }
     if (method === 'mpesa' && !payoutDetails.phoneNumber) { alert('Enter phone number'); return; }
     if (method === 'paypal' && !payoutDetails.paypalEmail) { alert('Enter PayPal email'); return; }
     if (method === 'wire' && (!payoutDetails.bankName || !payoutDetails.accountNumber)) { alert('Enter bank details'); return; }
@@ -648,7 +739,7 @@
       const res = await fetch('/api/wallet/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails })
+        body: JSON.stringify({ amountUsd: usdAmount, payoutMethod: method, payoutDetails })
       });
       const data = await res.json();
       if (data.success) { alert('Withdrawal request submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
@@ -656,16 +747,28 @@
     } catch(e) { alert('Error processing withdrawal'); }
   }
 
-  function scrollToWithdraw() { document.getElementById('withdraw-section').scrollIntoView({ behavior: 'smooth' }); }
-  async function showTransactions() { alert('Transaction history coming soon'); }
-  async function showEscrow() { alert('Escrow details coming soon'); }
-  function refreshProjects() { loadCampaigns(); }
-  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; loadUserData(); }
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  function switchLanguage() { alert('Language switcher coming soon'); }
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
-  async function saveSettings() { alert('Settings saved!'); closeModal('settings-modal'); }
+  // Load Demographics
+  async function loadDemographics() {
+    // Placeholder data - connect to your analytics API
+    document.getElementById('dem-followers').innerText = '1,234';
+    document.getElementById('dem-likes').innerText = '5,678';
+    document.getElementById('dem-comments').innerText = '890';
+    document.getElementById('dem-country').innerText = 'Kenya';
+    document.getElementById('dem-engagement').innerText = '4.5%';
+    document.getElementById('dem-campaigns').innerText = '12';
+  }
 
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // Withdrawal method selection
   document.querySelectorAll('.method-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
@@ -676,11 +779,11 @@
     });
   });
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
-  
+
   loadUserData();
   loadWallet();
-  loadTips();
   loadCampaigns();
+  loadDemographics();
 </script>
 </body>
 </html>
