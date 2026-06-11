@@ -328,6 +328,16 @@ const userSchema = new mongoose.Schema(
       phoneNumber: { type: String, trim: true }
     },
     
+    // ============================================
+    // NEW: SOCIAL MEDIA LINKS FOR CREATORS
+    // ============================================
+    socialLinks: {
+      tiktok: { type: String, default: '' },
+      youtube: { type: String, default: '' },
+      instagram: { type: String, default: '' },
+      twitter: { type: String, default: '' }
+    },
+    
     // ========== Payout Settings ==========
     payoutProfiles: [payoutProfileSchema],
     defaultPayoutProfileId: { 
