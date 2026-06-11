@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Community - Pebeto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow-x: hidden; }
+    .header {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,140,66,0.2);
+      padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 100;
+    }
+    .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
+    .search-bar {
+      background: rgba(255,255,255,0.1); border-radius: 40px;
+      padding: 8px 16px; display: flex; align-items: center; gap: 8px; width: 300px;
+    }
+    .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; }
+    .nav-icons { display: flex; gap: 20px; align-items: center; }
+    .nav-icons i { font-size: 24px; cursor: pointer; color: #b8a99a; }
+    .nav-icons i:hover { color: #ffaa77; }
+    .dashboard-btn {
+      background: rgba(255,140,66,0.15); border: 1px solid #ff8c42;
+      padding: 8px 16px; border-radius: 40px; color: #ffaa77;
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dashboard-btn:hover { background: #ff8c42; color: white; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-weight: bold; background-size: cover;
+    }
+    .feed-container { margin-top: 70px; height: calc(100vh - 70px); overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+    .feed-container::-webkit-scrollbar { display: none; }
+    .video-post { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
+    .video-post video { width: 100%; height: 100%; object-fit: contain; }
+    .post-overlay { position: absolute; bottom: 100px; left: 16px; right: 80px; z-index: 10; }
+    .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .author-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex; align-items: center; justify-content: center; font-weight: bold;
+      background-size: cover;
+    }
+    .author-info h4 { font-size: 16px; margin-bottom: 2px; }
+    .author-info h4 span { font-weight: normal; color: #a08070; font-size: 12px; }
+    .author-info p { font-size: 12px; color: #a08070; }
+    .post-caption { font-size: 14px; margin-top: 8px; max-width: 80%; }
+    .right-actions { position: absolute; right: 12px; bottom: 120px; display: flex; flex-direction: column; gap: 24px; z-index: 10; }
+    .action-btn { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .action-btn i { font-size: 28px; color: white; }
+    .action-btn span { font-size: 12px; margin-top: 4px; }
+    .trending-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.9); padding: 12px 20px;
+      display: flex; gap: 16px; overflow-x: auto; z-index: 99;
+      border-top: 1px solid rgba(255,140,66,0.2);
+    }
+    .trending-sound-item {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.1); padding: 6px 12px;
+      border-radius: 40px; cursor: pointer; white-space: nowrap;
+    }
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); backdrop-filter: blur(8px);
+      z-index: 1000; justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: #1a1510; border-radius: 28px; padding: 30px;
+      max-width: 500px; width: 90%; border: 1px solid rgba(255,140,66,0.3);
+    }
+    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3); padding: 12px;
+      border-radius: 30px; margin-bottom: 15px; color: white;
+    }
+    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
+    .save-btn { background: #ff8c42; color: white; }
+    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
+    @media (max-width: 768px) { .search-bar { display: none; } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
+  <div class="search-bar">
+    <i class="ri-search-line"></i>
+    <input type="text" id="global-search" placeholder="Search users or sounds..." onkeyup="searchGlobal()">
+  </div>
+  <div class="nav-icons">
+    <button class="dashboard-btn" onclick="goToDashboard()">
+      <i class="ri-dashboard-line"></i> Dashboard
+    </button>
+    <i class="ri-camera-add-line" onclick="openUploadModal()" title="Upload"></i>
+    <i class="ri-live-line" onclick="startLive()" title="Go Live"></i>
+    <div class="avatar" id="nav-avatar" onclick="goToDashboard()">U</div>
+  </div>
+</div>
+
+<div id="feed-container" class="feed-container"></div>
+<div class="trending-bar" id="trending-bar"></div>
+
+<!-- Upload Modal -->
+<div id="upload-modal" class="modal">
+  <div class="modal-content">
+    <h3>📤 Upload Video</h3>
+    <input type="text" id="video-caption" placeholder="Caption">
+    <select id="video-sound">
+      <option value="">Original Sound</option>
+      <option value="trending1">🔥 Trending: Summer Vibes</option>
+      <option value="trending2">🎵 Trending: Dance Challenge</option>
+      <option value="trending3">💃 Trending: Viral Beat</option>
+    </select>
+    <input type="file" id="video-file" accept="video/*">
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="uploadVideo()">Post</button>
+      <button class="cancel-btn" onclick="closeModal('upload-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Live Modal -->
+<div id="live-modal" class="modal">
+  <div class="modal-content">
+    <h3>🔴 Go Live</h3>
+    <p>Live streaming coming soon! This will use WebRTC for real-time broadcasting.</p>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('live-modal')">Close</button></div>
+  </div>
+</div>
+
+<script>
+  let currentUser = null;
+  let posts = [];
+  
+  const mockPosts = [
+    { id: "1", userId: "user1", username: "@djnova", displayName: "DJ Nova", role: "creator", niche: "Music", avatar: "", caption: "New track dropping soon! 🔥", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", likes: 1234, comments: [], sound: "Summer Vibes", isLive: false },
+    { id: "2", userId: "user2", username: "@sarahcreates", displayName: "Sarah Creates", role: "creator", niche: "Art", avatar: "", caption: "Speed painting of my latest piece 🎨", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4", likes: 567, comments: [], sound: "Original Sound", isLive: true },
+    { id: "3", userId: "user3", username: "@pebeto", displayName: "Pebeto", role: "business", niche: "Platform", avatar: "", caption: "Join the creator economy! #Pebeto", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_3mb.mp4", likes: 8901, comments: [], sound: "Trending: Dance Challenge", isLive: false }
+  ];
+  
+  const trendingSounds = [
+    { name: "Summer Vibes", uses: 1234, icon: "🔥" },
+    { name: "Dance Challenge", uses: 892, icon: "💃" },
+    { name: "Viral Beat", uses: 756, icon: "🎵" }
+  ];
+
+  function formatNumber(num) {
+    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
+    return num.toString();
+  }
+  
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function goToDashboard() { window.location.href = '/signup.html'; }
+  
+  function loadUserData() {
+    const userStr = localStorage.getItem('pebeto_user');
+    if (userStr) {
+      currentUser = JSON.parse(userStr);
+      const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
+      document.getElementById('nav-avatar').innerHTML = initial;
+    }
+    loadFeed();
+    loadTrendingSounds();
+  }
+  
+  function loadFeed() {
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    mockPosts.forEach(post => {
+      const postEl = createPostElement(post);
+      container.appendChild(postEl);
+    });
+  }
+  
+  function createPostElement(post) {
+    const article = document.createElement('article');
+    article.className = 'video-post';
+    article.innerHTML = `
+      ${post.isLive ? `<div class="live-badge" style="position:absolute; top:20px; left:16px; background:#ff0050; padding:4px 12px; border-radius:20px; font-size:12px; display:flex; align-items:center; gap:6px;"><span class="live-dot" style="width:8px; height:8px; background:white; border-radius:50%;"></span> LIVE</div>` : ''}
+      <video class="post-video" src="${post.videoUrl}" loop muted playsinline></video>
+      <div class="post-overlay">
+        <div class="post-author">
+          <div class="author-avatar">${post.displayName[0]}</div>
+          <div class="author-info">
+            <h4>${escapeHtml(post.displayName)} <span>${escapeHtml(post.username)}</span> • ${post.role === 'creator' ? '🎨 Creator' : '🏢 Brand'}</h4>
+            <p>${post.niche}</p>
+          </div>
+        </div>
+        <div class="post-caption">${escapeHtml(post.caption)}</div>
+      </div>
+      <div class="right-actions">
+        <div class="action-btn" onclick="toggleLike(this)">
+          <i class="ri-heart-line"></i>
+          <span>${formatNumber(post.likes)}</span>
+        </div>
+        <div class="action-btn" onclick="alert('Comments coming soon')">
+          <i class="ri-chat-3-fill"></i>
+          <span>${post.comments.length}</span>
+        </div>
+        <div class="action-btn" onclick="alert('Share feature coming soon')">
+          <i class="ri-share-forward-line"></i>
+          <span>Share</span>
+        </div>
+      </div>
+    `;
+    
+    const video = article.querySelector('video');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) video.play().catch(e => {});
+        else video.pause();
+      });
+    }, { threshold: 0.5 });
+    observer.observe(article);
+    return article;
+  }
+  
+  function toggleLike(element) {
+    const icon = element.querySelector('i');
+    const countSpan = element.querySelector('span');
+    let count = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
+    if (icon.classList.contains('ri-heart-line')) {
+      icon.classList.remove('ri-heart-line');
+      icon.classList.add('ri-heart-fill');
+      icon.style.color = '#ff0050';
+      countSpan.innerText = formatNumber(count + 1);
+    } else {
+      icon.classList.remove('ri-heart-fill');
+      icon.classList.add('ri-heart-line');
+      icon.style.color = 'white';
+      countSpan.innerText = formatNumber(count - 1);
+    }
+  }
+  
+  function loadTrendingSounds() {
+    const bar = document.getElementById('trending-bar');
+    bar.innerHTML = trendingSounds.map(s => `
+      <div class="trending-sound-item" onclick="useSound('${s.name}')">
+        <i class="ri-fire-line"></i> ${s.name} • ${formatNumber(s.uses)} uses
+      </div>
+    `).join('');
+  }
+  
+  function useSound(soundName) {
+    alert(`Using sound: ${soundName}`);
+    openUploadModal();
+  }
+  
+  function openUploadModal() { document.getElementById('upload-modal').style.display = 'flex'; }
+  function startLive() { document.getElementById('live-modal').style.display = 'flex'; }
+  
+  async function uploadVideo() {
+    const caption = document.getElementById('video-caption').value;
+    const fileInput = document.getElementById('video-file');
+    if (!fileInput.files.length) { alert('Select a video file'); return; }
+    alert(`Video uploaded! Caption: "${caption}"\n\nIn production, this would upload to server.`);
+    closeModal('upload-modal');
+    document.getElementById('video-caption').value = '';
+    document.getElementById('video-file').value = '';
+  }
+  
+  function searchGlobal() {
+    const query = document.getElementById('global-search').value.toLowerCase();
+    if (!query) { loadFeed(); return; }
+    const filtered = mockPosts.filter(p => p.displayName.toLowerCase().includes(query) || p.username.toLowerCase().includes(query));
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    filtered.forEach(post => container.appendChild(createPostElement(post)));
+    if (filtered.length === 0) container.innerHTML = '<div style="text-align:center; padding:50px;">No results found</div>';
+  }
+  
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+  
+  loadUserData();
+</script>
+</body>
+</html>
