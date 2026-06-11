@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Sign Up - Pebeto</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1208 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 28px;
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
+      margin: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 30px; color: #ff8c42; }
+    .tabs { display: flex; margin-bottom: 30px; border-bottom: 1px solid rgba(255,140,66,0.3); }
+    .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: #a08070; }
+    .tab.active { color: #ff8c42; border-bottom: 2px solid #ff8c42; }
+    .form-pane { display: none; }
+    .form-pane.active { display: block; }
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 14px;
+      border-radius: 40px;
+      margin-bottom: 15px;
+      color: white;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      background: #ff8c42;
+      border: none;
+      padding: 14px;
+      border-radius: 40px;
+      color: #1a1208;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #e0662c; }
+    .message { text-align: center; margin-top: 15px; font-size: 14px; }
+    .error { color: #ff6b6b; }
+    .success { color: #4caf50; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Pebeto</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('login')">Login</div>
+    <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+  </div>
+  
+  <div id="login-pane" class="form-pane active">
+    <input type="email" id="login-email" placeholder="Email">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div id="login-message" class="message"></div>
+  </div>
+  
+  <div id="signup-pane" class="form-pane">
+    <select id="signup-role">
+      <option value="creator">Creator</option>
+      <option value="business">Business</option>
+      <option value="admin">Admin</option>
+    </select>
+    <input type="email" id="signup-email" placeholder="Email">
+    <input type="password" id="signup-password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <div id="signup-message" class="message"></div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-pane').forEach(p => p.classList.remove('active'));
+    if (tab === 'login') {
+      document.querySelector('.tab:first-child').classList.add('active');
+      document.getElementById('login-pane').classList.add('active');
+    } else {
+      document.querySelector('.tab:last-child').classList.add('active');
+      document.getElementById('signup-pane').classList.add('active');
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const messageDiv = document.getElementById('login-message');
+    
+    if (!email || !password) {
+      messageDiv.innerHTML = 'Please enter email and password';
+      messageDiv.className = 'message error';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      
+      if (data.success && data.token) {
+        localStorage.setItem('pebeto_token', data.token);
+        localStorage.setItem('pebeto_user', JSON.stringify(data.user));
+        messageDiv.innerHTML = 'Login successful! Redirecting...';
+        messageDiv.className = 'message success';
+        setTimeout(() => {
+          if (data.user.role === 'creator') window.location.href = '/creator-dashboard.html';
+          else if (data.user.role === 'business') window.location.href = '/business-dashboard.html';
+          else if (data.user.role === 'admin') window.location.href = '/admin-dashboard.html';
+          else window.location.href = '/community.html';
+        }, 1000);
+      } else {
+        messageDiv.innerHTML = data.message || 'Login failed';
+        messageDiv.className = 'message error';
+      }
+    } catch (error) {
+      messageDiv.innerHTML = 'Network error. Please try again.';
+      messageDiv.className = 'message error';
+    }
+  }
+
+  async function signup() {
+    const role = document.getElementById('signup-role').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const messageDiv = document.getElementById('signup-message');
+    
+    if (!email || !password) {
+      messageDiv.innerHTML = 'Please enter email and password';
+      messageDiv.className = 'message error';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        messageDiv.innerHTML = 'Account created! Please login.';
+        messageDiv.className = 'message success';
+        document.getElementById('signup-email').value = '';
+        document.getElementById('signup-password').value = '';
+        setTimeout(() => switchTab('login'), 1500);
+      } else {
+        messageDiv.innerHTML = data.message || 'Signup failed';
+        messageDiv.className = 'message error';
+      }
+    } catch (error) {
+      messageDiv.innerHTML = 'Network error. Please try again.';
+      messageDiv.className = 'message error';
+    }
+  }
+</script>
+</body>
+</html>
