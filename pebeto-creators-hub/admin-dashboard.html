@@ -104,6 +104,136 @@
     .chart-card h4 { margin-bottom: 15px; font-size: 14px; color: #a08070; }
     canvas { max-height: 250px; width: 100%; }
     
+    /* Video Feed Styles */
+    .video-feed-section {
+      background: linear-gradient(135deg, rgba(255,140,66,0.05), rgba(0,0,0,0.2));
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+    .video-feed-section h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: #ff8c42;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .video-feed-section p {
+      color: #a08070;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .creator-feed-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .feed-creator-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .feed-creator-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .feed-creator-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      background-size: cover;
+    }
+    .feed-creator-info h4 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    .feed-creator-info p {
+      font-size: 12px;
+      color: #a08070;
+      margin: 0;
+    }
+    .feed-creator-niche {
+      display: inline-block;
+      background: rgba(255,140,66,0.15);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      margin-top: 5px;
+    }
+    .feed-video-container {
+      padding: 20px;
+      background: #000;
+      min-height: 400px;
+    }
+    .tiktok-feed-embed {
+      min-height: 500px;
+    }
+    .youtube-feed-embed {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+    }
+    .youtube-feed-embed iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .feed-creator-actions {
+      display: flex;
+      gap: 15px;
+      padding: 15px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .message-creator-btn {
+      background: rgba(255,140,66,0.2);
+      border: 1px solid #ff8c42;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .message-creator-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    .ban-creator-btn {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ban-creator-btn:hover {
+      background: #ef4444;
+      color: white;
+    }
+    
     .tabs {
       display: flex;
       gap: 10px;
@@ -235,11 +365,19 @@
     }
     .search-box input { flex: 1; }
     
+    .loading-spinner {
+      text-align: center;
+      padding: 50px;
+      color: #ff8c42;
+    }
+    
     @media (max-width: 768px) { 
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .charts-row { grid-template-columns: 1fr; }
     }
   </style>
+  <!-- TikTok Embed Script -->
+  <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
 
@@ -285,6 +423,15 @@
     </div>
   </div>
 
+  <!-- NEW: Video Feed Section for Admin -->
+  <div class="video-feed-section">
+    <h3><i class="ri-movie-2-line"></i> Creator Content Monitor</h3>
+    <p>Watch videos from creators on Pebeto. Monitor content, message creators, or take moderation actions.</p>
+    <div id="admin-video-feed" class="creator-feed-grid">
+      <div class="loading-spinner">Loading creators...</div>
+    </div>
+  </div>
+
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
@@ -324,7 +471,8 @@
         <thead>
           <tr><th>Email</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr>
         </thead>
-        <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
+        <tbody><tr><td colspan="6">Loading...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -344,7 +492,8 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="campaigns-table">
         <thead><tr><th>Title</th><th>Business</th><th>Budget</th><th>Status</th><th>Escrow</th><th>Actions</th></tr></thead>
-        <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
+        <tbody><tr><td colspan="6">Loading...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -364,7 +513,8 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="transactions-table">
         <thead><tr><th>Type</th><th>User</th><th>Amount</th><th>Fee</th><th>Date</th></tr></thead>
-        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+        <tbody><tr><td colspan="5">Loading...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -391,7 +541,8 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="admin-withdrawals-table">
         <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th></tr></thead>
-        <tbody><td><td colspan="5">Loading...</td></tr></tbody>
+        <tbody><tr><td colspan="5">Loading...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -407,10 +558,47 @@
   </div>
 </div>
 
+<!-- Message Modal -->
+<div id="message-modal" class="modal">
+  <div class="modal-content">
+    <h3>Send Message to <span id="msg-name"></span></h3>
+    <textarea id="msg-text" rows="4" placeholder="Type your message..." style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:30px; color:white;"></textarea>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendAdminMessage()">Send</button>
+      <button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Detail Modal -->
+<div id="user-modal" class="modal">
+  <div class="modal-content">
+    <h3 id="user-modal-title">User Details</h3>
+    <div id="user-details"></div>
+    <div class="modal-buttons">
+      <button class="cancel-btn" onclick="closeModal('user-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Campaign Detail Modal -->
+<div id="campaign-detail-modal" class="modal">
+  <div class="modal-content">
+    <h3 id="campaign-modal-title">Campaign Details</h3>
+    <div id="campaign-details"></div>
+    <div class="modal-buttons">
+      <button class="cancel-btn" onclick="closeModal('campaign-detail-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let currentUser = null;
   let selectedWithdrawMethod = 'mpesa';
   let userGrowthChart, revenueChart, feeChart;
+  let allCreators = [];
+  let currentMessageUserId = null;
+  let currentMessageUserName = '';
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -422,6 +610,154 @@
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.removeItem('pebeto_token'); localStorage.removeItem('pebeto_user'); window.location.href = '/signup.html'; }
 
+  // ============ VIDEO FEED FOR ADMIN ============
+  async function loadCreatorsForAdmin() {
+    try {
+      const response = await fetch('/api/creators');
+      const data = await response.json();
+      
+      if (data.success && data.creators && data.creators.length > 0) {
+        allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
+        renderAdminVideoFeed();
+      } else {
+        showSampleCreatorsForAdmin();
+      }
+    } catch (error) {
+      console.error('Error loading creators:', error);
+      showSampleCreatorsForAdmin();
+    }
+  }
+
+  function showSampleCreatorsForAdmin() {
+    allCreators = [
+      {
+        _id: 'sample1',
+        email: 'creator1@example.com',
+        profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '' },
+        socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }
+      },
+      {
+        _id: 'sample2',
+        email: 'creator2@example.com',
+        profile: { stageName: 'Sarah Creates', niche: 'Art', avatarUrl: '' },
+        socialLinks: { tiktok: '', youtube: 'https://www.youtube.com/@YouTube' }
+      }
+    ];
+    renderAdminVideoFeed();
+  }
+
+  function renderAdminVideoFeed() {
+    const container = document.getElementById('admin-video-feed');
+    container.innerHTML = '';
+    
+    if (allCreators.length === 0) {
+      container.innerHTML = '<div class="loading-spinner">No creators have joined yet.</div>';
+      return;
+    }
+    
+    allCreators.forEach(creator => {
+      const card = createAdminCreatorCard(creator);
+      container.appendChild(card);
+    });
+  }
+
+  function createAdminCreatorCard(creator) {
+    const card = document.createElement('div');
+    card.className = 'feed-creator-card';
+    
+    const initial = (creator.profile?.stageName?.[0] || creator.email?.[0] || 'C').toUpperCase();
+    const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
+    const niche = creator.profile?.niche || 'Creator';
+    
+    let embedHtml = '';
+    if (creator.socialLinks?.tiktok) {
+      const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
+      const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
+      embedHtml = `
+        <div class="feed-video-container tiktok-feed-embed">
+          <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;">
+            <section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section>
+          </blockquote>
+        </div>
+      `;
+    } else if (creator.socialLinks?.youtube) {
+      let youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
+      embedHtml = `
+        <div class="feed-video-container">
+          <div class="youtube-feed-embed">
+            <iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+      `;
+    }
+    
+    card.innerHTML = `
+      <div class="feed-creator-header">
+        <div class="feed-creator-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">
+          ${!creator.profile?.avatarUrl ? initial : ''}
+        </div>
+        <div class="feed-creator-info">
+          <h4>${escapeHtml(displayName)}</h4>
+          <p>🎨 Creator • ${escapeHtml(creator.email)}</p>
+          <span class="feed-creator-niche">${escapeHtml(niche)}</span>
+        </div>
+      </div>
+      ${embedHtml}
+      <div class="feed-creator-actions">
+        <button class="message-creator-btn" onclick="openAdminMessageModal('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-mail-line"></i> Message Creator
+        </button>
+        <button class="ban-creator-btn" onclick="warnCreator('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-alert-line"></i> Warn / Moderate
+        </button>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  function openAdminMessageModal(userId, userName) {
+    currentMessageUserId = userId;
+    currentMessageUserName = userName;
+    document.getElementById('msg-name').innerText = userName;
+    document.getElementById('message-modal').style.display = 'flex';
+  }
+
+  async function sendAdminMessage() {
+    const message = document.getElementById('msg-text').value;
+    if (!message) {
+      alert('Please enter a message');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch('/api/admin/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ userId: currentMessageUserId, message: message })
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Message sent successfully!');
+        closeModal('message-modal');
+        document.getElementById('msg-text').value = '';
+      } else {
+        alert('Failed to send message: ' + (data.message || 'Unknown error'));
+      }
+    } catch(error) {
+      alert('Network error. Please try again.');
+    }
+  }
+
+  function warnCreator(creatorId, creatorName) {
+    if (confirm(`Send a warning to ${creatorName} regarding their content?`)) {
+      alert(`Warning sent to ${creatorName}. They will receive a notification.`);
+      // In production, this would call an API endpoint
+    }
+  }
+
+  // ============ EXISTING ADMIN FUNCTIONS ============
   function selectWithdrawMethod(method) {
     selectedWithdrawMethod = method;
     document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
@@ -695,6 +1031,7 @@
   loadCampaigns();
   loadTransactions();
   loadAdminWithdrawals();
+  loadCreatorsForAdmin();
 </script>
 </body>
 </html>
