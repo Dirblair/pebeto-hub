@@ -283,7 +283,7 @@
     document.getElementById(id).style.display = 'none'; 
   }
   
-  // FIXED: goToDashboard - sends user to correct dashboard based on role
+  // FIXED: goToDashboard - CORRECTED to use creator-dashboard.html
   function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
@@ -296,19 +296,19 @@
       try {
         const user = JSON.parse(userStr);
         if (user.role === 'creator') {
-          window.location.href = '/dashboard.html';
+          window.location.href = '/creator-dashboard.html';
         } else if (user.role === 'business') {
           window.location.href = '/business-dashboard.html';
         } else if (user.role === 'admin') {
           window.location.href = '/admin-dashboard.html';
         } else {
-          window.location.href = '/dashboard.html';
+          window.location.href = '/creator-dashboard.html';
         }
       } catch(e) {
-        window.location.href = '/dashboard.html';
+        window.location.href = '/signup.html';
       }
     } else {
-      window.location.href = '/dashboard.html';
+      window.location.href = '/signup.html';
     }
   }
 
@@ -527,7 +527,6 @@
         alert(`💝 Tip of ${currency} ${amount} sent successfully!`);
         closeModal('tip-modal');
         document.getElementById('tip-amount').value = '';
-        // Refresh wallet balance if user is on dashboard
       } else {
         alert('Failed to send tip: ' + (data.message || 'Unknown error'));
       }
@@ -537,7 +536,7 @@
     }
   }
 
-  // FIXED: View profile - stores creator ID and goes to profile page
+  // View profile - stores creator ID and goes to profile page
   function viewCreatorProfile(creatorId) {
     localStorage.setItem('viewingCreatorId', creatorId);
     window.location.href = `/creator-profile.html?id=${creatorId}`;
