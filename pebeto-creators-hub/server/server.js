@@ -119,6 +119,11 @@ const exchangeRoutes = safeRequire('./routes/exchange.routes', 'exchange.routes'
 const withdrawalRoutes = safeRequire('./routes/withdrawal.routes', 'withdrawal.routes');
 
 // ============================================
+// NEW: Creator Routes Import
+// ============================================
+const creatorRoutes = safeRequire('./routes/creator.routes', 'creator.routes');
+
+// ============================================
 // Request ID Middleware
 // ============================================
 
@@ -310,6 +315,16 @@ async function bootstrap() {
     // Campaign routes
     app.use('/api/campaigns', campaignRoutes);
     
+    // ============================================
+    // NEW: Creator Routes (Social Media Links)
+    // ============================================
+    if (creatorRoutes) {
+      app.use('/api', creatorRoutes);
+      console.log('✅ Mounted creator routes (/api/creators, /api/creator/social-links)');
+    } else {
+      console.log('⚠️ Creator routes skipped - file not found');
+    }
+    
     // Community routes (optional)
     if (communityRoutes) {
       app.use('/api/community', communityRoutes);
@@ -379,6 +394,7 @@ async function bootstrap() {
               <h2>Available Endpoints:</h2>
               <ul>
                 <li><a href="/api/health">GET /api/health</a> - Health check</li>
+                <li><a href="/api/creators">GET /api/creators</a> - View all creators</li>
                 <li>POST /api/auth/register - User registration</li>
                 <li>POST /api/auth/login - User login</li>
               </ul>
@@ -409,6 +425,7 @@ async function bootstrap() {
       logger.info(`   Environment: ${env.nodeEnv}`);
       logger.info(`   Startup time: ${startupTime}ms`);
       logger.info(`   API Health: http://${HOST}:${PORT}/api/health`);
+      logger.info(`   Creators API: http://${HOST}:${PORT}/api/creators`);
       console.log('='.repeat(60));
       
       // Log configuration summary (sanitized)
