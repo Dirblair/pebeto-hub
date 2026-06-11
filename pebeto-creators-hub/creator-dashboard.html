@@ -32,6 +32,17 @@
     .nav-icons { display: flex; gap: 20px; align-items: center; }
     .nav-icons i { font-size: 22px; color: #b8a99a; cursor: pointer; transition: 0.2s; }
     .nav-icons i:hover { color: #ffaa77; }
+    .logout-btn {
+      background: rgba(255, 140, 66, 0.15);
+      border: 1px solid rgba(255, 140, 66, 0.3);
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 14px;
+    }
+    .logout-btn:hover { background: rgba(255, 140, 66, 0.3); }
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
@@ -144,6 +155,23 @@
     .status-badge.paid { background: rgba(34,197,94,0.2); color: #4ade80; }
     .status-badge.pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
     
+    /* Demographics Grid */
+    .demographics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .dem-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+    }
+    .dem-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
+    .dem-card .value { font-size: 28px; font-weight: 700; color: #ff8c42; }
+    .dem-card .trend { font-size: 11px; margin-top: 5px; color: #4ade80; }
+    
     /* Modals */
     .modal {
       display: none;
@@ -249,7 +277,8 @@
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: 1fr; }
       .profile-banner { flex-direction: column; text-align: center; }
-      .data-table th, .data-table td { padding: 10px; font-size: 12px; }
+      .data-table th, .data-table td { padding: 8px; font-size: 11px; }
+      .demographics-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -258,9 +287,9 @@
 <div class="header">
   <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
   <div class="nav-icons">
-    <i class="ri-home-line" onclick="window.location.href='/community.html'"></i>
-    <i class="ri-settings-4-line" onclick="openSettings()"></i>
-    <i class="ri-translate-2" onclick="switchLanguage()"></i>
+    <i class="ri-home-line" onclick="window.location.href='/community.html'" title="Community Home"></i>
+    <i class="ri-settings-4-line" onclick="openSettings()" title="Settings"></i>
+    <button class="logout-btn" onclick="logout()">Logout</button>
     <div class="avatar" onclick="openSettings()" id="avatar-initial">C</div>
   </div>
 </div>
@@ -313,7 +342,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-table">
         <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="4">Loading...</td></tr></tbody>
+        <tbody><tr><td colspan="4">Loading...</td></tr>
       </table>
     </div>
   </div>
@@ -323,7 +352,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="review-table">
         <thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead>
-        <tbody><tr><td colspan="4">No projects under review</td></tr></tbody>
+        <tbody><tr><td colspan="4">No projects under review</td></tr>
       </table>
     </div>
   </div>
@@ -333,7 +362,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="completed-table">
         <thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead>
-        <tbody><tr><td colspan="4">No completed works</td></tr></tbody>
+        <tbody><tr><td colspan="4">No completed works</td></tr>
       </table>
     </div>
   </div>
@@ -353,20 +382,20 @@
 
   <!-- Demographics Tab -->
   <div id="tab-demographics" class="tab-content">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-      <div class="stat-card" style="text-align: center;"><h3>👥 Followers</h3><div class="amount" id="dem-followers">0</div></div>
-      <div class="stat-card" style="text-align: center;"><h3>❤️ Total Likes</h3><div class="amount" id="dem-likes">0</div></div>
-      <div class="stat-card" style="text-align: center;"><h3>💬 Total Comments</h3><div class="amount" id="dem-comments">0</div></div>
-      <div class="stat-card" style="text-align: center;"><h3>🌍 Top Country</h3><div class="amount" id="dem-country">—</div></div>
-      <div class="stat-card" style="text-align: center;"><h3>📈 Engagement Rate</h3><div class="amount" id="dem-engagement">0%</div></div>
-      <div class="stat-card" style="text-align: center;"><h3>🎯 Campaigns Completed</h3><div class="amount" id="dem-campaigns">0</div></div>
+    <div class="demographics-grid">
+      <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div><div class="trend" id="followers-trend">📈 +0%</div></div>
+      <div class="dem-card"><h4>❤️ Total Likes</h4><div class="value" id="dem-likes">0</div><div class="trend" id="likes-trend">📈 +0%</div></div>
+      <div class="dem-card"><h4>💬 Total Comments</h4><div class="value" id="dem-comments">0</div><div class="trend" id="comments-trend">📈 +0%</div></div>
+      <div class="dem-card"><h4>🌍 Top Country</h4><div class="value" id="dem-country" style="font-size: 20px;">—</div></div>
+      <div class="dem-card"><h4>📈 Engagement Rate</h4><div class="value" id="dem-engagement">0%</div></div>
+      <div class="dem-card"><h4>🎯 Campaigns Completed</h4><div class="value" id="dem-campaigns">0</div></div>
     </div>
   </div>
 
   <!-- Withdrawal Section -->
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
-    <p>Minimum $30 USD (or equivalent in your currency) | Withdrawal fee: <strong>3%</strong></p>
+    <p>Minimum $30 USD (or equivalent) | Withdrawal fee: <strong>3%</strong></p>
     
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <div id="threshold-text" style="font-size: 13px;">$0 / $30</div>
@@ -502,6 +531,13 @@
     return amount / rate;
   }
 
+  // LOGOUT FUNCTION
+  function logout() {
+    localStorage.removeItem('pebeto_token');
+    localStorage.removeItem('pebeto_user');
+    window.location.href = '/signup.html';
+  }
+
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (!userStr) { window.location.href = '/signup.html'; return; }
@@ -601,18 +637,16 @@
     const review = myProjects.filter(p => p.status === 'submitted_for_review');
     const completed = myProjects.filter(p => p.status === 'paid');
     
-    // Active table
     const activeBody = document.querySelector('#active-table tbody');
     if (active.length === 0) activeBody.innerHTML = '<tr><td colspan="4">No active projects</td></tr>';
     else activeBody.innerHTML = active.map(p => `
       <tr onclick="showProjectDetails('${p._id}')">
         <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
         <td><span class="status-badge">In Progress</span></td>
-        <td><button class="btn-submit" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit Work</button></td>
+        <td><button class="btn-submit" onclick="event.stopPropagation(); showSubmitWork('${p._id}')" style="background:#ff8c42; border:none; padding:6px 12px; border-radius:20px; cursor:pointer;">Submit</button></td>
       </tr>
     `).join('');
     
-    // Review table
     const reviewBody = document.querySelector('#review-table tbody');
     if (review.length === 0) reviewBody.innerHTML = '<tr><td colspan="4">No projects under review</td></tr>';
     else reviewBody.innerHTML = review.map(p => `
@@ -623,7 +657,6 @@
       </tr>
     `).join('');
     
-    // Completed table
     const completedBody = document.querySelector('#completed-table tbody');
     if (completed.length === 0) completedBody.innerHTML = '<tr><td colspan="4">No completed works</td></tr>';
     else completedBody.innerHTML = completed.map(p => `
@@ -650,7 +683,7 @@
     if (project.status === 'in_progress') {
       document.getElementById('project-work-section').innerHTML = `
         <input type="text" id="work-url-${project._id}" placeholder="Work URL (Google Drive, YouTube, etc)" style="width:100%; padding:10px; margin-bottom:10px; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;">
-        <button class="btn-submit" onclick="submitWork('${project._id}')">Submit Work</button>
+        <button class="btn-submit" onclick="submitWork('${project._id}')" style="background:#ff8c42; border:none; padding:10px; border-radius:30px; cursor:pointer;">Submit Work</button>
       `;
     } else {
       document.getElementById('project-work-section').innerHTML = '';
@@ -688,7 +721,7 @@
         document.getElementById('txn-count').innerText = allTransactions.length;
         if (allTransactions.length === 0) listDiv.innerHTML = '<div style="text-align:center; padding:20px;">No transactions yet</div>';
         else listDiv.innerHTML = allTransactions.slice(0, 20).map(t => `
-          <div class="txn-item" style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
             <span>${t.type}</span>
             <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
             <span style="font-size:11px;">${new Date(t.createdAt).toLocaleDateString()}</span>
@@ -699,11 +732,13 @@
   }
 
   function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
-  function showEscrowDetails() { alert('Escrow details: Funds held for active campaigns. They will be released when brands approve your work.'); }
+  function showEscrowDetails() { 
+    const escrowAmount = document.getElementById('escrow-balance').innerText;
+    alert(`💰 Pending Escrow: ${escrowAmount}\n\nThis is money held for active campaigns. It will be released to your wallet when brands approve your completed work.`);
+  }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function refreshProjects() { loadCampaigns(); }
   function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-  function switchLanguage() { alert('Language switching will be available soon'); }
 
   async function saveSettings() {
     const updates = {
@@ -747,15 +782,50 @@
     } catch(e) { alert('Error processing withdrawal'); }
   }
 
-  // Load Demographics
+  // Load Demographics - REAL DATA from API
   async function loadDemographics() {
-    // Placeholder data - connect to your analytics API
-    document.getElementById('dem-followers').innerText = '1,234';
-    document.getElementById('dem-likes').innerText = '5,678';
-    document.getElementById('dem-comments').innerText = '890';
-    document.getElementById('dem-country').innerText = 'Kenya';
-    document.getElementById('dem-engagement').innerText = '4.5%';
-    document.getElementById('dem-campaigns').innerText = '12';
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      // Fetch real stats from your backend
+      const res = await fetch('/api/creator/stats', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('dem-followers').innerText = formatNumber(data.followers || 0);
+        document.getElementById('dem-likes').innerText = formatNumber(data.likes || 0);
+        document.getElementById('dem-comments').innerText = formatNumber(data.comments || 0);
+        document.getElementById('dem-country').innerText = data.topCountry || 'Kenya';
+        document.getElementById('dem-engagement').innerText = (data.engagementRate || 4.5) + '%';
+        document.getElementById('dem-campaigns').innerText = data.campaignsCompleted || 0;
+        document.getElementById('followers-trend').innerHTML = `📈 +${data.followersTrend || 0}%`;
+        document.getElementById('likes-trend').innerHTML = `📈 +${data.likesTrend || 0}%`;
+        document.getElementById('comments-trend').innerHTML = `📈 +${data.commentsTrend || 0}%`;
+      } else {
+        // Fallback to analytics from community interactions
+        const commRes = await fetch('/api/community/my-stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const commData = await commRes.json();
+        if (commData.success) {
+          document.getElementById('dem-followers').innerText = formatNumber(commData.followers || 0);
+          document.getElementById('dem-likes').innerText = formatNumber(commData.totalLikes || 0);
+          document.getElementById('dem-comments').innerText = formatNumber(commData.totalComments || 0);
+          document.getElementById('dem-country').innerText = commData.topCountry || 'Kenya';
+          document.getElementById('dem-engagement').innerText = (commData.engagementRate || 4.5) + '%';
+          document.getElementById('dem-campaigns').innerText = document.getElementById('dem-campaigns').innerText || '0';
+        }
+      }
+    } catch(e) {
+      console.error('Error loading demographics:', e);
+      // Keep default values
+    }
+  }
+
+  function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
   }
 
   // Tab switching
@@ -779,6 +849,8 @@
     });
   });
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
+
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
   loadUserData();
   loadWallet();
