@@ -11,17 +11,6 @@
 // PRE-START CHECKS (Must run first)
 // ============================================
 
-// Verify critical environment variables before anything else
-const requiredEnvVars = ['JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(key => !process.env[key]);
-
-if (missingEnvVars.length > 0) {
-  console.error('❌ CRITICAL: Missing required environment variables:');
-  missingEnvVars.forEach(key => console.error(`   - ${key}`));
-  console.error('\n💡 Please set these variables in your Render dashboard or .env file');
-  process.exit(1);
-}
-
 // Log startup environment (sanitized)
 console.log('='.repeat(60));
 console.log('🚀 PEBBETO CREATOR\'S HUB SERVER STARTING');
@@ -29,10 +18,34 @@ console.log('='.repeat(60));
 console.log(`📁 Directory: ${__dirname}`);
 console.log(`📦 Node Version: ${process.version}`);
 console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
-console.log(`🔑 JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Set' : '❌ Missing'}`);
-console.log(`🗄️ MONGO_URI: ${process.env.MONGO_URI ? '✅ Set' : '❌ Missing'}`);
-console.log(`🌐 PORT: ${process.env.PORT || '3000'}`);
-console.log('='.repeat(60));
+
+// Load environment configuration (this will validate critical vars)
+try {
+  // Import env config - this will throw if critical vars are missing in production
+  const env = require('./config/env');
+  
+  console.log(`🔑 JWT_SECRET: ${env.jwtSecret ? '✅ Set' : '❌ Missing'}`);
+  console.log(`🗄️ MONGO_URI: ${env.mongoUri ? '✅ Set' : '❌ Missing'}`);
+  console.log(`🌐 PORT: ${env.port || '3000'}`);
+  console.log('='.repeat(60));
+  
+  // Exit if critical configuration is missing in production
+  if (env.isProduction) {
+    if (!env.jwtSecret) {
+      console.error('❌ CRITICAL: JWT_SECRET is required in production');
+      process.exit(1);
+    }
+    if (!env.mongoUri) {
+      console.error('❌ CRITICAL: MONGO_URI is required in production');
+      console.error('💡 Please set MONGO_URI in your environment variables');
+      process.exit(1);
+    }
+  }
+} catch (error) {
+  console.error('❌ Failed to load environment configuration:', error.message);
+  console.error('💡 Please check your .env file or environment variables');
+  process.exit(1);
+}
 
 // ============================================
 // Module Imports
@@ -103,6 +116,7 @@ try {
 // Optional routes (may not exist yet)
 const communityRoutes = safeRequire('./routes/community.routes', 'community.routes');
 const exchangeRoutes = safeRequire('./routes/exchange.routes', 'exchange.routes');
+const withdrawalRoutes = safeRequire('./routes/withdrawal.routes', 'withdrawal.routes');
 
 // ============================================
 // Request ID Middleware
@@ -150,11 +164,21 @@ const corsOptions = {
     }
     
     if (env.clientOrigins.length === 0) {
+      // In production, this should not happen - we already warned
+      if (env.isProduction) {
+        console.warn(`⚠️ CORS: No origins configured, but allowing ${origin} for now`);
+        return callback(null, true);
+      }
       return callback(null, true);
     }
     
     if (env.clientOrigins.includes(origin)) {
       return callback(null, true);
+    }
+    
+    // Log blocked origins in development for debugging
+    if (env.isDevelopment) {
+      console.log(`🔒 CORS blocked origin: ${origin}`);
     }
     
     callback(new Error(`CORS policy does not allow origin: ${origin}`));
@@ -200,6 +224,11 @@ async function bootstrap() {
   try {
     // 1. Database Connection (Critical first step)
     logger.info('Connecting to database...');
+    
+    if (!env.mongoUri) {
+      throw new Error('MONGO_URI is not configured. Please check your environment variables.');
+    }
+    
     await connectDB(env.mongoUri, env.mongoOptions);
     logger.info('✅ Database connection established.');
     
@@ -210,7 +239,7 @@ async function bootstrap() {
     // 3. Socket.IO Setup
     const io = new Server(server, {
       cors: {
-        origin: env.clientOrigins,
+        origin: env.clientOrigins.length > 0 ? env.clientOrigins : true,
         credentials: true,
         methods: ['GET', 'POST']
       },
@@ -256,7 +285,8 @@ async function bootstrap() {
         timestamp: new Date().toISOString(),
         requestId: req.id,
         database: dbHealth,
-        environment: env.nodeEnv
+        environment: env.nodeEnv,
+        version: '1.0.0'
       });
     });
     
@@ -280,7 +310,7 @@ async function bootstrap() {
     // Campaign routes
     app.use('/api/campaigns', campaignRoutes);
     
-    // Community routes (optional - only if file exists)
+    // Community routes (optional)
     if (communityRoutes) {
       app.use('/api/community', communityRoutes);
       console.log('✅ Mounted community routes');
@@ -288,12 +318,20 @@ async function bootstrap() {
       console.log('⚠️ Community routes skipped - file not found');
     }
     
-    // Exchange rate routes (optional - only if file exists)
+    // Exchange rate routes (optional)
     if (exchangeRoutes) {
       app.use('/api/exchange', exchangeRoutes);
       console.log('✅ Mounted exchange routes');
     } else {
       console.log('⚠️ Exchange routes skipped - file not found');
+    }
+    
+    // Withdrawal routes (optional)
+    if (withdrawalRoutes) {
+      app.use('/api/withdrawals', withdrawalRoutes);
+      console.log('✅ Mounted withdrawal routes');
+    } else {
+      console.log('⚠️ Withdrawal routes skipped - file not found');
     }
     
     // 11. Static Files (Client UI)
@@ -319,18 +357,37 @@ async function bootstrap() {
       // Serve index.html for all other routes (SPA support)
       const indexPath = path.join(__dirname, '..', 'index.html');
       res.sendFile(indexPath, (err) => {
-        if (err) {
+        if (err && err.code === 'ENOENT') {
           // If index.html doesn't exist, send a simple message
           res.status(200).send(`
             <!DOCTYPE html>
             <html>
-            <head><title>Pebeto Creator's Hub</title></head>
+            <head>
+              <title>Pebeto Creator's Hub</title>
+              <style>
+                body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.6; }
+                h1 { color: #333; }
+                .status { background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50; }
+                .endpoint { background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; }
+              </style>
+            </head>
             <body>
-              <h1>Pebeto Creator's Hub API</h1>
-              <p>API is running. Visit <a href="/api/health">/api/health</a> to check status.</p>
+              <h1>🚀 Pebeto Creator's Hub API</h1>
+              <div class="status">
+                ✅ API is running in ${env.nodeEnv} mode
+              </div>
+              <h2>Available Endpoints:</h2>
+              <ul>
+                <li><a href="/api/health">GET /api/health</a> - Health check</li>
+                <li>POST /api/auth/register - User registration</li>
+                <li>POST /api/auth/login - User login</li>
+              </ul>
+              <p>For full API documentation, please refer to the API docs.</p>
             </body>
             </html>
           `);
+        } else if (err) {
+          next(err);
         }
       });
     });
@@ -342,8 +399,8 @@ async function bootstrap() {
     app.use(errorHandler);
     
     // 15. Start Server
-    const PORT = env.port || process.env.PORT || 3000;
-    const HOST = env.host || '0.0.0.0';
+    const PORT = env.port;
+    const HOST = env.host;
     
     server.listen(PORT, HOST, () => {
       const startupTime = Date.now() - startTime;
@@ -370,6 +427,19 @@ async function bootstrap() {
     logger.error('🚨 CRITICAL STARTUP ERROR:');
     console.error(error);
     console.error('='.repeat(60));
+    
+    // Provide helpful error messages based on error type
+    if (error.message.includes('MONGO_URI')) {
+      console.error('\n💡 Database Configuration Error:');
+      console.error('   Please ensure MONGO_URI is set in your environment variables');
+      console.error('   Example: MONGO_URI=mongodb://localhost:27017/pebeto');
+      console.error('   Or use MongoDB Atlas: mongodb+srv://<user>:<password>@cluster.mongodb.net/pebeto');
+    } else if (error.message.includes('JWT_SECRET')) {
+      console.error('\n💡 JWT Configuration Error:');
+      console.error('   Please set JWT_SECRET in your environment variables');
+      console.error('   Generate a secure key using: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    }
+    
     process.exit(1);
   }
 }
@@ -403,10 +473,11 @@ function setupGracefulShutdown(server) {
     
     try {
       // Stop accepting new connections
-      server.close(() => {
-        console.log('✅ HTTP server closed');
-        logger.info('HTTP server closed');
+      await new Promise((resolve) => {
+        server.close(resolve);
       });
+      console.log('✅ HTTP server closed');
+      logger.info('HTTP server closed');
       
       // Close database connection
       await disconnectDB();
@@ -434,14 +505,23 @@ function setupGracefulShutdown(server) {
   process.on('uncaughtException', (error) => {
     console.error('❌ Uncaught Exception:', error);
     logger.error('Uncaught Exception:', error);
-    shutdown('uncaughtException');
+    // Give it a moment to log before shutting down
+    setTimeout(() => {
+      shutdown('uncaughtException');
+    }, 1000);
   });
   
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Unhandled Rejection:', reason);
+    console.error('❌ Unhandled Rejection at:', promise);
+    console.error('   Reason:', reason);
     logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Don't exit immediately, let the process continue
+    // Don't exit immediately in development, but log clearly
+    if (env.isProduction) {
+      setTimeout(() => {
+        shutdown('unhandledRejection');
+      }, 1000);
+    }
   });
 }
 
@@ -455,6 +535,20 @@ bootstrap().catch((err) => {
   console.error('--- FATAL STARTUP ERROR ---');
   console.error(err);
   console.error('='.repeat(60));
+  
+  // Provide helpful messages for common errors
+  if (err.code === 'ECONNREFUSED') {
+    console.error('\n💡 Database connection refused. Please check:');
+    console.error('   1. MongoDB is running (mongod)');
+    console.error('   2. MONGO_URI is correct');
+    console.error('   3. Network/firewall allows the connection');
+  } else if (err.name === 'MongoNetworkError') {
+    console.error('\n💡 MongoDB network error. Please check:');
+    console.error('   1. Internet connection (for Atlas)');
+    console.error('   2. IP whitelist in MongoDB Atlas');
+    console.error('   3. Username/password are correct');
+  }
+  
   process.exit(1);
 });
 
