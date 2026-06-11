@@ -98,24 +98,32 @@ const HOST = process.env.HOST || (IS_PRODUCTION ? '0.0.0.0' : 'localhost');
 // Database Configuration
 // ============================================
 
-// DEBUG: Log what we're getting from process.env
-console.log('🔍 [ENV] process.env.MONGO_URI:', process.env.MONGO_URI ? '✅ EXISTS (starts with: ' + process.env.MONGO_URI.substring(0, 30) + '...)' : '❌ UNDEFINED');
-console.log('🔍 [ENV] process.env.MONGODB_URI:', process.env.MONGODB_URI ? '✅ EXISTS' : '❌ UNDEFINED');
+// Debug logging (only in development)
+if (IS_DEVELOPMENT) {
+  console.log('🔍 [ENV] process.env.MONGO_URI:', process.env.MONGO_URI ? '✅ EXISTS' : '❌ UNDEFINED');
+  console.log('🔍 [ENV] process.env.MONGODB_URI:', process.env.MONGODB_URI ? '✅ EXISTS' : '❌ UNDEFINED');
+}
 
-// Try both MONGO_URI and MONGODB_URI
+// Try both MONGO_URI and MONGODB_URI (with priority to MONGO_URI)
 let mongoUriValue = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-// If still not found, use hardcoded fallback for production
+// Fallback for production if not set in environment
 if (!mongoUriValue && IS_PRODUCTION) {
-  console.log('🔧 [ENV] Using hardcoded MongoDB URI as fallback');
-  mongoUriValue = 'mongodb+srv://pebeto:DebbyJenn123%21@pebeto.yggha0f.mongodb.net/pebeto?retryWrites=true&w=majority';
+  console.log('🔧 [ENV] No MongoDB URI found in environment, checking for fallback');
+  // Check if we have a hardcoded fallback (should only be used in emergency)
+  if (process.env.USE_HARDCODED_MONGO_FALLBACK === 'true') {
+    console.warn('⚠️ [ENV] USING HARDCODED MONGO FALLBACK - NOT RECOMMENDED FOR PRODUCTION');
+    mongoUriValue = 'mongodb+srv://pebeto:DebbyJenn123%21@pebeto.yggha0f.mongodb.net/pebeto?retryWrites=true&w=majority';
+  }
 }
 
 const MONGO_URI = mongoUriValue;
 
-// Only validate if we have a value, otherwise let db.js handle it
+// Log status
 if (!MONGO_URI) {
-  console.warn('⚠️ [ENV] MONGO_URI not set - will use hardcoded value in db.js');
+  console.error('❌ [ENV] MONGO_URI not set - database connection will fail!');
+} else if (IS_DEVELOPMENT) {
+  console.log('✅ [ENV] MongoDB URI configured');
 }
 
 const MONGO_OPTIONS = {
@@ -131,16 +139,16 @@ const MONGO_OPTIONS = {
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// JWT validation
 if (!JWT_SECRET) {
   console.error('❌ [ENV] JWT_SECRET is required!');
   if (IS_PRODUCTION) {
     throw new Error('Missing required environment variable: JWT_SECRET');
   }
-}
-
-// Validate JWT secret strength
-if (JWT_SECRET && JWT_SECRET.length < 32 && IS_PRODUCTION) {
+} else if (JWT_SECRET.length < 32 && IS_PRODUCTION) {
   console.warn('⚠️ WARNING: JWT_SECRET should be at least 32 characters long in production');
+} else if (JWT_SECRET === 'your-super-secret-jwt-key-change-this-in-production') {
+  console.warn('⚠️ WARNING: Using default JWT_SECRET. This is insecure!');
 }
 
 const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
@@ -149,22 +157,26 @@ const JWT_EMAIL_VERIFY_EXPIRES_IN = process.env.JWT_EMAIL_VERIFY_EXPIRES_IN || '
 const JWT_PASSWORD_RESET_EXPIRES_IN = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h';
 
 // ============================================
-// CORS Configuration (Updated for flexibility)
+// CORS Configuration
 // ============================================
 
 const CLIENT_ORIGIN_RAW = process.env.CLIENT_ORIGIN || (IS_PRODUCTION ? '' : '*');
 const CLIENT_ORIGINS = parseArray(CLIENT_ORIGIN_RAW, []);
 
-// In production, allow requests from the Render URL if no CLIENT_ORIGIN set
+// Auto-detect production URLs
 let finalClientOrigins = CLIENT_ORIGINS;
 if (IS_PRODUCTION && finalClientOrigins.length === 0) {
-  // Auto-detect Render URL from environment
+  // Try to auto-detect from various environment variables
   const renderUrl = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || '';
-  if (renderUrl) {
-    finalClientOrigins = [renderUrl];
-    console.log(`🔧 Auto-configured CORS origin to: ${renderUrl}`);
+  const herokuUrl = process.env.HEROKU_APP_URL || '';
+  const vercelUrl = process.env.VERCEL_URL || '';
+  const detectedUrl = renderUrl || herokuUrl || vercelUrl;
+  
+  if (detectedUrl) {
+    finalClientOrigins = [detectedUrl];
+    console.log(`🔧 Auto-configured CORS origin to: ${detectedUrl}`);
   } else {
-    console.warn('⚠️ WARNING: No CLIENT_ORIGIN set and no Render URL detected. CORS may block requests.');
+    console.warn('⚠️ WARNING: No CLIENT_ORIGIN set and no platform URL detected. CORS may block requests.');
   }
 }
 
@@ -189,7 +201,7 @@ const RATE_LIMIT_AUTH_MAX_REQUESTS = parseInteger(process.env.RATE_LIMIT_AUTH_MA
 
 const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY || '';
 const EXCHANGE_RATE_API_URL = process.env.EXCHANGE_RATE_API_URL || 'https://v6.exchangerate-api.com/v6';
-const EXCHANGE_RATE_CACHE_TTL = parseInteger(process.env.EXCHANGE_RATE_CACHE_TTL, 3600); // 1 hour
+const EXCHANGE_RATE_CACHE_TTL = parseInteger(process.env.EXCHANGE_RATE_CACHE_TTL, 3600);
 
 // ============================================
 // M-Pesa Configuration (Kenya)
@@ -210,15 +222,20 @@ const MPESA_API_URL = process.env.MPESA_API_URL ||
 const MPESA_QUEUE_TIMEOUT_URL = process.env.MPESA_QUEUE_TIMEOUT_URL || '';
 const MPESA_RESULT_URL = process.env.MPESA_RESULT_URL || '';
 const MPESA_CALLBACK_URL = process.env.MPESA_CALLBACK_URL || 
-  (finalClientOrigins[0] ? `${finalClientOrigins[0]}/api/wallet/mpesa-callback` : 'https://pebeto.com/api/wallet/mpesa-callback');
+  (finalClientOrigins[0] ? `${finalClientOrigins[0]}/api/wallet/mpesa-callback` : '');
 
-// Validate M-Pesa config if enabled
-if (MPESA_ENABLED && IS_PRODUCTION) {
-  if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET) {
-    console.warn('⚠️ WARNING: MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET not configured. M-Pesa will be disabled.');
-  }
-  if (!MPESA_SHORT_CODE) {
-    console.warn('⚠️ WARNING: MPESA_SHORT_CODE not configured. M-Pesa will be disabled.');
+// Validate M-Pesa config
+if (MPESA_ENABLED) {
+  const missingMpesaConfig = [];
+  if (!MPESA_CONSUMER_KEY) missingMpesaConfig.push('MPESA_CONSUMER_KEY');
+  if (!MPESA_CONSUMER_SECRET) missingMpesaConfig.push('MPESA_CONSUMER_SECRET');
+  if (!MPESA_SHORT_CODE) missingMpesaConfig.push('MPESA_SHORT_CODE');
+  if (!MPESA_PASSKEY) missingMpesaConfig.push('MPESA_PASSKEY');
+  
+  if (missingMpesaConfig.length > 0) {
+    if (IS_PRODUCTION) {
+      console.warn(`⚠️ WARNING: M-Pesa enabled but missing config: ${missingMpesaConfig.join(', ')}`);
+    }
   }
 }
 
@@ -239,7 +256,7 @@ const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID || '';
 const PAYPAL_MIN_AMOUNT = parseInteger(process.env.PAYPAL_MIN_AMOUNT, 1, { min: 1, max: 100 });
 const PAYPAL_MAX_AMOUNT = parseInteger(process.env.PAYPAL_MAX_AMOUNT, 10000, { min: 100, max: 50000 });
 
-if (PAYPAL_ENABLED && IS_PRODUCTION && (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET)) {
+if (PAYPAL_ENABLED && (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET)) {
   console.warn('⚠️ WARNING: PayPal credentials not configured. PayPal payments will be unavailable.');
 }
 
@@ -260,20 +277,15 @@ const WIRE_IBAN = process.env.WIRE_IBAN || '';
 const WIRE_BANK_COUNTRY = process.env.WIRE_BANK_COUNTRY || 'USA';
 const WIRE_CURRENCY = process.env.WIRE_CURRENCY || 'USD';
 
-if (WIRE_ENABLED && IS_PRODUCTION) {
-  if (!WIRE_ACCOUNT_NUMBER) {
-    console.warn('⚠️ WARNING: WIRE_ACCOUNT_NUMBER not configured. Wire transfers will be unavailable.');
-  }
-  if (!WIRE_SWIFT_CODE) {
-    console.warn('⚠️ WARNING: WIRE_SWIFT_CODE not configured. International wire transfers may fail.');
-  }
+if (WIRE_ENABLED && (!WIRE_ACCOUNT_NUMBER || !WIRE_SWIFT_CODE)) {
+  console.warn('⚠️ WARNING: Wire transfer configuration incomplete. Wire transfers will be unavailable.');
 }
 
 // ============================================
 // Email Configuration
 // ============================================
 
-const EMAIL_ENABLED = parseBoolean(process.env.EMAIL_ENABLED, true);
+const EMAIL_ENABLED = parseBoolean(process.env.EMAIL_ENABLED, !IS_TEST);
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = parseInteger(process.env.SMTP_PORT, 587, { min: 1, max: 65535 });
 const SMTP_USER = process.env.SMTP_USER || '';
@@ -282,17 +294,21 @@ const SMTP_SECURE = parseBoolean(process.env.SMTP_SECURE, SMTP_PORT === 465);
 const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@pebeto.com';
 const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'support@pebeto.com';
 
-if (EMAIL_ENABLED && IS_PRODUCTION && (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD)) {
+if (EMAIL_ENABLED && (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD)) {
   console.warn('⚠️ WARNING: Email configuration incomplete. Email notifications will not work.');
 }
 
 // ============================================
-// Redis Configuration
+// Redis Configuration (Optional)
 // ============================================
 
 const REDIS_ENABLED = parseBoolean(process.env.REDIS_ENABLED, false);
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
+
+if (REDIS_ENABLED && !REDIS_URL) {
+  console.warn('⚠️ WARNING: Redis enabled but REDIS_URL not set');
+}
 
 // ============================================
 // File Upload Configuration
@@ -366,7 +382,7 @@ const config = {
   exchangeRateApiUrl: EXCHANGE_RATE_API_URL,
   exchangeRateCacheTtl: EXCHANGE_RATE_CACHE_TTL,
   
-  // M-Pesa (Kenya)
+  // M-Pesa
   mpesa: {
     enabled: MPESA_ENABLED,
     environment: MPESA_ENVIRONMENT,
@@ -382,7 +398,7 @@ const config = {
     callbackUrl: MPESA_CALLBACK_URL,
   },
   
-  // PayPal (Global)
+  // PayPal
   paypal: {
     enabled: PAYPAL_ENABLED,
     environment: PAYPAL_ENVIRONMENT,
@@ -394,7 +410,7 @@ const config = {
     maxAmount: PAYPAL_MAX_AMOUNT,
   },
   
-  // Wire Transfer (International)
+  // Wire Transfer
   wire: {
     enabled: WIRE_ENABLED,
     minAmount: WIRE_MIN_AMOUNT,
@@ -446,54 +462,56 @@ const config = {
 };
 
 // ============================================
-// Direct Access Properties (Backward Compatibility)
+// Backward Compatibility Properties
 // ============================================
 
 // Add direct references to M-Pesa config for services that expect them
-config.MPESA_CONSUMER_KEY = config.mpesa.consumerKey;
-config.MPESA_CONSUMER_SECRET = config.mpesa.consumerSecret;
-config.MPESA_SHORT_CODE = config.mpesa.shortCode;
-config.MPESA_PASSKEY = config.mpesa.passkey;
-config.MPESA_API_URL = config.mpesa.apiUrl;
-config.MPESA_CALLBACK_URL = config.mpesa.callbackUrl;
-config.MPESA_INITIATOR_NAME = config.mpesa.initiatorName;
-config.MPESA_PASSWORD = config.mpesa.password;
-config.MPESA_ENVIRONMENT = config.mpesa.environment;
-
-// Add direct references to PayPal config
-config.PAYPAL_CLIENT_ID = config.paypal.clientId;
-config.PAYPAL_CLIENT_SECRET = config.paypal.clientSecret;
-config.PAYPAL_API_URL = config.paypal.apiUrl;
-
-// Add direct references to Wire config
-config.WIRE_ACCOUNT_NUMBER = config.wire.accountNumber;
-config.WIRE_SWIFT_CODE = config.wire.swiftCode;
+Object.assign(config, {
+  MPESA_CONSUMER_KEY: config.mpesa.consumerKey,
+  MPESA_CONSUMER_SECRET: config.mpesa.consumerSecret,
+  MPESA_SHORT_CODE: config.mpesa.shortCode,
+  MPESA_PASSKEY: config.mpesa.passkey,
+  MPESA_API_URL: config.mpesa.apiUrl,
+  MPESA_CALLBACK_URL: config.mpesa.callbackUrl,
+  MPESA_INITIATOR_NAME: config.mpesa.initiatorName,
+  MPESA_PASSWORD: config.mpesa.password,
+  MPESA_ENVIRONMENT: config.mpesa.environment,
+  MPESA_ENABLED: config.mpesa.enabled,
+  
+  PAYPAL_CLIENT_ID: config.paypal.clientId,
+  PAYPAL_CLIENT_SECRET: config.paypal.clientSecret,
+  PAYPAL_API_URL: config.paypal.apiUrl,
+  
+  WIRE_ACCOUNT_NUMBER: config.wire.accountNumber,
+  WIRE_SWIFT_CODE: config.wire.swiftCode,
+});
 
 // ============================================
-// Sanitized Config for Logging (Hides Secrets)
+// Sanitized Config for Logging
 // ============================================
 
 const configForLogging = {
   ...config,
-  jwtSecret: sanitizeForLog(config.jwtSecret),
+  jwtSecret: JWT_SECRET ? sanitizeForLog(JWT_SECRET) : '***',
+  mongoUri: MONGO_URI ? sanitizeForLog(MONGO_URI, 10, 10) : '***',
   mpesa: {
     ...config.mpesa,
-    consumerKey: config.mpesa.consumerKey ? sanitizeForLog(config.mpesa.consumerKey) : undefined,
+    consumerKey: config.mpesa.consumerKey ? sanitizeForLog(config.mpesa.consumerKey) : '***',
     consumerSecret: config.mpesa.consumerSecret ? '***' : undefined,
     password: config.mpesa.password ? '***' : undefined,
     passkey: config.mpesa.passkey ? '***' : undefined,
   },
   paypal: {
     ...config.paypal,
-    clientId: config.paypal.clientId ? sanitizeForLog(config.paypal.clientId) : undefined,
+    clientId: config.paypal.clientId ? sanitizeForLog(config.paypal.clientId) : '***',
     clientSecret: config.paypal.clientSecret ? '***' : undefined,
   },
   wire: {
     ...config.wire,
-    accountNumber: config.wire.accountNumber ? sanitizeForLog(config.wire.accountNumber) : undefined,
-    routingNumber: config.wire.routingNumber ? sanitizeForLog(config.wire.routingNumber) : undefined,
-    swiftCode: config.wire.swiftCode ? sanitizeForLog(config.wire.swiftCode) : undefined,
-    iban: config.wire.iban ? sanitizeForLog(config.wire.iban) : undefined,
+    accountNumber: config.wire.accountNumber ? sanitizeForLog(config.wire.accountNumber) : '***',
+    routingNumber: config.wire.routingNumber ? sanitizeForLog(config.wire.routingNumber) : '***',
+    swiftCode: config.wire.swiftCode ? sanitizeForLog(config.wire.swiftCode) : '***',
+    iban: config.wire.iban ? sanitizeForLog(config.wire.iban) : '***',
   },
   email: {
     ...config.email,
@@ -506,31 +524,31 @@ const configForLogging = {
 };
 
 // ============================================
-// Validation Summary (Log on Startup)
+// Validation Summary Function
 // ============================================
 
 function logConfigSummary() {
-  const missingVars = [];
+  console.log('\n📋 Configuration Summary:');
+  console.log('═'.repeat(50));
+  console.log(`🌍 Environment: ${NODE_ENV}`);
+  console.log(`🚀 Server: http://${HOST}:${PORT}`);
+  console.log(`💾 MongoDB: ${MONGO_URI ? '✅ Configured' : '❌ Missing'}`);
+  console.log(`🔐 JWT Secret: ${JWT_SECRET && JWT_SECRET.length >= 32 ? '✅ Strong' : JWT_SECRET ? '⚠️ Weak' : '❌ Missing'}`);
+  console.log(`🌐 CORS Origins: ${finalClientOrigins.length > 0 ? finalClientOrigins.join(', ') : '⚠️ None set'}`);
   
-  if (!MONGO_URI && !process.env.MONGO_URI) missingVars.push('MONGO_URI');
-  if (!JWT_SECRET) missingVars.push('JWT_SECRET');
+  console.log(`\n💳 Payment Gateways:`);
+  console.log(`   M-Pesa (Kenya): ${MPESA_ENABLED && MPESA_CONSUMER_KEY ? '✅ Enabled' : '❌ Disabled/Incomplete'}`);
+  console.log(`   PayPal (Global): ${PAYPAL_ENABLED && PAYPAL_CLIENT_ID ? '✅ Enabled' : '❌ Disabled/Incomplete'}`);
+  console.log(`   Wire Transfer: ${WIRE_ENABLED && WIRE_ACCOUNT_NUMBER ? '✅ Enabled' : '❌ Disabled/Incomplete'}`);
   
-  if (missingVars.length > 0 && IS_PRODUCTION) {
-    console.error(`❌ Missing required environment variables: ${missingVars.join(', ')}`);
-  }
+  console.log(`\n📧 Email Service: ${EMAIL_ENABLED && SMTP_HOST ? '✅ Configured' : '❌ Disabled'}`);
+  console.log(`🗄️ Redis Cache: ${REDIS_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
   
-  console.log('📋 Configuration loaded:');
-  console.log(`   Environment: ${NODE_ENV}`);
-  console.log(`   Port: ${PORT}`);
-  console.log(`   MongoDB: ${MONGO_URI ? '✅ Configured' : '⚠️ Using hardcoded fallback'}`);
-  console.log(`   JWT Secret: ${JWT_SECRET ? '✅ Configured' : '❌ MISSING'}`);
-  console.log(`   CORS Origins: ${finalClientOrigins.length > 0 ? finalClientOrigins.join(', ') : 'None (allow all)'}`);
-  console.log(`   M-Pesa: ${MPESA_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
-  console.log(`   PayPal: ${PAYPAL_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
-  console.log(`   Wire Transfer: ${WIRE_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
-  console.log(`   Email: ${EMAIL_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
-  console.log(`   Redis: ${REDIS_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
-  console.log(`   Features: Community=${FEATURES.COMMUNITY_ENABLED}, Withdrawals=${FEATURES.WITHDRAWALS_ENABLED}, Tips=${FEATURES.TIPS_ENABLED}`);
+  console.log(`\n🎯 Feature Flags:`);
+  Object.entries(FEATURES).forEach(([key, value]) => {
+    console.log(`   ${key}: ${value ? '✅' : '❌'}`);
+  });
+  console.log('═'.repeat(50) + '\n');
 }
 
 // ============================================
@@ -538,7 +556,10 @@ function logConfigSummary() {
 // ============================================
 
 module.exports = {
+  // Main config object
   ...config,
+  
+  // Utility exports
   configForLogging,
   logConfigSummary,
   sanitizeForLog,
@@ -546,4 +567,13 @@ module.exports = {
   parseInteger,
   parseArray,
   requireEnv,
+  
+  // Direct exports of critical config (for convenience)
+  IS_PRODUCTION,
+  IS_DEVELOPMENT,
+  IS_TEST,
+  PORT,
+  HOST,
+  MONGO_URI,
+  JWT_SECRET,
 };
