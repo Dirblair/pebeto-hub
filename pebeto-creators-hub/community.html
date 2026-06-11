@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow-x: hidden; }
+    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #fff; overflow-x: hidden; }
     .header {
       position: fixed; top: 0; left: 0; right: 0;
       background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
@@ -22,8 +22,6 @@
     }
     .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; }
     .nav-icons { display: flex; gap: 20px; align-items: center; }
-    .nav-icons i { font-size: 24px; cursor: pointer; color: #b8a99a; }
-    .nav-icons i:hover { color: #ffaa77; }
     .dashboard-btn {
       background: rgba(255,140,66,0.15); border: 1px solid #ff8c42;
       padding: 8px 16px; border-radius: 40px; color: #ffaa77;
@@ -37,58 +35,192 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; font-weight: bold; background-size: cover;
     }
-    .feed-container { margin-top: 70px; height: calc(100vh - 70px); overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-    .feed-container::-webkit-scrollbar { display: none; }
-    .video-post { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
-    .video-post video { width: 100%; height: 100%; object-fit: contain; }
-    .post-overlay { position: absolute; bottom: 100px; left: 16px; right: 80px; z-index: 10; }
-    .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-    .author-avatar {
-      width: 48px; height: 48px; border-radius: 50%;
+    .feed-container { 
+      margin-top: 70px; 
+      padding: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .creator-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,140,66,0.2);
+      border-radius: 24px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .creator-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,140,66,0.4);
+    }
+    .creator-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .creator-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
-      display: flex; align-items: center; justify-content: center; font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
       background-size: cover;
     }
-    .author-info h4 { font-size: 16px; margin-bottom: 2px; }
-    .author-info h4 span { font-weight: normal; color: #a08070; font-size: 12px; }
-    .author-info p { font-size: 12px; color: #a08070; }
-    .post-caption { font-size: 14px; margin-top: 8px; max-width: 80%; }
-    .right-actions { position: absolute; right: 12px; bottom: 120px; display: flex; flex-direction: column; gap: 24px; z-index: 10; }
-    .action-btn { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-    .action-btn i { font-size: 28px; color: white; }
-    .action-btn span { font-size: 12px; margin-top: 4px; }
-    .trending-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(0,0,0,0.9); padding: 12px 20px;
-      display: flex; gap: 16px; overflow-x: auto; z-index: 99;
-      border-top: 1px solid rgba(255,140,66,0.2);
+    .creator-info h3 {
+      font-size: 18px;
+      margin-bottom: 4px;
     }
-    .trending-sound-item {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.1); padding: 6px 12px;
-      border-radius: 40px; cursor: pointer; white-space: nowrap;
+    .creator-info p {
+      font-size: 13px;
+      color: #a08070;
+    }
+    .creator-niche {
+      display: inline-block;
+      background: rgba(255,140,66,0.15);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+    .video-embed-container {
+      padding: 20px;
+      background: #000;
+    }
+    .tiktok-embed-container {
+      min-height: 600px;
+      background: #000;
+    }
+    .youtube-embed-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+    }
+    .youtube-embed-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .creator-actions {
+      display: flex;
+      gap: 15px;
+      padding: 15px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .tip-btn {
+      background: rgba(255,140,66,0.2);
+      border: 1px solid #ff8c42;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tip-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    .profile-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .loading-spinner {
+      text-align: center;
+      padding: 50px;
+      color: #ff8c42;
+    }
+    .no-videos {
+      text-align: center;
+      padding: 50px;
+      color: #a08070;
+      background: rgba(255,255,255,0.03);
+      border-radius: 24px;
     }
     .modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95); backdrop-filter: blur(8px);
-      z-index: 1000; justify-content: center; align-items: center;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
     }
     .modal-content {
-      background: #1a1510; border-radius: 28px; padding: 30px;
-      max-width: 500px; width: 90%; border: 1px solid rgba(255,140,66,0.3);
+      background: #1a1510;
+      border-radius: 28px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid rgba(255,140,66,0.3);
     }
-    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select, .modal-content textarea {
-      width: 100%; background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,140,66,0.3); padding: 12px;
-      border-radius: 30px; margin-bottom: 15px; color: white;
+    .modal-content h3 {
+      margin-bottom: 20px;
+      color: #ff8c42;
     }
-    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
-    .save-btn { background: #ff8c42; color: white; }
-    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
-    @media (max-width: 768px) { .search-bar { display: none; } }
+    .modal-content input, .modal-content select {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 12px;
+      border-radius: 30px;
+      margin-bottom: 15px;
+      color: white;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+    }
+    .save-btn {
+      background: #ff8c42;
+      color: white;
+    }
+    .cancel-btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .search-bar { display: none; }
+      .feed-container { padding: 15px; }
+    }
   </style>
+  <!-- TikTok Embed Script (loads once globally) -->
+  <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
 
@@ -96,194 +228,355 @@
   <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
   <div class="search-bar">
     <i class="ri-search-line"></i>
-    <input type="text" id="global-search" placeholder="Search users or sounds..." onkeyup="searchGlobal()">
+    <input type="text" id="global-search" placeholder="Search creators..." onkeyup="searchGlobal()">
   </div>
   <div class="nav-icons">
     <button class="dashboard-btn" onclick="goToDashboard()">
       <i class="ri-dashboard-line"></i> Dashboard
     </button>
-    <i class="ri-camera-add-line" onclick="openUploadModal()" title="Upload"></i>
-    <i class="ri-live-line" onclick="startLive()" title="Go Live"></i>
     <div class="avatar" id="nav-avatar" onclick="goToDashboard()">U</div>
   </div>
 </div>
 
-<div id="feed-container" class="feed-container"></div>
-<div class="trending-bar" id="trending-bar"></div>
-
-<!-- Upload Modal -->
-<div id="upload-modal" class="modal">
-  <div class="modal-content">
-    <h3>📤 Upload Video</h3>
-    <input type="text" id="video-caption" placeholder="Caption">
-    <select id="video-sound">
-      <option value="">Original Sound</option>
-      <option value="trending1">🔥 Trending: Summer Vibes</option>
-      <option value="trending2">🎵 Trending: Dance Challenge</option>
-      <option value="trending3">💃 Trending: Viral Beat</option>
-    </select>
-    <input type="file" id="video-file" accept="video/*">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="uploadVideo()">Post</button>
-      <button class="cancel-btn" onclick="closeModal('upload-modal')">Cancel</button>
-    </div>
-  </div>
+<div id="feed-container" class="feed-container">
+  <div class="loading-spinner">Loading creators and their videos...</div>
 </div>
 
-<!-- Live Modal -->
-<div id="live-modal" class="modal">
+<!-- Tip Modal -->
+<div id="tip-modal" class="modal">
   <div class="modal-content">
-    <h3>🔴 Go Live</h3>
-    <p>Live streaming coming soon! This will use WebRTC for real-time broadcasting.</p>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('live-modal')">Close</button></div>
+    <h3>💝 Send Tip</h3>
+    <p id="tip-creator-name">Creator: Loading...</p>
+    <input type="number" id="tip-amount" placeholder="Amount in USD" min="1">
+    <select id="tip-currency">
+      <option value="USD">USD ($)</option>
+      <option value="KES">KES (KSh)</option>
+      <option value="EUR">EUR (€)</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendTip()">Send Tip</button>
+      <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
+    </div>
   </div>
 </div>
 
 <script>
   let currentUser = null;
-  let posts = [];
-  
-  const mockPosts = [
-    { id: "1", userId: "user1", username: "@djnova", displayName: "DJ Nova", role: "creator", niche: "Music", avatar: "", caption: "New track dropping soon! 🔥", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", likes: 1234, comments: [], sound: "Summer Vibes", isLive: false },
-    { id: "2", userId: "user2", username: "@sarahcreates", displayName: "Sarah Creates", role: "creator", niche: "Art", avatar: "", caption: "Speed painting of my latest piece 🎨", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4", likes: 567, comments: [], sound: "Original Sound", isLive: true },
-    { id: "3", userId: "user3", username: "@pebeto", displayName: "Pebeto", role: "business", niche: "Platform", avatar: "", caption: "Join the creator economy! #Pebeto", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_3mb.mp4", likes: 8901, comments: [], sound: "Trending: Dance Challenge", isLive: false }
-  ];
-  
-  const trendingSounds = [
-    { name: "Summer Vibes", uses: 1234, icon: "🔥" },
-    { name: "Dance Challenge", uses: 892, icon: "💃" },
-    { name: "Viral Beat", uses: 756, icon: "🎵" }
-  ];
+  let allCreators = [];
+  let currentTipCreatorId = null;
+  let currentTipCreatorName = '';
 
-  function formatNumber(num) {
-    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
-    return num.toString();
+  async function fetchJSON(url, options = {}) {
+    const token = localStorage.getItem('pebeto_token');
+    const res = await fetch(url, { 
+      ...options, 
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...options.headers 
+      } 
+    });
+    return res.json();
+  }
+
+  function closeModal(id) { 
+    document.getElementById(id).style.display = 'none'; 
   }
   
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  function goToDashboard() { window.location.href = '/signup.html'; }
-  
+  function goToDashboard() { 
+    const token = localStorage.getItem('pebeto_token');
+    if (token) window.location.href = '/dashboard.html';
+    else window.location.href = '/signup.html';
+  }
+
+  // Load all creators and their social links
+  async function loadCreators() {
+    try {
+      // First, try to get creators from your API
+      const response = await fetch('/api/creators');
+      const data = await response.json();
+      
+      if (data.success && data.creators && data.creators.length > 0) {
+        allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
+        renderFeed();
+      } else {
+        // If no creators in DB, show sample data for demonstration
+        showSampleCreators();
+      }
+    } catch (error) {
+      console.error('Error loading creators:', error);
+      // Show sample data if API fails
+      showSampleCreators();
+    }
+  }
+
+  // Show sample creators for demonstration
+  function showSampleCreators() {
+    allCreators = [
+      {
+        _id: 'sample1',
+        email: 'creator1@example.com',
+        profile: {
+          stageName: 'DJ Nova',
+          niche: 'Music',
+          avatarUrl: ''
+        },
+        socialLinks: {
+          tiktok: 'https://www.tiktok.com/@tiktok',
+          youtube: ''
+        }
+      },
+      {
+        _id: 'sample2',
+        email: 'creator2@example.com',
+        profile: {
+          stageName: 'Sarah Creates',
+          niche: 'Art',
+          avatarUrl: ''
+        },
+        socialLinks: {
+          tiktok: '',
+          youtube: 'https://www.youtube.com/@YouTube'
+        }
+      },
+      {
+        _id: 'sample3',
+        email: 'creator3@example.com',
+        profile: {
+          stageName: 'Mike Fitness',
+          niche: 'Fitness',
+          avatarUrl: ''
+        },
+        socialLinks: {
+          tiktok: 'https://www.tiktok.com/@tiktok',
+          youtube: ''
+        }
+      }
+    ];
+    renderFeed();
+  }
+
+  // Render the feed with TikTok and YouTube embeds
+  function renderFeed() {
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    
+    if (allCreators.length === 0) {
+      container.innerHTML = '<div class="no-videos">No creators have connected their social media yet.<br><br>🎨 <strong>Are you a creator?</strong><br>Go to your dashboard and connect your TikTok or YouTube!</div>';
+      return;
+    }
+    
+    allCreators.forEach(creator => {
+      const card = createCreatorCard(creator);
+      container.appendChild(card);
+    });
+
+    // Re-trigger TikTok embed script for new elements
+    if (window.tiktokEmbedLoad) {
+      window.tiktokEmbedLoad();
+    }
+  }
+
+  // Create a card for each creator
+  function createCreatorCard(creator) {
+    const card = document.createElement('div');
+    card.className = 'creator-card';
+    card.dataset.creatorId = creator._id;
+    
+    const initial = (creator.profile?.stageName?.[0] || creator.email?.[0] || 'C').toUpperCase();
+    const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
+    const username = creator.profile?.stageName ? `@${creator.profile.stageName.toLowerCase().replace(/\s/g, '')}` : '@creator';
+    const niche = creator.profile?.niche || 'Creator';
+    
+    // Generate embed HTML based on social links
+    let embedHtml = '';
+    
+    if (creator.socialLinks?.tiktok) {
+      const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
+      const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
+      embedHtml = `
+        <div class="video-embed-container tiktok-embed-container">
+          <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;">
+            <section>
+              <a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a>
+            </section>
+          </blockquote>
+        </div>
+      `;
+    } else if (creator.socialLinks?.youtube) {
+      // Extract channel ID or handle for YouTube embed
+      let youtubeEmbedUrl = '';
+      if (creator.socialLinks.youtube.includes('/@')) {
+        const handle = creator.socialLinks.youtube.split('/@')[1];
+        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${handle}`;
+      } else {
+        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
+      }
+      embedHtml = `
+        <div class="video-embed-container">
+          <div class="youtube-embed-container">
+            <iframe 
+              src="${youtubeEmbedUrl}"
+              frameborder="0" 
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+      `;
+    } else {
+      embedHtml = `
+        <div class="video-embed-container">
+          <p style="color: #a08070; text-align: center; padding: 40px;">
+            No videos connected yet. Check back soon!
+          </p>
+        </div>
+      `;
+    }
+    
+    card.innerHTML = `
+      <div class="creator-header">
+        <div class="creator-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">
+          ${!creator.profile?.avatarUrl ? initial : ''}
+        </div>
+        <div class="creator-info">
+          <h3>${escapeHtml(displayName)} <span style="font-size: 12px; color: #a08070;">${escapeHtml(username)}</span></h3>
+          <p>🎨 Creator</p>
+          <span class="creator-niche">${escapeHtml(niche)}</span>
+        </div>
+      </div>
+      ${embedHtml}
+      <div class="creator-actions">
+        <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-coin-line"></i> Send Tip 💝
+        </button>
+        <button class="profile-btn" onclick="viewCreatorProfile('${creator._id}')">
+          <i class="ri-user-line"></i> View Profile
+        </button>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  // Open tip modal
+  function openTipModal(creatorId, creatorName) {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please log in to send tips');
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    currentTipCreatorId = creatorId;
+    currentTipCreatorName = creatorName;
+    document.getElementById('tip-creator-name').innerHTML = `Sending tip to: <strong>${escapeHtml(creatorName)}</strong>`;
+    document.getElementById('tip-modal').style.display = 'flex';
+  }
+
+  // Send tip
+  async function sendTip() {
+    const amount = parseFloat(document.getElementById('tip-amount').value);
+    const currency = document.getElementById('tip-currency').value;
+    
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please log in to send tips');
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/wallet/tip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          creatorId: currentTipCreatorId,
+          amount: amount,
+          currency: currency
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`💝 Tip of ${currency} ${amount} sent successfully!`);
+        closeModal('tip-modal');
+        document.getElementById('tip-amount').value = '';
+      } else {
+        alert('Failed to send tip: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error sending tip:', error);
+      alert('Network error. Please try again.');
+    }
+  }
+
+  // View profile
+  function viewCreatorProfile(creatorId) {
+    window.location.href = `/creator-profile.html?id=${creatorId}`;
+  }
+
+  // Search
+  function searchGlobal() {
+    const query = document.getElementById('global-search').value.toLowerCase();
+    if (!query) {
+      renderFeed();
+      return;
+    }
+    
+    const filtered = allCreators.filter(c => {
+      const displayName = c.profile?.stageName || c.email?.split('@')[0] || '';
+      const niche = c.profile?.niche || '';
+      return displayName.toLowerCase().includes(query) || niche.toLowerCase().includes(query);
+    });
+    
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="no-videos">No creators found matching your search.</div>';
+    } else {
+      filtered.forEach(creator => {
+        container.appendChild(createCreatorCard(creator));
+      });
+    }
+  }
+
+  // Load user data
   function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) {
       currentUser = JSON.parse(userStr);
       const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
       document.getElementById('nav-avatar').innerHTML = initial;
-    }
-    loadFeed();
-    loadTrendingSounds();
-  }
-  
-  function loadFeed() {
-    const container = document.getElementById('feed-container');
-    container.innerHTML = '';
-    mockPosts.forEach(post => {
-      const postEl = createPostElement(post);
-      container.appendChild(postEl);
-    });
-  }
-  
-  function createPostElement(post) {
-    const article = document.createElement('article');
-    article.className = 'video-post';
-    article.innerHTML = `
-      ${post.isLive ? `<div class="live-badge" style="position:absolute; top:20px; left:16px; background:#ff0050; padding:4px 12px; border-radius:20px; font-size:12px; display:flex; align-items:center; gap:6px;"><span class="live-dot" style="width:8px; height:8px; background:white; border-radius:50%;"></span> LIVE</div>` : ''}
-      <video class="post-video" src="${post.videoUrl}" loop muted playsinline></video>
-      <div class="post-overlay">
-        <div class="post-author">
-          <div class="author-avatar">${post.displayName[0]}</div>
-          <div class="author-info">
-            <h4>${escapeHtml(post.displayName)} <span>${escapeHtml(post.username)}</span> • ${post.role === 'creator' ? '🎨 Creator' : '🏢 Brand'}</h4>
-            <p>${post.niche}</p>
-          </div>
-        </div>
-        <div class="post-caption">${escapeHtml(post.caption)}</div>
-      </div>
-      <div class="right-actions">
-        <div class="action-btn" onclick="toggleLike(this)">
-          <i class="ri-heart-line"></i>
-          <span>${formatNumber(post.likes)}</span>
-        </div>
-        <div class="action-btn" onclick="alert('Comments coming soon')">
-          <i class="ri-chat-3-fill"></i>
-          <span>${post.comments.length}</span>
-        </div>
-        <div class="action-btn" onclick="alert('Share feature coming soon')">
-          <i class="ri-share-forward-line"></i>
-          <span>Share</span>
-        </div>
-      </div>
-    `;
-    
-    const video = article.querySelector('video');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) video.play().catch(e => {});
-        else video.pause();
-      });
-    }, { threshold: 0.5 });
-    observer.observe(article);
-    return article;
-  }
-  
-  function toggleLike(element) {
-    const icon = element.querySelector('i');
-    const countSpan = element.querySelector('span');
-    let count = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
-    if (icon.classList.contains('ri-heart-line')) {
-      icon.classList.remove('ri-heart-line');
-      icon.classList.add('ri-heart-fill');
-      icon.style.color = '#ff0050';
-      countSpan.innerText = formatNumber(count + 1);
-    } else {
-      icon.classList.remove('ri-heart-fill');
-      icon.classList.add('ri-heart-line');
-      icon.style.color = 'white';
-      countSpan.innerText = formatNumber(count - 1);
+      if (currentUser.profile?.avatarUrl) {
+        document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
+        document.getElementById('nav-avatar').innerHTML = '';
+      }
     }
   }
-  
-  function loadTrendingSounds() {
-    const bar = document.getElementById('trending-bar');
-    bar.innerHTML = trendingSounds.map(s => `
-      <div class="trending-sound-item" onclick="useSound('${s.name}')">
-        <i class="ri-fire-line"></i> ${s.name} • ${formatNumber(s.uses)} uses
-      </div>
-    `).join('');
+
+  function escapeHtml(str) { 
+    if (!str) return ''; 
+    return str.replace(/[&<>]/g, function(m) { 
+      if (m === '&') return '&amp;'; 
+      if (m === '<') return '&lt;'; 
+      if (m === '>') return '&gt;'; 
+      return m; 
+    }); 
   }
-  
-  function useSound(soundName) {
-    alert(`Using sound: ${soundName}`);
-    openUploadModal();
-  }
-  
-  function openUploadModal() { document.getElementById('upload-modal').style.display = 'flex'; }
-  function startLive() { document.getElementById('live-modal').style.display = 'flex'; }
-  
-  async function uploadVideo() {
-    const caption = document.getElementById('video-caption').value;
-    const fileInput = document.getElementById('video-file');
-    if (!fileInput.files.length) { alert('Select a video file'); return; }
-    alert(`Video uploaded! Caption: "${caption}"\n\nIn production, this would upload to server.`);
-    closeModal('upload-modal');
-    document.getElementById('video-caption').value = '';
-    document.getElementById('video-file').value = '';
-  }
-  
-  function searchGlobal() {
-    const query = document.getElementById('global-search').value.toLowerCase();
-    if (!query) { loadFeed(); return; }
-    const filtered = mockPosts.filter(p => p.displayName.toLowerCase().includes(query) || p.username.toLowerCase().includes(query));
-    const container = document.getElementById('feed-container');
-    container.innerHTML = '';
-    filtered.forEach(post => container.appendChild(createPostElement(post)));
-    if (filtered.length === 0) container.innerHTML = '<div style="text-align:center; padding:50px;">No results found</div>';
-  }
-  
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
-  
+
+  // Initialize
   loadUserData();
+  loadCreators();
 </script>
 </body>
 </html>
