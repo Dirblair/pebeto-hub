@@ -3,12 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pebeto - Redirecting...</title>
+  <title>Pebeto - Creator's Hub</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1208 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+    }
+    .logo {
+      font-size: 48px;
+      font-weight: 800;
+      color: #ff8c42;
+      margin-bottom: 20px;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255,140,66,0.2);
+      border-top-color: #ff8c42;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .message {
+      color: #a08070;
+      font-size: 14px;
+    }
+    .link {
+      color: #ffaa77;
+      text-decoration: none;
+      margin-top: 20px;
+      display: inline-block;
+    }
+    .link:hover { text-decoration: underline; }
+  </style>
   <script>
-    window.location.href = '/signup.html';
+    // Redirect to community page after 2 seconds (shows loading animation)
+    setTimeout(() => {
+      window.location.href = '/community.html';
+    }, 1500);
   </script>
 </head>
 <body>
-  <p>Redirecting to <a href="/signup.html">Pebeto Creator's Hub</a>...</p>
+  <div class="container">
+    <div class="logo">Pebeto</div>
+    <div class="spinner"></div>
+    <p class="message">Loading the creator community...</p>
+    <a href="/community.html" class="link">Click here if not redirected</a>
+  </div>
 </body>
 </html>
