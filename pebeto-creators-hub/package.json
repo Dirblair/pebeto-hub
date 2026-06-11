@@ -6,18 +6,37 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
+    "start:prod": "NODE_ENV=production node server/server.js",
     "build": "npm install",
-    "dev": "node --watch server/server.js",
-    "dev:debug": "node --inspect --watch server/server.js",
+    "dev": "NODE_ENV=development node --watch server/server.js",
+    "dev:debug": "NODE_ENV=development node --inspect --watch server/server.js",
     "seed": "node scripts/seed.js",
     "seed:dev": "node scripts/seed-dev.js",
+    "seed:prod": "NODE_ENV=production node scripts/seed.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --config jest.integration.config.js",
+    "lint": "eslint server/ --ext .js",
+    "lint:fix": "eslint server/ --ext .js --fix",
+    "format": "prettier --write \"server/**/*.js\"",
+    "check": "npm run lint && npm run test",
+    "clean": "rm -rf node_modules package-lock.json && npm install",
+    "env:check": "node scripts/check-env.js",
+    "db:health": "node scripts/db-health.js",
+    "logs": "pm2 logs pebeto-creators-hub",
+    "monit": "pm2 monit",
+    "restart": "pm2 restart pebeto-creators-hub",
+    "stop": "pm2 stop pebeto-creators-hub",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:delete": "pm2 delete ecosystem.config.js",
+    "pm2:logs": "pm2 logs pebeto-creators-hub"
   },
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": ">=18.x <=20.x",
+    "npm": ">=9.x <=10.x"
   },
   "keywords": [
     "fintech",
@@ -28,7 +47,9 @@
     "paypal",
     "wire-transfer",
     "escrow",
-    "payments"
+    "payments",
+    "kenya",
+    "africa"
   ],
   "author": "Pebeto Creator's Hub",
   "license": "ISC",
@@ -47,7 +68,8 @@
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
     "socket.io": "^4.8.0",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "winston": "^3.13.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
@@ -55,7 +77,8 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "pm2": "^5.3.1"
   },
   "jest": {
     "testEnvironment": "node",
@@ -64,12 +87,26 @@
       "server/**/*.js",
       "!server/server.js",
       "!server/config/db.js",
-      "!**/node_modules/**"
+      "!**/node_modules/**",
+      "!**/__tests__/**"
     ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    },
     "testMatch": [
-      "**/__tests__/**/*.js",
+      "**/__tests__/**/*.test.js",
       "**/?(*.)+(spec|test).js"
-    ]
+    ],
+    "setupFilesAfterEnv": [
+      "./server/__tests__/setup.js"
+    ],
+    "testTimeout": 10000,
+    "verbose": true
   },
   "eslintConfig": {
     "env": {
@@ -83,8 +120,14 @@
       "ecmaVersion": "latest"
     },
     "rules": {
-      "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-      "no-console": ["off"]
+      "no-unused-vars": ["error", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+      "no-console": ["off"],
+      "no-process-exit": ["off"],
+      "no-async-promise-executor": ["warn"],
+      "handle-callback-err": ["warn"]
     }
   },
   "prettier": {
@@ -94,6 +137,22 @@
     "trailingComma": "es5",
     "printWidth": 100,
     "bracketSpacing": true,
-    "arrowParens": "always"
+    "arrowParens": "always",
+    "endOfLine": "lf"
+  },
+  "nodemonConfig": {
+    "watch": ["server"],
+    "ext": "js,json",
+    "ignore": ["server/__tests__", "coverage"],
+    "delay": 1000,
+    "events": {
+      "restart": "echo '🔄 Server restarting...'"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint && npm run format",
+      "pre-push": "npm run test"
+    }
   }
 }
