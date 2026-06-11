@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pebeto - Join or Sign In</title>
+  <title>Pebeto - Sign In / Sign Up</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,8 +52,6 @@
     .alert-success { background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #aaffaa; }
     .footer { text-align: center; margin-top: 25px; color: #a08070; font-size: 13px; }
     .footer a { color: #ffaa77; text-decoration: none; }
-    .forgot-link { text-align: right; margin-top: -16px; margin-bottom: 20px; }
-    .forgot-link a { color: #ffaa77; font-size: 12px; }
     .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
     .sub-tab {
       flex: 1; padding: 10px; background: transparent;
@@ -61,15 +59,6 @@
       color: white; font-weight: 500; cursor: pointer; text-align: center; font-size: 14px;
     }
     .sub-tab.active { background: linear-gradient(135deg, #ff8c42, #e0662c); }
-    .debug-panel {
-      margin-top: 20px;
-      padding: 10px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 10px;
-      font-size: 11px;
-      color: #aaa;
-      word-break: break-all;
-    }
   </style>
 </head>
 <body>
@@ -84,28 +73,23 @@
 
     <div id="alert" class="alert" style="display: none;"></div>
 
-    <!-- SIGN IN -->
     <div id="signin-panel">
       <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
       <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Your password"></div>
-      <div class="forgot-link"><a href="#">Forgot password?</a></div>
-      <button id="btn-signin">Sign In</button>
+      <button id="btn-signin" style="width:100%; padding:14px; background:#ff8c42; border:none; border-radius:50px; color:white; font-weight:bold; cursor:pointer;">Sign In</button>
     </div>
 
-    <!-- SIGN UP -->
     <div id="signup-panel" class="hidden">
       <div class="sub-tabs">
         <div class="sub-tab active" id="signup-creator-tab">Creator</div>
         <div class="sub-tab" id="signup-brand-tab">Brand</div>
       </div>
-
       <div id="creator-fields">
         <div class="form-group"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
         <div class="form-group"><label>Niche</label><input type="text" id="signup-niche" placeholder="Music, Comedy, Fashion..."></div>
         <div class="form-group"><label>Password</label><input type="password" id="signup-password" placeholder="At least 8 characters"></div>
         <div class="form-group"><label>Confirm Password</label><input type="password" id="signup-confirm" placeholder="Confirm password"></div>
       </div>
-
       <div id="brand-fields" class="hidden">
         <div class="form-group"><label>Email</label><input type="email" id="brand-email" placeholder="you@company.com"></div>
         <div class="form-group"><label>Company Name</label><input type="text" id="brand-company" placeholder="Your business name"></div>
@@ -113,124 +97,55 @@
         <div class="form-group"><label>Password</label><input type="password" id="brand-password" placeholder="At least 8 characters"></div>
         <div class="form-group"><label>Confirm Password</label><input type="password" id="brand-confirm" placeholder="Confirm password"></div>
       </div>
-
-      <button id="btn-signup">Join as Creator</button>
+      <button id="btn-signup" style="width:100%; padding:14px; background:#ff8c42; border:none; border-radius:50px; color:white; font-weight:bold; cursor:pointer;">Join as Creator</button>
     </div>
 
-    <div class="footer"><a href="#" id="switch-to-signup">Don't have an account? Create one</a></div>
-    
-    <!-- Debug Panel - Shows what's in localStorage -->
-    <div class="debug-panel" id="debug-panel">
-      Loading...
-    </div>
+    <div class="footer">Already have an account? <a href="#" id="switch-to-signup">Sign In</a></div>
   </div>
 </div>
 
 <script>
-  // Display debug info
-  function updateDebugPanel() {
-    const token = localStorage.getItem('pebeto_token');
-    const userStr = localStorage.getItem('pebeto_user');
-    const panel = document.getElementById('debug-panel');
-    if (panel) {
-      panel.innerHTML = `
-        <strong>🔍 Debug Info:</strong><br>
-        Token exists: ${token ? '✅ Yes' : '❌ No'}<br>
-        User data: ${userStr || '❌ None'}<br>
-        ${userStr ? `Role: ${JSON.parse(userStr).role || 'undefined'}` : ''}
-      `;
-    }
-  }
-  updateDebugPanel();
-
-  const tabSignin = document.getElementById('tab-signin');
-  const tabSignup = document.getElementById('tab-signup');
-  const signinPanel = document.getElementById('signin-panel');
-  const signupPanel = document.getElementById('signup-panel');
-  const switchLink = document.getElementById('switch-to-signup');
-  const alertDiv = document.getElementById('alert');
-
   let signupRole = 'creator';
 
-  tabSignin.onclick = () => {
-    tabSignin.classList.add('active');
-    tabSignup.classList.remove('active');
-    signinPanel.classList.remove('hidden');
-    signupPanel.classList.add('hidden');
-    alertDiv.style.display = 'none';
+  document.getElementById('tab-signin').onclick = () => {
+    document.getElementById('tab-signin').classList.add('active');
+    document.getElementById('tab-signup').classList.remove('active');
+    document.getElementById('signin-panel').classList.remove('hidden');
+    document.getElementById('signup-panel').classList.add('hidden');
   };
-
-  tabSignup.onclick = () => {
-    tabSignup.classList.add('active');
-    tabSignin.classList.remove('active');
-    signupPanel.classList.remove('hidden');
-    signinPanel.classList.add('hidden');
-    alertDiv.style.display = 'none';
+  document.getElementById('tab-signup').onclick = () => {
+    document.getElementById('tab-signup').classList.add('active');
+    document.getElementById('tab-signin').classList.remove('active');
+    document.getElementById('signup-panel').classList.remove('hidden');
+    document.getElementById('signin-panel').classList.add('hidden');
   };
+  document.getElementById('switch-to-signup').onclick = (e) => { e.preventDefault(); document.getElementById('tab-signup').click(); };
 
-  switchLink.onclick = (e) => {
-    e.preventDefault();
-    tabSignup.click();
-  };
-
-  const signupCreatorTab = document.getElementById('signup-creator-tab');
-  const signupBrandTab = document.getElementById('signup-brand-tab');
-  const creatorFields = document.getElementById('creator-fields');
-  const brandFields = document.getElementById('brand-fields');
-  const signupBtn = document.getElementById('btn-signup');
-
-  signupCreatorTab.onclick = () => {
+  document.getElementById('signup-creator-tab').onclick = () => {
     signupRole = 'creator';
-    signupCreatorTab.classList.add('active');
-    signupBrandTab.classList.remove('active');
-    creatorFields.classList.remove('hidden');
-    brandFields.classList.add('hidden');
-    signupBtn.innerText = 'Join as Creator';
+    document.getElementById('signup-creator-tab').classList.add('active');
+    document.getElementById('signup-brand-tab').classList.remove('active');
+    document.getElementById('creator-fields').classList.remove('hidden');
+    document.getElementById('brand-fields').classList.add('hidden');
+    document.getElementById('btn-signup').innerText = 'Join as Creator';
   };
-
-  signupBrandTab.onclick = () => {
+  document.getElementById('signup-brand-tab').onclick = () => {
     signupRole = 'brand';
-    signupBrandTab.classList.add('active');
-    signupCreatorTab.classList.remove('active');
-    brandFields.classList.remove('hidden');
-    creatorFields.classList.add('hidden');
-    signupBtn.innerText = 'Join as Brand';
+    document.getElementById('signup-brand-tab').classList.add('active');
+    document.getElementById('signup-creator-tab').classList.remove('active');
+    document.getElementById('brand-fields').classList.remove('hidden');
+    document.getElementById('creator-fields').classList.add('hidden');
+    document.getElementById('btn-signup').innerText = 'Join as Brand';
   };
 
   function showAlert(msg, type) {
-    alertDiv.style.display = 'block';
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.innerHTML = msg;
-    setTimeout(() => alertDiv.style.display = 'none', 4000);
+    const div = document.getElementById('alert');
+    div.style.display = 'block';
+    div.className = `alert alert-${type}`;
+    div.innerHTML = msg;
+    setTimeout(() => div.style.display = 'none', 4000);
   }
 
-  function saveSession(token, user) {
-    localStorage.setItem('pebeto_token', token);
-    localStorage.setItem('pebeto_user', JSON.stringify(user));
-    updateDebugPanel();
-    console.log('✅ Session saved. Role:', user.role);
-  }
-
-  function redirectToDashboard(role) {
-    console.log('🔄 REDIRECT - Role received:', role);
-    updateDebugPanel();
-    
-    if (role === 'admin') {
-      console.log('Going to admin-dashboard.html');
-      window.location.href = '/admin-dashboard.html';
-    } else if (role === 'business') {
-      console.log('Going to business-dashboard.html');
-      window.location.href = '/business-dashboard.html';
-    } else if (role === 'creator') {
-      console.log('Going to creator-dashboard.html');
-      window.location.href = '/creator-dashboard.html';
-    } else {
-      console.log('⚠️ Unknown role, going to /');
-      window.location.href = '/';
-    }
-  }
-
-  // SIGN IN
   document.getElementById('btn-signin').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
@@ -240,20 +155,17 @@
     try {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const data = await res.json();
-      console.log('📡 Login response:', data);
       if (!res.ok) throw new Error(data.message || 'Invalid credentials');
-      saveSession(data.token, data.user);
+      localStorage.setItem('pebeto_token', data.token);
+      localStorage.setItem('pebeto_user', JSON.stringify(data.user));
       showAlert('Login successful!', 'success');
-      redirectToDashboard(data.user.role);
-    } catch (err) { 
-      console.error('Login error:', err);
-      showAlert(err.message, 'error'); 
-      btn.disabled = false; 
-      btn.innerText = 'Sign In'; 
-    }
+      if (data.user.role === 'creator') window.location.href = '/creator-dashboard.html';
+      else if (data.user.role === 'business') window.location.href = '/business-dashboard.html';
+      else if (data.user.role === 'admin') window.location.href = '/admin-dashboard.html';
+      else window.location.href = '/';
+    } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Sign In'; }
   };
 
-  // SIGN UP - Creator
   document.getElementById('btn-signup').onclick = async () => {
     if (signupRole === 'creator') {
       const email = document.getElementById('signup-email').value.trim();
@@ -273,16 +185,16 @@
         const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
         if (loginRes.ok) {
-          saveSession(loginData.token, loginData.user);
+          localStorage.setItem('pebeto_token', loginData.token);
+          localStorage.setItem('pebeto_user', JSON.stringify(loginData.user));
           showAlert('Account created!', 'success');
-          redirectToDashboard('creator');
+          window.location.href = '/creator-dashboard.html';
         } else {
           showAlert('Account created! Please sign in.', 'success');
-          tabSignin.click();
+          document.getElementById('tab-signin').click();
         }
       } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Creator'; }
     } else {
-      // BRAND SIGN UP
       const email = document.getElementById('brand-email').value.trim();
       const company = document.getElementById('brand-company').value.trim();
       const website = document.getElementById('brand-website').value.trim();
@@ -303,12 +215,13 @@
         const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const loginData = await loginRes.json();
         if (loginRes.ok) {
-          saveSession(loginData.token, loginData.user);
+          localStorage.setItem('pebeto_token', loginData.token);
+          localStorage.setItem('pebeto_user', JSON.stringify(loginData.user));
           showAlert('Account created!', 'success');
-          redirectToDashboard('business');
+          window.location.href = '/business-dashboard.html';
         } else {
           showAlert('Account created! Please sign in.', 'success');
-          tabSignin.click();
+          document.getElementById('tab-signin').click();
         }
       } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Brand'; }
     }
