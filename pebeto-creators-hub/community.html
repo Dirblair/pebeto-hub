@@ -177,7 +177,7 @@
       background: #1a1510;
       border-radius: 28px;
       padding: 30px;
-      max-width: 400px;
+      max-width: 450px;
       width: 90%;
       border: 1px solid rgba(255,140,66,0.3);
     }
@@ -214,6 +214,12 @@
       background: rgba(255,255,255,0.1);
       color: white;
     }
+    .payment-source-btn {
+      transition: all 0.2s ease;
+    }
+    .payment-source-btn:hover {
+      transform: translateY(-1px);
+    }
     @media (max-width: 768px) {
       .search-bar { display: none; }
       .feed-container { padding: 15px; }
@@ -242,16 +248,16 @@
   <div class="loading-spinner">Loading creators and their videos...</div>
 </div>
 
-<!-- Tip Modal -->
+<!-- Tip Modal with Payment Source -->
 <div id="tip-modal" class="modal">
   <div class="modal-content">
     <h3>💝 Send Tip</h3>
-    <p id="tip-creator-name">To: Creator</p>
+    <p id="tip-creator-name" style="margin-bottom: 15px;">To: Creator</p>
     
     <!-- Payment Source Selection -->
     <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #a08070;">Pay with:</label>
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-      <button type="button" class="payment-source-btn active" data-source="wallet" onclick="selectPaymentSource('wallet')" style="flex: 1; background: rgba(255,140,66,0.2); border: 1px solid #ff8c42; padding: 10px; border-radius: 40px; cursor: pointer;">
+      <button type="button" class="payment-source-btn" data-source="wallet" onclick="selectPaymentSource('wallet')" style="flex: 1; background: rgba(255,140,66,0.2); border: 1px solid #ff8c42; padding: 10px; border-radius: 40px; cursor: pointer;">
         💼 Wallet Balance
       </button>
       <button type="button" class="payment-source-btn" data-source="mpesa" onclick="selectPaymentSource('mpesa')" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 40px; cursor: pointer;">
@@ -265,7 +271,7 @@
     <!-- Amount Input -->
     <input type="number" id="tip-amount" placeholder="Amount" min="1" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white; font-size: 16px;">
     
-    <!-- Currency Select (optional) -->
+    <!-- Currency Select -->
     <select id="tip-currency" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
       <option value="USD">USD ($)</option>
       <option value="KES">KES (KSh)</option>
@@ -273,12 +279,12 @@
       <option value="GBP">GBP (£)</option>
     </select>
     
-    <!-- M-Pesa Details (shown only when M-Pesa selected) -->
+    <!-- M-Pesa Details -->
     <div id="mpesa-details" style="display: none;">
       <input type="tel" id="mpesa-phone" placeholder="M-Pesa Phone Number (e.g., 254712345678)" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
     </div>
     
-    <!-- PayPal Details (shown only when PayPal selected) -->
+    <!-- PayPal Details -->
     <div id="paypal-details" style="display: none;">
       <input type="email" id="paypal-email" placeholder="PayPal Email" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
     </div>
@@ -303,6 +309,7 @@
   let allCreators = [];
   let currentTipCreatorId = null;
   let currentTipCreatorName = '';
+  let selectedPaymentSource = 'wallet';
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -324,7 +331,7 @@
   function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
-      window.location.href = '/signup.html';
+      window.location.href = '/login.html';
       return;
     }
     
@@ -342,11 +349,38 @@
           window.location.href = '/creator-dashboard.html';
         }
       } catch(e) {
-        window.location.href = '/signup.html';
+        window.location.href = '/login.html';
       }
     } else {
-      window.location.href = '/signup.html';
+      window.location.href = '/login.html';
     }
+  }
+
+  // Select payment source (wallet, mpesa, paypal)
+  function selectPaymentSource(source) {
+    selectedPaymentSource = source;
+    
+    // Update button styles
+    document.querySelectorAll('.payment-source-btn').forEach(btn => {
+      btn.style.background = 'rgba(255,255,255,0.05)';
+      btn.style.border = '1px solid rgba(255,140,66,0.3)';
+    });
+    const activeBtn = document.querySelector(`.payment-source-btn[data-source="${source}"]`);
+    if (activeBtn) {
+      activeBtn.style.background = 'rgba(255,140,66,0.2)';
+      activeBtn.style.border = '1px solid #ff8c42';
+    }
+    
+    // Show/hide payment details
+    document.getElementById('mpesa-details').style.display = source === 'mpesa' ? 'block' : 'none';
+    document.getElementById('paypal-details').style.display = source === 'paypal' ? 'block' : 'none';
+  }
+
+  // Update creator receives amount when amount changes
+  function updateCreatorReceives() {
+    const amount = parseFloat(document.getElementById('tip-amount').value) || 0;
+    const creatorGets = amount * 0.95;
+    document.getElementById('creator-receives').innerHTML = creatorGets.toFixed(2);
   }
 
   // Load all creators from BACKEND API
@@ -514,14 +548,38 @@
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
       alert('Please log in to send tips');
-      window.location.href = '/signup.html';
+      window.location.href = '/login.html';
       return;
     }
     
     currentTipCreatorId = creatorId;
     currentTipCreatorName = creatorName;
-    document.getElementById('tip-creator-name').innerHTML = `Sending tip to: <strong>${escapeHtml(creatorName)}</strong>`;
+    document.getElementById('tip-creator-name').innerHTML = `To: <strong>${escapeHtml(creatorName)}</strong>`;
     document.getElementById('tip-modal').style.display = 'flex';
+    
+    // Reset form
+    document.getElementById('tip-amount').value = '';
+    document.getElementById('creator-receives').innerHTML = '0.00';
+    selectedPaymentSource = 'wallet';
+    
+    // Reset payment source buttons
+    document.querySelectorAll('.payment-source-btn').forEach(btn => {
+      btn.style.background = 'rgba(255,255,255,0.05)';
+      btn.style.border = '1px solid rgba(255,140,66,0.3)';
+    });
+    const walletBtn = document.querySelector('.payment-source-btn[data-source="wallet"]');
+    if (walletBtn) {
+      walletBtn.style.background = 'rgba(255,140,66,0.2)';
+      walletBtn.style.border = '1px solid #ff8c42';
+    }
+    
+    // Hide payment details
+    document.getElementById('mpesa-details').style.display = 'none';
+    document.getElementById('paypal-details').style.display = 'none';
+    
+    // Add input event listener for amount
+    document.getElementById('tip-amount').removeEventListener('input', updateCreatorReceives);
+    document.getElementById('tip-amount').addEventListener('input', updateCreatorReceives);
   }
 
   async function sendTip() {
@@ -536,8 +594,29 @@
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
       alert('Please log in to send tips');
-      window.location.href = '/signup.html';
+      window.location.href = '/login.html';
       return;
+    }
+    
+    // Build payment details based on selected source
+    let paymentDetails = {};
+    
+    if (selectedPaymentSource === 'mpesa') {
+      const phoneNumber = document.getElementById('mpesa-phone').value;
+      if (!phoneNumber) {
+        alert('Please enter M-Pesa phone number');
+        return;
+      }
+      paymentDetails = { phoneNumber, method: 'mpesa' };
+    } else if (selectedPaymentSource === 'paypal') {
+      const email = document.getElementById('paypal-email').value;
+      if (!email) {
+        alert('Please enter PayPal email');
+        return;
+      }
+      paymentDetails = { paypalEmail: email, method: 'paypal' };
+    } else {
+      paymentDetails = { method: 'wallet' };
     }
     
     try {
@@ -550,14 +629,16 @@
         body: JSON.stringify({
           creatorId: currentTipCreatorId,
           amount: amount,
-          currency: currency
+          currency: currency,
+          paymentSource: selectedPaymentSource,
+          paymentDetails: paymentDetails
         })
       });
       
       const data = await response.json();
       
       if (data.success) {
-        alert(`💝 Tip of ${currency} ${amount} sent successfully!`);
+        alert(`💝 Tip of ${currency} ${amount} sent successfully to ${currentTipCreatorName}!`);
         closeModal('tip-modal');
         document.getElementById('tip-amount').value = '';
       } else {
