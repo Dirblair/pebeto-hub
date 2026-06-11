@@ -40,6 +40,10 @@
       color: white;
       font-size: 16px;
     }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #ff8c42;
+    }
     button {
       width: 100%;
       background: #ff8c42;
@@ -50,11 +54,18 @@
       font-weight: bold;
       font-size: 16px;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    button:hover { background: #e0662c; }
+    button:hover { background: #e0662c; transform: translateY(-1px); }
     .message { text-align: center; margin-top: 15px; font-size: 14px; padding: 10px; border-radius: 20px; }
     .message.error { color: #ff6b6b; background: rgba(255,107,107,0.1); }
     .message.success { color: #4caf50; background: rgba(76,175,80,0.1); }
+    .info-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #a08070;
+    }
   </style>
 </head>
 <body>
@@ -65,27 +76,33 @@
     <div class="tab" onclick="switchTab('signup')">Sign Up</div>
   </div>
   
+  <!-- Login Pane -->
   <div id="login-pane" class="form-pane active">
-    <input type="email" id="login-email" placeholder="Email">
-    <input type="password" id="login-password" placeholder="Password">
+    <input type="email" id="login-email" placeholder="Email address" autocomplete="email">
+    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
     <button onclick="login()">Login</button>
     <div id="login-message" class="message"></div>
   </div>
   
+  <!-- Sign Up Pane -->
   <div id="signup-pane" class="form-pane">
     <select id="signup-role">
-      <option value="creator">Creator</option>
-      <option value="business">Business</option>
+      <option value="creator">🎨 Creator - Share content & earn tips</option>
+      <option value="business">🏢 Business / Brand - Hire creators</option>
     </select>
-    <input type="email" id="signup-email" placeholder="Email">
-    <input type="password" id="signup-password" placeholder="Password">
-    <button onclick="signup()">Sign Up</button>
+    <input type="email" id="signup-email" placeholder="Email address" autocomplete="email">
+    <input type="password" id="signup-password" placeholder="Password (min 6 characters)" autocomplete="new-password">
+    <button onclick="signup()">Create Account</button>
     <div id="signup-message" class="message"></div>
+  </div>
+  
+  <div class="info-text">
+    By joining, you agree to Pebeto's terms.
   </div>
 </div>
 
 <script>
-  // THIS IS THE CORRECT BACKEND URL
+  // Backend API URL
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
 
   function switchTab(tab) {
@@ -101,7 +118,7 @@
   }
 
   async function login() {
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const messageDiv = document.getElementById('login-message');
     
@@ -128,29 +145,41 @@
         messageDiv.innerHTML = 'Login successful! Redirecting...';
         messageDiv.className = 'message success';
         setTimeout(() => {
-          if (data.user.role === 'creator') window.location.href = '/creator-dashboard.html';
-          else if (data.user.role === 'business') window.location.href = '/business-dashboard.html';
-          else window.location.href = '/community.html';
+          if (data.user.role === 'creator') {
+            window.location.href = '/creator-dashboard.html';
+          } else if (data.user.role === 'business') {
+            window.location.href = '/business-dashboard.html';
+          } else if (data.user.role === 'admin') {
+            window.location.href = '/admin-dashboard.html';
+          } else {
+            window.location.href = '/community.html';
+          }
         }, 1000);
       } else {
-        messageDiv.innerHTML = data.message || 'Login failed';
+        messageDiv.innerHTML = data.message || 'Login failed. Check your email and password.';
         messageDiv.className = 'message error';
       }
     } catch (error) {
       console.error('Login error:', error);
-      messageDiv.innerHTML = 'Network error: ' + error.message;
+      messageDiv.innerHTML = 'Network error. Please check your connection.';
       messageDiv.className = 'message error';
     }
   }
 
   async function signup() {
     const role = document.getElementById('signup-role').value;
-    const email = document.getElementById('signup-email').value;
+    const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     const messageDiv = document.getElementById('signup-message');
     
     if (!email || !password) {
       messageDiv.innerHTML = 'Please enter email and password';
+      messageDiv.className = 'message error';
+      return;
+    }
+    
+    if (password.length < 6) {
+      messageDiv.innerHTML = 'Password must be at least 6 characters';
       messageDiv.className = 'message error';
       return;
     }
@@ -167,18 +196,18 @@
       const data = await response.json();
       
       if (data.success) {
-        messageDiv.innerHTML = 'Account created! Please login.';
+        messageDiv.innerHTML = 'Account created successfully! Please login.';
         messageDiv.className = 'message success';
         document.getElementById('signup-email').value = '';
         document.getElementById('signup-password').value = '';
         setTimeout(() => switchTab('login'), 1500);
       } else {
-        messageDiv.innerHTML = data.message || 'Signup failed';
+        messageDiv.innerHTML = data.message || 'Signup failed. Email may already exist.';
         messageDiv.className = 'message error';
       }
     } catch (error) {
       console.error('Signup error:', error);
-      messageDiv.innerHTML = 'Network error: ' + error.message;
+      messageDiv.innerHTML = 'Network error. Please try again.';
       messageDiv.className = 'message error';
     }
   }
