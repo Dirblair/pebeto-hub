@@ -49,6 +49,8 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       font-weight: bold;
+      background-size: cover;
+      background-position: center;
     }
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
     
@@ -73,7 +75,12 @@
       justify-content: center;
       font-size: 32px;
       font-weight: bold;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      transition: 0.2s;
     }
+    .profile-avatar:hover { opacity: 0.8; transform: scale(1.02); }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
     .unique-code {
@@ -85,6 +92,7 @@
       margin-top: 10px;
       display: inline-block;
     }
+    .edit-icon { margin-left: 10px; font-size: 14px; color: #ff8c42; cursor: pointer; }
     
     /* Stats Row */
     .stats-row {
@@ -158,7 +166,7 @@
     /* Demographics Grid */
     .demographics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 20px;
     }
     .dem-card {
@@ -170,7 +178,6 @@
     }
     .dem-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .dem-card .value { font-size: 28px; font-weight: 700; color: #ff8c42; }
-    .dem-card .trend { font-size: 11px; margin-top: 5px; color: #4ade80; }
     
     /* Modals */
     .modal {
@@ -180,7 +187,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.95);
       backdrop-filter: blur(8px);
       z-index: 1000;
       justify-content: center;
@@ -206,6 +213,15 @@
       margin-bottom: 15px;
       color: white;
     }
+    .avatar-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 15px;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      background-size: cover;
+      background-position: center;
+    }
     .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
     .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
     .save-btn { background: #ff8c42; color: white; }
@@ -226,7 +242,8 @@
       overflow: hidden;
       margin: 15px 0;
     }
-    .progress-fill { height: 100%; width: 0%; background: #ff8c42; transition: width 0.3s; }
+    .progress-fill { height: 100%; width: 0%; background: #6a6050; transition: width 0.3s; border-radius: 10px; }
+    .progress-fill.active { background: linear-gradient(135deg, #ff8c42, #e0662c); }
     .withdraw-input-group {
       display: flex;
       gap: 15px;
@@ -277,8 +294,6 @@
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: 1fr; }
       .profile-banner { flex-direction: column; text-align: center; }
-      .data-table th, .data-table td { padding: 8px; font-size: 11px; }
-      .demographics-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -290,23 +305,28 @@
     <i class="ri-home-line" onclick="window.location.href='/community.html'" title="Community Home"></i>
     <i class="ri-settings-4-line" onclick="openSettings()" title="Settings"></i>
     <button class="logout-btn" onclick="logout()">Logout</button>
-    <div class="avatar" onclick="openSettings()" id="avatar-initial">C</div>
+    <div class="avatar" id="avatar-header" style="background-size: cover; background-position: center;">C</div>
   </div>
 </div>
 
 <div class="container">
   <!-- Profile Banner -->
   <div class="profile-banner">
-    <div class="profile-avatar" id="profile-avatar">C</div>
+    <div class="profile-avatar" id="profile-avatar" onclick="openSettings()">C</div>
     <div class="profile-info">
-      <h2 id="profile-name">Creator Name</h2>
+      <h2 id="profile-name">Creator Name <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
       <p id="profile-email">email@example.com</p>
       <div class="unique-code" id="unique-code">Loading...</div>
-      <div style="margin-top: 8px;"><span id="profile-niche">Niche: </span> • <span id="profile-currency">Currency: USD</span> • <span id="profile-language">Language: English</span></div>
+      <div style="margin-top: 8px;">
+        <span id="profile-niche">Niche: </span> • 
+        <span id="profile-currency">Currency: USD</span> • 
+        <span id="profile-language">Language: English</span>
+        <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>
+      </div>
     </div>
   </div>
 
-  <!-- Stats Row (Clickable) -->
+  <!-- Stats Row -->
   <div class="stats-row">
     <div class="stat-card" onclick="showWalletDetails()">
       <h3>💰 Available Wallet</h3>
@@ -328,7 +348,7 @@
     </div>
   </div>
 
-  <!-- Tabs for Projects -->
+  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="active">📋 Active Projects</button>
     <button class="tab-btn" data-tab="review">⏳ Under Review</button>
@@ -342,7 +362,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-table">
         <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="4">Loading...</td></tr>
+        <tbody><tr><td colspan="4">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -352,7 +372,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="review-table">
         <thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead>
-        <tbody><tr><td colspan="4">No projects under review</td></tr>
+        <tbody><tr><td colspan="4">No projects under review</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -362,7 +382,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="completed-table">
         <thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead>
-        <tbody><tr><td colspan="4">No completed works</td></tr>
+        <tbody><tr><td colspan="4">No completed works</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -372,7 +392,7 @@
     <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
       <p style="font-size: 14px; color: #a08070;">Share your unique code with fans to receive tips!</p>
       <div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div>
-      <div class="tip-stats" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
+      <div class="tip-stats" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
         <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
         <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
         <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
@@ -383,9 +403,9 @@
   <!-- Demographics Tab -->
   <div id="tab-demographics" class="tab-content">
     <div class="demographics-grid">
-      <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div><div class="trend" id="followers-trend">📈 +0%</div></div>
-      <div class="dem-card"><h4>❤️ Total Likes</h4><div class="value" id="dem-likes">0</div><div class="trend" id="likes-trend">📈 +0%</div></div>
-      <div class="dem-card"><h4>💬 Total Comments</h4><div class="value" id="dem-comments">0</div><div class="trend" id="comments-trend">📈 +0%</div></div>
+      <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div></div>
+      <div class="dem-card"><h4>❤️ Total Likes</h4><div class="value" id="dem-likes">0</div></div>
+      <div class="dem-card"><h4>💬 Total Comments</h4><div class="value" id="dem-comments">0</div></div>
       <div class="dem-card"><h4>🌍 Top Country</h4><div class="value" id="dem-country" style="font-size: 20px;">—</div></div>
       <div class="dem-card"><h4>📈 Engagement Rate</h4><div class="value" id="dem-engagement">0%</div></div>
       <div class="dem-card"><h4>🎯 Campaigns Completed</h4><div class="value" id="dem-campaigns">0</div></div>
@@ -398,19 +418,19 @@
     <p>Minimum $30 USD (or equivalent) | Withdrawal fee: <strong>3%</strong></p>
     
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-    <div id="threshold-text" style="font-size: 13px;">$0 / $30</div>
-    <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-top: 5px;"></div>
+    <div id="threshold-text" style="font-size: 13px; margin-bottom: 5px;">$0.00 / $30.00</div>
+    <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-bottom: 10px;"></div>
     
     <div class="withdraw-input-group">
-      <input type="number" id="withdraw-amount" placeholder="Amount">
+      <input type="number" id="withdraw-amount" placeholder="Amount" step="0.01">
       <select id="withdraw-currency">
-        <option value="USD">USD ($)</option>
-        <option value="KES">KES (KSh)</option>
-        <option value="EUR">EUR (€)</option>
-        <option value="GBP">GBP (£)</option>
-        <option value="NGN">NGN (₦)</option>
-        <option value="ZAR">ZAR (R)</option>
-        <option value="GHS">GHS (₵)</option>
+        <option value="USD">🇺🇸 USD ($)</option>
+        <option value="KES">🇰🇪 Kenyan Shilling (KSh)</option>
+        <option value="EUR">🇪🇺 Euro (€)</option>
+        <option value="GBP">🇬🇧 British Pound (£)</option>
+        <option value="NGN">🇳🇬 Nigerian Naira (₦)</option>
+        <option value="ZAR">🇿🇦 South African Rand (R)</option>
+        <option value="GHS">🇬🇭 Ghanaian Cedi (₵)</option>
       </select>
     </div>
     
@@ -441,7 +461,7 @@
   <div class="modal-content">
     <h3 id="project-title">Project Details</h3>
     <div id="project-details"></div>
-    <div id="project-work-section" style="margin-top: 15px;"></div>
+    <div id="project-work-section"></div>
     <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div>
   </div>
 </div>
@@ -466,29 +486,22 @@
   </div>
 </div>
 
-<!-- Escrow Details Modal -->
-<div id="escrow-modal" class="modal">
-  <div class="modal-content">
-    <h3>Pending Escrow</h3>
-    <div id="escrow-list"></div>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('escrow-modal')">Close</button></div>
-  </div>
-</div>
-
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal">
   <div class="modal-content">
     <h3>⚙️ Profile Settings</h3>
+    <div class="avatar-preview" id="avatar-preview"></div>
+    <input type="text" id="setting-avatar-url" placeholder="Avatar Image URL (direct link to image)">
     <input type="text" id="setting-stageName" placeholder="Stage Name / Display Name">
     <input type="text" id="setting-niche" placeholder="Niche (e.g., Music, Comedy, Fashion)">
     <select id="setting-currency">
-      <option value="USD">USD ($)</option>
-      <option value="KES">KES (KSh)</option>
-      <option value="EUR">EUR (€)</option>
-      <option value="GBP">GBP (£)</option>
-      <option value="NGN">NGN (₦)</option>
-      <option value="ZAR">ZAR (R)</option>
-      <option value="GHS">GHS (₵)</option>
+      <option value="USD">🇺🇸 USD ($)</option>
+      <option value="KES">🇰🇪 Kenyan Shilling (KSh)</option>
+      <option value="EUR">🇪🇺 Euro (€)</option>
+      <option value="GBP">🇬🇧 British Pound (£)</option>
+      <option value="NGN">🇳🇬 Nigerian Naira (₦)</option>
+      <option value="ZAR">🇿🇦 South African Rand (R)</option>
+      <option value="GHS">🇬🇭 Ghanaian Cedi (₵)</option>
     </select>
     <select id="setting-language">
       <option value="en">English</option>
@@ -496,7 +509,6 @@
       <option value="fr">French</option>
       <option value="es">Spanish</option>
     </select>
-    <input type="url" id="setting-avatar" placeholder="Avatar Image URL">
     <div class="modal-buttons">
       <button class="save-btn" onclick="saveSettings()">Save Changes</button>
       <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
@@ -509,7 +521,6 @@
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79, NGN: 750, ZAR: 18.5, GHS: 12.5 };
   let selectedMethod = 'mpesa';
   let projectsData = [];
-  let allTransactions = [];
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -531,7 +542,13 @@
     return amount / rate;
   }
 
-  // LOGOUT FUNCTION
+  function convertFromUSD(usdAmount, currency) {
+    if (currency === 'USD') return usdAmount;
+    const rate = exchangeRates[currency];
+    if (!rate) return usdAmount;
+    return usdAmount * rate;
+  }
+
   function logout() {
     localStorage.removeItem('pebeto_token');
     localStorage.removeItem('pebeto_user');
@@ -542,21 +559,35 @@
     const userStr = localStorage.getItem('pebeto_user');
     if (!userStr) { window.location.href = '/signup.html'; return; }
     currentUser = JSON.parse(userStr);
-    document.getElementById('profile-name').innerText = currentUser.profile?.stageName || currentUser.email.split('@')[0];
+    const displayName = currentUser.profile?.stageName || currentUser.email.split('@')[0];
+    const initial = displayName[0].toUpperCase();
+    document.getElementById('profile-name').innerText = displayName;
     document.getElementById('profile-email').innerText = currentUser.email;
     document.getElementById('unique-code').innerText = currentUser.uniqueCode || 'Not assigned';
     document.getElementById('tip-code').innerText = currentUser.uniqueCode || 'Share your code';
     document.getElementById('profile-niche').innerHTML = `Niche: ${currentUser.profile?.niche || 'Not set'}`;
     document.getElementById('profile-currency').innerHTML = `Currency: ${currentUser.preferredCurrency || 'USD'}`;
     document.getElementById('profile-language').innerHTML = `Language: ${currentUser.preferredLanguage || 'English'}`;
-    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email?.[0] || 'C').toUpperCase();
-    document.getElementById('avatar-initial').innerText = initial;
-    document.getElementById('profile-avatar').innerText = initial;
+    
+    // Set avatar
+    const avatarUrl = currentUser.profile?.avatarUrl;
+    if (avatarUrl) {
+      document.getElementById('avatar-header').style.backgroundImage = `url(${avatarUrl})`;
+      document.getElementById('avatar-header').innerText = '';
+      document.getElementById('profile-avatar').style.backgroundImage = `url(${avatarUrl})`;
+      document.getElementById('profile-avatar').innerText = '';
+      document.getElementById('avatar-preview').style.backgroundImage = `url(${avatarUrl})`;
+    } else {
+      document.getElementById('avatar-header').innerText = initial;
+      document.getElementById('profile-avatar').innerText = initial;
+      document.getElementById('avatar-preview').style.backgroundImage = '';
+    }
     
     document.getElementById('setting-stageName').value = currentUser.profile?.stageName || '';
     document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
     document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
     document.getElementById('setting-language').value = currentUser.preferredLanguage || 'en';
+    document.getElementById('setting-avatar-url').value = currentUser.profile?.avatarUrl || '';
   }
 
   async function loadWallet() {
@@ -566,17 +597,17 @@
         const available = data.data?.balances?.available || 0;
         const escrow = data.data?.balances?.escrow || 0;
         const tips = data.data?.balances?.tips || 0;
+        const prefCurrency = currentUser?.preferredCurrency || 'USD';
+        const localAmount = convertFromUSD(available, prefCurrency);
         document.getElementById('wallet-balance').innerHTML = formatMoney(available);
         document.getElementById('escrow-balance').innerHTML = formatMoney(escrow);
-        document.getElementById('local-balance').innerHTML = `≈ ${formatMoney(available * 130, 'KES')}`;
+        document.getElementById('local-balance').innerHTML = `≈ ${formatMoney(localAmount, prefCurrency)}`;
         document.getElementById('wallet-detail-available').innerText = formatMoney(available);
         document.getElementById('wallet-detail-tips').innerText = formatMoney(tips);
         document.getElementById('wallet-detail-escrow').innerText = formatMoney(escrow);
         document.getElementById('total-tips').innerHTML = formatMoney(tips);
-        const fee = tips * 0.05;
-        const net = tips - fee;
-        document.getElementById('tips-fee').innerHTML = formatMoney(fee);
-        document.getElementById('tips-net').innerHTML = formatMoney(net);
+        document.getElementById('tips-fee').innerHTML = formatMoney(tips * 0.05);
+        document.getElementById('tips-net').innerHTML = formatMoney(tips * 0.95);
         updateWithdrawUI(available);
       }
     } catch(e) { console.error(e); }
@@ -599,10 +630,15 @@
       const net = usdAmount - fee;
       const percent = Math.min(100, (usdAmount / minUSD) * 100);
       progressFill.style.width = percent + '%';
-      thresholdText.innerText = `${formatMoney(usdAmount)} / ${formatMoney(minUSD)}`;
+      if (usdAmount >= minUSD) {
+        progressFill.classList.add('active');
+      } else {
+        progressFill.classList.remove('active');
+      }
+      thresholdText.innerText = `${formatMoney(usdAmount)} USD / ${formatMoney(minUSD)} USD`;
       
       if (usdAmount > 0) {
-        previewDiv.innerHTML = `Withdraw ${formatMoney(usdAmount)} → Fee (3%): ${formatMoney(fee)} → You receive: ${formatMoney(net)}`;
+        previewDiv.innerHTML = `💸 ${formatMoney(localAmount, currency)} → USD: ${formatMoney(usdAmount)} → Fee (3%): ${formatMoney(fee)} → You receive: ${formatMoney(net)}`;
       } else { previewDiv.innerHTML = ''; }
       
       if (usdAmount >= minUSD && usdAmount <= available) {
@@ -612,12 +648,49 @@
       } else {
         withdrawBtn.classList.remove('active');
         withdrawBtn.disabled = true;
-        withdrawBtn.innerText = usdAmount >= minUSD ? `Insufficient balance (${formatMoney(available)})` : `Withdraw (min ${formatMoney(minUSD)})`;
+        withdrawBtn.innerText = usdAmount >= minUSD ? `❌ Insufficient balance (${formatMoney(available)} available)` : `⚠️ Minimum ${formatMoney(minUSD)} USD required`;
       }
     };
     amountInput.addEventListener('input', update);
     currencySelect.addEventListener('change', update);
     update();
+  }
+
+  async function saveSettings() {
+    const token = localStorage.getItem('pebeto_token');
+    const avatarUrl = document.getElementById('setting-avatar-url').value;
+    const updates = {
+      stageName: document.getElementById('setting-stageName').value,
+      niche: document.getElementById('setting-niche').value,
+      preferredCurrency: document.getElementById('setting-currency').value,
+      preferredLanguage: document.getElementById('setting-language').value,
+      avatarUrl: avatarUrl
+    };
+    
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ profile: { stageName: updates.stageName, niche: updates.niche, avatarUrl: updates.avatarUrl }, preferredCurrency: updates.preferredCurrency, preferredLanguage: updates.preferredLanguage })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Update local storage
+        const userStr = localStorage.getItem('pebeto_user');
+        const user = JSON.parse(userStr);
+        user.profile = user.profile || {};
+        user.profile.stageName = updates.stageName;
+        user.profile.niche = updates.niche;
+        user.profile.avatarUrl = updates.avatarUrl;
+        user.preferredCurrency = updates.preferredCurrency;
+        user.preferredLanguage = updates.preferredLanguage;
+        localStorage.setItem('pebeto_user', JSON.stringify(user));
+        alert('Settings saved! Page will refresh.');
+        location.reload();
+      } else {
+        alert('Failed to save settings: ' + (data.message || 'Unknown error'));
+      }
+    } catch(e) { alert('Error saving settings'); }
   }
 
   async function loadCampaigns() {
@@ -637,9 +710,7 @@
     const review = myProjects.filter(p => p.status === 'submitted_for_review');
     const completed = myProjects.filter(p => p.status === 'paid');
     
-    const activeBody = document.querySelector('#active-table tbody');
-    if (active.length === 0) activeBody.innerHTML = '<tr><td colspan="4">No active projects</td></tr>';
-    else activeBody.innerHTML = active.map(p => `
+    document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `
       <tr onclick="showProjectDetails('${p._id}')">
         <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
         <td><span class="status-badge">In Progress</span></td>
@@ -647,9 +718,7 @@
       </tr>
     `).join('');
     
-    const reviewBody = document.querySelector('#review-table tbody');
-    if (review.length === 0) reviewBody.innerHTML = '<tr><td colspan="4">No projects under review</td></tr>';
-    else reviewBody.innerHTML = review.map(p => `
+    document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `
       <tr onclick="showProjectDetails('${p._id}')">
         <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
         <td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td>
@@ -657,9 +726,7 @@
       </tr>
     `).join('');
     
-    const completedBody = document.querySelector('#completed-table tbody');
-    if (completed.length === 0) completedBody.innerHTML = '<tr><td colspan="4">No completed works</td></tr>';
-    else completedBody.innerHTML = completed.map(p => `
+    document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `
       <tr onclick="showProjectDetails('${p._id}')">
         <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
         <td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td>
@@ -671,24 +738,22 @@
   async function showProjectDetails(campaignId) {
     const project = projectsData.find(p => p._id === campaignId);
     if (!project) return;
-    const modal = document.getElementById('project-modal');
     document.getElementById('project-title').innerText = project.title;
     document.getElementById('project-details').innerHTML = `
       <p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p>
       <p><strong>Budget:</strong> ${formatMoney(project.budget)}</p>
       <p><strong>Status:</strong> ${project.status}</p>
       <p><strong>Escrow Held:</strong> ${formatMoney(project.escrowHeld || 0)}</p>
-      <p><strong>Created:</strong> ${new Date(project.createdAt).toLocaleDateString()}</p>
     `;
     if (project.status === 'in_progress') {
       document.getElementById('project-work-section').innerHTML = `
-        <input type="text" id="work-url-${project._id}" placeholder="Work URL (Google Drive, YouTube, etc)" style="width:100%; padding:10px; margin-bottom:10px; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;">
+        <input type="text" id="work-url-${project._id}" placeholder="Work URL (Google Drive, YouTube, etc)" style="width:100%; padding:10px; margin:10px 0; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;">
         <button class="btn-submit" onclick="submitWork('${project._id}')" style="background:#ff8c42; border:none; padding:10px; border-radius:30px; cursor:pointer;">Submit Work</button>
       `;
     } else {
       document.getElementById('project-work-section').innerHTML = '';
     }
-    modal.style.display = 'flex';
+    document.getElementById('project-modal').style.display = 'flex';
   }
 
   function showSubmitWork(campaignId) { showProjectDetails(campaignId); }
@@ -712,18 +777,17 @@
   async function showTransactions() {
     const modal = document.getElementById('txn-modal');
     const listDiv = document.getElementById('txn-list');
-    listDiv.innerHTML = '<div style="text-align:center; padding:20px;">Loading transactions...</div>';
+    listDiv.innerHTML = '<div style="text-align:center; padding:20px;">Loading...</div>';
     modal.style.display = 'flex';
     try {
       const data = await fetchJSON('/api/wallet/transactions');
       if (data.success && data.data?.transactions) {
-        allTransactions = data.data.transactions;
-        document.getElementById('txn-count').innerText = allTransactions.length;
-        if (allTransactions.length === 0) listDiv.innerHTML = '<div style="text-align:center; padding:20px;">No transactions yet</div>';
-        else listDiv.innerHTML = allTransactions.slice(0, 20).map(t => `
+        const txn = data.data.transactions;
+        document.getElementById('txn-count').innerText = txn.length;
+        if (txn.length === 0) listDiv.innerHTML = '<div style="text-align:center; padding:20px;">No transactions yet</div>';
+        else listDiv.innerHTML = txn.slice(0, 20).map(t => `
           <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
-            <span>${t.type}</span>
-            <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
+            <span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
             <span style="font-size:11px;">${new Date(t.createdAt).toLocaleDateString()}</span>
           </div>
         `).join('');
@@ -732,26 +796,9 @@
   }
 
   function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
-  function showEscrowDetails() { 
-    const escrowAmount = document.getElementById('escrow-balance').innerText;
-    alert(`💰 Pending Escrow: ${escrowAmount}\n\nThis is money held for active campaigns. It will be released to your wallet when brands approve your completed work.`);
-  }
+  function showEscrowDetails() { alert(`💰 Pending Escrow: ${document.getElementById('escrow-balance').innerText}\n\nMoney held for active campaigns. Released when brands approve your work.`); }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  function refreshProjects() { loadCampaigns(); }
   function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-
-  async function saveSettings() {
-    const updates = {
-      stageName: document.getElementById('setting-stageName').value,
-      niche: document.getElementById('setting-niche').value,
-      preferredCurrency: document.getElementById('setting-currency').value,
-      preferredLanguage: document.getElementById('setting-language').value,
-      avatarUrl: document.getElementById('setting-avatar').value
-    };
-    alert('Settings saved! Page will refresh.');
-    closeModal('settings-modal');
-    location.reload();
-  }
 
   async function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
@@ -782,14 +829,10 @@
     } catch(e) { alert('Error processing withdrawal'); }
   }
 
-  // Load Demographics - REAL DATA from API
   async function loadDemographics() {
     try {
       const token = localStorage.getItem('pebeto_token');
-      // Fetch real stats from your backend
-      const res = await fetch('/api/creator/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch('/api/creator/stats', { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
       if (data.success) {
         document.getElementById('dem-followers').innerText = formatNumber(data.followers || 0);
@@ -798,28 +841,8 @@
         document.getElementById('dem-country').innerText = data.topCountry || 'Kenya';
         document.getElementById('dem-engagement').innerText = (data.engagementRate || 4.5) + '%';
         document.getElementById('dem-campaigns').innerText = data.campaignsCompleted || 0;
-        document.getElementById('followers-trend').innerHTML = `📈 +${data.followersTrend || 0}%`;
-        document.getElementById('likes-trend').innerHTML = `📈 +${data.likesTrend || 0}%`;
-        document.getElementById('comments-trend').innerHTML = `📈 +${data.commentsTrend || 0}%`;
-      } else {
-        // Fallback to analytics from community interactions
-        const commRes = await fetch('/api/community/my-stats', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const commData = await commRes.json();
-        if (commData.success) {
-          document.getElementById('dem-followers').innerText = formatNumber(commData.followers || 0);
-          document.getElementById('dem-likes').innerText = formatNumber(commData.totalLikes || 0);
-          document.getElementById('dem-comments').innerText = formatNumber(commData.totalComments || 0);
-          document.getElementById('dem-country').innerText = commData.topCountry || 'Kenya';
-          document.getElementById('dem-engagement').innerText = (commData.engagementRate || 4.5) + '%';
-          document.getElementById('dem-campaigns').innerText = document.getElementById('dem-campaigns').innerText || '0';
-        }
       }
-    } catch(e) {
-      console.error('Error loading demographics:', e);
-      // Keep default values
-    }
+    } catch(e) { console.error(e); }
   }
 
   function formatNumber(num) {
@@ -838,7 +861,6 @@
     });
   });
 
-  // Withdrawal method selection
   document.querySelectorAll('.method-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
