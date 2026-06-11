@@ -104,9 +104,10 @@
     }
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
       margin-bottom: 30px;
+      max-width: 400px;
     }
     .stat-card {
       background: rgba(255,255,255,0.03);
@@ -280,7 +281,7 @@
       color: white;
     }
     @media (max-width: 768px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .stats-row { grid-template-columns: 1fr; }
       .profile-header { flex-direction: column; text-align: center; }
       .action-buttons { justify-content: center; }
     }
@@ -387,13 +388,11 @@
     }
   }
 
-  // Get creator ID from URL
   function getCreatorIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id') || localStorage.getItem('viewingCreatorId');
   }
 
-  // Load creator profile
   async function loadCreatorProfile() {
     const creatorId = getCreatorIdFromUrl();
     if (!creatorId) {
@@ -402,7 +401,6 @@
     }
 
     try {
-      // Try to fetch from API first
       const response = await fetch(`${API_BASE}/api/creators`);
       const data = await response.json();
       
@@ -411,7 +409,6 @@
         creator = data.creators.find(c => c._id === creatorId);
       }
       
-      // If not found in API, use sample data
       if (!creator) {
         creator = getSampleCreator(creatorId);
       }
@@ -441,21 +438,21 @@
         email: 'creator1@example.com',
         profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '', bio: 'Professional DJ and music producer. Creating beats and vibes for everyone!' },
         socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' },
-        social: { followerCount: 15000, followingCount: 500, totalTipsReceived: 2500, campaignsCompleted: 12 }
+        social: { followerCount: 15000 }
       },
       'sample2': {
         _id: 'sample2',
         email: 'creator2@example.com',
         profile: { stageName: 'Sarah Creates', niche: 'Art', avatarUrl: '', bio: 'Digital artist and illustrator. Bringing imagination to life!' },
         socialLinks: { tiktok: '', youtube: 'https://www.youtube.com/@YouTube' },
-        social: { followerCount: 8500, followingCount: 300, totalTipsReceived: 1800, campaignsCompleted: 8 }
+        social: { followerCount: 8500 }
       },
       'sample3': {
         _id: 'sample3',
         email: 'creator3@example.com',
         profile: { stageName: 'Mike Fitness', niche: 'Fitness', avatarUrl: '', bio: 'Certified fitness trainer. Helping you reach your goals!' },
         socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' },
-        social: { followerCount: 22000, followingCount: 800, totalTipsReceived: 4200, campaignsCompleted: 15 }
+        social: { followerCount: 22000 }
       }
     };
     return sampleCreators[creatorId] || null;
@@ -469,8 +466,6 @@
     const niche = creator.profile?.niche || 'Creator';
     const bio = creator.profile?.bio || 'No bio yet.';
     const followers = creator.social?.followerCount || 0;
-    const tipsReceived = creator.social?.totalTipsReceived || 0;
-    const campaignsCompleted = creator.social?.campaignsCompleted || 0;
     
     let embedHtml = '';
     if (creator.socialLinks?.tiktok) {
@@ -527,15 +522,7 @@
           <div class="value">${formatNumber(followers)}</div>
         </div>
         <div class="stat-card">
-          <h4>💰 Tips Received</h4>
-          <div class="value">$${formatNumber(tipsReceived)}</div>
-        </div>
-        <div class="stat-card">
-          <h4>✅ Campaigns</h4>
-          <div class="value">${campaignsCompleted}</div>
-        </div>
-        <div class="stat-card">
-          <h4>🎯 Engagement</h4>
+          <h4>🎯 Engagement Rate</h4>
           <div class="value">4.5%</div>
         </div>
       </div>
@@ -721,7 +708,6 @@
     }
   }
 
-  // Initialize
   loadUserData();
   loadCreatorProfile();
 </script>
