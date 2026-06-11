@@ -167,6 +167,144 @@
       font-size: 12px;
     }
     
+    /* Video Feed Styles */
+    .video-feed-section {
+      background: linear-gradient(135deg, rgba(255,140,66,0.05), rgba(0,0,0,0.2));
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+    .video-feed-section h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: #ff8c42;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .video-feed-section p {
+      color: #a08070;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .creator-feed-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .feed-creator-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .feed-creator-card:hover {
+      transform: translateX(5px);
+      border-color: rgba(255,140,66,0.4);
+    }
+    .feed-creator-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .feed-creator-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      background-size: cover;
+    }
+    .feed-creator-info h4 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    .feed-creator-info p {
+      font-size: 12px;
+      color: #a08070;
+      margin: 0;
+    }
+    .feed-creator-niche {
+      display: inline-block;
+      background: rgba(255,140,66,0.15);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      margin-top: 5px;
+    }
+    .feed-video-container {
+      padding: 20px;
+      background: #000;
+      min-height: 400px;
+    }
+    .tiktok-feed-embed {
+      min-height: 500px;
+    }
+    .youtube-feed-embed {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+    }
+    .youtube-feed-embed iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .feed-creator-actions {
+      display: flex;
+      gap: 15px;
+      padding: 15px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .tip-feed-btn {
+      background: rgba(255,140,66,0.2);
+      border: 1px solid #ff8c42;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tip-feed-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    .hire-feed-btn {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid #4caf50;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #4caf50;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hire-feed-btn:hover {
+      background: #4caf50;
+      color: white;
+    }
+    .loading-spinner {
+      text-align: center;
+      padding: 50px;
+      color: #ff8c42;
+    }
+    
     .modal {
       display: none;
       position: fixed;
@@ -261,6 +399,8 @@
     
     @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
   </style>
+  <!-- TikTok Embed Script -->
+  <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
 
@@ -303,6 +443,15 @@
     </div>
   </div>
 
+  <!-- NEW: Video Feed Section for Brands -->
+  <div class="video-feed-section">
+    <h3><i class="ri-movie-2-line"></i> Discover Creators</h3>
+    <p>Watch videos from creators on Pebeto. Send tips or hire them for campaigns directly from here!</p>
+    <div id="business-video-feed" class="creator-feed-grid">
+      <div class="loading-spinner">Loading creators...</div>
+    </div>
+  </div>
+
   <div class="tabs">
     <button class="tab-btn active" data-tab="campaigns">📢 My Campaigns</button>
     <button class="tab-btn" data-tab="applications">📝 Creator Applications</button>
@@ -317,7 +466,7 @@
         <thead>
           <tr><th>Title</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Action</th></tr>
         </thead>
-        <tbody><tr><td colspan="8">Loading...</td></tr></tbody>
+        <tbody><tr><td colspan="8">Loading...</td></tr>
       </table>
     </div>
   </div>
@@ -411,6 +560,39 @@
   </div>
 </div>
 
+<!-- Tip Modal -->
+<div id="tip-modal" class="modal">
+  <div class="modal-content">
+    <h3>💝 Send Tip to Creator</h3>
+    <p id="tip-creator-name">Creator: Loading...</p>
+    <input type="number" id="tip-amount" placeholder="Amount in USD" min="1">
+    <select id="tip-currency">
+      <option value="USD">USD ($)</option>
+      <option value="KES">KES (KSh)</option>
+      <option value="EUR">EUR (€)</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendTipFromBusiness()">Send Tip</button>
+      <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hire Modal -->
+<div id="hire-modal" class="modal">
+  <div class="modal-content">
+    <h3>🤝 Hire Creator</h3>
+    <p id="hire-creator-name">Creator: Loading...</p>
+    <input type="text" id="hire-campaign-title" placeholder="Campaign Title">
+    <input type="number" id="hire-budget" placeholder="Offer Amount (USD)">
+    <textarea id="hire-description" rows="3" placeholder="Describe what you need..."></textarea>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendHireOffer()">Send Offer</button>
+      <button class="cancel-btn" onclick="closeModal('hire-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Avatar Modal -->
 <div id="avatar-modal" class="modal">
   <div class="modal-content">
@@ -458,6 +640,11 @@
   let selectedWithdrawMethod = 'mpesa';
   let selectedDepositMethod = 'mpesa';
   let campaigns = [];
+  let allCreators = [];
+  let currentTipCreatorId = null;
+  let currentTipCreatorName = '';
+  let currentHireCreatorId = null;
+  let currentHireCreatorName = '';
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -469,6 +656,196 @@
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.removeItem('pebeto_token'); localStorage.removeItem('pebeto_user'); window.location.href = '/signup.html'; }
 
+  // ============ VIDEO FEED FOR BUSINESS ============
+  async function loadCreatorsForBusiness() {
+    try {
+      const response = await fetch('/api/creators');
+      const data = await response.json();
+      
+      if (data.success && data.creators && data.creators.length > 0) {
+        allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
+        renderBusinessVideoFeed();
+      } else {
+        showSampleCreatorsForBusiness();
+      }
+    } catch (error) {
+      console.error('Error loading creators:', error);
+      showSampleCreatorsForBusiness();
+    }
+  }
+
+  function showSampleCreatorsForBusiness() {
+    allCreators = [
+      {
+        _id: 'sample1',
+        email: 'creator1@example.com',
+        profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '' },
+        socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }
+      },
+      {
+        _id: 'sample2',
+        email: 'creator2@example.com',
+        profile: { stageName: 'Sarah Creates', niche: 'Art', avatarUrl: '' },
+        socialLinks: { tiktok: '', youtube: 'https://www.youtube.com/@YouTube' }
+      }
+    ];
+    renderBusinessVideoFeed();
+  }
+
+  function renderBusinessVideoFeed() {
+    const container = document.getElementById('business-video-feed');
+    container.innerHTML = '';
+    
+    if (allCreators.length === 0) {
+      container.innerHTML = '<div class="loading-spinner">No creators have joined yet. Check back soon!</div>';
+      return;
+    }
+    
+    allCreators.forEach(creator => {
+      const card = createBusinessCreatorCard(creator);
+      container.appendChild(card);
+    });
+  }
+
+  function createBusinessCreatorCard(creator) {
+    const card = document.createElement('div');
+    card.className = 'feed-creator-card';
+    
+    const initial = (creator.profile?.stageName?.[0] || creator.email?.[0] || 'C').toUpperCase();
+    const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
+    const niche = creator.profile?.niche || 'Creator';
+    
+    let embedHtml = '';
+    if (creator.socialLinks?.tiktok) {
+      const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
+      const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
+      embedHtml = `
+        <div class="feed-video-container tiktok-feed-embed">
+          <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;">
+            <section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section>
+          </blockquote>
+        </div>
+      `;
+    } else if (creator.socialLinks?.youtube) {
+      let youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
+      embedHtml = `
+        <div class="feed-video-container">
+          <div class="youtube-feed-embed">
+            <iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+      `;
+    }
+    
+    card.innerHTML = `
+      <div class="feed-creator-header">
+        <div class="feed-creator-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">
+          ${!creator.profile?.avatarUrl ? initial : ''}
+        </div>
+        <div class="feed-creator-info">
+          <h4>${escapeHtml(displayName)}</h4>
+          <p>🎨 Creator</p>
+          <span class="feed-creator-niche">${escapeHtml(niche)}</span>
+        </div>
+      </div>
+      ${embedHtml}
+      <div class="feed-creator-actions">
+        <button class="tip-feed-btn" onclick="openTipModalBusiness('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-coin-line"></i> Send Tip 💝
+        </button>
+        <button class="hire-feed-btn" onclick="openHireModal('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-briefcase-line"></i> Hire for Campaign
+        </button>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  function openTipModalBusiness(creatorId, creatorName) {
+    currentTipCreatorId = creatorId;
+    currentTipCreatorName = creatorName;
+    document.getElementById('tip-creator-name').innerHTML = `Sending tip to: <strong>${escapeHtml(creatorName)}</strong>`;
+    document.getElementById('tip-modal').style.display = 'flex';
+  }
+
+  async function sendTipFromBusiness() {
+    const amount = parseFloat(document.getElementById('tip-amount').value);
+    const currency = document.getElementById('tip-currency').value;
+    
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch('/api/wallet/tip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ creatorId: currentTipCreatorId, amount: amount, currency: currency })
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert(`💝 Tip of ${currency} ${amount} sent successfully!`);
+        closeModal('tip-modal');
+        document.getElementById('tip-amount').value = '';
+        loadWallet();
+      } else {
+        alert('Failed to send tip: ' + (data.message || 'Unknown error'));
+      }
+    } catch(error) {
+      alert('Network error. Please try again.');
+    }
+  }
+
+  function openHireModal(creatorId, creatorName) {
+    currentHireCreatorId = creatorId;
+    currentHireCreatorName = creatorName;
+    document.getElementById('hire-creator-name').innerHTML = `Hiring: <strong>${escapeHtml(creatorName)}</strong>`;
+    document.getElementById('hire-modal').style.display = 'flex';
+  }
+
+  async function sendHireOffer() {
+    const title = document.getElementById('hire-campaign-title').value;
+    const budget = parseFloat(document.getElementById('hire-budget').value);
+    const description = document.getElementById('hire-description').value;
+    
+    if (!title || !budget) {
+      alert('Please enter campaign title and budget');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          title: title,
+          budget: budget,
+          description: description,
+          assignedCreatorId: currentHireCreatorId,
+          slots: 1
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert(`🤝 Campaign "${title}" created and offered to creator!`);
+        closeModal('hire-modal');
+        document.getElementById('hire-campaign-title').value = '';
+        document.getElementById('hire-budget').value = '';
+        document.getElementById('hire-description').value = '';
+        loadCampaigns();
+      } else {
+        alert('Failed to create campaign: ' + (data.message || 'Unknown error'));
+      }
+    } catch(error) {
+      alert('Network error. Please try again.');
+    }
+  }
+
+  // ============ EXISTING BUSINESS FUNCTIONS ============
   function selectWithdrawMethod(method) {
     selectedWithdrawMethod = method;
     document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
@@ -792,6 +1169,7 @@
   loadCampaigns();
   loadApplications();
   loadActiveProjects();
+  loadCreatorsForBusiness();
 </script>
 </body>
 </html>
