@@ -71,7 +71,6 @@
     }
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
     
-    /* Profile Banner */
     .profile-banner {
       background: linear-gradient(135deg, rgba(255,140,66,0.15), rgba(0,0,0,0.3));
       border-radius: 28px;
@@ -123,7 +122,6 @@
     }
     .edit-icon { margin-left: 10px; font-size: 14px; color: #ff8c42; cursor: pointer; }
     
-    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -143,7 +141,6 @@
     .stat-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .stat-card .amount { font-size: 28px; font-weight: 700; color: #ff8c42; }
     
-    /* Tabs */
     .tabs {
       display: flex;
       gap: 10px;
@@ -165,7 +162,6 @@
     .tab-content.active { display: block; animation: fadeIn 0.3s; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     
-    /* Tables */
     .data-table { width: 100%; border-collapse: collapse; }
     .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .data-table th { color: #a08070; font-weight: 500; font-size: 13px; }
@@ -190,7 +186,6 @@
     }
     .btn-action:hover { opacity: 0.8; }
     
-    /* Modals */
     .modal {
       display: none;
       position: fixed;
@@ -237,7 +232,6 @@
       background-position: center;
     }
     
-    /* Withdrawal */
     .withdraw-section {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,140,66,0.2);
@@ -257,17 +251,25 @@
       color: white;
       flex: 1;
     }
+    .method-buttons { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
     .method-btn {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,140,66,0.3);
       padding: 8px 20px;
       border-radius: 40px;
       cursor: pointer;
-      display: inline-block;
-      margin: 5px;
     }
     .method-btn.active { background: #ff8c42; border-color: #ff8c42; }
     .method-fields { display: none; margin-top: 15px; }
+    .method-fields.active { display: block; }
+    .method-fields input {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 12px;
+      border-radius: 30px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
     .withdraw-btn {
       background: #6a6050;
       border: none;
@@ -280,6 +282,20 @@
       margin-top: 15px;
     }
     .withdraw-btn.active { background: linear-gradient(135deg, #ff8c42, #e0662c); cursor: pointer; }
+    
+    .deposit-methods { display: flex; gap: 10px; margin-bottom: 20px; }
+    .deposit-method-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 10px;
+      border-radius: 40px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .deposit-method-btn.active { background: #ff8c42; border-color: #ff8c42; }
+    .deposit-fields { display: none; margin-top: 15px; }
+    .deposit-fields.active { display: block; }
     
     @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .profile-banner { flex-direction: column; text-align: center; } }
   </style>
@@ -320,7 +336,6 @@
     <div class="stat-card" onclick="showActiveEscrow()">
       <h4>🔒 Active Escrow</h4>
       <div class="amount" id="escrow-balance">$0.00</div>
-      <div style="font-size:11px; color:#a08070;">Locked in campaigns</div>
     </div>
     <div class="stat-card" onclick="showTotalDeposits()">
       <h4>📥 Total Deposits</h4>
@@ -348,7 +363,7 @@
       <table class="data-table" id="campaigns-table">
         <thead><tr><th>Title</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Action</th></tr></thead>
         <tbody><tr><td colspan="8">Loading...</td></tr>
-      </table>
+       </table>
     </div>
   </div>
 
@@ -357,7 +372,7 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="applications-table">
         <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Submitted</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="6">No pending applications</td></tr>
+        <tbody><tr><td colspan="6">No pending applications</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -366,8 +381,8 @@
   <div id="tab-active" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-projects-table">
-        <thead><tr><th>Campaign</th><th>Creator</th><th>Assigned Slot</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="6">No active projects</td></tr>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="5">No active projects</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -388,14 +403,14 @@
         <option value="all">All Transactions</option>
         <option value="deposit">Deposits</option>
         <option value="withdrawal">Withdrawals</option>
-        <option value="escrow">Escrow Releases</option>
+        <option value="escrow_release">Escrow Releases</option>
       </select>
       <button class="btn-action" onclick="loadHistory()">Refresh</button>
     </div>
     <div style="overflow-x: auto;">
       <table class="data-table" id="history-table">
         <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead>
-        <tbody><td><td colspan="5">Loading...</td></tr>
+        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -411,14 +426,14 @@
       <input type="number" id="withdraw-amount" placeholder="Amount">
       <select id="withdraw-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
     </div>
-    <div>
-      <div class="method-btn active" onclick="selectMethod('mpesa')">M-Pesa</div>
-      <div class="method-btn" onclick="selectMethod('paypal')">PayPal</div>
-      <div class="method-btn" onclick="selectMethod('wire')">Wire Transfer</div>
+    <div class="method-buttons">
+      <div class="method-btn active" data-method="mpesa" onclick="selectWithdrawMethod('mpesa')">M-Pesa</div>
+      <div class="method-btn" data-method="paypal" onclick="selectWithdrawMethod('paypal')">PayPal</div>
+      <div class="method-btn" data-method="wire" onclick="selectWithdrawMethod('wire')">Wire Transfer</div>
     </div>
-    <div id="mpesa-fields" class="method-fields"><input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)"></div>
-    <div id="paypal-fields" class="method-fields" style="display:none"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
-    <div id="wire-fields" class="method-fields" style="display:none"><input type="text" id="wire-bank" placeholder="Bank Name"><input type="text" id="wire-account" placeholder="Account Number"></div>
+    <div id="withdraw-mpesa-fields" class="method-fields active"><input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)"></div>
+    <div id="withdraw-paypal-fields" class="method-fields" style="display:none"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
+    <div id="withdraw-wire-fields" class="method-fields" style="display:none"><input type="text" id="wire-bank" placeholder="Bank Name"><input type="text" id="wire-account" placeholder="Account Number"></div>
     <button id="withdraw-btn" class="withdraw-btn">Withdraw (min $30)</button>
   </div>
 </div>
@@ -428,14 +443,14 @@
   <div class="modal-content">
     <h3>💰 Add Funds to Wallet</h3>
     <p style="margin-bottom: 15px;">Platform fee: <strong>10%</strong> (you pay extra)</p>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <button class="btn-action" onclick="selectDepositMethod('mpesa')" id="deposit-method-mpesa" style="flex:1;">M-Pesa</button>
-      <button class="btn-action" onclick="selectDepositMethod('bank')" id="deposit-method-bank" style="flex:1;">Bank Transfer</button>
-      <button class="btn-action" onclick="selectDepositMethod('paypal')" id="deposit-method-paypal" style="flex:1;">PayPal</button>
+    <div class="deposit-methods">
+      <div class="deposit-method-btn active" onclick="selectDepositMethod('mpesa')">M-Pesa</div>
+      <div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank Transfer</div>
+      <div class="deposit-method-btn" onclick="selectDepositMethod('paypal')">PayPal</div>
     </div>
-    <div id="deposit-mpesa-fields"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
-    <div id="deposit-bank-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
-    <div id="deposit-paypal-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
+    <div id="deposit-mpesa-fields" class="deposit-fields active"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
+    <div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
+    <div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
     <div class="form-group">
       <label>Amount to Deposit (USD)</label>
       <input type="number" id="deposit-amount" placeholder="Enter amount">
@@ -536,7 +551,7 @@
 <script>
   let currentUser = null;
   let campaigns = [];
-  let selectedMethod = 'mpesa';
+  let selectedWithdrawMethod = 'mpesa';
   let selectedDepositMethod = 'mpesa';
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
 
@@ -550,19 +565,31 @@
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.removeItem('pebeto_token'); localStorage.removeItem('pebeto_user'); window.location.href = '/signup.html'; }
 
-  function selectMethod(method) {
-    selectedMethod = method;
-    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+  // Withdrawal method selection - FIXED
+  function selectWithdrawMethod(method) {
+    selectedWithdrawMethod = method;
+    document.querySelectorAll('.method-btn').forEach(btn => {
+      if (btn.dataset.method === method) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
     document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none');
-    document.getElementById(`${method}-fields`).style.display = 'block';
+    document.getElementById(`withdraw-${method}-fields`).style.display = 'block';
   }
 
+  // Deposit method selection - FIXED
   function selectDepositMethod(method) {
     selectedDepositMethod = method;
-    document.querySelectorAll('[id^="deposit-method-"]').forEach(b => b.style.opacity = '0.6');
-    document.getElementById(`deposit-method-${method}`).style.opacity = '1';
-    document.querySelectorAll('[id^="deposit-"]').forEach(f => { if (f.id.includes('-fields')) f.style.display = 'none'; });
+    document.querySelectorAll('.deposit-method-btn').forEach(btn => {
+      if (btn.innerText.toLowerCase().includes(method)) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none');
     document.getElementById(`deposit-${method}-fields`).style.display = 'block';
     updateDepositPreview();
   }
@@ -722,7 +749,7 @@
             <td><span class="status-badge">${c.status}</span></td>
             <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
             <td><button class="btn-action" onclick="viewCampaign('${c._id}')">View</button> <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund Escrow</button></td>
-           </tr>
+          </tr>
         `).join('');
       }
     } catch(e) { console.error(e); }
@@ -750,7 +777,7 @@
       if (data.success) {
         const myCampaigns = (data.campaigns || []).filter(c => c.businessId === currentUser?._id);
         const allBids = [];
-        myCampaigns.forEach(c => { if (c.bids) c.bids.forEach(b => allBids.push({ ...b, campaignTitle: c.title, campaignId: c._id, campaignBudget: c.budget })); });
+        myCampaigns.forEach(c => { if (c.bids) c.bids.forEach(b => allBids.push({ ...b, campaignTitle: c.title, campaignId: c._id })); });
         const pendingBids = allBids.filter(b => b.status === 'pending');
         const tbody = document.querySelector('#applications-table tbody');
         if (pendingBids.length === 0) tbody.innerHTML = '<tr><td colspan="6">No pending applications</td></tr>';
@@ -762,7 +789,7 @@
             <td>${escapeHtml(b.proposal?.substring(0, 50))}...</td>
             <td>${new Date(b.createdAt).toLocaleDateString()}</td>
             <td><button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve & Assign</button></td>
-           </tr>
+          </tr>
         `).join('');
       }
     } catch(e) { console.error(e); }
@@ -786,14 +813,13 @@
         const myCampaigns = (data.campaigns || []).filter(c => c.businessId === currentUser?._id);
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
         const tbody = document.querySelector('#active-projects-table tbody');
-        if (active.length === 0) tbody.innerHTML = '<tr><td colspan="6">No active projects</td></tr>';
+        if (active.length === 0) tbody.innerHTML = '<tr><td colspan="5">No active projects</td></tr>';
         else tbody.innerHTML = active.map(c => {
           const acceptedBid = c.bids?.find(b => b.status === 'accepted');
           return `
             <tr>
               <td>${escapeHtml(c.title)}</td>
               <td>${acceptedBid?.uniqueCode || 'Assigned'}</td>
-              <td>-</td>
               <td>${acceptedBid?.submittedWorkUrl || 'Not yet'}</td>
               <td><span class="status-badge">${c.status}</span></td>
               <td>${c.status === 'submitted_for_review' ? `<button class="btn-action" onclick="completeWork('${c._id}')">Complete & Pay</button>` : '-'}</td>
@@ -927,14 +953,14 @@
   function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; updateBudgetBreakdown(); }
   function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; }
   function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-  function openMessageModal(creatorId, name) { document.getElementById('msg-name').innerText = name; document.getElementById('message-modal').style.display = 'flex'; document.getElementById('msg-text').dataset.recipient = creatorId; }
+  function openMessageModal(creatorId, name) { document.getElementById('msg-name').innerText = name; document.getElementById('message-modal').style.display = 'flex'; }
   function sendMessage() { alert(`Message sent to creator! (WebSocket integration coming)`); closeModal('message-modal'); }
   function viewCampaign(id) { alert(`Campaign details for ID: ${id}\n\nFull campaign management coming soon.`); }
 
   async function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
     if (!amount || amount <= 0) { alert('Enter amount'); return; }
-    const method = selectedMethod;
+    const method = selectedWithdrawMethod;
     let payoutDetails = {};
     if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
     else if (method === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
