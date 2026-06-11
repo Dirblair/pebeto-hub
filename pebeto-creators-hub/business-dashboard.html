@@ -30,7 +30,6 @@
     }
     .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
     .nav-icons { display: flex; gap: 15px; align-items: center; }
-    .nav-icons button, .nav-icons i { cursor: pointer; }
     .community-btn {
       background: rgba(255, 140, 66, 0.15);
       border: 1px solid #ff8c42;
@@ -66,10 +65,41 @@
       justify-content: center;
       font-weight: bold;
       font-size: 18px;
-      background-size: cover;
-      background-position: center;
     }
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    
+    /* Profile Banner */
+    .profile-banner {
+      background: linear-gradient(135deg, rgba(255,140,66,0.15), rgba(0,0,0,0.3));
+      border-radius: 28px;
+      padding: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .profile-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
+    .profile-info p { color: #a08070; font-size: 14px; }
+    .company-code {
+      background: rgba(255,140,66,0.15);
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-size: 12px;
+      display: inline-block;
+      margin-top: 8px;
+    }
     
     /* Stats Grid */
     .stats-grid {
@@ -85,6 +115,7 @@
       padding: 20px;
       cursor: pointer;
       transition: all 0.2s;
+      text-align: center;
     }
     .stat-card:hover { border-color: rgba(255,140,66,0.4); transform: translateY(-2px); }
     .stat-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
@@ -116,13 +147,13 @@
     .data-table { width: 100%; border-collapse: collapse; }
     .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .data-table th { color: #a08070; font-weight: 500; font-size: 13px; }
-    .data-table tr { cursor: pointer; transition: 0.2s; }
     .data-table tr:hover { background: rgba(255,140,66,0.05); }
     .status-badge {
       background: rgba(255,140,66,0.2);
       padding: 4px 12px;
       border-radius: 20px;
       font-size: 12px;
+      display: inline-block;
     }
     .status-badge.approved { background: rgba(34,197,94,0.2); color: #4ade80; }
     .status-badge.pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
@@ -134,7 +165,6 @@
       color: white;
       cursor: pointer;
       font-size: 12px;
-      margin: 0 5px;
     }
     .btn-action:hover { opacity: 0.8; }
     
@@ -156,11 +186,9 @@
       background: #1a1510;
       border-radius: 28px;
       padding: 30px;
-      max-width: 550px;
+      max-width: 500px;
       width: 90%;
       border: 1px solid rgba(255,140,66,0.3);
-      max-height: 85vh;
-      overflow-y: auto;
     }
     .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
     .modal-content input, .modal-content select, .modal-content textarea {
@@ -177,7 +205,7 @@
     .save-btn { background: #ff8c42; color: white; }
     .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
     
-    /* Withdrawal Section */
+    /* Withdrawal */
     .withdraw-section {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,140,66,0.2);
@@ -203,9 +231,11 @@
       padding: 8px 20px;
       border-radius: 40px;
       cursor: pointer;
+      display: inline-block;
       margin: 5px;
     }
     .method-btn.active { background: #ff8c42; border-color: #ff8c42; }
+    .method-fields { display: none; margin-top: 15px; }
     .withdraw-btn {
       background: #6a6050;
       border: none;
@@ -215,33 +245,11 @@
       font-weight: 600;
       width: 100%;
       cursor: not-allowed;
+      margin-top: 15px;
     }
     .withdraw-btn.active { background: linear-gradient(135deg, #ff8c42, #e0662c); cursor: pointer; }
     
-    /* Search Creator */
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .search-box input {
-      flex: 1;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,140,66,0.3);
-      padding: 12px;
-      border-radius: 40px;
-      color: white;
-    }
-    .creator-card {
-      background: rgba(255,255,255,0.05);
-      border-radius: 20px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-    .creator-stats { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
-    .creator-stat { background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 20px; font-size: 12px; }
-    
-    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .profile-banner { flex-direction: column; text-align: center; } }
   </style>
 </head>
 <body>
@@ -256,12 +264,22 @@
 </div>
 
 <div class="container">
+  <!-- Profile Banner -->
+  <div class="profile-banner">
+    <div class="profile-avatar" id="profile-avatar">B</div>
+    <div class="profile-info">
+      <h2 id="company-name">Loading...</h2>
+      <p id="business-email">Loading...</p>
+      <div class="company-code" id="business-code">Loading...</div>
+    </div>
+  </div>
+
   <!-- Stats Grid -->
   <div class="stats-grid">
-    <div class="stat-card" onclick="showWalletDetails()">
+    <div class="stat-card" onclick="openDepositModal()">
       <h4>💰 Available Wallet</h4>
       <div class="amount" id="wallet-balance">$0.00</div>
-      <div class="sub">👇 Click to add funds</div>
+      <div style="font-size:11px; color:#a08070; margin-top:5px;">👇 Click to add funds</div>
     </div>
     <div class="stat-card" onclick="showActiveEscrow()">
       <h4>🔒 Active Escrow</h4>
@@ -282,7 +300,6 @@
     <button class="tab-btn active" data-tab="campaigns">📢 My Campaigns</button>
     <button class="tab-btn" data-tab="bids">📝 Pending Bids</button>
     <button class="tab-btn" data-tab="active">⚡ Active Projects</button>
-    <button class="tab-btn" data-tab="applications">👥 Creator Applications</button>
     <button class="tab-btn" data-tab="search">🔍 Find Creators</button>
   </div>
 
@@ -291,7 +308,7 @@
     <button class="btn-action" onclick="openCampaignModal()" style="margin-bottom: 20px; padding: 10px 20px;">+ Launch New Campaign</button>
     <div style="overflow-x: auto;">
       <table class="data-table" id="campaigns-table">
-        <thead><tr><th>Title</th><th>Budget</th><th>Slots</th><th>Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Bids</th><th>Action</th></tr></thead>
         <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
       </table>
     </div>
@@ -299,23 +316,28 @@
 
   <!-- Pending Bids Tab -->
   <div id="tab-bids" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="bids-table"><thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Action</th></tr></thead><tbody><tr><td colspan="5">Loading...</td></tr></tbody></table></div>
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="bids-table">
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Active Projects Tab -->
   <div id="tab-active" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="active-projects-table"><thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead><tbody><tr><td colspan="5">No active projects</td></tr></tbody></table></div>
-  </div>
-
-  <!-- Creator Applications Tab -->
-  <div id="tab-applications" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="applications-table"><thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Action</th></tr></thead><tbody><tr><td colspan="5">No pending applications</td></tr></tbody></table></div>
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="active-projects-table">
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="5">No active projects</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Find Creators Tab -->
   <div id="tab-search" class="tab-content">
-    <div class="search-box">
-      <input type="text" id="creator-search" placeholder="Search by username or unique code...">
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <input type="text" id="creator-search" placeholder="Search by username or unique code..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white;">
       <button class="btn-action" onclick="searchCreator()">Search</button>
     </div>
     <div id="search-results"></div>
@@ -326,37 +348,61 @@
     <h3>💸 Withdraw Funds</h3>
     <p>Minimum $30 USD | 3% fee</p>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-    <div id="threshold-text" style="font-size: 13px; margin-bottom: 5px;">$0.00 / $30.00</div>
-    <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-bottom: 10px;"></div>
+    <div id="threshold-text" style="font-size: 13px;">$0.00 / $30.00</div>
     <div class="withdraw-input-group">
       <input type="number" id="withdraw-amount" placeholder="Amount">
       <select id="withdraw-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
     </div>
     <div>
-      <div class="method-btn active" data-method="mpesa" onclick="selectMethod('mpesa')">M-Pesa</div>
-      <div class="method-btn" data-method="paypal" onclick="selectMethod('paypal')">PayPal</div>
-      <div class="method-btn" data-method="wire" onclick="selectMethod('wire')">Wire Transfer</div>
+      <div class="method-btn active" onclick="selectMethod('mpesa')">M-Pesa</div>
+      <div class="method-btn" onclick="selectMethod('paypal')">PayPal</div>
+      <div class="method-btn" onclick="selectMethod('wire')">Wire Transfer</div>
     </div>
-    <div id="mpesa-fields" class="method-fields"><input type="tel" id="mpesa-phone" placeholder="Phone Number"></div>
+    <div id="mpesa-fields" class="method-fields"><input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)"></div>
     <div id="paypal-fields" class="method-fields" style="display:none"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
     <div id="wire-fields" class="method-fields" style="display:none"><input type="text" id="wire-bank" placeholder="Bank Name"><input type="text" id="wire-account" placeholder="Account Number"></div>
     <button id="withdraw-btn" class="withdraw-btn">Withdraw (min $30)</button>
   </div>
 </div>
 
-<!-- Modals -->
-<div id="fund-modal" class="modal"><div class="modal-content"><h3>💰 Add Funds</h3><p>Platform fee: 10%</p><input type="number" id="fund-amount" placeholder="Amount to deposit"><p id="fund-preview" style="font-size: 12px; margin: 10px 0;"></p><div class="modal-buttons"><button class="save-btn" onclick="addFunds()">Deposit</button><button class="cancel-btn" onclick="closeModal('fund-modal')">Cancel</button></div></div></div>
-<div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Campaign Title"><input type="number" id="campaign-budget" placeholder="Total Budget (USD)"><input type="number" id="campaign-slots" placeholder="Number of Creators" value="1"><input type="date" id="campaign-deadline"><textarea id="campaign-instructions" rows="3" placeholder="Instructions for creators"></textarea><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch Campaign</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
-<div id="wallet-modal" class="modal"><div class="modal-content"><h3>Wallet Details</h3><p>Available: <strong id="wallet-available">$0</strong></p><p>Escrow Held: <strong id="wallet-escrow">$0</strong></p><p>Total Deposited: <strong id="wallet-deposited">$0</strong></p><div class="modal-buttons"><button class="save-btn" onclick="document.getElementById('fund-modal').style.display='flex'; closeModal('wallet-modal')">Add Funds</button><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div></div></div>
-<div id="audit-modal" class="modal"><div class="modal-content"><h3>Funding Audit Ledger</h3><div id="audit-list" style="max-height: 400px; overflow-y: auto;"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('audit-modal')">Close</button></div></div></div>
-<div id="escrow-modal" class="modal"><div class="modal-content"><h3>Active Escrow Details</h3><div id="escrow-list"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('escrow-modal')">Close</button></div></div></div>
-<div id="message-modal" class="modal"><div class="modal-content"><h3>Send Message to <span id="message-recipient"></span></h3><textarea id="message-text" rows="4" placeholder="Type your message..."></textarea><div class="modal-buttons"><button class="save-btn" onclick="sendMessage()">Send</button><button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button></div></div></div>
+<!-- Deposit Modal -->
+<div id="deposit-modal" class="modal">
+  <div class="modal-content">
+    <h3>💰 Add Funds to Wallet</h3>
+    <p style="margin-bottom: 15px;">Platform fee: <strong>10%</strong> (you pay extra)</p>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button class="btn-action" onclick="selectDepositMethod('mpesa')" id="deposit-method-mpesa" style="flex:1;">M-Pesa</button>
+      <button class="btn-action" onclick="selectDepositMethod('bank')" id="deposit-method-bank" style="flex:1;">Bank Transfer</button>
+      <button class="btn-action" onclick="selectDepositMethod('paypal')" id="deposit-method-paypal" style="flex:1;">PayPal</button>
+    </div>
+    <div id="deposit-mpesa-fields"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
+    <div id="deposit-bank-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
+    <div id="deposit-paypal-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
+    <div class="form-group">
+      <label>Amount to Deposit (USD)</label>
+      <input type="number" id="deposit-amount" placeholder="Enter amount">
+    </div>
+    <div id="deposit-preview" style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
+      💡 You pay: $0.00 (includes 10% fee)
+    </div>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="processDeposit()">Add Funds</button>
+      <button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Other Modals -->
+<div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Campaign Title"><input type="number" id="campaign-budget" placeholder="Total Budget (USD)"><textarea id="campaign-desc" rows="3" placeholder="Campaign Description"></textarea><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
+<div id="audit-modal" class="modal"><div class="modal-content"><h3>Funding Audit Ledger</h3><div id="audit-list" style="max-height: 400px; overflow-y: auto;"></div><button class="cancel-btn" onclick="closeModal('audit-modal')" style="margin-top:15px;">Close</button></div></div>
+<div id="escrow-modal" class="modal"><div class="modal-content"><h3>Active Escrow</h3><div id="escrow-list"></div><button class="cancel-btn" onclick="closeModal('escrow-modal')">Close</button></div></div>
+<div id="message-modal" class="modal"><div class="modal-content"><h3>Send Message to <span id="msg-name"></span></h3><textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea><div class="modal-buttons"><button class="save-btn" onclick="sendMessage()">Send</button><button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button></div></div></div>
 
 <script>
   let currentUser = null;
   let campaigns = [];
-  let bids = [];
   let selectedMethod = 'mpesa';
+  let selectedDepositMethod = 'mpesa';
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
 
   async function fetchJSON(url, options = {}) {
@@ -366,16 +412,69 @@
   }
 
   function formatMoney(amount, currency = 'USD') { return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount); }
-  function convertToUSD(amount, currency) { if (currency === 'USD') return amount; const rate = exchangeRates[currency]; return rate ? amount / rate : amount; }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.removeItem('pebeto_token'); localStorage.removeItem('pebeto_user'); window.location.href = '/signup.html'; }
-  function selectMethod(method) { selectedMethod = method; document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.method-btn[data-method="${method}"]`).classList.add('active'); document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); document.getElementById(`${method}-fields`).style.display = 'block'; }
+
+  function selectMethod(method) {
+    selectedMethod = method;
+    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none');
+    document.getElementById(`${method}-fields`).style.display = 'block';
+  }
+
+  function selectDepositMethod(method) {
+    selectedDepositMethod = method;
+    document.querySelectorAll('[id^="deposit-method-"]').forEach(b => b.style.opacity = '0.6');
+    document.getElementById(`deposit-method-${method}`).style.opacity = '1';
+    document.querySelectorAll('[id^="deposit-"]').forEach(f => { if (f.id.includes('-fields')) f.style.display = 'none'; });
+    document.getElementById(`deposit-${method}-fields`).style.display = 'block';
+    updateDepositPreview();
+  }
+
+  function updateDepositPreview() {
+    const amount = parseFloat(document.getElementById('deposit-amount').value) || 0;
+    const fee = amount * 0.1;
+    const total = amount + fee;
+    document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${total.toFixed(2)} ($${amount} + $${fee.toFixed(2)} fee)`;
+  }
+
+  async function processDeposit() {
+    const amount = parseFloat(document.getElementById('deposit-amount').value);
+    if (!amount || amount <= 0) { alert('Enter valid amount'); return; }
+    const total = amount + (amount * 0.1);
+    if (!confirm(`Confirm deposit of $${amount} USD?\n\nYou will be charged: $${total.toFixed(2)} (includes 10% fee)`)) return;
+    
+    // Simulate external payment processing
+    alert(`Processing ${selectedDepositMethod.toUpperCase()} payment of $${total.toFixed(2)}...\n\nThis would connect to ${selectedDepositMethod.toUpperCase()} API in production.`);
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch('/api/wallet/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ intentUsd: amount, paymentMethod: selectedDepositMethod })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`✅ Successfully added $${amount} USD to your wallet!`);
+        closeModal('deposit-modal');
+        loadWallet();
+      } else {
+        alert(`❌ Insufficient funds in your ${selectedDepositMethod.toUpperCase()} account. Please add funds and try again.`);
+      }
+    } catch(e) { alert('Error processing deposit'); }
+  }
 
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (!userStr) { window.location.href = '/signup.html'; return; }
     currentUser = JSON.parse(userStr);
+    document.getElementById('company-name').innerText = currentUser.profile?.companyName || currentUser.email.split('@')[0];
+    document.getElementById('business-email').innerText = currentUser.email;
+    document.getElementById('business-code').innerHTML = `ID: ${currentUser._id?.slice(-8)}`;
     document.getElementById('avatar-header').innerText = (currentUser.profile?.companyName?.[0] || currentUser.email[0]).toUpperCase();
+    document.getElementById('profile-avatar').innerText = (currentUser.profile?.companyName?.[0] || currentUser.email[0]).toUpperCase();
   }
 
   async function loadWallet() {
@@ -386,8 +485,6 @@
         const escrow = data.data?.balances?.escrow || 0;
         document.getElementById('wallet-balance').innerHTML = formatMoney(available);
         document.getElementById('escrow-balance').innerHTML = formatMoney(escrow);
-        document.getElementById('wallet-available').innerHTML = formatMoney(available);
-        document.getElementById('wallet-escrow').innerHTML = formatMoney(escrow);
         updateWithdrawUI(available);
       }
     } catch(e) { console.error(e); }
@@ -424,7 +521,15 @@
         const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
         const tbody = document.querySelector('#campaigns-table tbody');
         if (myCampaigns.length === 0) tbody.innerHTML = '<tr><td colspan="5">No campaigns yet</td></tr>';
-        else tbody.innerHTML = myCampaigns.map(c => `<tr><td>${escapeHtml(c.title)}</td><td>${formatMoney(c.budget)}</td><td>${c.slots || 1}</td><td><span class="status-badge">${c.status}</span></td><td><button class="btn-action" onclick="viewCampaignDetails('${c._id}')">View</button></td></tr>`).join('');
+        else tbody.innerHTML = myCampaigns.map(c => `
+          <tr>
+            <td>${escapeHtml(c.title)}</td>
+            <td>${formatMoney(c.budget)}</td>
+            <td><span class="status-badge">${c.status}</span></td>
+            <td>${c.bids?.length || 0}</td>
+            <td><button class="btn-action" onclick="alert('Campaign details: ${escapeHtml(c.title)}')">View</button></td>
+          </tr>
+        `).join('');
       }
     } catch(e) { console.error(e); }
   }
@@ -439,7 +544,15 @@
         const pendingBids = allBids.filter(b => b.status === 'pending');
         const tbody = document.querySelector('#bids-table tbody');
         if (pendingBids.length === 0) tbody.innerHTML = '<tr><td colspan="5">No pending bids</td></tr>';
-        else tbody.innerHTML = pendingBids.map(b => `<tr><td>${escapeHtml(b.campaignTitle)}</td><td>${escapeHtml(b.uniqueCode)}</td><td>${formatMoney(b.amount)}</td><td>${escapeHtml(b.proposal?.substring(0, 50))}</td><td><button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Accept</button></td></tr>`).join('');
+        else tbody.innerHTML = pendingBids.map(b => `
+          <tr>
+            <td>${escapeHtml(b.campaignTitle)}</td>
+            <td>${escapeHtml(b.uniqueCode)}</td>
+            <td>${formatMoney(b.amount)}</td>
+            <td>${escapeHtml(b.proposal?.substring(0, 50))}</td>
+            <td><button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Accept</button></td>
+          </tr>
+        `).join('');
       }
     } catch(e) { console.error(e); }
   }
@@ -450,18 +563,18 @@
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch(`/api/campaigns/${campaignId}/bids/${bidId}/accept`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
-      if (data.success) { alert('Bid accepted! Creator assigned.'); loadBids(); loadCampaigns(); }
+      if (data.success) { alert('Bid accepted! Creator assigned.'); loadBids(); loadCampaigns(); loadActiveProjects(); }
       else alert(data.message || 'Failed');
     } catch(e) { alert('Error'); }
   }
 
   async function completeWork(campaignId) {
-    if (!confirm('Mark this work as complete? This will release payment to the creator.')) return;
+    if (!confirm('Complete this project? Payment will be released to the creator.')) return;
     try {
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch(`/api/campaigns/${campaignId}/complete`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
-      if (data.success) { alert('Work completed! Payment released.'); loadActiveProjects(); loadWallet(); }
+      if (data.success) { alert('Project completed! Payment released.'); loadActiveProjects(); loadWallet(); }
       else alert(data.message || 'Failed');
     } catch(e) { alert('Error'); }
   }
@@ -474,7 +587,15 @@
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
         const tbody = document.querySelector('#active-projects-table tbody');
         if (active.length === 0) tbody.innerHTML = '<tr><td colspan="5">No active projects</td></tr>';
-        else tbody.innerHTML = active.map(c => `<tr><td>${escapeHtml(c.title)}</td><td>${c.assignedCreatorId ? 'Assigned' : 'Pending'}</td><td>${c.bids?.find(b => b.status === 'accepted')?.submittedWorkUrl || '-'}</td><td><span class="status-badge">${c.status}</span></td><td>${c.status === 'submitted_for_review' ? `<button class="btn-action" onclick="completeWork('${c._id}')">Complete & Pay</button>` : '-'}</td></tr>`).join('');
+        else tbody.innerHTML = active.map(c => `
+          <tr>
+            <td>${escapeHtml(c.title)}</td>
+            <td>${c.assignedCreatorId ? 'Assigned' : 'Pending'}</td>
+            <td>${c.bids?.find(b => b.status === 'accepted')?.submittedWorkUrl || '-'}</td>
+            <td><span class="status-badge">${c.status}</span></td>
+            <td>${c.status === 'submitted_for_review' ? `<button class="btn-action" onclick="completeWork('${c._id}')">Complete & Pay</button>` : '-'}</td>
+          </tr>
+        `).join('');
       }
     } catch(e) { console.error(e); }
   }
@@ -489,16 +610,15 @@
       const resultsDiv = document.getElementById('search-results');
       if (data.success && data.results?.length) {
         resultsDiv.innerHTML = data.results.map(u => `
-          <div class="creator-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="background:rgba(255,255,255,0.05); border-radius:20px; padding:15px; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div><strong>${escapeHtml(u.profile?.stageName || u.uniqueCode)}</strong><br><span style="font-size:12px;">${u.uniqueCode}</span></div>
               <button class="btn-action" onclick="openMessageModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">💬 Message</button>
             </div>
-            <div class="creator-stats">
-              <div class="creator-stat">👥 ${u.social?.followerCount || 0} followers</div>
-              <div class="creator-stat">❤️ ${u.social?.engagementRate || 0}% engagement</div>
-              <div class="creator-stat">🎯 Niche: ${u.profile?.niche || 'Not set'}</div>
-              <div class="creator-stat">📧 ${u.email}</div>
+            <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
+              <span class="status-badge">👥 ${u.social?.followerCount || 0} followers</span>
+              <span class="status-badge">❤️ ${u.social?.engagementRate || 0}% engagement</span>
+              <span class="status-badge">🎯 Niche: ${u.profile?.niche || 'Not set'}</span>
             </div>
           </div>
         `).join('');
@@ -509,33 +629,50 @@
   async function createCampaign() {
     const title = document.getElementById('campaign-title').value.trim();
     const budget = parseFloat(document.getElementById('campaign-budget').value);
-    const slots = parseInt(document.getElementById('campaign-slots').value) || 1;
-    const instructions = document.getElementById('campaign-instructions').value;
+    const description = document.getElementById('campaign-desc').value;
     if (!title || !budget) { alert('Title and budget required'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ title, budget: budget / slots, description: instructions, instructions }) });
+      const res = await fetch('/api/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ title, budget, description }) });
       const data = await res.json();
       if (data.success) { alert('Campaign launched!'); closeModal('campaign-modal'); loadCampaigns(); }
       else alert(data.message || 'Failed');
     } catch(e) { alert('Error'); }
   }
 
-  async function addFunds() {
-    const amount = parseFloat(document.getElementById('fund-amount').value);
-    if (!amount || amount <= 0) { alert('Enter valid amount'); return; }
-    const fee = amount * 0.1;
-    const total = amount + fee;
-    document.getElementById('fund-preview').innerHTML = `You pay: $${total.toFixed(2)} ($${amount} + $${fee.toFixed(2)} fee)`;
-    if (!confirm(`Deposit $${amount} USD? Total charge: $${total.toFixed(2)} (includes 10% fee)`)) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/wallet/deposit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ intentUsd: amount, paymentMethod: 'wallet' }) });
-      const data = await res.json();
-      if (data.success) { alert('Funds added!'); loadWallet(); closeModal('fund-modal'); closeModal('wallet-modal'); }
-      else alert(data.message || 'Failed');
-    } catch(e) { alert('Error'); }
+  async function showTotalDeposits() {
+    const data = await fetchJSON('/api/wallet/transactions');
+    if (data.success) {
+      const deposits = data.data?.transactions?.filter(t => t.type === 'deposit') || [];
+      const total = deposits.reduce((s, t) => s + t.grossAmount, 0);
+      document.getElementById('total-deposits').innerHTML = formatMoney(total);
+      alert(`💰 Total Deposits: ${formatMoney(total)}\n\nYou have deposited this amount into your Pebeto wallet.`);
+    }
   }
+
+  async function showAuditLedger() {
+    const data = await fetchJSON('/api/wallet/transactions');
+    if (data.success) {
+      const txs = data.data?.transactions || [];
+      document.getElementById('audit-list').innerHTML = txs.slice(0, 30).map(t => `
+        <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
+          <span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span style="font-size:11px;">${new Date(t.createdAt).toLocaleDateString()}</span>
+        </div>
+      `).join('');
+      document.getElementById('audit-modal').style.display = 'flex';
+    }
+  }
+
+  function showActiveEscrow() {
+    const escrow = document.getElementById('escrow-balance').innerText;
+    document.getElementById('escrow-list').innerHTML = `<p style="margin-bottom:10px;">🔒 Escrow Balance: ${escrow}</p><p>This money is held securely and will be released to creators when campaigns are completed.</p>`;
+    document.getElementById('escrow-modal').style.display = 'flex';
+  }
+
+  function openDepositModal() { document.getElementById('deposit-modal').style.display = 'flex'; updateDepositPreview(); }
+  function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; }
+  function openMessageModal(creatorId, name) { document.getElementById('msg-name').innerText = name; document.getElementById('message-modal').style.display = 'flex'; document.getElementById('msg-text').dataset.recipient = creatorId; }
+  function sendMessage() { alert(`Message sent! (Demo - would send to creator)`); closeModal('message-modal'); }
 
   async function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
@@ -545,27 +682,30 @@
     if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
     else if (method === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
     else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value };
+    if (method === 'mpesa' && !payoutDetails.phoneNumber) { alert('Enter phone number'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch('/api/wallet/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails }) });
       const data = await res.json();
-      if (data.success) { alert('Withdrawal submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
-      else alert(data.message);
+      if (data.success) { alert('Withdrawal request submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
+      else alert(data.message || 'Withdrawal failed');
     } catch(e) { alert('Error'); }
   }
 
-  function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; }
-  function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
-  function showActiveEscrow() { document.getElementById('escrow-modal').style.display = 'flex'; document.getElementById('escrow-list').innerHTML = `<p>Escrow held: ${document.getElementById('escrow-balance').innerHTML}</p><p>Funds are locked until campaigns are completed.</p>`; }
-  async function showTotalDeposits() { const data = await fetchJSON('/api/wallet/transactions'); if (data.success) { const deposits = data.data?.transactions?.filter(t => t.type === 'deposit') || []; const total = deposits.reduce((s, t) => s + t.grossAmount, 0); document.getElementById('total-deposits').innerHTML = formatMoney(total); alert(`Total Deposits: ${formatMoney(total)}`); } }
-  async function showAuditLedger() { const data = await fetchJSON('/api/wallet/transactions'); if (data.success) { const txs = data.data?.transactions || []; document.getElementById('audit-list').innerHTML = txs.slice(0, 20).map(t => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${t.type}</span><span>${formatMoney(t.grossAmount)}</span><span>${new Date(t.createdAt).toLocaleDateString()}</span></div>`).join(''); document.getElementById('audit-modal').style.display = 'flex'; } }
-  function openMessageModal(creatorId, name) { document.getElementById('message-recipient').innerText = name; document.getElementById('message-modal').style.display = 'flex'; document.getElementById('message-text').dataset.recipient = creatorId; }
-  async function sendMessage() { alert('Messaging feature coming soon (WebSocket integration needed)'); closeModal('message-modal'); }
-  function viewCampaignDetails(id) { alert('Campaign details view coming soon'); }
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-  document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); if (btn.dataset.tab === 'bids') loadBids(); if (btn.dataset.tab === 'active') loadActiveProjects(); }); });
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+      if (btn.dataset.tab === 'bids') loadBids();
+      if (btn.dataset.tab === 'active') loadActiveProjects();
+    });
+  });
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
+  document.getElementById('deposit-amount').addEventListener('input', updateDepositPreview);
 
   loadUserData();
   loadWallet();
