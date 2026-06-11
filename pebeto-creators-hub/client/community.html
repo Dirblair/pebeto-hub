@@ -2,648 +2,642 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pebeto Community — Watch, Connect, Create</title>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#4facfe',
-            secondary: '#00f2fe',
-            accent: '#ff0050',
-          },
-        },
-      },
-    };
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Community - Pebeto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <style>
-    body { margin: 0; background: #000; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #000;
+      color: #fff;
+      overflow-x: hidden;
+    }
     
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,140,66,0.2);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
+    .search-bar {
+      background: rgba(255,255,255,0.1);
+      border-radius: 40px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 300px;
+    }
+    .search-bar input {
+      background: transparent;
+      border: none;
+      color: white;
+      width: 100%;
+      outline: none;
+    }
+    .nav-icons { display: flex; gap: 20px; align-items: center; }
+    .nav-icons i { font-size: 24px; cursor: pointer; color: #b8a99a; }
+    .nav-icons i:hover { color: #ffaa77; }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    /* Feed Container */
     .feed-container {
-      height: 100vh; width: 100vw; overflow-y: scroll;
-      scroll-snap-type: y mandatory; scrollbar-width: none;
+      margin-top: 70px;
+      height: calc(100vh - 70px);
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
     }
     .feed-container::-webkit-scrollbar { display: none; }
-
-    .post-card {
-      height: 100vh; width: 100%; scroll-snap-align: start;
-      position: relative; background: #000;
+    
+    /* Video Post */
+    .video-post {
+      height: 100vh;
+      scroll-snap-align: start;
+      position: relative;
+      background: #000;
     }
-    .post-media { width: 100%; height: 100%; object-fit: contain; background: #000; }
-
-    .right-sidebar {
-      position: absolute; right: 12px; bottom: 100px;
-      display: flex; flex-direction: column; align-items: center;
-      gap: 24px; z-index: 50;
+    .video-post video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
-    .action-item { 
-      display: flex; flex-direction: column; align-items: center; 
-      cursor: pointer; color: white; transition: transform 0.1s ease;
+    .post-overlay {
+      position: absolute;
+      bottom: 100px;
+      left: 16px;
+      right: 80px;
+      z-index: 10;
     }
-    .action-item:active { transform: scale(0.95); }
-    .action-item i { font-size: 2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-    .action-count { font-size: 0.7rem; font-weight: 600; margin-top: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-    .creator-avatar { 
-      width: 48px; height: 48px; border-radius: 50%; 
-      border: 2px solid #fff; background: linear-gradient(135deg, #4facfe, #00f2fe);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 1.2rem;
+    .post-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
     }
-    .follow-btn { 
-      position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); 
-      width: 22px; height: 22px; background: #ff0050; border-radius: 50%; 
-      display: flex; justify-content: center; align-items: center; 
-      font-size: 12px; font-weight: bold; color: white;
-      cursor: pointer; transition: transform 0.1s ease;
+    .author-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      background-size: cover;
     }
-    .follow-btn:active { transform: translateX(-50%) scale(0.9); }
-
-    .caption-overlay {
-      position: absolute; bottom: 100px; left: 16px;
-      color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-      max-width: 70%; z-index: 50;
+    .author-info h4 { font-size: 16px; margin-bottom: 2px; }
+    .author-info h4 span { font-weight: normal; color: #a08070; font-size: 12px; }
+    .author-info p { font-size: 12px; color: #a08070; }
+    .post-caption { font-size: 14px; margin-top: 8px; max-width: 80%; }
+    .trending-sound {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #ffaa77;
+      cursor: pointer;
     }
-    .caption-username { font-weight: bold; font-size: 0.9rem; }
-    .caption-text { font-size: 0.85rem; margin-top: 4px; opacity: 0.9; }
-
-    .bottom-navbar {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
-      background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px);
-      border-top: 1px solid #222;
-      display: flex; justify-content: space-around; align-items: center;
-      z-index: 100; padding-bottom: env(safe-area-inset-bottom);
+    
+    /* Right Sidebar Actions */
+    .right-actions {
+      position: absolute;
+      right: 12px;
+      bottom: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      z-index: 10;
     }
-    .nav-item { 
-      display: flex; flex-direction: column; align-items: center; 
-      cursor: pointer; color: #8a8b91; transition: color 0.1s ease;
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.2s;
     }
-    .nav-item.active { color: #fff; }
-    .nav-item i { font-size: 1.5rem; }
-    .nav-label { font-size: 0.65rem; margin-top: 2px; }
-    .create-btn-container { 
-      width: 50px; height: 50px; 
-      background: linear-gradient(135deg, #4facfe, #00f2fe); 
-      border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      margin-top: -20px; cursor: pointer;
-      transition: transform 0.1s ease;
+    .action-btn i { font-size: 28px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    .action-btn span { font-size: 12px; margin-top: 4px; color: white; }
+    .action-btn:hover i { color: #ff8c42; }
+    .action-btn.liked i { color: #ff0050; }
+    
+    /* Live Badge */
+    .live-badge {
+      position: absolute;
+      top: 20px;
+      left: 16px;
+      background: #ff0050;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
     }
-    .create-btn-container:active { transform: scale(0.95); }
-    .create-btn-inner { 
-      width: 44px; height: 44px; background: #000; border-radius: 50%; 
-      display: flex; justify-content: center; align-items: center; 
-      color: white; font-weight: bold; font-size: 1.5rem;
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #1a1510;
+      border-radius: 28px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid rgba(255,140,66,0.3);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 12px;
+      border-radius: 30px;
+      margin-bottom: 15px;
+      color: white;
+    }
+    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
+    .save-btn { background: #ff8c42; color: white; }
+    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
+    
+    /* Comments Section */
+    .comments-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ff8c42;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .comment-text strong { font-size: 13px; }
+    .comment-text p { font-size: 12px; margin-top: 4px; color: #ccc; }
+    
+    /* Trending Sounds Bar */
+    .trending-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      z-index: 99;
+      border-top: 1px solid rgba(255,140,66,0.2);
+    }
+    .trending-sound-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 40px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .trending-sound-item i { color: #ff8c42; }
+    
+    /* Profile Page */
+    .profile-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .profile-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .profile-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 20px 0;
+    }
+    .profile-stats div { text-align: center; }
+    .profile-stats .number { font-size: 20px; font-weight: bold; color: #ff8c42; }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+    .video-grid-item {
+      aspect-ratio: 1;
+      background: #333;
+      cursor: pointer;
+    }
+    .video-grid-item video { width: 100%; height: 100%; object-fit: cover; }
+    
+    @media (max-width: 768px) {
+      .search-bar { display: none; }
+      .post-caption { font-size: 12px; }
+      .right-actions { right: 8px; gap: 16px; }
+      .action-btn i { font-size: 22px; }
     }
   </style>
 </head>
-
 <body>
-  <!-- Main Feed -->
-  <div class="feed-container" id="feed"></div>
 
-  <!-- Bottom Navigation -->
-  <nav class="bottom-navbar">
-    <div class="nav-item active" data-nav="home">
-      <i class="ri-home-fill"></i>
-      <span class="nav-label">Home</span>
-    </div>
-    <div class="create-btn-container" onclick="openComposer()">
-      <div class="create-btn-inner">+</div>
-    </div>
-    <div class="nav-item" data-nav="profile" onclick="goToHub()">
-      <i class="ri-user-line"></i>
-      <span class="nav-label">Profile</span>
-    </div>
-  </nav>
+<div class="header">
+  <div class="logo" onclick="showFeed()">Pebeto</div>
+  <div class="search-bar">
+    <i class="ri-search-line"></i>
+    <input type="text" id="global-search" placeholder="Search users or sounds..." onkeyup="searchGlobal()">
+  </div>
+  <div class="nav-icons">
+    <i class="ri-home-5-line" onclick="showFeed()" title="Home"></i>
+    <i class="ri-user-line" onclick="showMyProfile()" title="Profile"></i>
+    <i class="ri-camera-add-line" onclick="openUploadModal()" title="Upload"></i>
+    <i class="ri-live-line" onclick="startLive()" title="Go Live"></i>
+    <div class="avatar" id="nav-avatar" onclick="showMyProfile()">U</div>
+  </div>
+</div>
 
-  <!-- Composer Modal -->
-  <div id="composer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:200; padding:20px;">
-    <div style="max-width:400px; margin:50px auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="color:white; font-size:1.5rem;">Create Post</h2>
-        <button onclick="closeComposer()" style="background:transparent; border:none; color:white; font-size:1.5rem;">✕</button>
-      </div>
-      <textarea id="post-caption" placeholder="What's happening?" style="width:100%; height:100px; background:#222; color:white; padding:10px; border-radius:10px; border:none; resize:none;"></textarea>
-      <input id="post-file" type="file" accept="image/*,video/*" style="width:100%; margin-top:10px; background:#222; color:white; padding:10px; border-radius:10px; border:none;">
-      <div id="upload-progress" class="hidden mt-2">
-        <div class="h-1 bg-slate-700 rounded-full overflow-hidden">
-          <div id="progress-bar" class="h-full bg-primary transition-all" style="width:0%"></div>
-        </div>
-        <p id="progress-text" class="text-xs text-slate-400 mt-1">Uploading...</p>
-      </div>
-      <div style="margin-top:20px; display:flex; gap:10px;">
-        <button onclick="closeComposer()" style="flex:1; padding:12px; background:#333; color:white; border-radius:10px; border:none;">Cancel</button>
-        <button onclick="submitPost()" id="submit-post-btn" style="flex:1; padding:12px; background:linear-gradient(135deg, #4facfe, #00f2fe); color:white; border-radius:10px; border:none; font-weight:bold;">Post</button>
-      </div>
+<!-- Feed Container -->
+<div id="feed-container" class="feed-container"></div>
+
+<!-- Trending Sounds Bar -->
+<div class="trending-bar" id="trending-bar"></div>
+
+<!-- Upload Modal -->
+<div id="upload-modal" class="modal">
+  <div class="modal-content">
+    <h3>📤 Upload Video</h3>
+    <input type="text" id="video-caption" placeholder="Caption">
+    <select id="video-sound">
+      <option value="">Original Sound</option>
+      <option value="trending1">🔥 Trending: Summer Vibes</option>
+      <option value="trending2">🎵 Trending: Dance Challenge</option>
+      <option value="trending3">💃 Trending: Viral Beat</option>
+    </select>
+    <input type="file" id="video-file" accept="video/*">
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="uploadVideo()">Post</button>
+      <button class="cancel-btn" onclick="closeModal('upload-modal')">Cancel</button>
     </div>
   </div>
+</div>
 
-  <!-- Comments Modal -->
-  <div id="comment-modal" style="display:none; position:fixed; bottom:0; left:0; width:100%; height:60%; background:#1a1a1a; z-index:300; border-radius:20px 20px 0 0; padding:20px; color:white;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <h3 style="margin:0;">Comments</h3>
-      <button onclick="closeComments()" style="background:transparent; border:none; color:white; font-size:1.2rem;">✕</button>
+<!-- Comments Modal -->
+<div id="comments-modal" class="modal">
+  <div class="modal-content">
+    <h3>💬 Comments</h3>
+    <div id="comments-list" class="comments-list"></div>
+    <div style="display: flex; gap: 10px;">
+      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;">
+      <button class="save-btn" onclick="addComment()">Post</button>
     </div>
-    <div id="comment-list" style="height:65%; overflow-y:scroll;"></div>
-    <div style="display:flex; gap:10px; margin-top:10px;">
-      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1; padding:12px; border-radius:25px; border:none; background:#333; color:white;">
-      <button onclick="addComment()" style="background:linear-gradient(135deg, #4facfe, #00f2fe); border:none; padding:10px 20px; border-radius:25px; color:white; font-weight:bold;">Post</button>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('comments-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Live Modal -->
+<div id="live-modal" class="modal">
+  <div class="modal-content">
+    <h3>🔴 Go Live</h3>
+    <p>Live streaming coming soon! This will use WebRTC for real-time broadcasting.</p>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('live-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Tip Modal -->
+<div id="tip-modal" class="modal">
+  <div class="modal-content">
+    <h3>💝 Send Tip</h3>
+    <p id="tip-creator-name">To: Creator</p>
+    <input type="number" id="tip-amount" placeholder="Amount (USD)" min="1">
+    <p style="font-size:12px; margin:10px 0;">5% platform fee. Creator receives 95%.</p>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendTip()">Send Tip</button>
+      <button class="cancel-btn" onclick="closeModal('tip-modal')">Close</button>
     </div>
   </div>
+</div>
 
-  <script src="/js/pebeto-api.js"></script>
-  <script>
-    const { requireRole, apiFetch, formatUsd, formatDate, clearSession, getUser, getToken } = window.PebetoApi || {};
+<script>
+  let currentUser = null;
+  let posts = [];
+  let currentPostId = null;
+  let currentProfileUserId = null;
+  
+  // Mock data for demo
+  const mockPosts = [
+    { id: "1", userId: "user1", username: "@djnova", displayName: "DJ Nova", role: "creator", niche: "Music", avatar: "", caption: "New track dropping soon! 🔥", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", likes: 1234, comments: [], sound: "Summer Vibes", isLive: false, createdAt: new Date() },
+    { id: "2", userId: "user2", username: "@sarahcreates", displayName: "Sarah Creates", role: "creator", niche: "Art", avatar: "", caption: "Speed painting of my latest piece 🎨", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4", likes: 567, comments: [], sound: "Original Sound", isLive: true, createdAt: new Date() },
+    { id: "3", userId: "user3", username: "@pebeto", displayName: "Pebeto", role: "business", niche: "Platform", avatar: "", caption: "Join the creator economy! #Pebeto", videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_3mb.mp4", likes: 8901, comments: [], sound: "Trending: Dance Challenge", isLive: false, createdAt: new Date() }
+  ];
+  
+  const trendingSounds = [
+    { name: "Summer Vibes", uses: 1234, icon: "🔥" },
+    { name: "Dance Challenge", uses: 892, icon: "💃" },
+    { name: "Viral Beat", uses: 756, icon: "🎵" },
+    { name: "Comedy Skit", uses: 543, icon: "😂" }
+  ];
+  
+  async function fetchJSON(url, options = {}) {
+    const token = localStorage.getItem('pebeto_token');
+    const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
+    return res.json();
+  }
+  
+  function formatNumber(num) {
+    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
+    return num.toString();
+  }
+  
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  
+  function loadUserData() {
+    const userStr = localStorage.getItem('pebeto_user');
+    if (userStr) {
+      currentUser = JSON.parse(userStr);
+      document.getElementById('nav-avatar').innerHTML = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
+      if (currentUser.profile?.avatarUrl) {
+        document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
+        document.getElementById('nav-avatar').innerHTML = '';
+      }
+    }
+    loadFeed();
+    loadTrendingSounds();
+  }
+  
+  function loadFeed() {
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    // In production, fetch from API: const data = await fetchJSON('/api/community/posts');
+    mockPosts.forEach(post => {
+      const postEl = createPostElement(post);
+      container.appendChild(postEl);
+    });
+  }
+  
+  function createPostElement(post) {
+    const article = document.createElement('article');
+    article.className = 'video-post';
+    article.dataset.postId = post.id;
     
-    let socket = null;
-    let currentUser = null;
-    let currentPostId = null;
-    let observer = null;
-    let feedPosts = [];
-
-    // Initialize authentication
-    (async function initAuth() {
-      try {
-        // Check if user is logged in via API
-        const user = getUser ? getUser() : null;
-        if (!user) {
-          // No session, redirect to signup
-          window.location.href = '/signup.html';
-          return;
-        }
-        currentUser = user;
-        
-        // Initialize socket connection
-        initSocket();
-        
-        // Load posts
-        await loadPosts();
-        
-        // Setup intersection observer for video autoplay
-        setupObserver();
-        
-      } catch (error) {
-        console.error('Auth error:', error);
-        window.location.href = '/signup.html';
-      }
-    })();
-
-    function initSocket() {
-      if (typeof io === 'undefined') {
-        console.warn('Socket.io not available');
-        return;
-      }
-      
-      const token = getToken ? getToken() : null;
-      socket = io({
-        auth: { token: token },
-        transports: ['websocket', 'polling']
-      });
-      
-      socket.on('connect', () => {
-        console.log('Socket connected');
-        socket.emit('join:community');
-      });
-      
-      socket.on('post:new', (post) => {
-        // Add new post to the top of feed
-        const postElement = renderPostElement(post);
-        const feed = document.getElementById('feed');
-        if (feed) {
-          feed.insertBefore(postElement, feed.firstChild);
-          if (observer) observer.observe(postElement);
-        }
-        feedPosts.unshift(post);
-      });
-      
-      socket.on('post:like', (data) => {
-        updateLikeCount(data.postId, data.likeCount, data.isLikedByCurrentUser);
-      });
-      
-      socket.on('post:comment', (data) => {
-        if (currentPostId === data.postId) {
-          renderComments(data.comments);
-        }
-        updateCommentCount(data.postId, data.commentCount);
-      });
-      
-      socket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err);
-      });
-    }
-
-    async function loadPosts() {
-      try {
-        const feed = document.getElementById('feed');
-        if (feed) {
-          feed.innerHTML = '<div class="flex items-center justify-center h-full"><div class="text-slate-400">Loading videos...</div></div>';
-        }
-        
-        const data = await apiFetch('/api/community/posts');
-        feedPosts = data.posts || [];
-        
-        if (feed) feed.innerHTML = '';
-        
-        if (feedPosts.length === 0) {
-          if (feed) {
-            feed.innerHTML = `
-              <div class="flex flex-col items-center justify-center h-full text-center p-8">
-                <i class="ri-video-add-line text-6xl text-slate-600 mb-4"></i>
-                <p class="text-slate-400">No posts yet</p>
-                <p class="text-slate-500 text-sm mt-2">Be the first to share something!</p>
-                <button onclick="openComposer()" class="mt-4 px-6 py-2 bg-primary rounded-full text-white">Create Post</button>
-              </div>
-            `;
-          }
-          return;
-        }
-        
-        feedPosts.forEach(post => {
-          const postElement = renderPostElement(post);
-          if (feed) feed.appendChild(postElement);
-          if (observer) observer.observe(postElement);
-        });
-      } catch (error) {
-        console.error('Load posts error:', error);
-        const feed = document.getElementById('feed');
-        if (feed) {
-          feed.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full text-center p-8">
-              <i class="ri-error-warning-line text-6xl text-rose-500 mb-4"></i>
-              <p class="text-slate-400">Failed to load posts</p>
-              <button onclick="loadPosts()" class="mt-4 px-6 py-2 bg-primary rounded-full text-white">Retry</button>
-            </div>
-          `;
-        }
-      }
-    }
-
-    function renderPostElement(post) {
-      const article = document.createElement('article');
-      article.className = 'post-card';
-      article.dataset.postId = post._id;
-      
-      const mediaTag = post.mediaType === 'video' 
-        ? `<video class="post-media" src="${post.mediaUrl}" loop muted playsinline poster="${post.thumbnailUrl || ''}"></video>`
-        : `<img class="post-media" src="${post.mediaUrl}" alt="${escapeHtml(post.caption || 'Post image')}" />`;
-      
-      const isLiked = post.isLikedByCurrentUser || false;
-      const likeIconColor = isLiked ? '#ff0050' : 'white';
-      const likeIconFill = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
-      
-      const isFollowing = post.author?.isFollowedByCurrentUser || false;
-      const followBtnText = isFollowing ? '✓' : '+';
-      
-      const authorName = post.author?.stageName || post.author?.uniqueCode || 'Creator';
-      const authorInitial = authorName.charAt(0).toUpperCase();
-      
-      article.innerHTML = `
-        ${mediaTag}
-        <div class="caption-overlay">
-          <div class="caption-username">@${escapeHtml(post.author?.uniqueCode || 'user')}</div>
-          <div class="caption-text">${escapeHtml(post.caption || '')}</div>
+    const isLiked = false; // Check if user liked
+    const likeIconColor = isLiked ? '#ff0050' : 'white';
+    const likeIconFill = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
+    
+    article.innerHTML = `
+      ${post.isLive ? `<div class="live-badge"><span class="live-dot"></span> LIVE</div>` : ''}
+      <video class="post-video" src="${post.videoUrl}" loop muted playsinline></video>
+      <div class="post-overlay">
+        <div class="post-author">
+          <div class="author-avatar" style="background-image: url(${post.avatar})">${!post.avatar ? (post.displayName[0] || 'U') : ''}</div>
+          <div class="author-info">
+            <h4>${escapeHtml(post.displayName)} <span>${escapeHtml(post.username)}</span> • ${post.role === 'creator' ? '🎨 Creator' : '🏢 Brand'}</h4>
+            <p>${post.niche || 'Creator'} • ${formatNumber(Math.floor(Math.random() * 1000))} followers</p>
+          </div>
         </div>
-        <div class="right-sidebar">
-          <div class="action-item" onclick="viewProfile('${post.author?._id}')">
-            <div class="creator-avatar">${authorInitial}</div>
-            <button class="follow-btn" onclick="event.stopPropagation(); toggleFollow('${post.author?._id}', this)">${followBtnText}</button>
-          </div>
-          <div class="action-item" onclick="toggleLike('${post._id}', this)">
-            <i class="${likeIconFill}" style="color:${likeIconColor}"></i>
-            <span class="action-count">${formatNumber(post.likeCount || 0)}</span>
-          </div>
-          <div class="action-item" onclick="openComments('${post._id}')">
-            <i class="ri-chat-3-fill"></i>
-            <span class="action-count">${formatNumber(post.commentCount || 0)}</span>
-          </div>
-          ${currentUser?._id === post.author?._id ? `
-          <div class="action-item" onclick="deletePost('${post._id}', this)">
-            <i class="ri-delete-bin-line"></i>
-          </div>
-          ` : ''}
+        <div class="post-caption">${escapeHtml(post.caption)}</div>
+        ${post.sound ? `<div class="trending-sound" onclick="useSound('${post.sound}')"><i class="ri-music-2-line"></i> ${escapeHtml(post.sound)}</div>` : ''}
+      </div>
+      <div class="right-actions">
+        <div class="action-btn" onclick="toggleLike(this, '${post.id}')">
+          <i class="${likeIconFill}" style="color:${likeIconColor}"></i>
+          <span>${formatNumber(post.likes)}</span>
         </div>
-      `;
-      
-      // Setup video autoplay on load
-      const video = article.querySelector('video');
-      if (video) {
-        video.addEventListener('canplay', () => {
-          if (isElementInViewport(article)) {
-            video.play().catch(e => console.log('Autoplay prevented:', e));
-          }
-        });
-      }
-      
-      return article;
+        <div class="action-btn" onclick="openComments('${post.id}')">
+          <i class="ri-chat-3-fill"></i>
+          <span>${formatNumber(post.comments?.length || 0)}</span>
+        </div>
+        <div class="action-btn" onclick="openTipModal('${post.userId}', '${escapeHtml(post.displayName)}')">
+          <i class="ri-hand-coin-line"></i>
+          <span>Tip</span>
+        </div>
+        <div class="action-btn" onclick="sharePost('${post.id}')">
+          <i class="ri-share-forward-line"></i>
+          <span>Share</span>
+        </div>
+        <div class="action-btn" onclick="saveToProfile('${post.id}')">
+          <i class="ri-bookmark-line"></i>
+          <span>Save</span>
+        </div>
+      </div>
+    `;
+    
+    const video = article.querySelector('video');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) video.play().catch(e => {});
+        else video.pause();
+      });
+    }, { threshold: 0.5 });
+    observer.observe(article);
+    
+    return article;
+  }
+  
+  function toggleLike(element, postId) {
+    const icon = element.querySelector('i');
+    const countSpan = element.querySelector('span');
+    let count = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
+    if (icon.classList.contains('ri-heart-line')) {
+      icon.classList.remove('ri-heart-line');
+      icon.classList.add('ri-heart-fill');
+      icon.style.color = '#ff0050';
+      count++;
+    } else {
+      icon.classList.remove('ri-heart-fill');
+      icon.classList.add('ri-heart-line');
+      icon.style.color = 'white';
+      count--;
     }
-
-    function isElementInViewport(el) {
-      const rect = el.getBoundingClientRect();
-      return rect.top >= 0 && rect.top <= window.innerHeight;
-    }
-
-    function setupObserver() {
-      observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          const video = entry.target.querySelector('video');
-          if (!video) return;
-          
-          if (entry.isIntersecting) {
-            video.play().catch(e => console.log('Play failed:', e));
-          } else {
-            video.pause();
-            video.currentTime = 0;
-          }
-        });
-      }, { threshold: 0.5 });
-      
-      document.querySelectorAll('.post-card').forEach(card => observer.observe(card));
-    }
-
-    async function toggleLike(postId, element) {
-      try {
-        const icon = element.querySelector('i');
-        const countSpan = element.querySelector('.action-count');
-        
-        const data = await apiFetch('/api/community/posts/' + postId + '/like', {
-          method: 'POST',
-          body: JSON.stringify({})
-        });
-        
-        const isLiked = data.liked;
-        icon.className = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
-        icon.style.color = isLiked ? '#ff0050' : 'white';
-        countSpan.textContent = formatNumber(data.likeCount);
-      } catch (error) {
-        console.error('Like error:', error);
-      }
-    }
-
-    function updateLikeCount(postId, likeCount, isLiked) {
-      const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-      if (!postCard) return;
-      
-      const actionItem = postCard.querySelector('.action-item:has(.ri-heart-fill), .action-item:has(.ri-heart-line)');
-      if (actionItem) {
-        const icon = actionItem.querySelector('i');
-        const countSpan = actionItem.querySelector('.action-count');
-        
-        if (icon) {
-          icon.className = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
-          icon.style.color = isLiked ? '#ff0050' : 'white';
-        }
-        if (countSpan) countSpan.textContent = formatNumber(likeCount);
-      }
-    }
-
-    function updateCommentCount(postId, commentCount) {
-      const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-      if (!postCard) return;
-      
-      const commentItem = postCard.querySelector('.action-item:has(.ri-chat-3-fill)');
-      if (commentItem) {
-        const countSpan = commentItem.querySelector('.action-count');
-        if (countSpan) countSpan.textContent = formatNumber(commentCount);
-      }
-    }
-
-    async function toggleFollow(userId, button) {
-      try {
-        const data = await apiFetch('/api/users/' + userId + '/follow', {
-          method: 'POST',
-          body: JSON.stringify({})
-        });
-        
-        button.textContent = data.isFollowing ? '✓' : '+';
-      } catch (error) {
-        console.error('Follow error:', error);
-      }
-    }
-
-    async function openComments(postId) {
-      currentPostId = postId;
-      const modal = document.getElementById('comment-modal');
-      const commentList = document.getElementById('comment-list');
-      
-      if (commentList) commentList.innerHTML = '<div class="text-slate-500 text-center py-4">Loading comments...</div>';
-      if (modal) modal.style.display = 'block';
-      
-      try {
-        const data = await apiFetch('/api/community/posts/' + postId + '/comments');
-        renderComments(data.comments || []);
-      } catch (error) {
-        console.error('Load comments error:', error);
-        if (commentList) commentList.innerHTML = '<div class="text-rose-400 text-center py-4">Failed to load comments</div>';
-      }
-    }
-
-    function renderComments(comments) {
-      const commentList = document.getElementById('comment-list');
-      if (!commentList) return;
-      
-      if (!comments.length) {
-        commentList.innerHTML = '<div class="text-slate-500 text-center py-4">No comments yet. Be the first!</div>';
-        return;
-      }
-      
-      commentList.innerHTML = comments.map(comment => `
-        <div class="flex gap-2 py-2 border-b border-slate-800">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xs font-bold">
-            ${(comment.author?.stageName?.[0] || comment.author?.uniqueCode?.[0] || 'U').toUpperCase()}
-          </div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-semibold">@${escapeHtml(comment.author?.uniqueCode || 'user')}</span>
-              <span class="text-xs text-slate-500">${formatDate ? formatDate(comment.createdAt) : new Date(comment.createdAt).toLocaleDateString()}</span>
-            </div>
-            <p class="text-sm mt-1">${escapeHtml(comment.text)}</p>
-          </div>
+    countSpan.innerText = formatNumber(count);
+  }
+  
+  function openComments(postId) {
+    currentPostId = postId;
+    const post = mockPosts.find(p => p.id === postId);
+    const commentsDiv = document.getElementById('comments-list');
+    if (post && post.comments) {
+      commentsDiv.innerHTML = post.comments.map(c => `
+        <div class="comment-item">
+          <div class="comment-avatar">${c.username[1] || 'U'}</div>
+          <div class="comment-text"><strong>${escapeHtml(c.username)}</strong><p>${escapeHtml(c.text)}</p></div>
         </div>
       `).join('');
+    } else {
+      commentsDiv.innerHTML = '<div style="text-align:center; padding:20px;">No comments yet. Be the first!</div>';
     }
-
-    async function addComment() {
-      const input = document.getElementById('comment-input');
-      const text = input?.value.trim();
-      
-      if (!text || !currentPostId) return;
-      
-      try {
-        await apiFetch('/api/community/posts/' + currentPostId + '/comments', {
-          method: 'POST',
-          body: JSON.stringify({ text })
-        });
-        
-        input.value = '';
-        
-        // Refresh comments
-        const data = await apiFetch('/api/community/posts/' + currentPostId + '/comments');
-        renderComments(data.comments || []);
-        
-      } catch (error) {
-        console.error('Add comment error:', error);
-        alert('Failed to add comment');
-      }
+    document.getElementById('comments-modal').style.display = 'flex';
+  }
+  
+  function addComment() {
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const post = mockPosts.find(p => p.id === currentPostId);
+    if (post) {
+      if (!post.comments) post.comments = [];
+      post.comments.push({ username: currentUser?.profile?.stageName || currentUser?.email?.split('@')[0] || 'User', text: text });
+      openComments(currentPostId);
+      input.value = '';
+      // Update comment count in UI
+      const commentCountSpan = document.querySelector(`.video-post[data-post-id="${currentPostId}"] .action-btn:nth-child(2) span`);
+      if (commentCountSpan) commentCountSpan.innerText = formatNumber(post.comments.length);
     }
-
-    function closeComments() {
-      const modal = document.getElementById('comment-modal');
-      if (modal) modal.style.display = 'none';
-      currentPostId = null;
-    }
-
-    async function deletePost(postId, element) {
-      if (!confirm('Delete this post?')) return;
-      
-      try {
-        await apiFetch('/api/community/posts/' + postId, {
-          method: 'DELETE'
-        });
-        
-        const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-        if (postCard) {
-          if (observer) observer.unobserve(postCard);
-          postCard.remove();
-        }
-        
-        feedPosts = feedPosts.filter(p => p._id !== postId);
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Failed to delete post');
-      }
-    }
-
-    async function submitPost() {
-      const caption = document.getElementById('post-caption')?.value.trim();
-      const fileInput = document.getElementById('post-file');
-      
-      if (!caption) {
-        alert('Please add a caption');
-        return;
-      }
-      
-      if (!fileInput?.files.length) {
-        alert('Please select an image or video');
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append('media', file);
-      formData.append('caption', caption);
-      
-      const submitBtn = document.getElementById('submit-post-btn');
-      const progressDiv = document.getElementById('upload-progress');
-      const progressBar = document.getElementById('progress-bar');
-      const progressText = document.getElementById('progress-text');
-      
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Uploading...';
-      }
-      if (progressDiv) progressDiv.classList.remove('hidden');
-      
-      try {
-        const data = await apiFetch('/api/community/posts', {
-          method: 'POST',
-          body: formData,
-          isFormData: true,
-          onProgress: (percent) => {
-            if (progressBar) progressBar.style.width = percent + '%';
-            if (progressText) progressText.textContent = `Uploading: ${percent}%`;
-          }
-        });
-        
-        // Add new post to feed
-        const postElement = renderPostElement(data.post);
-        const feed = document.getElementById('feed');
-        if (feed) {
-          // Remove empty state if present
-          if (feed.children.length === 1 && feed.children[0].querySelector('.ri-video-add-line')) {
-            feed.innerHTML = '';
-          }
-          feed.insertBefore(postElement, feed.firstChild);
-          if (observer) observer.observe(postElement);
-        }
-        feedPosts.unshift(data.post);
-        
-        closeComposer();
-        
-        // Clear form
-        if (fileInput) fileInput.value = '';
-        if (document.getElementById('post-caption')) document.getElementById('post-caption').value = '';
-        
-      } catch (error) {
-        console.error('Upload error:', error);
-        alert('Failed to upload: ' + (error.message || 'Unknown error'));
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Post';
-        }
-        if (progressDiv) progressDiv.classList.add('hidden');
-        if (progressBar) progressBar.style.width = '0%';
-      }
-    }
-
-    function openComposer() {
-      const modal = document.getElementById('composer-modal');
-      if (modal) modal.style.display = 'block';
-    }
-
-    function closeComposer() {
-      const modal = document.getElementById('composer-modal');
-      if (modal) modal.style.display = 'none';
-      
-      // Clear form
-      const fileInput = document.getElementById('post-file');
-      const captionInput = document.getElementById('post-caption');
-      if (fileInput) fileInput.value = '';
-      if (captionInput) captionInput.value = '';
-    }
-
-    function viewProfile(userId) {
-      if (userId === currentUser?._id) {
-        goToHub();
-      } else {
-        window.location.href = `/profile.html?userId=${userId}`;
-      }
-    }
-
-    function goToHub() {
-      const userRole = currentUser?.role;
-      if (userRole === 'business') window.location.href = '/business.html';
-      else if (userRole === 'creator') window.location.href = '/creator-hub.html';
-      else window.location.href = '/signup.html';
-    }
-
-    function formatNumber(num) {
-      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-      return num.toString();
-    }
-
-    function escapeHtml(s) {
-      if (!s) return '';
-      const div = document.createElement('div');
-      div.textContent = s;
-      return div.innerHTML;
-    }
-
-    // Re-setup observer when feed changes (for dynamically loaded videos)
-    const feedContainer = document.getElementById('feed');
-    if (feedContainer) {
-      const mutationObserver = new MutationObserver(() => {
-        document.querySelectorAll('.post-card:not([data-observed])').forEach(card => {
-          if (observer) observer.observe(card);
-          card.dataset.observed = 'true';
-        });
-      });
-      mutationObserver.observe(feedContainer, { childList: true });
-    }
-  </script>
+  }
+  
+  function openTipModal(userId, name) {
+    document.getElementById('tip-creator-name').innerHTML = `To: ${name}`;
+    document.getElementById('tip-modal').dataset.userId = userId;
+    document.getElementById('tip-modal').style.display = 'flex';
+  }
+  
+  async function sendTip() {
+    const amount = parseFloat(document.getElementById('tip-amount').value);
+    if (!amount || amount <= 0) { alert('Enter valid amount'); return; }
+    alert(`💝 Tip of $${amount} sent! (5% fee, creator gets $${(amount * 0.95).toFixed(2)})`);
+    closeModal('tip-modal');
+    document.getElementById('tip-amount').value = '';
+  }
+  
+  function sharePost(postId) {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
+    alert('Link copied to clipboard!');
+  }
+  
+  function saveToProfile(postId) {
+    alert('Post saved to your profile!');
+    // In production, save to user's saved posts collection
+  }
+  
+  function useSound(soundName) {
+    alert(`Using sound: ${soundName}`);
+    openUploadModal();
+  }
+  
+  function loadTrendingSounds() {
+    const bar = document.getElementById('trending-bar');
+    bar.innerHTML = trendingSounds.map(s => `
+      <div class="trending-sound-item" onclick="useSound('${s.name}')">
+        <i class="ri-fire-line"></i> ${s.name} • ${formatNumber(s.uses)} uses
+      </div>
+    `).join('');
+  }
+  
+  function openUploadModal() { document.getElementById('upload-modal').style.display = 'flex'; }
+  function startLive() { document.getElementById('live-modal').style.display = 'flex'; }
+  
+  async function uploadVideo() {
+    const caption = document.getElementById('video-caption').value;
+    const sound = document.getElementById('video-sound').value;
+    const fileInput = document.getElementById('video-file');
+    if (!fileInput.files.length) { alert('Select a video file'); return; }
+    alert(`Video uploaded! Caption: "${caption}" Sound: ${sound || 'Original'}\n\nIn production, this would upload to server/Cloudinary.`);
+    closeModal('upload-modal');
+    document.getElementById('video-caption').value = '';
+    document.getElementById('video-file').value = '';
+  }
+  
+  function showFeed() {
+    document.getElementById('feed-container').style.display = 'block';
+    loadFeed();
+  }
+  
+  function showMyProfile() {
+    document.getElementById('feed-container').style.display = 'block';
+    document.getElementById('feed-container').innerHTML = `
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="author-avatar" style="width:100px; height:100px; margin:0 auto 16px;">${currentUser?.profile?.stageName?.[0] || currentUser?.email[0] || 'U'}</div>
+          <h2>${currentUser?.profile?.stageName || currentUser?.email?.split('@')[0]}</h2>
+          <p>${currentUser?.email}</p>
+          <div class="profile-stats">
+            <div><div class="number">${Math.floor(Math.random() * 1000)}</div><div>Followers</div></div>
+            <div><div class="number">${Math.floor(Math.random() * 500)}</div><div>Following</div></div>
+            <div><div class="number">${mockPosts.length}</div><div>Posts</div></div>
+          </div>
+          <button class="btn-action" onclick="showFeed()">Back to Feed</button>
+        </div>
+        <h3 style="margin-bottom: 15px;">My Videos</h3>
+        <div class="video-grid">
+          ${mockPosts.map(post => `
+            <div class="video-grid-item" onclick="playVideo('${post.videoUrl}')">
+              <video src="${post.videoUrl}" style="width:100%; height:100%; object-fit:cover;"></video>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  function playVideo(videoUrl) { alert('Playing video: ' + videoUrl); }
+  
+  function searchGlobal() {
+    const query = document.getElementById('global-search').value.toLowerCase();
+    if (!query) { loadFeed(); return; }
+    const filtered = mockPosts.filter(p => p.displayName.toLowerCase().includes(query) || p.username.toLowerCase().includes(query));
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    filtered.forEach(post => container.appendChild(createPostElement(post)));
+    if (filtered.length === 0) container.innerHTML = '<div style="text-align:center; padding:50px;">No results found</div>';
+  }
+  
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+  
+  loadUserData();
+</script>
 </body>
 </html>
