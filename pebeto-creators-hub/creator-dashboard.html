@@ -30,8 +30,21 @@
     }
     .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
     .nav-icons { display: flex; gap: 15px; align-items: center; }
-    .nav-icons i { font-size: 22px; color: #b8a99a; cursor: pointer; transition: 0.2s; }
-    .nav-icons i:hover { color: #ffaa77; }
+    .nav-icons button, .nav-icons i { cursor: pointer; }
+    .community-btn {
+      background: rgba(255, 140, 66, 0.15);
+      border: 1px solid #ff8c42;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .community-btn:hover { background: #ff8c42; color: white; }
     .logout-btn {
       background: rgba(255, 140, 66, 0.2);
       border: 1px solid #ff8c42;
@@ -39,7 +52,6 @@
       border-radius: 40px;
       color: #ffaa77;
       cursor: pointer;
-      transition: 0.2s;
       font-size: 14px;
       font-weight: 500;
     }
@@ -57,7 +69,9 @@
       font-size: 18px;
       background-size: cover;
       background-position: center;
+      overflow: hidden;
     }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
     
     /* Profile Banner */
@@ -84,7 +98,24 @@
       background-size: cover;
       background-position: center;
       cursor: pointer;
+      overflow: hidden;
+      position: relative;
     }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      text-align: center;
+      font-size: 10px;
+      padding: 4px;
+      opacity: 0;
+      transition: 0.2s;
+    }
+    .profile-avatar:hover .avatar-overlay { opacity: 1; }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
     .unique-code {
@@ -117,7 +148,6 @@
     .stat-card:hover { border-color: rgba(255,140,66,0.4); transform: translateY(-2px); }
     .stat-card h3 { font-size: 14px; color: #a08070; margin-bottom: 8px; }
     .stat-card .amount { font-size: 28px; font-weight: 700; color: #ff8c42; }
-    .stat-card .sub { font-size: 11px; color: #6a6050; margin-top: 5px; }
     
     /* Tabs */
     .tabs {
@@ -134,27 +164,16 @@
       color: #b8a99a;
       font-weight: 500;
       cursor: pointer;
-      transition: 0.2s;
       border-radius: 40px 40px 0 0;
     }
-    .tab-btn.active {
-      color: #ff8c42;
-      border-bottom: 2px solid #ff8c42;
-    }
+    .tab-btn.active { color: #ff8c42; border-bottom: 2px solid #ff8c42; }
     .tab-content { display: none; }
     .tab-content.active { display: block; animation: fadeIn 0.3s; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     
     /* Tables */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .data-table th, .data-table td {
-      padding: 14px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .data-table th { color: #a08070; font-weight: 500; font-size: 13px; }
     .data-table tr { cursor: pointer; transition: 0.2s; }
     .data-table tr:hover { background: rgba(255,140,66,0.05); }
@@ -165,16 +184,7 @@
       font-size: 11px;
     }
     .status-badge.paid { background: rgba(34,197,94,0.2); color: #4ade80; }
-    .status-badge.pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
-    .btn-submit {
-      background: #ff8c42;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 20px;
-      color: white;
-      cursor: pointer;
-      font-size: 12px;
-    }
+    .btn-submit { background: #ff8c42; border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; }
     
     /* Demographics Grid */
     .demographics-grid {
@@ -192,7 +202,7 @@
     .dem-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .dem-card .value { font-size: 28px; font-weight: 700; color: #ff8c42; }
     
-    /* Modal */
+    /* Modals */
     .modal {
       display: none;
       position: fixed;
@@ -210,11 +220,9 @@
       background: #1a1510;
       border-radius: 28px;
       padding: 30px;
-      max-width: 550px;
+      max-width: 500px;
       width: 90%;
       border: 1px solid rgba(255,140,66,0.3);
-      max-height: 85vh;
-      overflow-y: auto;
     }
     .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
     .modal-content input, .modal-content select {
@@ -230,8 +238,16 @@
     .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
     .save-btn { background: #ff8c42; color: white; }
     .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
+    .avatar-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 15px;
+      background-size: cover;
+      background-position: center;
+    }
     
-    /* Withdrawal Section */
+    /* Withdrawal */
     .withdraw-section {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,140,66,0.2);
@@ -239,21 +255,10 @@
       padding: 24px;
       margin-top: 30px;
     }
-    .progress-bar {
-      height: 8px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 15px 0;
-    }
-    .progress-fill { height: 100%; width: 0%; background: #6a6050; transition: width 0.3s; border-radius: 10px; }
+    .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin: 15px 0; }
+    .progress-fill { height: 100%; width: 0%; background: #6a6050; transition: width 0.3s; }
     .progress-fill.active { background: linear-gradient(135deg, #ff8c42, #e0662c); }
-    .withdraw-input-group {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin: 20px 0;
-    }
+    .withdraw-input-group { display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0; }
     .withdraw-input-group input, .withdraw-input-group select {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -269,7 +274,6 @@
       padding: 8px 20px;
       border-radius: 40px;
       cursor: pointer;
-      transition: 0.2s;
     }
     .method-btn.active { background: #ff8c42; border-color: #ff8c42; }
     .method-fields { display: none; margin-top: 15px; }
@@ -291,15 +295,10 @@
       font-weight: 600;
       width: 100%;
       cursor: not-allowed;
-      transition: 0.2s;
     }
     .withdraw-btn.active { background: linear-gradient(135deg, #ff8c42, #e0662c); cursor: pointer; }
     
-    @media (max-width: 768px) {
-      .stats-row { grid-template-columns: 1fr; }
-      .profile-banner { flex-direction: column; text-align: center; }
-      .tabs { justify-content: center; }
-    }
+    @media (max-width: 768px) { .stats-row { grid-template-columns: 1fr; } .profile-banner { flex-direction: column; text-align: center; } }
   </style>
 </head>
 <body>
@@ -307,25 +306,27 @@
 <div class="header">
   <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
   <div class="nav-icons">
-    <i class="ri-home-5-line" onclick="window.location.href='/community.html'" title="Home" style="font-size: 24px;"></i>
-    <i class="ri-settings-4-line" onclick="openSettings()" title="Settings"></i>
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-    <div class="avatar" id="avatar-header">C</div>
+    <button class="community-btn" onclick="window.location.href='/community.html'"><i class="ri-home-5-line"></i> Community</button>
+    <button class="logout-btn" onclick="logout()"><i class="ri-logout-box-r-line"></i> Logout</button>
+    <div class="avatar" id="avatar-header" onclick="openAvatarModal()">C</div>
   </div>
 </div>
 
 <div class="container">
   <!-- Profile Banner -->
   <div class="profile-banner">
-    <div class="profile-avatar" id="profile-avatar" onclick="openSettings()">C</div>
+    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">
+      <span id="avatar-text">C</span>
+      <div class="avatar-overlay">Change</div>
+    </div>
     <div class="profile-info">
       <h2 id="profile-name">Loading... <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
       <p id="profile-email">Loading...</p>
       <div class="unique-code" id="unique-code">Loading...</div>
       <div style="margin-top: 8px;">
         <span id="profile-niche">Niche: </span> • 
-        <span id="profile-currency">Currency: </span> • 
-        <span id="profile-language">Language: </span>
+        <span id="profile-currency">Currency: USD</span> • 
+        <span id="profile-language">Language: English</span>
         <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>
       </div>
     </div>
@@ -333,87 +334,34 @@
 
   <!-- Stats Row -->
   <div class="stats-row">
-    <div class="stat-card" onclick="showWalletDetails()">
-      <h3>💰 Available Wallet</h3>
-      <div class="amount" id="wallet-balance">$0.00</div>
-      <div class="sub">👇 Click for details</div>
-    </div>
-    <div class="stat-card" onclick="showTransactions()">
-      <h3>📜 Transaction History</h3>
-      <div class="amount" id="txn-count">0</div>
-      <div class="sub">Total Transactions</div>
-      <div class="sub">👇 Click to view</div>
-    </div>
-    <div class="stat-card" onclick="showEscrowDetails()">
-      <h3>⏳ Pending Escrow</h3>
-      <div class="amount" id="escrow-balance">$0.00</div>
-      <div class="sub">Awaiting release</div>
-      <div class="sub">👇 Click for details</div>
-    </div>
+    <div class="stat-card" onclick="showWalletDetails()"><h3 data-i18n="wallet">💰 Available Wallet</h3><div class="amount" id="wallet-balance">$0.00</div></div>
+    <div class="stat-card" onclick="showTransactions()"><h3 data-i18n="transactions">📜 Transaction History</h3><div class="amount" id="txn-count">0</div></div>
+    <div class="stat-card" onclick="showEscrowDetails()"><h3 data-i18n="escrow">⏳ Pending Escrow</h3><div class="amount" id="escrow-balance">$0.00</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" data-tab="active">📋 Active Projects</button>
-    <button class="tab-btn" data-tab="review">⏳ Under Review</button>
-    <button class="tab-btn" data-tab="completed">✅ Completed Works</button>
-    <button class="tab-btn" data-tab="tips">💝 Tips Received</button>
-    <button class="tab-btn" data-tab="demographics">📊 Demographics</button>
+    <button class="tab-btn active" data-tab="active" data-i18n="active_projects">📋 Active Projects</button>
+    <button class="tab-btn" data-tab="review" data-i18n="under_review">⏳ Under Review</button>
+    <button class="tab-btn" data-tab="completed" data-i18n="completed">✅ Completed Works</button>
+    <button class="tab-btn" data-tab="tips" data-i18n="tips">💝 Tips Received</button>
+    <button class="tab-btn" data-tab="demographics" data-i18n="demographics">📊 Demographics</button>
   </div>
 
-  <!-- Active Projects Tab -->
-  <div id="tab-active" class="tab-content active">
-    <div style="overflow-x: auto;">
-      <table class="data-table" id="active-table">
-        <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="4">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
+  <!-- Tab Contents -->
+  <div id="tab-active" class="tab-content active"><div style="overflow-x: auto;"><table class="data-table" id="active-table"><thead><tr><th data-i18n="title">Title</th><th data-i18n="budget">Budget</th><th data-i18n="status">Status</th><th data-i18n="action">Action</th></tr></thead><tbody><td><td colspan="4">Loading...</td></tr></tbody></table></div></div>
+  <div id="tab-review" class="tab-content"><div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th data-i18n="title">Title</th><th data-i18n="budget">Budget</th><th data-i18n="submitted">Submitted</th><th data-i18n="status">Status</th></tr></thead><tbody><tr><td colspan="4">No projects</td></tr></tbody></table></div></div>
+  <div id="tab-completed" class="tab-content"><div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th data-i18n="title">Title</th><th data-i18n="earned">Earned</th><th data-i18n="date">Completed On</th><th data-i18n="status">Status</th></tr></thead><tbody><tr><td colspan="4">No completed</td></tr></tbody></table></div></div>
+  <div id="tab-tips" class="tab-content"><div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;"><p data-i18n="share_code">Share your unique code with fans to receive tips!</p><div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div><div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;"><div><strong id="total-tips">$0</strong><br><small data-i18n="total_tips">Total Tips</small></div><div><strong id="tips-fee">$0</strong><br><small data-i18n="fee">Platform Fee (5%)</small></div><div><strong id="tips-net">$0</strong><br><small data-i18n="you_keep">You Keep (95%)</small></div></div></div></div>
+  <div id="tab-demographics" class="tab-content"><div class="demographics-grid"><div class="dem-card"><h4 data-i18n="followers">👥 Followers</h4><div class="value" id="dem-followers">0</div></div><div class="dem-card"><h4 data-i18n="likes">❤️ Likes</h4><div class="value" id="dem-likes">0</div></div><div class="dem-card"><h4 data-i18n="comments">💬 Comments</h4><div class="value" id="dem-comments">0</div></div><div class="dem-card"><h4 data-i18n="top_country">🌍 Top Country</h4><div class="value" id="dem-country">—</div></div><div class="dem-card"><h4 data-i18n="engagement">📈 Engagement</h4><div class="value" id="dem-engagement">0%</div></div><div class="dem-card"><h4 data-i18n="campaigns">🎯 Campaigns</h4><div class="value" id="dem-campaigns">0</div></div></div></div>
 
-  <!-- Under Review Tab -->
-  <div id="tab-review" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">No projects under review</td></tr></tbody></table></div>
-  </div>
-
-  <!-- Completed Works Tab -->
-  <div id="tab-completed" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">No completed works</td></tr></tbody></table></div>
-  </div>
-
-  <!-- Tips Received Tab -->
-  <div id="tab-tips" class="tab-content">
-    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
-      <p>Share your unique code with fans to receive tips!</p>
-      <div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div>
-      <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
-        <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
-        <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
-        <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Demographics Tab -->
-  <div id="tab-demographics" class="tab-content">
-    <div class="demographics-grid">
-      <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div></div>
-      <div class="dem-card"><h4>❤️ Likes</h4><div class="value" id="dem-likes">0</div></div>
-      <div class="dem-card"><h4>💬 Comments</h4><div class="value" id="dem-comments">0</div></div>
-      <div class="dem-card"><h4>🌍 Top Country</h4><div class="value" id="dem-country" style="font-size: 20px;">—</div></div>
-      <div class="dem-card"><h4>📈 Engagement</h4><div class="value" id="dem-engagement">0%</div></div>
-      <div class="dem-card"><h4>🎯 Campaigns</h4><div class="value" id="dem-campaigns">0</div></div>
-    </div>
-  </div>
-
-  <!-- Withdrawal Section -->
+  <!-- Withdrawal -->
   <div id="withdraw-section" class="withdraw-section">
-    <h3>💸 Withdraw Funds</h3>
-    <p>Minimum $30 USD | 3% fee</p>
+    <h3 data-i18n="withdraw_title">💸 Withdraw Funds</h3>
+    <p data-i18n="min_withdraw">Minimum $30 USD | 3% fee</p>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <div id="threshold-text" style="font-size: 13px; margin-bottom: 5px;">$0.00 / $30.00</div>
     <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-bottom: 10px;"></div>
-    
     <div class="withdraw-input-group">
       <input type="number" id="withdraw-amount" placeholder="Amount">
       <select id="withdraw-currency">
@@ -426,47 +374,54 @@
         <option value="GHS">🇬🇭 GHS (₵)</option>
       </select>
     </div>
-    
     <div class="method-buttons">
       <div class="method-btn active" data-method="mpesa">M-Pesa</div>
       <div class="method-btn" data-method="paypal">PayPal</div>
       <div class="method-btn" data-method="wire">Wire Transfer</div>
     </div>
-    
-    <div id="mpesa-fields" class="method-fields active">
-      <input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)">
-    </div>
-    <div id="paypal-fields" class="method-fields">
-      <input type="email" id="paypal-email" placeholder="PayPal Email">
-    </div>
-    <div id="wire-fields" class="method-fields">
-      <input type="text" id="wire-bank" placeholder="Bank Name">
-      <input type="text" id="wire-account" placeholder="Account Number">
-      <input type="text" id="wire-swift" placeholder="SWIFT Code">
-    </div>
-    
-    <button id="withdraw-btn" class="withdraw-btn">Withdraw (min $30)</button>
+    <div id="mpesa-fields" class="method-fields active"><input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)"></div>
+    <div id="paypal-fields" class="method-fields"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
+    <div id="wire-fields" class="method-fields"><input type="text" id="wire-bank" placeholder="Bank Name"><input type="text" id="wire-account" placeholder="Account Number"><input type="text" id="wire-swift" placeholder="SWIFT Code"></div>
+    <button id="withdraw-btn" class="withdraw-btn" data-i18n="withdraw_button">Withdraw (min $30)</button>
   </div>
 </div>
 
 <!-- Modals -->
-<div id="project-modal" class="modal"><div class="modal-content"><h3 id="project-title">Project Details</h3><div id="project-details"></div><div id="project-work-section"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div></div></div>
-<div id="wallet-modal" class="modal"><div class="modal-content"><h3>Wallet Balance</h3><p>Available: <strong id="wallet-detail-available">$0</strong></p><p>Tips: <strong id="wallet-detail-tips">$0</strong></p><p>Escrow: <strong id="wallet-detail-escrow">$0</strong></p><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div></div></div>
-<div id="txn-modal" class="modal"><div class="modal-content"><h3>Transaction History</h3><div id="txn-list" style="max-height: 400px; overflow-y: auto;"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('txn-modal')">Close</button></div></div></div>
-<div id="settings-modal" class="modal"><div class="modal-content"><h3>⚙️ Profile Settings</h3>
-  <input type="text" id="setting-avatar-url" placeholder="Avatar Image URL">
-  <input type="text" id="setting-stageName" placeholder="Stage Name">
-  <input type="text" id="setting-niche" placeholder="Niche">
-  <select id="setting-currency"><option value="USD">USD</option><option value="KES">KES</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
-  <select id="setting-language"><option value="en">English</option><option value="sw">Swahili</option></select>
-  <div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div>
-</div></div>
+<div id="avatar-modal" class="modal"><div class="modal-content"><h3 data-i18n="change_avatar">Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url-input" placeholder="Image URL (direct link to your photo)"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()" data-i18n="save">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')" data-i18n="cancel">Cancel</button></div></div></div>
+<div id="settings-modal" class="modal"><div class="modal-content"><h3 data-i18n="settings">⚙️ Profile Settings</h3><input type="text" id="setting-stageName" placeholder="Stage Name"><input type="text" id="setting-niche" placeholder="Niche"><select id="setting-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select><select id="setting-language" onchange="switchLanguage(this.value)"><option value="en">English</option><option value="sw">Swahili</option><option value="fr">French</option><option value="es">Spanish</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()" data-i18n="save">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')" data-i18n="cancel">Cancel</button></div></div></div>
+<div id="project-modal" class="modal"><div class="modal-content"><h3 id="project-title">Project Details</h3><div id="project-details"></div><div id="project-work-section"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('project-modal')" data-i18n="close">Close</button></div></div></div>
+<div id="wallet-modal" class="modal"><div class="modal-content"><h3 data-i18n="wallet_details">Wallet Balance</h3><p data-i18n="available">Available: <strong id="wallet-detail-available">$0</strong></p><p data-i18n="tips_received">Tips: <strong id="wallet-detail-tips">$0</strong></p><p data-i18n="escrow_held">Escrow: <strong id="wallet-detail-escrow">$0</strong></p><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('wallet-modal')" data-i18n="close">Close</button></div></div></div>
+<div id="txn-modal" class="modal"><div class="modal-content"><h3 data-i18n="transactions">Transaction History</h3><div id="txn-list" style="max-height: 400px; overflow-y: auto;"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('txn-modal')" data-i18n="close">Close</button></div></div></div>
 
 <script>
   let currentUser = null;
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79, NGN: 750, ZAR: 18.5, GHS: 12.5 };
   let selectedMethod = 'mpesa';
   let projectsData = [];
+  
+  // Language translations
+  const translations = {
+    en: { wallet: "💰 Available Wallet", transactions: "📜 Transaction History", escrow: "⏳ Pending Escrow", active_projects: "📋 Active Projects", under_review: "⏳ Under Review", completed: "✅ Completed Works", tips: "💝 Tips Received", demographics: "📊 Demographics", title: "Title", budget: "Budget", status: "Status", action: "Action", submitted: "Submitted", earned: "Earned", date: "Completed On", share_code: "Share your unique code with fans to receive tips!", total_tips: "Total Tips", fee: "Platform Fee (5%)", you_keep: "You Keep (95%)", followers: "👥 Followers", likes: "❤️ Likes", comments: "💬 Comments", top_country: "🌍 Top Country", engagement: "📈 Engagement", campaigns: "🎯 Campaigns", withdraw_title: "💸 Withdraw Funds", min_withdraw: "Minimum $30 USD | 3% fee", withdraw_button: "Withdraw (min $30)", change_avatar: "Change Profile Picture", save: "Save", cancel: "Cancel", settings: "⚙️ Profile Settings", wallet_details: "Wallet Balance", available: "Available:", tips_received: "Tips:", escrow_held: "Escrow:", close: "Close" },
+    sw: { wallet: "💰 Pesa Inapatikana", transactions: "📜 Historia ya Malipo", escrow: "⏳ Escrow Inasubiri", active_projects: "📋 Miradi Inayoendelea", under_review: "⏳ Inakaguliwa", completed: "✅ Kazi Zilizokamilika", tips: "💝 Sadaka Zilizopokelewa", demographics: "📊 Takwimu", title: "Jina", budget: "Bajeti", status: "Hali", action: "Kitendo", submitted: "Iliyowasilishwa", earned: "Ulipata", date: "Tarehe ya Kukamilika", share_code: "Shiriki msimbo wako wa kipekee na mashabiki kupokea sadaka!", total_tips: "Jumla ya Sadaka", fee: "Ada ya Platformu (5%)", you_keep: "Unabakisha (95%)", followers: "👥 Wafuasi", likes: "❤️ Kupenda", comments: "💬 Maoni", top_country: "🌍 Nchi Bora", engagement: "📈 Ushirikiano", campaigns: "🎯 Kampeni", withdraw_title: "💸 Toa Pesa", min_withdraw: "Kiwango cha chini $30 USD | Ada 3%", withdraw_button: "Toa Pesa", change_avatar: "Badilisha Picha ya Profaili", save: "Hifadhi", cancel: "Ghairi", settings: "⚙️ Mipangilio", wallet_details: "Salio la Pochi", available: "Inapatikana:", tips_received: "Sadaka:", escrow_held: "Escrow:", close: "Funga" },
+    fr: { wallet: "💰 Portefeuille Disponible", transactions: "📜 Historique des Transactions", escrow: "⏳ Séquestre en Attente", active_projects: "📋 Projets Actifs", under_review: "⏳ En Revue", completed: "✅ Travaux Terminés", tips: "💝 Pourboires Reçus", demographics: "📊 Démographie", title: "Titre", budget: "Budget", status: "Statut", action: "Action", submitted: "Soumis", earned: "Gagné", date: "Date d'achèvement", share_code: "Partagez votre code unique avec vos fans pour recevoir des pourboires!", total_tips: "Total des Pourboires", fee: "Frais Plateforme (5%)", you_keep: "Vous Gardez (95%)", followers: "👥 Abonnés", likes: "❤️ J'aime", comments: "💬 Commentaires", top_country: "🌍 Pays Principal", engagement: "📈 Engagement", campaigns: "🎯 Campagnes", withdraw_title: "💸 Retirer des Fonds", min_withdraw: "Minimum $30 USD | Frais 3%", withdraw_button: "Retirer", change_avatar: "Changer la Photo de Profil", save: "Enregistrer", cancel: "Annuler", settings: "⚙️ Paramètres", wallet_details: "Solde du Portefeuille", available: "Disponible:", tips_received: "Pourboires:", escrow_held: "Séquestre:", close: "Fermer" },
+    es: { wallet: "💰 Billetera Disponible", transactions: "📜 Historial de Transacciones", escrow: "⏳ Depósito en Espera", active_projects: "📋 Proyectos Activos", under_review: "⏳ En Revisión", completed: "✅ Trabajos Completados", tips: "💝 Propinas Recibidas", demographics: "📊 Demografía", title: "Título", budget: "Presupuesto", status: "Estado", action: "Acción", submitted: "Enviado", earned: "Ganado", date: "Fecha de Finalización", share_code: "¡Comparte tu código único con fans para recibir propinas!", total_tips: "Total de Propinas", fee: "Comisión (5%)", you_keep: "Tu Retienes (95%)", followers: "👥 Seguidores", likes: "❤️ Me Gusta", comments: "💬 Comentarios", top_country: "🌍 País Principal", engagement: "📈 Participación", campaigns: "🎯 Campañas", withdraw_title: "💸 Retirar Fondos", min_withdraw: "Mínimo $30 USD | Comisión 3%", withdraw_button: "Retirar", change_avatar: "Cambiar Foto de Perfil", save: "Guardar", cancel: "Cancelar", settings: "⚙️ Configuración", wallet_details: "Saldo de la Billetera", available: "Disponible:", tips_received: "Propinas:", escrow_held: "Depósito:", close: "Cerrar" }
+  };
+  
+  function switchLanguage(lang) {
+    localStorage.setItem('preferred_language', lang);
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (translations[lang] && translations[lang][key]) el.innerHTML = translations[lang][key];
+    });
+    document.querySelectorAll('button, .tab-btn, .submit-btn, .withdraw-btn, .save-btn, .cancel-btn').forEach(btn => {
+      const text = btn.innerText;
+      if (translations[lang]) {
+        if (text.includes('Withdraw')) btn.innerText = translations[lang].withdraw_button || 'Withdraw';
+        if (text.includes('Save')) btn.innerText = translations[lang].save || 'Save';
+        if (text.includes('Cancel')) btn.innerText = translations[lang].cancel || 'Cancel';
+      }
+    });
+  }
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -474,20 +429,64 @@
     return res.json();
   }
 
-  function formatMoney(amount, currency = 'USD') {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+  function formatMoney(amount, currency = 'USD') { return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount); }
+  function convertToUSD(amount, currency) { if (currency === 'USD') return amount; const rate = exchangeRates[currency]; return rate ? amount / rate : amount; }
+  function logout() { localStorage.removeItem('pebeto_token'); localStorage.removeItem('pebeto_user'); window.location.href = '/signup.html'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; document.getElementById('avatar-url-input').value = currentUser?.profile?.avatarUrl || ''; document.getElementById('avatar-preview').style.backgroundImage = currentUser?.profile?.avatarUrl ? `url(${currentUser.profile.avatarUrl})` : 'none'; }
+  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; document.getElementById('setting-stageName').value = currentUser?.profile?.stageName || ''; document.getElementById('setting-niche').value = currentUser?.profile?.niche || ''; document.getElementById('setting-currency').value = currentUser?.preferredCurrency || 'USD'; document.getElementById('setting-language').value = currentUser?.preferredLanguage || 'en'; }
+  
+  async function saveAvatar() {
+    const avatarUrl = document.getElementById('avatar-url-input').value;
+    if (!avatarUrl) { alert('Please enter an image URL'); return; }
+    const token = localStorage.getItem('pebeto_token');
+    try {
+      const res = await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { avatarUrl } }) });
+      const data = await res.json();
+      if (data.success) { 
+        currentUser.profile.avatarUrl = avatarUrl;
+        localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+        updateAvatarDisplay(avatarUrl);
+        closeModal('avatar-modal');
+        alert('Profile picture updated!');
+      } else alert('Failed to update');
+    } catch(e) { alert('Error saving avatar'); }
   }
-
-  function convertToUSD(amount, currency) {
-    if (currency === 'USD') return amount;
-    const rate = exchangeRates[currency];
-    return rate ? amount / rate : amount;
+  
+  function updateAvatarDisplay(url) {
+    const avatarHeader = document.getElementById('avatar-header');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const avatarText = document.getElementById('avatar-text');
+    if (url) {
+      avatarHeader.style.backgroundImage = `url(${url})`;
+      avatarHeader.innerText = '';
+      profileAvatar.style.backgroundImage = `url(${url})`;
+      if (avatarText) avatarText.style.display = 'none';
+    }
   }
-
-  function logout() {
-    localStorage.removeItem('pebeto_token');
-    localStorage.removeItem('pebeto_user');
-    window.location.href = '/signup.html';
+  
+  async function saveSettings() {
+    const token = localStorage.getItem('pebeto_token');
+    const newNiche = document.getElementById('setting-niche').value;
+    const newCurrency = document.getElementById('setting-currency').value;
+    const newLanguage = document.getElementById('setting-language').value;
+    try {
+      const res = await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { stageName: document.getElementById('setting-stageName').value, niche: newNiche }, preferredCurrency: newCurrency, preferredLanguage: newLanguage }) });
+      const data = await res.json();
+      if (data.success) {
+        currentUser.profile.niche = newNiche;
+        currentUser.preferredCurrency = newCurrency;
+        currentUser.preferredLanguage = newLanguage;
+        localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+        document.getElementById('profile-niche').innerHTML = `Niche: ${newNiche || 'Not set'}`;
+        document.getElementById('profile-currency').innerHTML = `Currency: ${newCurrency}`;
+        document.getElementById('profile-language').innerHTML = `Language: ${newLanguage}`;
+        if (newLanguage) switchLanguage(newLanguage);
+        alert('Settings saved!');
+        closeModal('settings-modal');
+        location.reload();
+      } else alert('Failed to save');
+    } catch(e) { alert('Error'); }
   }
 
   async function loadUserData() {
@@ -495,29 +494,19 @@
     if (!userStr) { window.location.href = '/signup.html'; return; }
     currentUser = JSON.parse(userStr);
     const displayName = currentUser.profile?.stageName || currentUser.email.split('@')[0];
-    const initial = displayName[0].toUpperCase();
-    document.getElementById('profile-name').innerText = displayName;
+    document.getElementById('profile-name').innerHTML = `${displayName} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`;
     document.getElementById('profile-email').innerText = currentUser.email;
     document.getElementById('unique-code').innerText = currentUser.uniqueCode || 'Not assigned';
     document.getElementById('tip-code').innerText = currentUser.uniqueCode || 'Share your code';
     document.getElementById('profile-niche').innerHTML = `Niche: ${currentUser.profile?.niche || 'Not set'}`;
     document.getElementById('profile-currency').innerHTML = `Currency: ${currentUser.preferredCurrency || 'USD'}`;
     document.getElementById('profile-language').innerHTML = `Language: ${currentUser.preferredLanguage || 'English'}`;
-    
-    const avatarUrl = currentUser.profile?.avatarUrl;
-    if (avatarUrl) {
-      document.getElementById('avatar-header').style.backgroundImage = `url(${avatarUrl})`;
-      document.getElementById('avatar-header').innerText = '';
-      document.getElementById('profile-avatar').style.backgroundImage = `url(${avatarUrl})`;
-      document.getElementById('profile-avatar').innerText = '';
-    } else {
-      document.getElementById('avatar-header').innerText = initial;
-      document.getElementById('profile-avatar').innerText = initial;
-    }
-    document.getElementById('setting-stageName').value = currentUser.profile?.stageName || '';
-    document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
-    document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
-    document.getElementById('setting-language').value = currentUser.preferredLanguage || 'en';
+    const initial = displayName[0].toUpperCase();
+    document.getElementById('avatar-header').innerText = initial;
+    document.getElementById('avatar-text').innerText = initial;
+    if (currentUser.profile?.avatarUrl) updateAvatarDisplay(currentUser.profile.avatarUrl);
+    const savedLang = localStorage.getItem('preferred_language') || currentUser.preferredLanguage || 'en';
+    switchLanguage(savedLang);
   }
 
   async function loadWallet() {
@@ -529,9 +518,9 @@
         const tips = data.data?.balances?.tips || 0;
         document.getElementById('wallet-balance').innerHTML = formatMoney(available);
         document.getElementById('escrow-balance').innerHTML = formatMoney(escrow);
-        document.getElementById('wallet-detail-available').innerText = formatMoney(available);
-        document.getElementById('wallet-detail-tips').innerText = formatMoney(tips);
-        document.getElementById('wallet-detail-escrow').innerText = formatMoney(escrow);
+        document.getElementById('wallet-detail-available').innerHTML = formatMoney(available);
+        document.getElementById('wallet-detail-tips').innerHTML = formatMoney(tips);
+        document.getElementById('wallet-detail-escrow').innerHTML = formatMoney(escrow);
         document.getElementById('total-tips').innerHTML = formatMoney(tips);
         document.getElementById('tips-fee').innerHTML = formatMoney(tips * 0.05);
         document.getElementById('tips-net').innerHTML = formatMoney(tips * 0.95);
@@ -548,7 +537,6 @@
     const thresholdText = document.getElementById('threshold-text');
     const withdrawBtn = document.getElementById('withdraw-btn');
     const previewDiv = document.getElementById('withdrawal-preview');
-    
     const update = () => {
       let localAmount = parseFloat(amountInput.value) || 0;
       const currency = currencySelect.value;
@@ -576,30 +564,6 @@
     update();
   }
 
-  async function saveSettings() {
-    const token = localStorage.getItem('pebeto_token');
-    try {
-      const res = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ 
-          profile: { 
-            stageName: document.getElementById('setting-stageName').value,
-            niche: document.getElementById('setting-niche').value,
-            avatarUrl: document.getElementById('setting-avatar-url').value
-          },
-          preferredCurrency: document.getElementById('setting-currency').value,
-          preferredLanguage: document.getElementById('setting-language').value
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('Settings saved! Page will refresh.');
-        location.reload();
-      } else alert('Failed to save');
-    } catch(e) { alert('Error saving'); }
-  }
-
   async function loadCampaigns() {
     try {
       const data = await fetchJSON('/api/campaigns');
@@ -610,7 +574,6 @@
         const active = myProjects.filter(p => p.status === 'in_progress');
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
-        
         document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-submit" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
         document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge pending">Under Review</span></td></tr>`).join('');
         document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge paid">Paid ✅</span></td></tr>`).join('');
@@ -623,14 +586,12 @@
     if (!project) return;
     document.getElementById('project-title').innerText = project.title;
     document.getElementById('project-details').innerHTML = `<p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p><p><strong>Budget:</strong> ${formatMoney(project.budget)}</p><p><strong>Status:</strong> ${project.status}</p>`;
-    if (project.status === 'in_progress') {
-      document.getElementById('project-work-section').innerHTML = `<input type="text" id="work-url-${project._id}" placeholder="Work URL" style="width:100%; padding:10px; margin:10px 0; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;"><button class="btn-submit" onclick="submitWork('${project._id}')">Submit Work</button>`;
-    } else document.getElementById('project-work-section').innerHTML = '';
+    if (project.status === 'in_progress') document.getElementById('project-work-section').innerHTML = `<input type="text" id="work-url-${project._id}" placeholder="Work URL" style="width:100%; padding:10px; margin:10px 0; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;"><button class="btn-submit" onclick="submitWork('${project._id}')">Submit Work</button>`;
+    else document.getElementById('project-work-section').innerHTML = '';
     document.getElementById('project-modal').style.display = 'flex';
   }
 
   function showSubmitWork(campaignId) { showProjectDetails(campaignId); }
-
   async function submitWork(campaignId) {
     const workUrl = document.getElementById(`work-url-${campaignId}`)?.value;
     if (!workUrl) { alert('Enter work URL'); return; }
@@ -656,10 +617,7 @@
   }
 
   function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
-  function showEscrowDetails() { alert(`Pending Escrow: ${document.getElementById('escrow-balance').innerText}`); }
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-
+  function showEscrowDetails() { alert(`Pending Escrow: ${document.getElementById('escrow-balance').innerText}\n\nMoney held for active campaigns. Released when brands approve your work.`); }
   async function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
     const currency = document.getElementById('withdraw-currency').value;
@@ -669,7 +627,6 @@
     if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
     else if (method === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
     else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value, swiftCode: document.getElementById('wire-swift').value };
-    
     if (!amount || amount <= 0) { alert('Enter amount'); return; }
     if (usdAmount < 30) { alert(`Minimum $30 USD required`); return; }
     try {
@@ -699,23 +656,8 @@
   function formatNumber(num) { if (num >= 1000000) return (num/1000000).toFixed(1)+'M'; if (num >= 1000) return (num/1000).toFixed(1)+'K'; return num; }
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    });
-  });
-  document.querySelectorAll('.method-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedMethod = btn.dataset.method;
-      document.querySelectorAll('.method-fields').forEach(f => f.classList.remove('active'));
-      document.getElementById(`${selectedMethod}-fields`).classList.add('active');
-    });
-  });
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); }); });
+  document.querySelectorAll('.method-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); selectedMethod = btn.dataset.method; document.querySelectorAll('.method-fields').forEach(f => f.classList.remove('active')); document.getElementById(`${selectedMethod}-fields`).classList.add('active'); }); });
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
 
   loadUserData();
