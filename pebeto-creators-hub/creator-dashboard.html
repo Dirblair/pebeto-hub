@@ -108,7 +108,6 @@
     }
     .edit-icon { margin-left: 10px; font-size: 14px; color: #ff8c42; cursor: pointer; }
     
-    /* NEW: Social Links Section */
     .social-links-section {
       background: linear-gradient(135deg, rgba(255,140,66,0.08), rgba(0,0,0,0.2));
       border: 1px solid rgba(255,140,66,0.2);
@@ -176,14 +175,6 @@
     .social-status.error {
       background: rgba(244, 67, 54, 0.2);
       color: #f44336;
-    }
-    .connected-badge {
-      background: rgba(76, 175, 80, 0.2);
-      color: #4caf50;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-left: 10px;
     }
     
     .stats-row {
@@ -379,7 +370,6 @@
 </div>
 
 <div class="container">
-  <!-- Profile Banner -->
   <div class="profile-banner">
     <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">C</div>
     <div class="profile-info">
@@ -390,7 +380,6 @@
     </div>
   </div>
 
-  <!-- NEW: Social Media Links Section -->
   <div class="social-links-section">
     <h3><i class="ri-share-line"></i> Connect Your Social Media</h3>
     <p>Paste your TikTok and YouTube links below. Your videos will appear on your public profile for brands and fans to see.</p>
@@ -407,12 +396,10 @@
     <div id="socialStatus" class="social-status" style="display: none;"></div>
   </div>
 
-  <!-- Stats Row -->
   <div class="stats-row">
     <div class="stat-card" onclick="showWalletDetails()">
       <h3>💰 Available Wallet</h3>
       <div class="amount" id="wallet-balance">$0.00</div>
-      <div class="sub" id="local-balance"></div>
     </div>
     <div class="stat-card" onclick="showTransactions()">
       <h3>📜 Transaction History</h3>
@@ -424,7 +411,6 @@
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="active">📋 Active Projects</button>
     <button class="tab-btn" data-tab="review">⏳ Under Review</button>
@@ -433,7 +419,6 @@
     <button class="tab-btn" data-tab="demographics">📊 Demographics</button>
   </div>
 
-  <!-- Active Projects Tab -->
   <div id="tab-active" class="tab-content active">
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-table">
@@ -443,17 +428,14 @@
     </div>
   </div>
 
-  <!-- Under Review Tab -->
   <div id="tab-review" class="tab-content">
     <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...</td></tr></tbody></table></div>
   </div>
 
-  <!-- Completed Works Tab -->
   <div id="tab-completed" class="tab-content">
     <div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...</td></tr></tbody></table></div>
   </div>
 
-  <!-- Tips Tab -->
   <div id="tab-tips" class="tab-content">
     <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
       <p>Share your unique code with fans to receive tips!</p>
@@ -466,7 +448,6 @@
     </div>
   </div>
 
-  <!-- Demographics Tab -->
   <div id="tab-demographics" class="tab-content">
     <div class="demographics-grid">
       <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div></div>
@@ -478,7 +459,6 @@
     </div>
   </div>
 
-  <!-- Withdrawal Section -->
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
     <p>Minimum $30 USD | 3% fee</p>
@@ -500,7 +480,6 @@
   </div>
 </div>
 
-<!-- Modals -->
 <div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
 <div id="settings-modal" class="modal"><div class="modal-content"><h3>Profile Settings</h3><input type="text" id="setting-stageName" placeholder="Stage Name"><input type="text" id="setting-niche" placeholder="Niche"><select id="setting-currency"><option value="USD">USD</option><option value="KES">KES</option><option value="EUR">EUR</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div></div></div>
 <div id="wallet-modal" class="modal"><div class="modal-content"><h3>Wallet Balance</h3><p>Available: <strong id="wallet-detail-available">$0</strong></p><p>Tips: <strong id="wallet-detail-tips">$0</strong></p><p>Escrow: <strong id="wallet-detail-escrow">$0</strong></p><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div></div>
@@ -508,6 +487,11 @@
 <div id="project-modal" class="modal"><div class="modal-content"><h3 id="project-title">Project Details</h3><div id="project-details"></div><div id="project-work-section"></div><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div></div>
 
 <script>
+  // ============================================
+  // API BASE URL - Your backend on Render
+  // ============================================
+  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  
   let currentUser = null;
   let selectedMethod = 'mpesa';
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
@@ -531,7 +515,6 @@
     document.getElementById(`${method}-fields`).style.display = 'block';
   }
 
-  // NEW: Save Social Links Function
   async function saveSocialLinks() {
     const tiktokUrl = document.getElementById('tiktokUrl').value.trim();
     const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
@@ -547,7 +530,7 @@
     
     try {
       const token = localStorage.getItem('pebeto_token');
-      const response = await fetch('/api/creator/social-links', {
+      const response = await fetch(`${API_BASE}/api/creator/social-links`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -583,7 +566,7 @@
     if (!avatarUrl) { alert('Enter image URL'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { avatarUrl } }) });
+      await fetch(`${API_BASE}/api/user/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { avatarUrl } }) });
       alert('Profile picture updated!');
       location.reload();
     } catch(e) { alert('Error'); }
@@ -592,7 +575,7 @@
   async function saveSettings() {
     const token = localStorage.getItem('pebeto_token');
     try {
-      await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { stageName: document.getElementById('setting-stageName').value, niche: document.getElementById('setting-niche').value }, preferredCurrency: document.getElementById('setting-currency').value }) });
+      await fetch(`${API_BASE}/api/user/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { stageName: document.getElementById('setting-stageName').value, niche: document.getElementById('setting-niche').value }, preferredCurrency: document.getElementById('setting-currency').value }) });
       alert('Settings saved!');
       location.reload();
     } catch(e) { alert('Error'); }
@@ -621,7 +604,6 @@
     document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
     document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
     
-    // Load existing social links if any
     if (currentUser.socialLinks) {
       if (currentUser.socialLinks.tiktok) document.getElementById('tiktokUrl').value = currentUser.socialLinks.tiktok;
       if (currentUser.socialLinks.youtube) document.getElementById('youtubeUrl').value = currentUser.socialLinks.youtube;
@@ -630,7 +612,7 @@
 
   async function loadWallet() {
     try {
-      const data = await fetchJSON('/api/wallet/balance');
+      const data = await fetchJSON(`${API_BASE}/api/wallet/balance`);
       if (data.success) {
         const available = data.data?.balances?.available || 0;
         const escrow = data.data?.balances?.escrow || 0;
@@ -657,8 +639,6 @@
     const update = () => {
       let localAmount = parseFloat(amountInput.value) || 0;
       let usdAmount = localAmount;
-      const fee = usdAmount * 0.03;
-      const net = usdAmount - fee;
       const percent = Math.min(100, (usdAmount / minUSD) * 100);
       progressFill.style.width = percent + '%';
       if (usdAmount >= minUSD) progressFill.classList.add('active');
@@ -678,7 +658,7 @@
 
   async function loadCampaigns() {
     try {
-      const data = await fetchJSON('/api/campaigns');
+      const data = await fetchJSON(`${API_BASE}/api/campaigns`);
       if (data.success) {
         projectsData = data.campaigns || [];
         const userId = currentUser?._id;
@@ -688,9 +668,9 @@
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
         
-        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><tr>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
-        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
-        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
+        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
+        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
       }
     } catch(e) { console.error(e); }
   }
@@ -713,7 +693,7 @@
     if (!workUrl) { alert('Enter work URL'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`/api/campaigns/${campaignId}/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ workUrl }) });
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ workUrl }) });
       if (res.ok) { alert('Work submitted!'); loadCampaigns(); closeModal('project-modal'); }
       else alert('Submission failed');
     } catch(e) { alert('Error'); }
@@ -722,7 +702,7 @@
   async function showTransactions() {
     document.getElementById('txn-modal').style.display = 'flex';
     try {
-      const data = await fetchJSON('/api/wallet/transactions?limit=50');
+      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?limit=50`);
       if (data.success && data.data?.transactions) {
         const txs = data.data.transactions;
         document.getElementById('txn-count').innerText = txs.length;
@@ -746,7 +726,7 @@
     else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value };
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/wallet/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails }) });
+      const res = await fetch(`${API_BASE}/api/wallet/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails }) });
       const data = await res.json();
       if (data.success) { alert('Withdrawal submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
       else alert(data.message);
@@ -755,7 +735,7 @@
 
   async function loadDemographics() {
     try {
-      const res = await fetch('/api/creator/stats', { headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` } });
+      const res = await fetch(`${API_BASE}/api/creator/stats`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` } });
       const data = await res.json();
       if (data.success) {
         document.getElementById('dem-followers').innerText = data.followers || 0;
