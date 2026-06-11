@@ -76,7 +76,7 @@
     <div id="signin-panel">
       <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
       <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Your password"></div>
-      <button id="btn-signin" style="width:100%; padding:14px; background:#ff8c42; border:none; border-radius:50px; color:white; font-weight:bold; cursor:pointer;">Sign In</button>
+      <button id="btn-signin">Sign In</button>
     </div>
 
     <div id="signup-panel" class="hidden">
@@ -97,7 +97,7 @@
         <div class="form-group"><label>Password</label><input type="password" id="brand-password" placeholder="At least 8 characters"></div>
         <div class="form-group"><label>Confirm Password</label><input type="password" id="brand-confirm" placeholder="Confirm password"></div>
       </div>
-      <button id="btn-signup" style="width:100%; padding:14px; background:#ff8c42; border:none; border-radius:50px; color:white; font-weight:bold; cursor:pointer;">Join as Creator</button>
+      <button id="btn-signup">Join as Creator</button>
     </div>
 
     <div class="footer">Already have an account? <a href="#" id="switch-to-signup">Sign In</a></div>
@@ -107,6 +107,7 @@
 <script>
   let signupRole = 'creator';
 
+  // Tab switching
   document.getElementById('tab-signin').onclick = () => {
     document.getElementById('tab-signin').classList.add('active');
     document.getElementById('tab-signup').classList.remove('active');
@@ -121,13 +122,14 @@
   };
   document.getElementById('switch-to-signup').onclick = (e) => { e.preventDefault(); document.getElementById('tab-signup').click(); };
 
+  // Role switching
   document.getElementById('signup-creator-tab').onclick = () => {
     signupRole = 'creator';
     document.getElementById('signup-creator-tab').classList.add('active');
     document.getElementById('signup-brand-tab').classList.remove('active');
     document.getElementById('creator-fields').classList.remove('hidden');
     document.getElementById('brand-fields').classList.add('hidden');
-    document.getElementById('btn-signup').innerText = 'Join as Creator';
+    document.getElementById('btn-signup').innerHTML = 'Join as Creator';
   };
   document.getElementById('signup-brand-tab').onclick = () => {
     signupRole = 'brand';
@@ -135,7 +137,7 @@
     document.getElementById('signup-creator-tab').classList.remove('active');
     document.getElementById('brand-fields').classList.remove('hidden');
     document.getElementById('creator-fields').classList.add('hidden');
-    document.getElementById('btn-signup').innerText = 'Join as Brand';
+    document.getElementById('btn-signup').innerHTML = 'Join as Brand';
   };
 
   function showAlert(msg, type) {
@@ -146,12 +148,13 @@
     setTimeout(() => div.style.display = 'none', 4000);
   }
 
+  // SIGN IN - Fixed redirect
   document.getElementById('btn-signin').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     if (!email || !password) return showAlert('Email and password required', 'error');
     const btn = document.getElementById('btn-signin');
-    btn.disabled = true; btn.innerText = 'Signing in...';
+    btn.disabled = true; btn.innerHTML = 'Signing in...';
     try {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const data = await res.json();
@@ -159,13 +162,15 @@
       localStorage.setItem('pebeto_token', data.token);
       localStorage.setItem('pebeto_user', JSON.stringify(data.user));
       showAlert('Login successful!', 'success');
+      // DIRECT REDIRECT TO DASHBOARD
       if (data.user.role === 'creator') window.location.href = '/creator-dashboard.html';
       else if (data.user.role === 'business') window.location.href = '/business-dashboard.html';
       else if (data.user.role === 'admin') window.location.href = '/admin-dashboard.html';
       else window.location.href = '/';
-    } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Sign In'; }
+    } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerHTML = 'Sign In'; }
   };
 
+  // SIGN UP - Creator
   document.getElementById('btn-signup').onclick = async () => {
     if (signupRole === 'creator') {
       const email = document.getElementById('signup-email').value.trim();
@@ -177,7 +182,7 @@
       if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
       if (password !== confirm) return showAlert('Passwords do not match', 'error');
       const btn = document.getElementById('btn-signup');
-      btn.disabled = true; btn.innerText = 'Creating...';
+      btn.disabled = true; btn.innerHTML = 'Creating...';
       try {
         const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role: 'creator', profile: { stageName: email.split('@')[0], niche, displayName: email.split('@')[0] } }) });
         const data = await res.json();
@@ -193,8 +198,9 @@
           showAlert('Account created! Please sign in.', 'success');
           document.getElementById('tab-signin').click();
         }
-      } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Creator'; }
+      } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerHTML = 'Join as Creator'; }
     } else {
+      // SIGN UP - Brand
       const email = document.getElementById('brand-email').value.trim();
       const company = document.getElementById('brand-company').value.trim();
       const website = document.getElementById('brand-website').value.trim();
@@ -205,7 +211,7 @@
       if (password.length < 8) return showAlert('Password must be 8+ characters', 'error');
       if (password !== confirm) return showAlert('Passwords do not match', 'error');
       const btn = document.getElementById('btn-signup');
-      btn.disabled = true; btn.innerText = 'Creating...';
+      btn.disabled = true; btn.innerHTML = 'Creating...';
       try {
         const profile = { companyName: company, displayName: company };
         if (website) profile.website = website;
@@ -223,7 +229,7 @@
           showAlert('Account created! Please sign in.', 'success');
           document.getElementById('tab-signin').click();
         }
-      } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerText = 'Join as Brand'; }
+      } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerHTML = 'Join as Brand'; }
     }
   };
 </script>
