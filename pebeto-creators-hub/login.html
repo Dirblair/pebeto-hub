@@ -157,19 +157,6 @@
       color: #4caf50;
       background: rgba(76,175,80,0.1);
     }
-    .switch-link {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 14px;
-      color: #a08070;
-    }
-    .switch-link span {
-      color: #ff8c42;
-      cursor: pointer;
-    }
-    .switch-link span:hover {
-      text-decoration: underline;
-    }
     @media (max-width: 768px) {
       h1 { font-size: 36px; }
       .role-card { width: 100%; max-width: 280px; }
@@ -181,7 +168,6 @@
   <h1>Pebeto</h1>
   <div class="tagline">Connect, Create, Earn</div>
   
-  <!-- Role Selection Cards -->
   <div class="role-cards">
     <div class="role-card" data-role="creator" onclick="selectRole('creator')">
       <div class="role-icon">🎨</div>
@@ -195,7 +181,6 @@
     </div>
   </div>
 
-  <!-- Auth Form (Hidden until role selected) -->
   <div class="auth-form" id="auth-form" style="display: none;">
     <div class="form-title" id="form-title">Login as <span id="selected-role-name">Creator</span></div>
     
@@ -221,26 +206,21 @@
 </div>
 
 <script>
+  // THIS IS THE CORRECT API URL - YOUR BACKEND
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
   let selectedRole = null;
 
   function selectRole(role) {
     selectedRole = role;
     
-    // Update UI - highlight selected card
     document.querySelectorAll('.role-card').forEach(card => {
       card.classList.remove('selected');
     });
     document.querySelector(`.role-card[data-role="${role}"]`).classList.add('selected');
     
-    // Update form title
     const roleName = role === 'creator' ? 'Creator' : 'Business / Brand';
     document.getElementById('selected-role-name').innerHTML = roleName;
-    
-    // Show the auth form
     document.getElementById('auth-form').style.display = 'block';
-    
-    // Scroll to form smoothly
     document.getElementById('auth-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -278,12 +258,14 @@
     messageDiv.className = 'message';
     
     try {
+      console.log('Attempting login to:', `${API_BASE}/api/auth/login`);
       const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
       const data = await response.json();
+      console.log('Login response:', data);
       
       if (data.success && data.token) {
         localStorage.setItem('pebeto_token', data.token);
@@ -301,7 +283,8 @@
         messageDiv.className = 'message error';
       }
     } catch (error) {
-      messageDiv.innerHTML = 'Network error. Please try again.';
+      console.error('Login error:', error);
+      messageDiv.innerHTML = 'Network error: ' + error.message;
       messageDiv.className = 'message error';
     }
   }
@@ -327,12 +310,14 @@
     messageDiv.className = 'message';
     
     try {
+      console.log('Attempting signup to:', `${API_BASE}/api/auth/register`);
       const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, role: selectedRole })
       });
       const data = await response.json();
+      console.log('Signup response:', data);
       
       if (data.success) {
         messageDiv.innerHTML = 'Account created successfully! Please login.';
@@ -345,7 +330,8 @@
         messageDiv.className = 'message error';
       }
     } catch (error) {
-      messageDiv.innerHTML = 'Network error. Please try again.';
+      console.error('Signup error:', error);
+      messageDiv.innerHTML = 'Network error: ' + error.message;
       messageDiv.className = 'message error';
     }
   }
