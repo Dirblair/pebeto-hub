@@ -307,14 +307,49 @@
 <!-- Tip Modal -->
 <div id="tip-modal" class="modal">
   <div class="modal-content">
-    <h3>💝 Send Tip to Creator</h3>
-    <p id="tip-creator-name">Creator: Loading...</p>
-    <input type="number" id="tip-amount" placeholder="Amount in USD" min="1">
-    <select id="tip-currency">
+    <h3>💝 Send Tip</h3>
+    <p id="tip-creator-name">To: Creator</p>
+    
+    <!-- Payment Source Selection -->
+    <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #a08070;">Pay with:</label>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <button type="button" class="payment-source-btn active" data-source="wallet" onclick="selectPaymentSource('wallet')" style="flex: 1; background: rgba(255,140,66,0.2); border: 1px solid #ff8c42; padding: 10px; border-radius: 40px; cursor: pointer;">
+        💼 Wallet Balance
+      </button>
+      <button type="button" class="payment-source-btn" data-source="mpesa" onclick="selectPaymentSource('mpesa')" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 40px; cursor: pointer;">
+        📱 M-Pesa
+      </button>
+      <button type="button" class="payment-source-btn" data-source="paypal" onclick="selectPaymentSource('paypal')" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 40px; cursor: pointer;">
+        💳 PayPal
+      </button>
+    </div>
+    
+    <!-- Amount Input -->
+    <input type="number" id="tip-amount" placeholder="Amount" min="1" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white; font-size: 16px;">
+    
+    <!-- Currency Select (optional) -->
+    <select id="tip-currency" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
       <option value="USD">USD ($)</option>
       <option value="KES">KES (KSh)</option>
       <option value="EUR">EUR (€)</option>
+      <option value="GBP">GBP (£)</option>
     </select>
+    
+    <!-- M-Pesa Details (shown only when M-Pesa selected) -->
+    <div id="mpesa-details" style="display: none;">
+      <input type="tel" id="mpesa-phone" placeholder="M-Pesa Phone Number (e.g., 254712345678)" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
+    </div>
+    
+    <!-- PayPal Details (shown only when PayPal selected) -->
+    <div id="paypal-details" style="display: none;">
+      <input type="email" id="paypal-email" placeholder="PayPal Email" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
+    </div>
+    
+    <!-- Fee Information -->
+    <div style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
+      💡 Platform fee: 5% | Creator receives: <span id="creator-receives">0.00</span>
+    </div>
+    
     <div class="modal-buttons">
       <button class="save-btn" onclick="sendTip()">Send Tip</button>
       <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
