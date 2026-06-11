@@ -65,6 +65,9 @@
       justify-content: center;
       font-weight: bold;
       font-size: 18px;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
     }
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
     
@@ -80,15 +83,33 @@
       align-items: center;
     }
     .profile-avatar {
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: bold;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .profile-avatar:hover .avatar-overlay { opacity: 1; }
+    .avatar-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      border-radius: 0 0 40px 40px;
+      text-align: center;
+      font-size: 10px;
+      padding: 4px;
+      opacity: 0;
+      transition: 0.2s;
     }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
@@ -100,6 +121,7 @@
       display: inline-block;
       margin-top: 8px;
     }
+    .edit-icon { margin-left: 10px; font-size: 14px; color: #ff8c42; cursor: pointer; }
     
     /* Stats Grid */
     .stats-grid {
@@ -186,9 +208,11 @@
       background: #1a1510;
       border-radius: 28px;
       padding: 30px;
-      max-width: 500px;
+      max-width: 550px;
       width: 90%;
       border: 1px solid rgba(255,140,66,0.3);
+      max-height: 85vh;
+      overflow-y: auto;
     }
     .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
     .modal-content input, .modal-content select, .modal-content textarea {
@@ -204,6 +228,14 @@
     .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
     .save-btn { background: #ff8c42; color: white; }
     .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
+    .avatar-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 15px;
+      background-size: cover;
+      background-position: center;
+    }
     
     /* Withdrawal */
     .withdraw-section {
@@ -259,18 +291,22 @@
   <div class="nav-icons">
     <button class="community-btn" onclick="window.location.href='/community.html'"><i class="ri-home-5-line"></i> Community</button>
     <button class="logout-btn" onclick="logout()"><i class="ri-logout-box-r-line"></i> Logout</button>
-    <div class="avatar" id="avatar-header">B</div>
+    <div class="avatar" id="avatar-header" onclick="openAvatarModal()">B</div>
   </div>
 </div>
 
 <div class="container">
   <!-- Profile Banner -->
   <div class="profile-banner">
-    <div class="profile-avatar" id="profile-avatar">B</div>
+    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">
+      <span id="avatar-text">B</span>
+      <div class="avatar-overlay">Change</div>
+    </div>
     <div class="profile-info">
-      <h2 id="company-name">Loading...</h2>
+      <h2 id="company-name">Loading... <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
       <p id="business-email">Loading...</p>
       <div class="company-code" id="business-code">Loading...</div>
+      <div style="margin-top: 8px;"><span id="business-currency">Currency: USD</span> • <span id="business-language">Language: English</span> <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></div>
     </div>
   </div>
 
@@ -284,6 +320,7 @@
     <div class="stat-card" onclick="showActiveEscrow()">
       <h4>🔒 Active Escrow</h4>
       <div class="amount" id="escrow-balance">$0.00</div>
+      <div style="font-size:11px; color:#a08070;">Locked in campaigns</div>
     </div>
     <div class="stat-card" onclick="showTotalDeposits()">
       <h4>📥 Total Deposits</h4>
@@ -298,9 +335,10 @@
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="campaigns">📢 My Campaigns</button>
-    <button class="tab-btn" data-tab="bids">📝 Pending Bids</button>
+    <button class="tab-btn" data-tab="applications">📝 Creator Applications</button>
     <button class="tab-btn" data-tab="active">⚡ Active Projects</button>
     <button class="tab-btn" data-tab="search">🔍 Find Creators</button>
+    <button class="tab-btn" data-tab="history">📜 History</button>
   </div>
 
   <!-- My Campaigns Tab -->
@@ -308,18 +346,18 @@
     <button class="btn-action" onclick="openCampaignModal()" style="margin-bottom: 20px; padding: 10px 20px;">+ Launch New Campaign</button>
     <div style="overflow-x: auto;">
       <table class="data-table" id="campaigns-table">
-        <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Bids</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+        <thead><tr><th>Title</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="8">Loading...</td></tr>
       </table>
     </div>
   </div>
 
-  <!-- Pending Bids Tab -->
-  <div id="tab-bids" class="tab-content">
+  <!-- Creator Applications Tab -->
+  <div id="tab-applications" class="tab-content">
     <div style="overflow-x: auto;">
-      <table class="data-table" id="bids-table">
-        <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
+      <table class="data-table" id="applications-table">
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Submitted</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="6">No pending applications</td></tr>
       </table>
     </div>
   </div>
@@ -328,8 +366,8 @@
   <div id="tab-active" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-projects-table">
-        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="5">No active projects</td></tr></tbody>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Assigned Slot</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="6">No active projects</td></tr>
       </table>
     </div>
   </div>
@@ -343,12 +381,32 @@
     <div id="search-results"></div>
   </div>
 
+  <!-- History Tab -->
+  <div id="tab-history" class="tab-content">
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <select id="history-filter" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; color:white;">
+        <option value="all">All Transactions</option>
+        <option value="deposit">Deposits</option>
+        <option value="withdrawal">Withdrawals</option>
+        <option value="escrow">Escrow Releases</option>
+      </select>
+      <button class="btn-action" onclick="loadHistory()">Refresh</button>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="history-table">
+        <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead>
+        <tbody><td><td colspan="5">Loading...</td></tr>
+      </table>
+    </div>
+  </div>
+
   <!-- Withdrawal Section -->
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
     <p>Minimum $30 USD | 3% fee</p>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <div id="threshold-text" style="font-size: 13px;">$0.00 / $30.00</div>
+    <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-bottom: 10px;"></div>
     <div class="withdraw-input-group">
       <input type="number" id="withdraw-amount" placeholder="Amount">
       <select id="withdraw-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
@@ -392,11 +450,88 @@
   </div>
 </div>
 
-<!-- Other Modals -->
-<div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Campaign Title"><input type="number" id="campaign-budget" placeholder="Total Budget (USD)"><textarea id="campaign-desc" rows="3" placeholder="Campaign Description"></textarea><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
-<div id="audit-modal" class="modal"><div class="modal-content"><h3>Funding Audit Ledger</h3><div id="audit-list" style="max-height: 400px; overflow-y: auto;"></div><button class="cancel-btn" onclick="closeModal('audit-modal')" style="margin-top:15px;">Close</button></div></div>
-<div id="escrow-modal" class="modal"><div class="modal-content"><h3>Active Escrow</h3><div id="escrow-list"></div><button class="cancel-btn" onclick="closeModal('escrow-modal')">Close</button></div></div>
-<div id="message-modal" class="modal"><div class="modal-content"><h3>Send Message to <span id="msg-name"></span></h3><textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea><div class="modal-buttons"><button class="save-btn" onclick="sendMessage()">Send</button><button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button></div></div></div>
+<!-- Campaign Modal -->
+<div id="campaign-modal" class="modal">
+  <div class="modal-content">
+    <h3>📢 Launch Campaign</h3>
+    <input type="text" id="campaign-title" placeholder="Campaign Title">
+    <input type="number" id="campaign-budget" placeholder="Total Budget (USD)">
+    <input type="number" id="campaign-slots" placeholder="Number of Creators Needed" value="1">
+    <input type="date" id="campaign-deadline">
+    <textarea id="campaign-instructions" rows="3" placeholder="Instructions for creators"></textarea>
+    <div id="budget-breakdown" style="background:rgba(255,140,66,0.1); padding:12px; border-radius:16px; margin:10px 0; font-size:13px;"></div>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="createCampaign()">Launch Campaign</button>
+      <button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Modal -->
+<div id="avatar-modal" class="modal">
+  <div class="modal-content">
+    <h3>Change Profile Picture</h3>
+    <div class="avatar-preview" id="avatar-preview"></div>
+    <input type="text" id="avatar-url" placeholder="Image URL (direct link to your photo)">
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="saveAvatar()">Save</button>
+      <button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+  <div class="modal-content">
+    <h3>⚙️ Company Settings</h3>
+    <input type="text" id="setting-company" placeholder="Company Name">
+    <select id="setting-currency">
+      <option value="USD">USD ($)</option>
+      <option value="KES">KES (KSh)</option>
+      <option value="EUR">EUR (€)</option>
+      <option value="GBP">GBP (£)</option>
+    </select>
+    <select id="setting-language">
+      <option value="en">English</option>
+      <option value="sw">Swahili</option>
+      <option value="fr">French</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+      <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Message Modal -->
+<div id="message-modal" class="modal">
+  <div class="modal-content">
+    <h3>Send Message to <span id="msg-name"></span></h3>
+    <textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendMessage()">Send</button>
+      <button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Escrow Modal -->
+<div id="escrow-modal" class="modal">
+  <div class="modal-content">
+    <h3>Active Escrow Details</h3>
+    <div id="escrow-list"></div>
+    <button class="cancel-btn" onclick="closeModal('escrow-modal')">Close</button>
+  </div>
+</div>
+
+<!-- Audit Modal -->
+<div id="audit-modal" class="modal">
+  <div class="modal-content">
+    <h3>Funding Audit Ledger</h3>
+    <div id="audit-list" style="max-height: 400px; overflow-y: auto;"></div>
+    <button class="cancel-btn" onclick="closeModal('audit-modal')">Close</button>
+  </div>
+</div>
 
 <script>
   let currentUser = null;
@@ -445,8 +580,7 @@
     const total = amount + (amount * 0.1);
     if (!confirm(`Confirm deposit of $${amount} USD?\n\nYou will be charged: $${total.toFixed(2)} (includes 10% fee)`)) return;
     
-    // Simulate external payment processing
-    alert(`Processing ${selectedDepositMethod.toUpperCase()} payment of $${total.toFixed(2)}...\n\nThis would connect to ${selectedDepositMethod.toUpperCase()} API in production.`);
+    alert(`Processing ${selectedDepositMethod.toUpperCase()} payment of $${total.toFixed(2)}...\n\nIn production, this would connect to ${selectedDepositMethod.toUpperCase()} API.`);
     
     try {
       const token = localStorage.getItem('pebeto_token');
@@ -460,21 +594,74 @@
         alert(`✅ Successfully added $${amount} USD to your wallet!`);
         closeModal('deposit-modal');
         loadWallet();
+        loadHistory();
       } else {
         alert(`❌ Insufficient funds in your ${selectedDepositMethod.toUpperCase()} account. Please add funds and try again.`);
       }
     } catch(e) { alert('Error processing deposit'); }
   }
 
+  async function saveAvatar() {
+    const avatarUrl = document.getElementById('avatar-url').value;
+    if (!avatarUrl) { alert('Enter an image URL'); return; }
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ profile: { avatarUrl } })
+      });
+      if (res.ok) {
+        alert('Profile picture updated!');
+        updateAvatarDisplay(avatarUrl);
+        closeModal('avatar-modal');
+      } else alert('Failed to update');
+    } catch(e) { alert('Error'); }
+  }
+
+  function updateAvatarDisplay(url) {
+    const avatarHeader = document.getElementById('avatar-header');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const avatarText = document.getElementById('avatar-text');
+    avatarHeader.style.backgroundImage = `url(${url})`;
+    avatarHeader.innerText = '';
+    profileAvatar.style.backgroundImage = `url(${url})`;
+    if (avatarText) avatarText.style.display = 'none';
+    document.getElementById('avatar-preview').style.backgroundImage = `url(${url})`;
+  }
+
+  async function saveSettings() {
+    const companyName = document.getElementById('setting-company').value;
+    const currency = document.getElementById('setting-currency').value;
+    const language = document.getElementById('setting-language').value;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ profile: { companyName }, preferredCurrency: currency, preferredLanguage: language })
+      });
+      alert('Settings saved! Page will refresh.');
+      location.reload();
+    } catch(e) { alert('Error'); }
+  }
+
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (!userStr) { window.location.href = '/signup.html'; return; }
     currentUser = JSON.parse(userStr);
-    document.getElementById('company-name').innerText = currentUser.profile?.companyName || currentUser.email.split('@')[0];
+    document.getElementById('company-name').innerHTML = `${currentUser.profile?.companyName || currentUser.email.split('@')[0]} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`;
     document.getElementById('business-email').innerText = currentUser.email;
     document.getElementById('business-code').innerHTML = `ID: ${currentUser._id?.slice(-8)}`;
-    document.getElementById('avatar-header').innerText = (currentUser.profile?.companyName?.[0] || currentUser.email[0]).toUpperCase();
-    document.getElementById('profile-avatar').innerText = (currentUser.profile?.companyName?.[0] || currentUser.email[0]).toUpperCase();
+    document.getElementById('business-currency').innerHTML = `Currency: ${currentUser.preferredCurrency || 'USD'}`;
+    document.getElementById('business-language').innerHTML = `Language: ${currentUser.preferredLanguage || 'English'}`;
+    const initial = (currentUser.profile?.companyName?.[0] || currentUser.email[0]).toUpperCase();
+    document.getElementById('avatar-header').innerText = initial;
+    document.getElementById('avatar-text').innerText = initial;
+    if (currentUser.profile?.avatarUrl) updateAvatarDisplay(currentUser.profile.avatarUrl);
+    document.getElementById('setting-company').value = currentUser.profile?.companyName || '';
+    document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
+    document.getElementById('setting-language').value = currentUser.preferredLanguage || 'en';
   }
 
   async function loadWallet() {
@@ -495,12 +682,16 @@
     const amountInput = document.getElementById('withdraw-amount');
     const progressFill = document.getElementById('progress-fill');
     const withdrawBtn = document.getElementById('withdraw-btn');
+    const previewDiv = document.getElementById('withdrawal-preview');
     const update = () => {
       let usdAmount = parseFloat(amountInput.value) || 0;
+      const fee = usdAmount * 0.03;
+      const net = usdAmount - fee;
       const percent = Math.min(100, (usdAmount / minUSD) * 100);
       progressFill.style.width = percent + '%';
       if (usdAmount >= minUSD) progressFill.classList.add('active');
       else progressFill.classList.remove('active');
+      if (usdAmount > 0) previewDiv.innerHTML = `Withdraw ${formatMoney(usdAmount)} → Fee (3%): ${formatMoney(fee)} → You receive: ${formatMoney(net)}`;
       if (usdAmount >= minUSD && usdAmount <= available) {
         withdrawBtn.classList.add('active');
         withdrawBtn.disabled = false;
@@ -520,61 +711,70 @@
         campaigns = data.campaigns || [];
         const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
         const tbody = document.querySelector('#campaigns-table tbody');
-        if (myCampaigns.length === 0) tbody.innerHTML = '<tr><td colspan="5">No campaigns yet</td></tr>';
+        if (myCampaigns.length === 0) tbody.innerHTML = '<tr><td colspan="8">No campaigns yet</td></tr>';
         else tbody.innerHTML = myCampaigns.map(c => `
           <tr>
             <td>${escapeHtml(c.title)}</td>
             <td>${formatMoney(c.budget)}</td>
+            <td>${c.slots || 1}</td>
+            <td>${formatMoney((c.budget || 0) / (c.slots || 1))}</td>
+            <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
             <td><span class="status-badge">${c.status}</span></td>
-            <td>${c.bids?.length || 0}</td>
-            <td><button class="btn-action" onclick="alert('Campaign details: ${escapeHtml(c.title)}')">View</button></td>
-          </tr>
+            <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
+            <td><button class="btn-action" onclick="viewCampaign('${c._id}')">View</button> <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund Escrow</button></td>
+           </tr>
         `).join('');
       }
     } catch(e) { console.error(e); }
   }
 
-  async function loadBids() {
+  async function fundCampaignEscrow(campaignId) {
+    const amount = prompt('Enter amount to fund escrow (USD):');
+    if (!amount || amount <= 0) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`/api/campaigns/${campaignId}/fund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ intentUsd: parseFloat(amount) })
+      });
+      const data = await res.json();
+      if (data.success) { alert('Escrow funded successfully!'); loadWallet(); loadCampaigns(); }
+      else alert(data.message || 'Failed');
+    } catch(e) { alert('Error funding escrow'); }
+  }
+
+  async function loadApplications() {
     try {
       const data = await fetchJSON('/api/campaigns');
       if (data.success) {
         const myCampaigns = (data.campaigns || []).filter(c => c.businessId === currentUser?._id);
         const allBids = [];
-        myCampaigns.forEach(c => { if (c.bids) c.bids.forEach(b => allBids.push({ ...b, campaignTitle: c.title, campaignId: c._id })); });
+        myCampaigns.forEach(c => { if (c.bids) c.bids.forEach(b => allBids.push({ ...b, campaignTitle: c.title, campaignId: c._id, campaignBudget: c.budget })); });
         const pendingBids = allBids.filter(b => b.status === 'pending');
-        const tbody = document.querySelector('#bids-table tbody');
-        if (pendingBids.length === 0) tbody.innerHTML = '<tr><td colspan="5">No pending bids</td></tr>';
+        const tbody = document.querySelector('#applications-table tbody');
+        if (pendingBids.length === 0) tbody.innerHTML = '<tr><td colspan="6">No pending applications</td></tr>';
         else tbody.innerHTML = pendingBids.map(b => `
           <tr>
             <td>${escapeHtml(b.campaignTitle)}</td>
             <td>${escapeHtml(b.uniqueCode)}</td>
             <td>${formatMoney(b.amount)}</td>
-            <td>${escapeHtml(b.proposal?.substring(0, 50))}</td>
-            <td><button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Accept</button></td>
-          </tr>
+            <td>${escapeHtml(b.proposal?.substring(0, 50))}...</td>
+            <td>${new Date(b.createdAt).toLocaleDateString()}</td>
+            <td><button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve & Assign</button></td>
+           </tr>
         `).join('');
       }
     } catch(e) { console.error(e); }
   }
 
   async function acceptBid(campaignId, bidId) {
-    if (!confirm('Accept this bid? The creator will be assigned to start work.')) return;
+    if (!confirm('Approve this creator? They will be assigned to the campaign.')) return;
     try {
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch(`/api/campaigns/${campaignId}/bids/${bidId}/accept`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
-      if (data.success) { alert('Bid accepted! Creator assigned.'); loadBids(); loadCampaigns(); loadActiveProjects(); }
-      else alert(data.message || 'Failed');
-    } catch(e) { alert('Error'); }
-  }
-
-  async function completeWork(campaignId) {
-    if (!confirm('Complete this project? Payment will be released to the creator.')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`/api/campaigns/${campaignId}/complete`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.success) { alert('Project completed! Payment released.'); loadActiveProjects(); loadWallet(); }
+      if (data.success) { alert('Creator approved and assigned!'); loadApplications(); loadActiveProjects(); loadCampaigns(); }
       else alert(data.message || 'Failed');
     } catch(e) { alert('Error'); }
   }
@@ -586,18 +786,62 @@
         const myCampaigns = (data.campaigns || []).filter(c => c.businessId === currentUser?._id);
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
         const tbody = document.querySelector('#active-projects-table tbody');
-        if (active.length === 0) tbody.innerHTML = '<tr><td colspan="5">No active projects</td></tr>';
-        else tbody.innerHTML = active.map(c => `
-          <tr>
-            <td>${escapeHtml(c.title)}</td>
-            <td>${c.assignedCreatorId ? 'Assigned' : 'Pending'}</td>
-            <td>${c.bids?.find(b => b.status === 'accepted')?.submittedWorkUrl || '-'}</td>
-            <td><span class="status-badge">${c.status}</span></td>
-            <td>${c.status === 'submitted_for_review' ? `<button class="btn-action" onclick="completeWork('${c._id}')">Complete & Pay</button>` : '-'}</td>
-          </tr>
-        `).join('');
+        if (active.length === 0) tbody.innerHTML = '<tr><td colspan="6">No active projects</td></tr>';
+        else tbody.innerHTML = active.map(c => {
+          const acceptedBid = c.bids?.find(b => b.status === 'accepted');
+          return `
+            <tr>
+              <td>${escapeHtml(c.title)}</td>
+              <td>${acceptedBid?.uniqueCode || 'Assigned'}</td>
+              <td>-</td>
+              <td>${acceptedBid?.submittedWorkUrl || 'Not yet'}</td>
+              <td><span class="status-badge">${c.status}</span></td>
+              <td>${c.status === 'submitted_for_review' ? `<button class="btn-action" onclick="completeWork('${c._id}')">Complete & Pay</button>` : '-'}</td>
+            </tr>
+          `;
+        }).join('');
       }
     } catch(e) { console.error(e); }
+  }
+
+  async function completeWork(campaignId) {
+    if (!confirm('Complete this project? Payment will be released to the creator.')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`/api/campaigns/${campaignId}/complete`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) { alert('Project completed! Payment released.'); loadActiveProjects(); loadWallet(); loadCampaigns(); }
+      else alert(data.message || 'Failed');
+    } catch(e) { alert('Error'); }
+  }
+
+  async function createCampaign() {
+    const title = document.getElementById('campaign-title').value.trim();
+    const budget = parseFloat(document.getElementById('campaign-budget').value);
+    const slots = parseInt(document.getElementById('campaign-slots').value) || 1;
+    const deadline = document.getElementById('campaign-deadline').value;
+    const instructions = document.getElementById('campaign-instructions').value;
+    if (!title || !budget) { alert('Title and budget required'); return; }
+    const perCreator = budget / slots;
+    if (!confirm(`Launch "${title}"?\n\nTotal Budget: $${budget}\nCreators: ${slots}\nPer Creator: $${perCreator.toFixed(2)}\nFee: 10% on funding`)) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ title, budget: perCreator, description: instructions, slots, deadline, instructions })
+      });
+      const data = await res.json();
+      if (data.success) { alert('Campaign launched!'); closeModal('campaign-modal'); loadCampaigns(); }
+      else alert(data.message || 'Failed');
+    } catch(e) { alert('Error'); }
+  }
+
+  function updateBudgetBreakdown() {
+    const budget = parseFloat(document.getElementById('campaign-budget').value) || 0;
+    const slots = parseInt(document.getElementById('campaign-slots').value) || 1;
+    const perCreator = budget / slots;
+    document.getElementById('budget-breakdown').innerHTML = `💰 Budget Breakdown: $${budget} total → $${perCreator.toFixed(2)} per creator (${slots} creator${slots !== 1 ? 's' : ''})`;
   }
 
   async function searchCreator() {
@@ -619,6 +863,7 @@
               <span class="status-badge">👥 ${u.social?.followerCount || 0} followers</span>
               <span class="status-badge">❤️ ${u.social?.engagementRate || 0}% engagement</span>
               <span class="status-badge">🎯 Niche: ${u.profile?.niche || 'Not set'}</span>
+              <span class="status-badge">📧 ${u.email}</span>
             </div>
           </div>
         `).join('');
@@ -626,18 +871,26 @@
     } catch(e) { document.getElementById('search-results').innerHTML = '<p>Error searching</p>'; }
   }
 
-  async function createCampaign() {
-    const title = document.getElementById('campaign-title').value.trim();
-    const budget = parseFloat(document.getElementById('campaign-budget').value);
-    const description = document.getElementById('campaign-desc').value;
-    if (!title || !budget) { alert('Title and budget required'); return; }
+  async function loadHistory() {
+    const filter = document.getElementById('history-filter').value;
     try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ title, budget, description }) });
-      const data = await res.json();
-      if (data.success) { alert('Campaign launched!'); closeModal('campaign-modal'); loadCampaigns(); }
-      else alert(data.message || 'Failed');
-    } catch(e) { alert('Error'); }
+      const data = await fetchJSON('/api/wallet/transactions');
+      if (data.success && data.data?.transactions) {
+        let txs = data.data.transactions;
+        if (filter !== 'all') txs = txs.filter(t => t.type === filter);
+        const tbody = document.querySelector('#history-table tbody');
+        if (txs.length === 0) tbody.innerHTML = '<tr><td colspan="5">No transactions found</td></tr>';
+        else tbody.innerHTML = txs.slice(0, 50).map(t => `
+          <tr>
+            <td>${new Date(t.createdAt).toLocaleDateString()}</td>
+            <td>${t.type}</td>
+            <td style="color:#ff8c42;">${formatMoney(t.grossAmount)}</td>
+            <td><span class="status-badge">${t.status}</span></td>
+            <td>${t.transactionId?.slice(-8) || '-'}</td>
+          </tr>
+        `).join('');
+      }
+    } catch(e) { console.error(e); }
   }
 
   async function showTotalDeposits() {
@@ -660,19 +913,23 @@
         </div>
       `).join('');
       document.getElementById('audit-modal').style.display = 'flex';
+      document.getElementById('audit-count').innerText = txs.length;
     }
   }
 
   function showActiveEscrow() {
     const escrow = document.getElementById('escrow-balance').innerText;
-    document.getElementById('escrow-list').innerHTML = `<p style="margin-bottom:10px;">🔒 Escrow Balance: ${escrow}</p><p>This money is held securely and will be released to creators when campaigns are completed.</p>`;
+    document.getElementById('escrow-list').innerHTML = `<p style="margin-bottom:10px;">🔒 Total Escrow: ${escrow}</p><p>This money is locked in active campaigns. It will be released to creators when work is approved.</p>`;
     document.getElementById('escrow-modal').style.display = 'flex';
   }
 
   function openDepositModal() { document.getElementById('deposit-modal').style.display = 'flex'; updateDepositPreview(); }
-  function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; }
+  function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; updateBudgetBreakdown(); }
+  function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; }
+  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
   function openMessageModal(creatorId, name) { document.getElementById('msg-name').innerText = name; document.getElementById('message-modal').style.display = 'flex'; document.getElementById('msg-text').dataset.recipient = creatorId; }
-  function sendMessage() { alert(`Message sent! (Demo - would send to creator)`); closeModal('message-modal'); }
+  function sendMessage() { alert(`Message sent to creator! (WebSocket integration coming)`); closeModal('message-modal'); }
+  function viewCampaign(id) { alert(`Campaign details for ID: ${id}\n\nFull campaign management coming soon.`); }
 
   async function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
@@ -687,7 +944,7 @@
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch('/api/wallet/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails }) });
       const data = await res.json();
-      if (data.success) { alert('Withdrawal request submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
+      if (data.success) { alert('Withdrawal request submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; loadHistory(); }
       else alert(data.message || 'Withdrawal failed');
     } catch(e) { alert('Error'); }
   }
@@ -700,17 +957,20 @@
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-      if (btn.dataset.tab === 'bids') loadBids();
+      if (btn.dataset.tab === 'applications') loadApplications();
       if (btn.dataset.tab === 'active') loadActiveProjects();
+      if (btn.dataset.tab === 'history') loadHistory();
     });
   });
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
   document.getElementById('deposit-amount').addEventListener('input', updateDepositPreview);
+  document.getElementById('campaign-budget').addEventListener('input', updateBudgetBreakdown);
+  document.getElementById('campaign-slots').addEventListener('input', updateBudgetBreakdown);
 
   loadUserData();
   loadWallet();
   loadCampaigns();
-  loadBids();
+  loadApplications();
   loadActiveProjects();
 </script>
 </body>
