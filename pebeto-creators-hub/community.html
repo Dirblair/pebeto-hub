@@ -219,7 +219,7 @@
       .feed-container { padding: 15px; }
     }
   </style>
-  <!-- TikTok Embed Script (loads once globally) -->
+  <!-- TikTok Embed Script -->
   <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
@@ -261,6 +261,9 @@
 </div>
 
 <script>
+  // API Base URL - Your backend on Render
+  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  
   let currentUser = null;
   let allCreators = [];
   let currentTipCreatorId = null;
@@ -283,7 +286,6 @@
     document.getElementById(id).style.display = 'none'; 
   }
   
-  // FIXED: goToDashboard - CORRECTED to use creator-dashboard.html
   function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
@@ -312,10 +314,10 @@
     }
   }
 
-  // Load all creators and their social links
+  // Load all creators from BACKEND API
   async function loadCreators() {
     try {
-      const response = await fetch('/api/creators');
+      const response = await fetch(`${API_BASE}/api/creators`);
       const data = await response.json();
       
       if (data.success && data.creators && data.creators.length > 0) {
@@ -376,7 +378,6 @@
     renderFeed();
   }
 
-  // Render the feed with TikTok and YouTube embeds
   function renderFeed() {
     const container = document.getElementById('feed-container');
     container.innerHTML = '';
@@ -396,7 +397,6 @@
     }
   }
 
-  // Create a card for each creator
   function createCreatorCard(creator) {
     const card = document.createElement('div');
     card.className = 'creator-card';
@@ -475,7 +475,6 @@
     return card;
   }
 
-  // Open tip modal
   function openTipModal(creatorId, creatorName) {
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
@@ -490,7 +489,6 @@
     document.getElementById('tip-modal').style.display = 'flex';
   }
 
-  // Send tip
   async function sendTip() {
     const amount = parseFloat(document.getElementById('tip-amount').value);
     const currency = document.getElementById('tip-currency').value;
@@ -508,7 +506,7 @@
     }
     
     try {
-      const response = await fetch('/api/wallet/tip', {
+      const response = await fetch(`${API_BASE}/api/wallet/tip`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -536,13 +534,11 @@
     }
   }
 
-  // View profile - stores creator ID and goes to profile page
   function viewCreatorProfile(creatorId) {
     localStorage.setItem('viewingCreatorId', creatorId);
     window.location.href = `/creator-profile.html?id=${creatorId}`;
   }
 
-  // Search
   function searchGlobal() {
     const query = document.getElementById('global-search').value.toLowerCase();
     if (!query) {
@@ -568,7 +564,6 @@
     }
   }
 
-  // Load user data for avatar
   function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) {
