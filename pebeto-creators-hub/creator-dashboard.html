@@ -29,26 +29,32 @@
       z-index: 100;
     }
     .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
-    .nav-icons { display: flex; gap: 20px; align-items: center; }
+    .nav-icons { display: flex; gap: 15px; align-items: center; }
     .nav-icons i { font-size: 22px; color: #b8a99a; cursor: pointer; transition: 0.2s; }
     .nav-icons i:hover { color: #ffaa77; }
     .logout-btn {
-      background: rgba(255, 140, 66, 0.15);
-      border: 1px solid rgba(255, 140, 66, 0.3);
+      background: rgba(255, 140, 66, 0.2);
+      border: 1px solid #ff8c42;
       padding: 8px 20px;
       border-radius: 40px;
       color: #ffaa77;
       cursor: pointer;
       transition: 0.2s;
       font-size: 14px;
+      font-weight: 500;
     }
-    .logout-btn:hover { background: rgba(255, 140, 66, 0.3); }
+    .logout-btn:hover { background: #ff8c42; color: white; }
     .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       font-weight: bold;
+      font-size: 18px;
       background-size: cover;
       background-position: center;
     }
@@ -78,9 +84,7 @@
       background-size: cover;
       background-position: center;
       cursor: pointer;
-      transition: 0.2s;
     }
-    .profile-avatar:hover { opacity: 0.8; transform: scale(1.02); }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
     .unique-code {
@@ -162,6 +166,15 @@
     }
     .status-badge.paid { background: rgba(34,197,94,0.2); color: #4ade80; }
     .status-badge.pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    .btn-submit {
+      background: #ff8c42;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+    }
     
     /* Demographics Grid */
     .demographics-grid {
@@ -179,7 +192,7 @@
     .dem-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .dem-card .value { font-size: 28px; font-weight: 700; color: #ff8c42; }
     
-    /* Modals */
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -204,7 +217,7 @@
       overflow-y: auto;
     }
     .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select, .modal-content textarea {
+    .modal-content input, .modal-content select {
       width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -212,15 +225,6 @@
       border-radius: 30px;
       margin-bottom: 15px;
       color: white;
-    }
-    .avatar-preview {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      margin: 0 auto 15px;
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      background-size: cover;
-      background-position: center;
     }
     .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
     .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
@@ -294,6 +298,7 @@
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: 1fr; }
       .profile-banner { flex-direction: column; text-align: center; }
+      .tabs { justify-content: center; }
     }
   </style>
 </head>
@@ -302,10 +307,10 @@
 <div class="header">
   <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
   <div class="nav-icons">
-    <i class="ri-home-line" onclick="window.location.href='/community.html'" title="Community Home"></i>
+    <i class="ri-home-5-line" onclick="window.location.href='/community.html'" title="Home" style="font-size: 24px;"></i>
     <i class="ri-settings-4-line" onclick="openSettings()" title="Settings"></i>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-    <div class="avatar" id="avatar-header" style="background-size: cover; background-position: center;">C</div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <div class="avatar" id="avatar-header">C</div>
   </div>
 </div>
 
@@ -314,13 +319,13 @@
   <div class="profile-banner">
     <div class="profile-avatar" id="profile-avatar" onclick="openSettings()">C</div>
     <div class="profile-info">
-      <h2 id="profile-name">Creator Name <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
-      <p id="profile-email">email@example.com</p>
+      <h2 id="profile-name">Loading... <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
+      <p id="profile-email">Loading...</p>
       <div class="unique-code" id="unique-code">Loading...</div>
       <div style="margin-top: 8px;">
         <span id="profile-niche">Niche: </span> • 
-        <span id="profile-currency">Currency: USD</span> • 
-        <span id="profile-language">Language: English</span>
+        <span id="profile-currency">Currency: </span> • 
+        <span id="profile-language">Language: </span>
         <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>
       </div>
     </div>
@@ -331,7 +336,6 @@
     <div class="stat-card" onclick="showWalletDetails()">
       <h3>💰 Available Wallet</h3>
       <div class="amount" id="wallet-balance">$0.00</div>
-      <div class="sub" id="local-balance"></div>
       <div class="sub">👇 Click for details</div>
     </div>
     <div class="stat-card" onclick="showTransactions()">
@@ -369,30 +373,20 @@
 
   <!-- Under Review Tab -->
   <div id="tab-review" class="tab-content">
-    <div style="overflow-x: auto;">
-      <table class="data-table" id="review-table">
-        <thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead>
-        <tbody><tr><td colspan="4">No projects under review</td></tr></tbody>
-      </table>
-    </div>
+    <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">No projects under review</td></tr></tbody></table></div>
   </div>
 
   <!-- Completed Works Tab -->
   <div id="tab-completed" class="tab-content">
-    <div style="overflow-x: auto;">
-      <table class="data-table" id="completed-table">
-        <thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead>
-        <tbody><tr><td colspan="4">No completed works</td></tr></tbody>
-      </table>
-    </div>
+    <div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">No completed works</td></tr></tbody></table></div>
   </div>
 
   <!-- Tips Received Tab -->
   <div id="tab-tips" class="tab-content">
     <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
-      <p style="font-size: 14px; color: #a08070;">Share your unique code with fans to receive tips!</p>
+      <p>Share your unique code with fans to receive tips!</p>
       <div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div>
-      <div class="tip-stats" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+      <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
         <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
         <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
         <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
@@ -404,33 +398,32 @@
   <div id="tab-demographics" class="tab-content">
     <div class="demographics-grid">
       <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div></div>
-      <div class="dem-card"><h4>❤️ Total Likes</h4><div class="value" id="dem-likes">0</div></div>
-      <div class="dem-card"><h4>💬 Total Comments</h4><div class="value" id="dem-comments">0</div></div>
+      <div class="dem-card"><h4>❤️ Likes</h4><div class="value" id="dem-likes">0</div></div>
+      <div class="dem-card"><h4>💬 Comments</h4><div class="value" id="dem-comments">0</div></div>
       <div class="dem-card"><h4>🌍 Top Country</h4><div class="value" id="dem-country" style="font-size: 20px;">—</div></div>
-      <div class="dem-card"><h4>📈 Engagement Rate</h4><div class="value" id="dem-engagement">0%</div></div>
-      <div class="dem-card"><h4>🎯 Campaigns Completed</h4><div class="value" id="dem-campaigns">0</div></div>
+      <div class="dem-card"><h4>📈 Engagement</h4><div class="value" id="dem-engagement">0%</div></div>
+      <div class="dem-card"><h4>🎯 Campaigns</h4><div class="value" id="dem-campaigns">0</div></div>
     </div>
   </div>
 
   <!-- Withdrawal Section -->
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
-    <p>Minimum $30 USD (or equivalent) | Withdrawal fee: <strong>3%</strong></p>
-    
+    <p>Minimum $30 USD | 3% fee</p>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <div id="threshold-text" style="font-size: 13px; margin-bottom: 5px;">$0.00 / $30.00</div>
     <div id="withdrawal-preview" style="font-size: 12px; color: #a08070; margin-bottom: 10px;"></div>
     
     <div class="withdraw-input-group">
-      <input type="number" id="withdraw-amount" placeholder="Amount" step="0.01">
+      <input type="number" id="withdraw-amount" placeholder="Amount">
       <select id="withdraw-currency">
         <option value="USD">🇺🇸 USD ($)</option>
-        <option value="KES">🇰🇪 Kenyan Shilling (KSh)</option>
-        <option value="EUR">🇪🇺 Euro (€)</option>
-        <option value="GBP">🇬🇧 British Pound (£)</option>
-        <option value="NGN">🇳🇬 Nigerian Naira (₦)</option>
-        <option value="ZAR">🇿🇦 South African Rand (R)</option>
-        <option value="GHS">🇬🇭 Ghanaian Cedi (₵)</option>
+        <option value="KES">🇰🇪 KES (KSh)</option>
+        <option value="EUR">🇪🇺 EUR (€)</option>
+        <option value="GBP">🇬🇧 GBP (£)</option>
+        <option value="NGN">🇳🇬 NGN (₦)</option>
+        <option value="ZAR">🇿🇦 ZAR (R)</option>
+        <option value="GHS">🇬🇭 GHS (₵)</option>
       </select>
     </div>
     
@@ -441,7 +434,7 @@
     </div>
     
     <div id="mpesa-fields" class="method-fields active">
-      <input type="tel" id="mpesa-phone" placeholder="Phone Number (e.g., 254712345678)">
+      <input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)">
     </div>
     <div id="paypal-fields" class="method-fields">
       <input type="email" id="paypal-email" placeholder="PayPal Email">
@@ -456,65 +449,18 @@
   </div>
 </div>
 
-<!-- Project Details Modal -->
-<div id="project-modal" class="modal">
-  <div class="modal-content">
-    <h3 id="project-title">Project Details</h3>
-    <div id="project-details"></div>
-    <div id="project-work-section"></div>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div>
-  </div>
-</div>
-
-<!-- Wallet Details Modal -->
-<div id="wallet-modal" class="modal">
-  <div class="modal-content">
-    <h3>Wallet Balance</h3>
-    <p>Available: <strong id="wallet-detail-available">$0</strong></p>
-    <p>Tips Received: <strong id="wallet-detail-tips">$0</strong></p>
-    <p>Escrow Held: <strong id="wallet-detail-escrow">$0</strong></p>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div>
-  </div>
-</div>
-
-<!-- Transactions Modal -->
-<div id="txn-modal" class="modal">
-  <div class="modal-content">
-    <h3>Transaction History</h3>
-    <div id="txn-list" style="max-height: 400px; overflow-y: auto;"></div>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('txn-modal')">Close</button></div>
-  </div>
-</div>
-
-<!-- Settings Modal -->
-<div id="settings-modal" class="modal">
-  <div class="modal-content">
-    <h3>⚙️ Profile Settings</h3>
-    <div class="avatar-preview" id="avatar-preview"></div>
-    <input type="text" id="setting-avatar-url" placeholder="Avatar Image URL (direct link to image)">
-    <input type="text" id="setting-stageName" placeholder="Stage Name / Display Name">
-    <input type="text" id="setting-niche" placeholder="Niche (e.g., Music, Comedy, Fashion)">
-    <select id="setting-currency">
-      <option value="USD">🇺🇸 USD ($)</option>
-      <option value="KES">🇰🇪 Kenyan Shilling (KSh)</option>
-      <option value="EUR">🇪🇺 Euro (€)</option>
-      <option value="GBP">🇬🇧 British Pound (£)</option>
-      <option value="NGN">🇳🇬 Nigerian Naira (₦)</option>
-      <option value="ZAR">🇿🇦 South African Rand (R)</option>
-      <option value="GHS">🇬🇭 Ghanaian Cedi (₵)</option>
-    </select>
-    <select id="setting-language">
-      <option value="en">English</option>
-      <option value="sw">Swahili</option>
-      <option value="fr">French</option>
-      <option value="es">Spanish</option>
-    </select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="saveSettings()">Save Changes</button>
-      <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
+<!-- Modals -->
+<div id="project-modal" class="modal"><div class="modal-content"><h3 id="project-title">Project Details</h3><div id="project-details"></div><div id="project-work-section"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div></div></div>
+<div id="wallet-modal" class="modal"><div class="modal-content"><h3>Wallet Balance</h3><p>Available: <strong id="wallet-detail-available">$0</strong></p><p>Tips: <strong id="wallet-detail-tips">$0</strong></p><p>Escrow: <strong id="wallet-detail-escrow">$0</strong></p><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div></div></div>
+<div id="txn-modal" class="modal"><div class="modal-content"><h3>Transaction History</h3><div id="txn-list" style="max-height: 400px; overflow-y: auto;"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('txn-modal')">Close</button></div></div></div>
+<div id="settings-modal" class="modal"><div class="modal-content"><h3>⚙️ Profile Settings</h3>
+  <input type="text" id="setting-avatar-url" placeholder="Avatar Image URL">
+  <input type="text" id="setting-stageName" placeholder="Stage Name">
+  <input type="text" id="setting-niche" placeholder="Niche">
+  <select id="setting-currency"><option value="USD">USD</option><option value="KES">KES</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+  <select id="setting-language"><option value="en">English</option><option value="sw">Swahili</option></select>
+  <div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div>
+</div></div>
 
 <script>
   let currentUser = null;
@@ -524,10 +470,7 @@
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
-    const res = await fetch(url, {
-      ...options,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers }
-    });
+    const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
     return res.json();
   }
 
@@ -538,15 +481,7 @@
   function convertToUSD(amount, currency) {
     if (currency === 'USD') return amount;
     const rate = exchangeRates[currency];
-    if (!rate) return amount;
-    return amount / rate;
-  }
-
-  function convertFromUSD(usdAmount, currency) {
-    if (currency === 'USD') return usdAmount;
-    const rate = exchangeRates[currency];
-    if (!rate) return usdAmount;
-    return usdAmount * rate;
+    return rate ? amount / rate : amount;
   }
 
   function logout() {
@@ -569,25 +504,20 @@
     document.getElementById('profile-currency').innerHTML = `Currency: ${currentUser.preferredCurrency || 'USD'}`;
     document.getElementById('profile-language').innerHTML = `Language: ${currentUser.preferredLanguage || 'English'}`;
     
-    // Set avatar
     const avatarUrl = currentUser.profile?.avatarUrl;
     if (avatarUrl) {
       document.getElementById('avatar-header').style.backgroundImage = `url(${avatarUrl})`;
       document.getElementById('avatar-header').innerText = '';
       document.getElementById('profile-avatar').style.backgroundImage = `url(${avatarUrl})`;
       document.getElementById('profile-avatar').innerText = '';
-      document.getElementById('avatar-preview').style.backgroundImage = `url(${avatarUrl})`;
     } else {
       document.getElementById('avatar-header').innerText = initial;
       document.getElementById('profile-avatar').innerText = initial;
-      document.getElementById('avatar-preview').style.backgroundImage = '';
     }
-    
     document.getElementById('setting-stageName').value = currentUser.profile?.stageName || '';
     document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
     document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
     document.getElementById('setting-language').value = currentUser.preferredLanguage || 'en';
-    document.getElementById('setting-avatar-url').value = currentUser.profile?.avatarUrl || '';
   }
 
   async function loadWallet() {
@@ -597,11 +527,8 @@
         const available = data.data?.balances?.available || 0;
         const escrow = data.data?.balances?.escrow || 0;
         const tips = data.data?.balances?.tips || 0;
-        const prefCurrency = currentUser?.preferredCurrency || 'USD';
-        const localAmount = convertFromUSD(available, prefCurrency);
         document.getElementById('wallet-balance').innerHTML = formatMoney(available);
         document.getElementById('escrow-balance').innerHTML = formatMoney(escrow);
-        document.getElementById('local-balance').innerHTML = `≈ ${formatMoney(localAmount, prefCurrency)}`;
         document.getElementById('wallet-detail-available').innerText = formatMoney(available);
         document.getElementById('wallet-detail-tips').innerText = formatMoney(tips);
         document.getElementById('wallet-detail-escrow').innerText = formatMoney(escrow);
@@ -630,25 +557,18 @@
       const net = usdAmount - fee;
       const percent = Math.min(100, (usdAmount / minUSD) * 100);
       progressFill.style.width = percent + '%';
-      if (usdAmount >= minUSD) {
-        progressFill.classList.add('active');
-      } else {
-        progressFill.classList.remove('active');
-      }
+      if (usdAmount >= minUSD) progressFill.classList.add('active');
+      else progressFill.classList.remove('active');
       thresholdText.innerText = `${formatMoney(usdAmount)} USD / ${formatMoney(minUSD)} USD`;
-      
-      if (usdAmount > 0) {
-        previewDiv.innerHTML = `💸 ${formatMoney(localAmount, currency)} → USD: ${formatMoney(usdAmount)} → Fee (3%): ${formatMoney(fee)} → You receive: ${formatMoney(net)}`;
-      } else { previewDiv.innerHTML = ''; }
-      
+      if (usdAmount > 0) previewDiv.innerHTML = `${formatMoney(localAmount, currency)} → USD: ${formatMoney(usdAmount)} → Fee: ${formatMoney(fee)} → You get: ${formatMoney(net)}`;
       if (usdAmount >= minUSD && usdAmount <= available) {
         withdrawBtn.classList.add('active');
         withdrawBtn.disabled = false;
-        withdrawBtn.innerText = `Withdraw ${formatMoney(net)} (after 3% fee)`;
+        withdrawBtn.innerText = `Withdraw ${formatMoney(net)}`;
       } else {
         withdrawBtn.classList.remove('active');
         withdrawBtn.disabled = true;
-        withdrawBtn.innerText = usdAmount >= minUSD ? `❌ Insufficient balance (${formatMoney(available)} available)` : `⚠️ Minimum ${formatMoney(minUSD)} USD required`;
+        withdrawBtn.innerText = usdAmount >= minUSD ? `Insufficient balance` : `Min $30 USD required`;
       }
     };
     amountInput.addEventListener('input', update);
@@ -658,39 +578,26 @@
 
   async function saveSettings() {
     const token = localStorage.getItem('pebeto_token');
-    const avatarUrl = document.getElementById('setting-avatar-url').value;
-    const updates = {
-      stageName: document.getElementById('setting-stageName').value,
-      niche: document.getElementById('setting-niche').value,
-      preferredCurrency: document.getElementById('setting-currency').value,
-      preferredLanguage: document.getElementById('setting-language').value,
-      avatarUrl: avatarUrl
-    };
-    
     try {
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ profile: { stageName: updates.stageName, niche: updates.niche, avatarUrl: updates.avatarUrl }, preferredCurrency: updates.preferredCurrency, preferredLanguage: updates.preferredLanguage })
+        body: JSON.stringify({ 
+          profile: { 
+            stageName: document.getElementById('setting-stageName').value,
+            niche: document.getElementById('setting-niche').value,
+            avatarUrl: document.getElementById('setting-avatar-url').value
+          },
+          preferredCurrency: document.getElementById('setting-currency').value,
+          preferredLanguage: document.getElementById('setting-language').value
+        })
       });
       const data = await res.json();
       if (data.success) {
-        // Update local storage
-        const userStr = localStorage.getItem('pebeto_user');
-        const user = JSON.parse(userStr);
-        user.profile = user.profile || {};
-        user.profile.stageName = updates.stageName;
-        user.profile.niche = updates.niche;
-        user.profile.avatarUrl = updates.avatarUrl;
-        user.preferredCurrency = updates.preferredCurrency;
-        user.preferredLanguage = updates.preferredLanguage;
-        localStorage.setItem('pebeto_user', JSON.stringify(user));
         alert('Settings saved! Page will refresh.');
         location.reload();
-      } else {
-        alert('Failed to save settings: ' + (data.message || 'Unknown error'));
-      }
-    } catch(e) { alert('Error saving settings'); }
+      } else alert('Failed to save');
+    } catch(e) { alert('Error saving'); }
   }
 
   async function loadCampaigns() {
@@ -698,61 +605,27 @@
       const data = await fetchJSON('/api/campaigns');
       if (data.success) {
         projectsData = data.campaigns || [];
-        renderTables();
+        const userId = currentUser?._id;
+        const myProjects = projectsData.filter(p => p.assignedCreatorId === userId || p.bids?.some(b => b.creatorId === userId));
+        const active = myProjects.filter(p => p.status === 'in_progress');
+        const review = myProjects.filter(p => p.status === 'submitted_for_review');
+        const completed = myProjects.filter(p => p.status === 'paid');
+        
+        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-submit" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
+        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge pending">Under Review</span></td></tr>`).join('');
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge paid">Paid ✅</span></td></tr>`).join('');
       }
     } catch(e) { console.error(e); }
-  }
-
-  function renderTables() {
-    const userId = currentUser?._id;
-    const myProjects = projectsData.filter(p => p.assignedCreatorId === userId || p.bids?.some(b => b.creatorId === userId));
-    const active = myProjects.filter(p => p.status === 'in_progress');
-    const review = myProjects.filter(p => p.status === 'submitted_for_review');
-    const completed = myProjects.filter(p => p.status === 'paid');
-    
-    document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `
-      <tr onclick="showProjectDetails('${p._id}')">
-        <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
-        <td><span class="status-badge">In Progress</span></td>
-        <td><button class="btn-submit" onclick="event.stopPropagation(); showSubmitWork('${p._id}')" style="background:#ff8c42; border:none; padding:6px 12px; border-radius:20px; cursor:pointer;">Submit</button></td>
-      </tr>
-    `).join('');
-    
-    document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `
-      <tr onclick="showProjectDetails('${p._id}')">
-        <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
-        <td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td>
-        <td><span class="status-badge pending">Under Review</span></td>
-      </tr>
-    `).join('');
-    
-    document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `
-      <tr onclick="showProjectDetails('${p._id}')">
-        <td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td>
-        <td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td>
-        <td><span class="status-badge paid">Paid ✅</span></td>
-      </tr>
-    `).join('');
   }
 
   async function showProjectDetails(campaignId) {
     const project = projectsData.find(p => p._id === campaignId);
     if (!project) return;
     document.getElementById('project-title').innerText = project.title;
-    document.getElementById('project-details').innerHTML = `
-      <p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p>
-      <p><strong>Budget:</strong> ${formatMoney(project.budget)}</p>
-      <p><strong>Status:</strong> ${project.status}</p>
-      <p><strong>Escrow Held:</strong> ${formatMoney(project.escrowHeld || 0)}</p>
-    `;
+    document.getElementById('project-details').innerHTML = `<p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p><p><strong>Budget:</strong> ${formatMoney(project.budget)}</p><p><strong>Status:</strong> ${project.status}</p>`;
     if (project.status === 'in_progress') {
-      document.getElementById('project-work-section').innerHTML = `
-        <input type="text" id="work-url-${project._id}" placeholder="Work URL (Google Drive, YouTube, etc)" style="width:100%; padding:10px; margin:10px 0; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;">
-        <button class="btn-submit" onclick="submitWork('${project._id}')" style="background:#ff8c42; border:none; padding:10px; border-radius:30px; cursor:pointer;">Submit Work</button>
-      `;
-    } else {
-      document.getElementById('project-work-section').innerHTML = '';
-    }
+      document.getElementById('project-work-section').innerHTML = `<input type="text" id="work-url-${project._id}" placeholder="Work URL" style="width:100%; padding:10px; margin:10px 0; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;"><button class="btn-submit" onclick="submitWork('${project._id}')">Submit Work</button>`;
+    } else document.getElementById('project-work-section').innerHTML = '';
     document.getElementById('project-modal').style.display = 'flex';
   }
 
@@ -760,43 +633,30 @@
 
   async function submitWork(campaignId) {
     const workUrl = document.getElementById(`work-url-${campaignId}`)?.value;
-    if (!workUrl) { alert('Please enter a work URL'); return; }
+    if (!workUrl) { alert('Enter work URL'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`/api/campaigns/${campaignId}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ workUrl })
-      });
+      const res = await fetch(`/api/campaigns/${campaignId}/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ workUrl }) });
       const data = await res.json();
-      if (data.success) { alert('Work submitted! Waiting for review.'); loadCampaigns(); closeModal('project-modal'); }
-      else alert(data.message || 'Submission failed');
-    } catch(e) { alert('Error submitting work'); }
+      if (data.success) { alert('Work submitted!'); loadCampaigns(); closeModal('project-modal'); }
+      else alert(data.message);
+    } catch(e) { alert('Error'); }
   }
 
   async function showTransactions() {
-    const modal = document.getElementById('txn-modal');
-    const listDiv = document.getElementById('txn-list');
-    listDiv.innerHTML = '<div style="text-align:center; padding:20px;">Loading...</div>';
-    modal.style.display = 'flex';
+    document.getElementById('txn-modal').style.display = 'flex';
     try {
       const data = await fetchJSON('/api/wallet/transactions');
       if (data.success && data.data?.transactions) {
         const txn = data.data.transactions;
         document.getElementById('txn-count').innerText = txn.length;
-        if (txn.length === 0) listDiv.innerHTML = '<div style="text-align:center; padding:20px;">No transactions yet</div>';
-        else listDiv.innerHTML = txn.slice(0, 20).map(t => `
-          <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
-            <span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
-            <span style="font-size:11px;">${new Date(t.createdAt).toLocaleDateString()}</span>
-          </div>
-        `).join('');
+        document.getElementById('txn-list').innerHTML = txn.length === 0 ? 'No transactions' : txn.slice(0, 20).map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span>${new Date(t.createdAt).toLocaleDateString()}</span></div>`).join('');
       }
-    } catch(e) { listDiv.innerHTML = '<div style="text-align:center; padding:20px;">Error loading transactions</div>'; }
+    } catch(e) { document.getElementById('txn-list').innerHTML = 'Error loading'; }
   }
 
   function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
-  function showEscrowDetails() { alert(`💰 Pending Escrow: ${document.getElementById('escrow-balance').innerText}\n\nMoney held for active campaigns. Released when brands approve your work.`); }
+  function showEscrowDetails() { alert(`Pending Escrow: ${document.getElementById('escrow-balance').innerText}`); }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
 
@@ -811,28 +671,19 @@
     else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value, swiftCode: document.getElementById('wire-swift').value };
     
     if (!amount || amount <= 0) { alert('Enter amount'); return; }
-    if (usdAmount < 30) { alert(`Minimum withdrawal is $30 USD. You entered ${formatMoney(usdAmount)}`); return; }
-    if (method === 'mpesa' && !payoutDetails.phoneNumber) { alert('Enter phone number'); return; }
-    if (method === 'paypal' && !payoutDetails.paypalEmail) { alert('Enter PayPal email'); return; }
-    if (method === 'wire' && (!payoutDetails.bankName || !payoutDetails.accountNumber)) { alert('Enter bank details'); return; }
-    
+    if (usdAmount < 30) { alert(`Minimum $30 USD required`); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/wallet/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ amountUsd: usdAmount, payoutMethod: method, payoutDetails })
-      });
+      const res = await fetch('/api/wallet/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: usdAmount, payoutMethod: method, payoutDetails }) });
       const data = await res.json();
-      if (data.success) { alert('Withdrawal request submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
-      else alert(data.message || 'Withdrawal failed');
-    } catch(e) { alert('Error processing withdrawal'); }
+      if (data.success) { alert('Withdrawal submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
+      else alert(data.message);
+    } catch(e) { alert('Error'); }
   }
 
   async function loadDemographics() {
     try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/creator/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch('/api/creator/stats', { headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` } });
       const data = await res.json();
       if (data.success) {
         document.getElementById('dem-followers').innerText = formatNumber(data.followers || 0);
@@ -845,13 +696,9 @@
     } catch(e) { console.error(e); }
   }
 
-  function formatNumber(num) {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-  }
+  function formatNumber(num) { if (num >= 1000000) return (num/1000000).toFixed(1)+'M'; if (num >= 1000) return (num/1000).toFixed(1)+'K'; return num; }
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-  // Tab switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -860,7 +707,6 @@
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
     });
   });
-
   document.querySelectorAll('.method-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
@@ -871,8 +717,6 @@
     });
   });
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
-
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
   loadUserData();
   loadWallet();
