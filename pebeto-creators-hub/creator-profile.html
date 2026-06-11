@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Creator Profile - Pebeto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1208 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 140, 66, 0.2);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      z-index: 100;
+    }
+    .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
+    .nav-icons { display: flex; gap: 15px; align-items: center; }
+    .community-btn {
+      background: rgba(255, 140, 66, 0.15);
+      border: 1px solid #ff8c42;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .community-btn:hover { background: #ff8c42; color: white; }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      background-size: cover;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .profile-header {
+      background: linear-gradient(135deg, rgba(255,140,66,0.15), rgba(0,0,0,0.3));
+      border-radius: 28px;
+      padding: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: bold;
+      background-size: cover;
+      background-position: center;
+    }
+    .profile-info h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .profile-info .username {
+      color: #a08070;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .profile-info .niche {
+      display: inline-block;
+      background: rgba(255,140,66,0.15);
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card h4 {
+      font-size: 13px;
+      color: #a08070;
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ff8c42;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .tip-btn {
+      background: rgba(255,140,66,0.2);
+      border: 1px solid #ff8c42;
+      padding: 12px 32px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tip-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    .bid-btn {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid #4caf50;
+      padding: 12px 32px;
+      border-radius: 40px;
+      color: #4caf50;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bid-btn:hover {
+      background: #4caf50;
+      color: white;
+    }
+    .message-btn {
+      background: rgba(33, 150, 243, 0.2);
+      border: 1px solid #2196f3;
+      padding: 12px 32px;
+      border-radius: 40px;
+      color: #2196f3;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .message-btn:hover {
+      background: #2196f3;
+      color: white;
+    }
+    .videos-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 24px;
+      padding: 24px;
+    }
+    .videos-section h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #ff8c42;
+    }
+    .video-container {
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 500px;
+    }
+    .tiktok-embed-container {
+      min-height: 600px;
+    }
+    .youtube-embed-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+    }
+    .youtube-embed-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .loading-spinner {
+      text-align: center;
+      padding: 50px;
+      color: #ff8c42;
+    }
+    .not-found {
+      text-align: center;
+      padding: 50px;
+      color: #a08070;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #1a1510;
+      border-radius: 28px;
+      padding: 30px;
+      max-width: 450px;
+      width: 90%;
+      border: 1px solid rgba(255,140,66,0.3);
+    }
+    .modal-content h3 {
+      margin-bottom: 20px;
+      color: #ff8c42;
+    }
+    .modal-content input, .modal-content select, .modal-content textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 12px;
+      border-radius: 30px;
+      margin-bottom: 15px;
+      color: white;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+    }
+    .save-btn {
+      background: #ff8c42;
+      color: white;
+    }
+    .cancel-btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .profile-header { flex-direction: column; text-align: center; }
+      .action-buttons { justify-content: center; }
+    }
+  </style>
+  <script async src="https://www.tiktok.com/embed.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
+  <div class="nav-icons">
+    <button class="community-btn" onclick="window.location.href='/community.html'">
+      <i class="ri-home-5-line"></i> Community
+    </button>
+    <div class="avatar" id="nav-avatar" onclick="goToDashboard()">U</div>
+  </div>
+</div>
+
+<div class="container" id="profile-container">
+  <div class="loading-spinner">Loading creator profile...</div>
+</div>
+
+<!-- Tip Modal -->
+<div id="tip-modal" class="modal">
+  <div class="modal-content">
+    <h3>💝 Send Tip to Creator</h3>
+    <p id="tip-creator-name">Creator: Loading...</p>
+    <input type="number" id="tip-amount" placeholder="Amount in USD" min="1">
+    <select id="tip-currency">
+      <option value="USD">USD ($)</option>
+      <option value="KES">KES (KSh)</option>
+      <option value="EUR">EUR (€)</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendTip()">Send Tip</button>
+      <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bid Modal -->
+<div id="bid-modal" class="modal">
+  <div class="modal-content">
+    <h3>🤝 Send Bid / Offer</h3>
+    <p id="bid-creator-name">Creator: Loading...</p>
+    <input type="text" id="bid-campaign" placeholder="Campaign Title">
+    <input type="number" id="bid-amount" placeholder="Amount (USD)" min="1">
+    <textarea id="bid-message" rows="3" placeholder="Describe your offer..."></textarea>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="sendBid()">Send Offer</button>
+      <button class="cancel-btn" onclick="closeModal('bid-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  let currentCreator = null;
+  let currentUser = null;
+  let currentTipCreatorId = null;
+  let currentTipCreatorName = '';
+
+  async function fetchJSON(url, options = {}) {
+    const token = localStorage.getItem('pebeto_token');
+    const res = await fetch(url, { 
+      ...options, 
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...options.headers 
+      } 
+    });
+    return res.json();
+  }
+
+  function closeModal(id) { 
+    document.getElementById(id).style.display = 'none'; 
+  }
+
+  function goToDashboard() {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      window.location.href = '/signup.html';
+      return;
+    }
+    const userStr = localStorage.getItem('pebeto_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === 'creator') {
+          window.location.href = '/creator-dashboard.html';
+        } else if (user.role === 'business') {
+          window.location.href = '/business-dashboard.html';
+        } else if (user.role === 'admin') {
+          window.location.href = '/admin-dashboard.html';
+        } else {
+          window.location.href = '/creator-dashboard.html';
+        }
+      } catch(e) {
+        window.location.href = '/signup.html';
+      }
+    } else {
+      window.location.href = '/signup.html';
+    }
+  }
+
+  // Get creator ID from URL
+  function getCreatorIdFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('id') || localStorage.getItem('viewingCreatorId');
+  }
+
+  // Load creator profile
+  async function loadCreatorProfile() {
+    const creatorId = getCreatorIdFromUrl();
+    if (!creatorId) {
+      document.getElementById('profile-container').innerHTML = '<div class="not-found">No creator ID provided.</div>';
+      return;
+    }
+
+    try {
+      // Try to fetch from API first
+      const response = await fetch(`${API_BASE}/api/creators`);
+      const data = await response.json();
+      
+      let creator = null;
+      if (data.success && data.creators) {
+        creator = data.creators.find(c => c._id === creatorId);
+      }
+      
+      // If not found in API, use sample data
+      if (!creator) {
+        creator = getSampleCreator(creatorId);
+      }
+      
+      if (creator) {
+        currentCreator = creator;
+        renderProfile(creator);
+      } else {
+        document.getElementById('profile-container').innerHTML = '<div class="not-found">Creator not found.</div>';
+      }
+    } catch (error) {
+      console.error('Error loading creator:', error);
+      const sampleCreator = getSampleCreator(creatorId);
+      if (sampleCreator) {
+        currentCreator = sampleCreator;
+        renderProfile(sampleCreator);
+      } else {
+        document.getElementById('profile-container').innerHTML = '<div class="not-found">Error loading creator profile.</div>';
+      }
+    }
+  }
+
+  function getSampleCreator(creatorId) {
+    const sampleCreators = {
+      'sample1': {
+        _id: 'sample1',
+        email: 'creator1@example.com',
+        profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '', bio: 'Professional DJ and music producer. Creating beats and vibes for everyone!' },
+        socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' },
+        social: { followerCount: 15000, followingCount: 500, totalTipsReceived: 2500, campaignsCompleted: 12 }
+      },
+      'sample2': {
+        _id: 'sample2',
+        email: 'creator2@example.com',
+        profile: { stageName: 'Sarah Creates', niche: 'Art', avatarUrl: '', bio: 'Digital artist and illustrator. Bringing imagination to life!' },
+        socialLinks: { tiktok: '', youtube: 'https://www.youtube.com/@YouTube' },
+        social: { followerCount: 8500, followingCount: 300, totalTipsReceived: 1800, campaignsCompleted: 8 }
+      },
+      'sample3': {
+        _id: 'sample3',
+        email: 'creator3@example.com',
+        profile: { stageName: 'Mike Fitness', niche: 'Fitness', avatarUrl: '', bio: 'Certified fitness trainer. Helping you reach your goals!' },
+        socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' },
+        social: { followerCount: 22000, followingCount: 800, totalTipsReceived: 4200, campaignsCompleted: 15 }
+      }
+    };
+    return sampleCreators[creatorId] || null;
+  }
+
+  function renderProfile(creator) {
+    const container = document.getElementById('profile-container');
+    const initial = (creator.profile?.stageName?.[0] || creator.email?.[0] || 'C').toUpperCase();
+    const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
+    const username = creator.profile?.stageName ? `@${creator.profile.stageName.toLowerCase().replace(/\s/g, '')}` : '@creator';
+    const niche = creator.profile?.niche || 'Creator';
+    const bio = creator.profile?.bio || 'No bio yet.';
+    const followers = creator.social?.followerCount || 0;
+    const tipsReceived = creator.social?.totalTipsReceived || 0;
+    const campaignsCompleted = creator.social?.campaignsCompleted || 0;
+    
+    let embedHtml = '';
+    if (creator.socialLinks?.tiktok) {
+      const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
+      const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
+      embedHtml = `
+        <div class="video-container tiktok-embed-container">
+          <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;">
+            <section>
+              <a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a>
+            </section>
+          </blockquote>
+        </div>
+      `;
+    } else if (creator.socialLinks?.youtube) {
+      let youtubeEmbedUrl = '';
+      if (creator.socialLinks.youtube.includes('/@')) {
+        const handle = creator.socialLinks.youtube.split('/@')[1];
+        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${handle}`;
+      } else {
+        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
+      }
+      embedHtml = `
+        <div class="video-container">
+          <div class="youtube-embed-container">
+            <iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+      `;
+    } else {
+      embedHtml = `
+        <div class="video-container" style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
+          <p style="color: #a08070;">No videos connected yet.</p>
+        </div>
+      `;
+    }
+    
+    container.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">
+          ${!creator.profile?.avatarUrl ? initial : ''}
+        </div>
+        <div class="profile-info">
+          <h1>${escapeHtml(displayName)}</h1>
+          <div class="username">${escapeHtml(username)}</div>
+          <div class="niche">🎨 ${escapeHtml(niche)}</div>
+          <p style="margin-top: 15px; color: #b8a99a;">${escapeHtml(bio)}</p>
+        </div>
+      </div>
+      
+      <div class="stats-row">
+        <div class="stat-card">
+          <h4>👥 Followers</h4>
+          <div class="value">${formatNumber(followers)}</div>
+        </div>
+        <div class="stat-card">
+          <h4>💰 Tips Received</h4>
+          <div class="value">$${formatNumber(tipsReceived)}</div>
+        </div>
+        <div class="stat-card">
+          <h4>✅ Campaigns</h4>
+          <div class="value">${campaignsCompleted}</div>
+        </div>
+        <div class="stat-card">
+          <h4>🎯 Engagement</h4>
+          <div class="value">4.5%</div>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="tip-btn" onclick="openTipModalFromProfile('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-coin-line"></i> Send Tip 💝
+        </button>
+        <button class="bid-btn" onclick="openBidModalFromProfile('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-briefcase-line"></i> Send Bid / Offer
+        </button>
+        <button class="message-btn" onclick="messageCreator('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-mail-line"></i> Send Message
+        </button>
+      </div>
+      
+      <div class="videos-section">
+        <h2>📹 Creator Content</h2>
+        ${embedHtml}
+      </div>
+    `;
+    
+    if (window.tiktokEmbedLoad) {
+      window.tiktokEmbedLoad();
+    }
+  }
+
+  function openTipModalFromProfile(creatorId, creatorName) {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please log in to send tips');
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    currentTipCreatorId = creatorId;
+    currentTipCreatorName = creatorName;
+    document.getElementById('tip-creator-name').innerHTML = `Sending tip to: <strong>${escapeHtml(creatorName)}</strong>`;
+    document.getElementById('tip-modal').style.display = 'flex';
+  }
+
+  async function sendTip() {
+    const amount = parseFloat(document.getElementById('tip-amount').value);
+    const currency = document.getElementById('tip-currency').value;
+    
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please log in to send tips');
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/wallet/tip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          creatorId: currentTipCreatorId,
+          amount: amount,
+          currency: currency
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`💝 Tip of ${currency} ${amount} sent successfully!`);
+        closeModal('tip-modal');
+        document.getElementById('tip-amount').value = '';
+      } else {
+        alert('Failed to send tip: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error sending tip:', error);
+      alert('Network error. Please try again.');
+    }
+  }
+
+  function openBidModalFromProfile(creatorId, creatorName) {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please log in to send bids');
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    document.getElementById('bid-creator-name').innerHTML = `Sending offer to: <strong>${escapeHtml(creatorName)}</strong>`;
+    document.getElementById('bid-modal').style.display = 'flex';
+  }
+
+  async function sendBid() {
+    const campaignTitle = document.getElementById('bid-campaign').value;
+    const amount = parseFloat(document.getElementById('bid-amount').value);
+    const message = document.getElementById('bid-message').value;
+    
+    if (!campaignTitle || !amount) {
+      alert('Please enter campaign title and amount');
+      return;
+    }
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please log in to send bids');
+      window.location.href = '/signup.html';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/campaigns`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: campaignTitle,
+          budget: amount,
+          description: message,
+          assignedCreatorId: currentCreator?._id,
+          slots: 1
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`🤝 Offer sent successfully! The creator will review your proposal.`);
+        closeModal('bid-modal');
+        document.getElementById('bid-campaign').value = '';
+        document.getElementById('bid-amount').value = '';
+        document.getElementById('bid-message').value = '';
+      } else {
+        alert('Failed to send offer: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error sending bid:', error);
+      alert('Network error. Please try again.');
+    }
+  }
+
+  function messageCreator(creatorId, creatorName) {
+    alert(`Message feature coming soon!\n\nYou can message ${creatorName} directly once implemented.`);
+  }
+
+  function formatNumber(num) {
+    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
+    return num.toString();
+  }
+
+  function escapeHtml(str) { 
+    if (!str) return ''; 
+    return str.replace(/[&<>]/g, function(m) { 
+      if (m === '&') return '&amp;'; 
+      if (m === '<') return '&lt;'; 
+      if (m === '>') return '&gt;'; 
+      return m; 
+    }); 
+  }
+
+  function loadUserData() {
+    const userStr = localStorage.getItem('pebeto_user');
+    if (userStr) {
+      try {
+        currentUser = JSON.parse(userStr);
+        const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'U').toUpperCase();
+        document.getElementById('nav-avatar').innerHTML = initial;
+        if (currentUser.profile?.avatarUrl) {
+          document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
+          document.getElementById('nav-avatar').innerHTML = '';
+        }
+      } catch(e) {
+        console.error('Error parsing user data:', e);
+      }
+    }
+  }
+
+  // Initialize
+  loadUserData();
+  loadCreatorProfile();
+</script>
+</body>
+</html>
