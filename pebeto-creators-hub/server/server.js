@@ -155,42 +155,56 @@ const morganFormat = env.isProduction
   : 'dev';
 
 // ============================================
-// CORS Configuration
+// CORS Configuration (FIXED)
 // ============================================
 
 const corsOptions = {
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps, curl)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      return callback(null, true);
+    }
     
-    // Check if origin is allowed
+    // List of allowed origins (add your frontend URLs here)
+    const allowedOrigins = [
+      'https://pebeto-new.onrender.com',
+      'https://pebeto-hub-1-v7pq.onrender.com',
+      'https://pebeto-hub-1.onrender.com',
+      'http://localhost:3000',
+      'http://localhost:5500',
+      'http://127.0.0.1:5500'
+    ];
+    
+    // Allow any .onrender.com subdomain
+    if (origin.includes('.onrender.com')) {
+      console.log(`✅ CORS allowed: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS allowed: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // For production, also check env.clientOrigins
+    if (env.clientOrigins && env.clientOrigins.includes(origin)) {
+      console.log(`✅ CORS allowed (env): ${origin}`);
+      return callback(null, true);
+    }
+    
+    // If corsAllowAll is true, allow everything
     if (env.corsAllowAll) {
+      console.log(`⚠️ CORS allowed all: ${origin}`);
       return callback(null, true);
     }
     
-    if (env.clientOrigins.length === 0) {
-      // In production, this should not happen - we already warned
-      if (env.isProduction) {
-        console.warn(`⚠️ CORS: No origins configured, but allowing ${origin} for now`);
-        return callback(null, true);
-      }
-      return callback(null, true);
-    }
-    
-    if (env.clientOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // Log blocked origins in development for debugging
-    if (env.isDevelopment) {
-      console.log(`🔒 CORS blocked origin: ${origin}`);
-    }
-    
+    console.log(`🔒 CORS blocked: ${origin}`);
     callback(new Error(`CORS policy does not allow origin: ${origin}`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Accept'],
   exposedHeaders: ['X-Request-ID'],
   maxAge: 86400 // 24 hours
 };
