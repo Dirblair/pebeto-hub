@@ -149,26 +149,51 @@
   }
 
   // SIGN IN - FIXED REDIRECT
-  document.getElementById('btn-signin').onclick = async () => {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) return showAlert('Email and password required', 'error');
-    const btn = document.getElementById('btn-signin');
-    btn.disabled = true; btn.innerHTML = 'Signing in...';
-    try {
-      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Invalid credentials');
-      localStorage.setItem('pebeto_token', data.token);
-      localStorage.setItem('pebeto_user', JSON.stringify(data.user));
-      showAlert('Login successful!', 'success');
-      // DIRECT REDIRECT TO DASHBOARD
-      if (data.user.role === 'creator') window.location.href = '/creator-dashboard.html';
-      else if (data.user.role === 'business') window.location.href = '/business-dashboard.html';
-      else if (data.user.role === 'admin') window.location.href = '/admin-dashboard.html';
-      else window.location.href = '/';
-    } catch (err) { showAlert(err.message, 'error'); btn.disabled = false; btn.innerHTML = 'Sign In'; }
-  };
+  // SIGN IN - SIMPLE VERSION THAT WILL WORK
+document.getElementById('btn-signin').onclick = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  if (!email || !password) {
+    alert('Email and password required');
+    return;
+  }
+  
+  const btn = document.getElementById('btn-signin');
+  btn.disabled = true;
+  btn.innerText = 'Signing in...';
+  
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      alert(data.message || 'Login failed');
+      btn.disabled = false;
+      btn.innerText = 'Sign In';
+      return;
+    }
+    
+    // Save session
+    localStorage.setItem('pebeto_token', data.token);
+    localStorage.setItem('pebeto_user', JSON.stringify(data.user));
+    
+    alert('Login successful! Redirecting...');
+    
+    // Force redirect
+    window.location.href = '/creator-dashboard.html';
+    
+  } catch (err) {
+    alert('Error: ' + err.message);
+    btn.disabled = false;
+    btn.innerText = 'Sign In';
+  }
+};
 
   // SIGN UP - Creator
   document.getElementById('btn-signup').onclick = async () => {
