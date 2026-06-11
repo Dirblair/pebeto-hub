@@ -123,10 +123,9 @@
     .tab-btn.active { color: #ff8c42; border-bottom: 2px solid #ff8c42; }
     .tab-content { display: none; }
     .tab-content.active { display: block; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .data-table th, .data-table td { padding: 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .data-table th { color: #a08070; font-weight: 500; font-size: 13px; }
     .data-table tr:hover { background: rgba(255,140,66,0.05); }
     .status-badge {
@@ -172,7 +171,7 @@
       overflow-y: auto;
     }
     .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select, .modal-content textarea {
+    .modal-content input, .modal-content select {
       width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -254,7 +253,7 @@
 </div>
 
 <div class="container">
-  <!-- Stats Grid - REAL DATA -->
+  <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card">
       <h4>💰 Admin Profit Wallet</h4>
@@ -277,11 +276,11 @@
   <!-- Charts Row -->
   <div class="charts-row">
     <div class="chart-card">
-      <h4>📈 User Growth</h4>
+      <h4>📈 User Growth (Last 7 Days)</h4>
       <canvas id="user-growth-chart"></canvas>
     </div>
     <div class="chart-card">
-      <h4>💰 Revenue Trends</h4>
+      <h4>💰 Revenue Trends (Last 7 Days)</h4>
       <canvas id="revenue-trend-chart"></canvas>
     </div>
   </div>
@@ -322,7 +321,9 @@
     </div>
     <div style="overflow-x: auto;">
       <table class="data-table" id="users-table">
-        <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead>
+        <thead>
+          <tr><th>Email</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
         <tbody><tr><td colspan="6">Loading...</td></tr></tbody>
       </table>
     </div>
@@ -370,34 +371,22 @@
 
   <!-- Withdrawals Tab -->
   <div id="tab-withdrawals" class="tab-content">
-    <h3 style="margin-bottom: 20px;">💸 Admin Withdrawal (No fees, no minimum)</h3>
+    <h3 style="margin-bottom: 20px;">💸 Admin Withdrawal (No fees)</h3>
     <div style="background: rgba(255,255,255,0.03); border-radius: 24px; padding: 24px;">
       <div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin: 15px 0;">
         <div class="progress-fill" id="progress-fill" style="height: 100%; width: 0%; background: #6a6050; transition: width 0.3s;"></div>
       </div>
-      <div id="threshold-text" style="font-size: 13px;">$0.00</div>
-      
-      <div style="display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0;">
+      <div class="withdraw-input-group" style="display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0;">
         <input type="number" id="withdraw-amount" placeholder="Amount (USD)" style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white;">
       </div>
-      
       <div class="method-buttons">
-        <button class="method-btn active" data-method="mpesa" onclick="selectWithdrawMethod('mpesa')">M-Pesa</button>
-        <button class="method-btn" data-method="bank" onclick="selectWithdrawMethod('bank')">Bank Transfer</button>
+        <button class="method-btn" onclick="selectWithdrawMethod('mpesa')">M-Pesa</button>
+        <button class="method-btn" onclick="selectWithdrawMethod('bank')">Bank Transfer</button>
       </div>
-      
-      <div id="withdraw-mpesa-fields" class="method-fields active">
-        <input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)">
-      </div>
-      <div id="withdraw-bank-fields" class="method-fields" style="display:none">
-        <input type="text" id="bank-name" placeholder="Bank Name">
-        <input type="text" id="bank-account" placeholder="Account Number">
-        <input type="text" id="bank-holder" placeholder="Account Holder Name">
-      </div>
-      
+      <div id="withdraw-mpesa-fields" class="method-fields" style="display:block"><input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)"></div>
+      <div id="withdraw-bank-fields" class="method-fields" style="display:none"><input type="text" id="bank-name" placeholder="Bank Name"><input type="text" id="bank-account" placeholder="Account Number"><input type="text" id="bank-holder" placeholder="Account Holder Name"></div>
       <button id="withdraw-btn" class="withdraw-btn" style="background:#6a6050; border:none; padding:14px; border-radius:40px; color:white; font-weight:600; width:100%; cursor:not-allowed;">Withdraw</button>
     </div>
-    
     <h3 style="margin: 30px 0 20px;">📜 Withdrawal History</h3>
     <div style="overflow-x: auto;">
       <table class="data-table" id="admin-withdrawals-table">
@@ -413,11 +402,8 @@
   <div class="modal-content">
     <h3>Change Profile Picture</h3>
     <div class="avatar-preview" id="avatar-preview"></div>
-    <input type="text" id="avatar-url" placeholder="Image URL (direct link to your photo)">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="saveAvatar()">Save</button>
-      <button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button>
-    </div>
+    <input type="text" id="avatar-url" placeholder="Image URL">
+    <div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div>
   </div>
 </div>
 
@@ -442,7 +428,7 @@
 <script>
   let currentUser = null;
   let selectedWithdrawMethod = 'mpesa';
-  let growthChart, revenueChart, feeChart;
+  let userGrowthChart, revenueChart, feeChart;
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -456,10 +442,8 @@
 
   function selectWithdrawMethod(method) {
     selectedWithdrawMethod = method;
-    document.querySelectorAll('.method-btn').forEach(btn => {
-      if (btn.getAttribute('data-method') === method) btn.classList.add('active');
-      else btn.classList.remove('active');
-    });
+    document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
     document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none');
     document.getElementById(`withdraw-${method}-fields`).style.display = 'block';
     updateWithdrawPreview();
@@ -470,7 +454,6 @@
     const progressFill = document.getElementById('progress-fill');
     const withdrawBtn = document.getElementById('withdraw-btn');
     progressFill.style.width = Math.min(100, (amount / 1000) * 100) + '%';
-    if (amount > 0) progressFill.style.background = 'linear-gradient(135deg, #ff8c42, #e0662c)';
     if (amount > 0) {
       withdrawBtn.classList.add('active');
       withdrawBtn.disabled = false;
@@ -482,73 +465,19 @@
     }
   }
 
-  async function withdraw() {
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    if (!amount || amount <= 0) { alert('Enter amount'); return; }
-    const method = selectedWithdrawMethod;
-    let payoutDetails = {};
-    if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
-    else payoutDetails = { bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-account').value, accountHolderName: document.getElementById('bank-holder').value };
-    
-    if (method === 'mpesa' && !payoutDetails.phoneNumber) { alert('Enter phone number'); return; }
-    if (method === 'bank' && (!payoutDetails.bankName || !payoutDetails.accountNumber)) { alert('Enter bank details'); return; }
-    
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/wallet/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`Withdrawal of $${amount} submitted successfully!`);
-        document.getElementById('withdraw-amount').value = '';
-        updateWithdrawPreview();
-        loadAdminWithdrawals();
-        loadAdminData();
-      } else alert(data.message || 'Withdrawal failed');
-    } catch(e) { alert('Error'); }
-  }
-
   async function saveAvatar() {
     const avatarUrl = document.getElementById('avatar-url').value;
-    if (!avatarUrl) { alert('Enter an image URL'); return; }
+    if (!avatarUrl) { alert('Enter image URL'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ profile: { avatarUrl } })
-      });
-      if (res.ok) {
-        alert('Profile picture updated!');
-        updateAvatarDisplay(avatarUrl);
-        closeModal('avatar-modal');
-      } else alert('Failed to update');
+      await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { avatarUrl } }) });
+      alert('Profile picture updated!');
+      location.reload();
     } catch(e) { alert('Error'); }
   }
 
-  function updateAvatarDisplay(url) {
-    const avatarHeader = document.getElementById('avatar-header');
-    avatarHeader.style.backgroundImage = `url(${url})`;
-    avatarHeader.innerText = '';
-    document.getElementById('avatar-preview').style.backgroundImage = `url(${url})`;
-  }
-
-  // ========== REAL DATA FUNCTIONS ==========
-  
   async function loadAdminData() {
     try {
-      // Get real user counts
-      const reg = await fetchJSON('/api/admin/registrations');
-      if (reg.success) {
-        document.getElementById('total-users').innerText = reg.total || 0;
-        document.getElementById('creators-count').innerText = reg.creators || 0;
-        document.getElementById('businesses-count').innerText = reg.businesses || 0;
-      }
-      
-      // Get real wallet data
       const metrics = await fetchJSON('/api/admin/metrics');
       if (metrics.success) {
         document.getElementById('admin-wallet').innerHTML = formatMoney(metrics.profitWallet || 0);
@@ -559,14 +488,18 @@
         if (feeChart) feeChart.destroy();
         feeChart = new Chart(document.getElementById('fee-breakdown-chart'), {
           type: 'doughnut',
-          data: { labels: ['Deposit Fees (10%)', 'Tip Fees (5%)', 'Withdrawal Fees (3%)'], 
-                  datasets: [{ data: [metrics.feeBreakdown?.deposit || 0, metrics.feeBreakdown?.tip || 0, metrics.feeBreakdown?.withdrawal || 0], 
-                              backgroundColor: ['#ff8c42', '#e0662c', '#b84a1a'] }] },
+          data: { labels: ['Deposit Fees (10%)', 'Tip Fees (5%)', 'Withdrawal Fees (3%)'], datasets: [{ data: [metrics.feeBreakdown?.deposit || 0, metrics.feeBreakdown?.tip || 0, metrics.feeBreakdown?.withdrawal || 0], backgroundColor: ['#ff8c42', '#e0662c', '#b84a1a'] }] },
           options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
         });
       }
       
-      // Get real campaign counts
+      const reg = await fetchJSON('/api/admin/registrations');
+      if (reg.success) {
+        document.getElementById('total-users').innerText = reg.total || 0;
+        document.getElementById('creators-count').innerText = reg.creators || 0;
+        document.getElementById('businesses-count').innerText = reg.businesses || 0;
+      }
+      
       const campaigns = await fetchJSON('/api/campaigns');
       if (campaigns.success) {
         const allCampaigns = campaigns.campaigns || [];
@@ -574,34 +507,35 @@
         document.getElementById('completed-campaigns').innerText = allCampaigns.filter(c => c.status === 'paid').length;
       }
       
-      // Charts with real data (last 7 days)
-      const last7Days = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        last7Days.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      }
-      
-      // Get user growth from registration dates
-      const allUsers = await fetchJSON('/api/admin/users?limit=100');
-      if (allUsers.success && allUsers.data?.users) {
-        const userDates = allUsers.data.users.map(u => new Date(u.createdAt).toLocaleDateString());
+      const users = await fetchJSON('/api/admin/users?limit=100');
+      if (users.success && users.data?.users) {
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          last7Days.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
+        const userDates = users.data.users.map(u => new Date(u.createdAt).toLocaleDateString());
         const userCountByDay = last7Days.map(day => userDates.filter(d => d === day).length);
         
-        if (growthChart) growthChart.destroy();
-        growthChart = new Chart(document.getElementById('user-growth-chart'), {
-          type: 'line',
-          data: { labels: last7Days, datasets: [{ label: 'New Users', data: userCountByDay, borderColor: '#ff8c42', fill: false, tension: 0.3 }] },
+        if (userGrowthChart) userGrowthChart.destroy();
+        userGrowthChart = new Chart(document.getElementById('user-growth-chart'), {
+          type: 'line', data: { labels: last7Days, datasets: [{ label: 'New Users', data: userCountByDay, borderColor: '#ff8c42', fill: false, tension: 0.3 }] },
           options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
         });
       }
       
-      // Revenue trends
-      const transactions = await fetchJSON('/api/wallet/transactions?limit=200');
-      if (transactions.success && transactions.data?.transactions) {
+      const txs = await fetchJSON('/api/wallet/transactions?limit=200');
+      if (txs.success && txs.data?.transactions) {
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          last7Days.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
         const revenueByDay = {};
         last7Days.forEach(day => revenueByDay[day] = 0);
-        transactions.data.transactions.forEach(t => {
+        txs.data.transactions.forEach(t => {
           const day = new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           if (revenueByDay[day] !== undefined && t.type === 'platform_fee') {
             revenueByDay[day] += t.grossAmount || 0;
@@ -610,12 +544,11 @@
         
         if (revenueChart) revenueChart.destroy();
         revenueChart = new Chart(document.getElementById('revenue-trend-chart'), {
-          type: 'line',
-          data: { labels: last7Days, datasets: [{ label: 'Revenue ($)', data: last7Days.map(d => revenueByDay[d]), borderColor: '#4ade80', fill: false, tension: 0.3 }] },
+          type: 'line', data: { labels: last7Days, datasets: [{ label: 'Revenue ($)', data: last7Days.map(d => revenueByDay[d]), borderColor: '#4ade80', fill: false, tension: 0.3 }] },
           options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
         });
       }
-    } catch(e) { console.error('Admin data error:', e); }
+    } catch(e) { console.error(e); }
   }
 
   async function loadUsers() {
@@ -649,14 +582,13 @@
           <p><strong>Email:</strong> ${escapeHtml(u.email)}</p>
           <p><strong>Role:</strong> ${u.role}</p>
           <p><strong>Status:</strong> ${u.status}</p>
-          <p><strong>Unique Code:</strong> ${u.uniqueCode || 'N/A'}</p>
           <p><strong>Wallet Available:</strong> ${formatMoney(u.wallet?.balances?.available || 0)}</p>
           <p><strong>Wallet Escrow:</strong> ${formatMoney(u.wallet?.balances?.escrow || 0)}</p>
           <p><strong>Joined:</strong> ${new Date(u.createdAt).toLocaleString()}</p>
         `;
         document.getElementById('user-modal').style.display = 'flex';
       }
-    } catch(e) { alert('Error loading user'); }
+    } catch(e) { alert('Error'); }
   }
 
   async function loadCampaigns() {
@@ -690,12 +622,11 @@
           <p><strong>Budget:</strong> ${formatMoney(c.budget)}</p>
           <p><strong>Status:</strong> ${c.status}</p>
           <p><strong>Escrow Held:</strong> ${formatMoney(c.escrowHeld || 0)}</p>
-          <p><strong>Bids:</strong> ${c.bids?.length || 0}</p>
           <p><strong>Created:</strong> ${new Date(c.createdAt).toLocaleString()}</p>
         `;
         document.getElementById('campaign-detail-modal').style.display = 'flex';
       }
-    } catch(e) { alert('Error loading campaign'); }
+    } catch(e) { alert('Error'); }
   }
 
   async function loadTransactions() {
@@ -738,6 +669,21 @@
     } catch(e) { console.error(e); }
   }
 
+  async function withdraw() {
+    let amount = parseFloat(document.getElementById('withdraw-amount').value);
+    if (!amount || amount <= 0) { alert('Enter amount'); return; }
+    const method = selectedWithdrawMethod;
+    let payoutDetails = {};
+    if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
+    else payoutDetails = { bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-account').value, accountHolderName: document.getElementById('bank-holder').value };
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch('/api/wallet/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails }) });
+      if (res.ok) { alert('Withdrawal submitted!'); loadAdminWithdrawals(); document.getElementById('withdraw-amount').value = ''; }
+      else alert('Failed');
+    } catch(e) { alert('Error'); }
+  }
+
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
   function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; }
 
@@ -754,18 +700,14 @@
     });
   });
 
-  document.getElementById('withdraw-amount').addEventListener('input', updateWithdrawPreview);
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
 
   const userStr = localStorage.getItem('pebeto_user');
   if (userStr) {
     currentUser = JSON.parse(userStr);
-    const initial = (currentUser.email?.[0] || 'A').toUpperCase();
-    document.getElementById('avatar-header').innerHTML = initial;
-    if (currentUser.profile?.avatarUrl) updateAvatarDisplay(currentUser.profile.avatarUrl);
+    document.getElementById('avatar-header').innerHTML = (currentUser.email?.[0] || 'A').toUpperCase();
   }
 
-  // Load all real data
   loadAdminData();
   loadUsers();
   loadCampaigns();
