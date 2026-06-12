@@ -8,27 +8,106 @@
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #fff; overflow-x: hidden; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.light-theme {
+      background: #f5f5f5;
+      color: #1a1a1a;
+    }
+    body.light-theme .creator-card,
+    body.light-theme .modal-content,
+    body.light-theme .notification-dropdown,
+    body.light-theme .filter-sort-bar {
+      background: #ffffff;
+      border-color: #e0e0e0;
+    }
+    body.light-theme .search-bar,
+    body.light-theme .action-btn,
+    body.light-theme .profile-btn {
+      background: rgba(0,0,0,0.05);
+      border-color: #ddd;
+      color: #333;
+    }
+    body.light-theme .creator-niche,
+    body.light-theme .status-badge {
+      background: rgba(0,0,0,0.05);
+      color: #555;
+    }
     .header {
       position: fixed; top: 0; left: 0; right: 0;
       background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255,140,66,0.2);
       padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 100;
+      flex-wrap: wrap;
+      gap: 12px;
     }
+    body.light-theme .header { background: rgba(255,255,255,0.95); border-bottom-color: rgba(255,140,66,0.3); }
     .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
     .search-bar {
       background: rgba(255,255,255,0.1); border-radius: 40px;
       padding: 8px 16px; display: flex; align-items: center; gap: 8px; width: 300px;
     }
     .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; }
-    .nav-icons { display: flex; gap: 20px; align-items: center; }
-    .dashboard-btn {
+    body.light-theme .search-bar input { color: #333; }
+    .nav-icons { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    .dashboard-btn, .logout-btn {
       background: rgba(255,140,66,0.15); border: 1px solid #ff8c42;
       padding: 8px 16px; border-radius: 40px; color: #ffaa77;
       cursor: pointer; font-size: 14px; font-weight: 500;
       display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
     }
-    .dashboard-btn:hover { background: #ff8c42; color: white; }
+    .dashboard-btn:hover, .logout-btn:hover { background: #ff8c42; color: white; }
+    .theme-toggle {
+      background: rgba(255,255,255,0.1); border: none;
+      padding: 8px 12px; border-radius: 40px; color: #ffaa77;
+      cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .notification-bell {
+      position: relative;
+      cursor: pointer;
+      background: rgba(255,255,255,0.1);
+      padding: 8px 12px;
+      border-radius: 40px;
+    }
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #f44336;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .notification-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 0;
+      width: 320px;
+      background: #1a1510;
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 16px;
+      z-index: 200;
+      display: none;
+    }
+    .notification-dropdown.show { display: block; }
+    .notification-item {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+    .notification-item:hover { background: rgba(255,140,66,0.1); }
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
       background: linear-gradient(135deg, #ff8c42, #e0662c);
@@ -36,12 +115,53 @@
       cursor: pointer; font-weight: bold; background-size: cover;
     }
     .feed-container { 
-      margin-top: 70px; 
+      margin-top: 80px; 
       padding: 20px;
       max-width: 800px;
       margin-left: auto;
       margin-right: auto;
     }
+    /* Filter and Sort Bar - NEW */
+    .filter-sort-bar {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.2);
+      border-radius: 60px;
+      padding: 10px 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 8px 16px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .filter-chip:hover, .filter-chip.active {
+      background: #ff8c42;
+      color: white;
+      border-color: #ff8c42;
+    }
+    .sort-select {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 8px 16px;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+    }
+    body.light-theme .sort-select { color: #333; background: #f0f0f0; }
     .creator-card {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,140,66,0.2);
@@ -60,6 +180,7 @@
       gap: 15px;
       padding: 20px;
       border-bottom: 1px solid rgba(255,255,255,0.05);
+      position: relative;
     }
     .creator-avatar {
       width: 60px;
@@ -72,15 +193,31 @@
       font-size: 24px;
       font-weight: bold;
       background-size: cover;
+      position: relative;
+    }
+    .verified-badge {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #1da1f2;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      border: 2px solid #0a0a0a;
     }
     .creator-info h3 {
       font-size: 18px;
       margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
-    .creator-info p {
-      font-size: 13px;
-      color: #a08070;
-    }
+    .creator-info p { font-size: 13px; color: #a08070; }
     .creator-niche {
       display: inline-block;
       background: rgba(255,140,66,0.15);
@@ -89,28 +226,37 @@
       font-size: 11px;
       margin-top: 6px;
     }
-    .video-embed-container {
-      padding: 20px;
-      background: #000;
+    .follow-btn {
+      margin-left: auto;
+      background: rgba(255,140,66,0.15);
+      border: 1px solid #ff8c42;
+      padding: 6px 16px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
     }
-    .tiktok-embed-container {
-      min-height: 600px;
-      background: #000;
+    .follow-btn.following {
+      background: #ff8c42;
+      color: white;
     }
-    .youtube-embed-container {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-    }
-    .youtube-embed-container iframe {
+    .video-embed-container { padding: 20px; background: #000; position: relative; }
+    .view-count-badge {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
     }
+    .tiktok-embed-container { min-height: 600px; background: #000; }
+    .youtube-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+    .youtube-embed-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
     .creator-actions {
       display: flex;
       gap: 15px;
@@ -118,7 +264,7 @@
       border-top: 1px solid rgba(255,255,255,0.05);
       flex-wrap: wrap;
     }
-    .action-btn {
+    .action-btn, .tip-btn, .profile-btn, .share-btn, .report-btn {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.2);
       padding: 8px 20px;
@@ -131,64 +277,14 @@
       gap: 8px;
       transition: all 0.2s;
     }
-    .action-btn:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    .action-btn.liked {
-      background: rgba(255,0,80,0.2);
-      border-color: #ff0050;
-      color: #ff0050;
-    }
-    .action-btn.liked i {
-      color: #ff0050;
-    }
-    .tip-btn {
-      background: rgba(255,140,66,0.2);
-      border: 1px solid #ff8c42;
-      padding: 8px 20px;
-      border-radius: 40px;
-      color: #ffaa77;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .tip-btn:hover {
-      background: #ff8c42;
-      color: white;
-    }
-    .profile-btn {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 20px;
-      border-radius: 40px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .profile-btn:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    .like-count, .comment-count {
-      font-size: 13px;
-      margin-left: 4px;
-    }
-    .loading-spinner {
-      text-align: center;
-      padding: 50px;
-      color: #ff8c42;
-    }
-    .no-videos {
-      text-align: center;
-      padding: 50px;
-      color: #a08070;
-      background: rgba(255,255,255,0.03);
-      border-radius: 24px;
-    }
+    .action-btn:hover, .profile-btn:hover, .share-btn:hover { background: rgba(255,255,255,0.15); }
+    .action-btn.liked { background: rgba(255,0,80,0.2); border-color: #ff0050; color: #ff0050; }
+    .tip-btn { background: rgba(255,140,66,0.2); border: 1px solid #ff8c42; color: #ffaa77; }
+    .tip-btn:hover { background: #ff8c42; color: white; }
+    .report-btn { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #ef4444; }
+    .report-btn:hover { background: #ef4444; color: white; }
+    .loading-spinner { text-align: center; padding: 50px; color: #ff8c42; }
+    .no-videos { text-align: center; padding: 50px; color: #a08070; background: rgba(255,255,255,0.03); border-radius: 24px; }
     .modal {
       display: none;
       position: fixed;
@@ -210,10 +306,7 @@
       width: 90%;
       border: 1px solid rgba(255,140,66,0.3);
     }
-    .modal-content h3 {
-      margin-bottom: 20px;
-      color: #ff8c42;
-    }
+    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
     .modal-content input, .modal-content select, .modal-content textarea {
       width: 100%;
       background: rgba(255,255,255,0.08);
@@ -223,51 +316,52 @@
       margin-bottom: 15px;
       color: white;
     }
-    .modal-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .modal-buttons button {
-      flex: 1;
-      padding: 12px;
-      border-radius: 40px;
-      border: none;
-      cursor: pointer;
-    }
-    .save-btn {
-      background: #ff8c42;
-      color: white;
-    }
-    .cancel-btn {
-      background: rgba(255,255,255,0.1);
-      color: white;
-    }
+    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
+    .save-btn { background: #ff8c42; color: white; }
+    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
     .payment-source-btn {
       transition: all 0.2s ease;
       cursor: pointer;
     }
-    .payment-source-btn:hover {
-      transform: translateY(-1px);
+    .load-more-btn {
+      background: rgba(255,140,66,0.15);
+      border: 1px solid #ff8c42;
+      padding: 12px 24px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      font-size: 14px;
+      text-align: center;
     }
-    .comments-list {
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 15px;
+    .load-more-btn:hover { background: #ff8c42; color: white; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1a1510;
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 12px;
+      padding: 12px 20px;
+      z-index: 2001;
+      animation: slideIn 0.3s ease;
     }
-    .comment-item {
-      display: flex;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
+    .comments-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+    .comment-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
     @media (max-width: 768px) {
       .search-bar { display: none; }
       .feed-container { padding: 15px; }
       .creator-actions { justify-content: center; }
+      .filter-sort-bar { flex-direction: column; align-items: stretch; border-radius: 20px; }
+      .filter-group { justify-content: center; }
     }
   </style>
-  <!-- TikTok Embed Script -->
   <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
@@ -279,15 +373,41 @@
     <input type="text" id="global-search" placeholder="Search creators..." onkeyup="searchGlobal()">
   </div>
   <div class="nav-icons">
-    <button class="dashboard-btn" onclick="goToDashboard()">
-      <i class="ri-dashboard-line"></i> Dashboard
-    </button>
+    <button class="theme-toggle" onclick="toggleTheme()"><i class="ri-sun-line"></i></button>
+    <div class="notification-bell" onclick="toggleNotifications()">
+      <i class="ri-notification-3-line"></i>
+      <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+      <div id="notification-dropdown" class="notification-dropdown"></div>
+    </div>
+    <button class="dashboard-btn" onclick="goToDashboard()"><i class="ri-dashboard-line"></i> Dashboard</button>
+    <button class="logout-btn" onclick="logout()"><i class="ri-logout-box-r-line"></i> Logout</button>
     <div class="avatar" id="nav-avatar" onclick="goToDashboard()">U</div>
   </div>
 </div>
 
-<div id="feed-container" class="feed-container">
-  <div class="loading-spinner">Loading creators and their videos...</div>
+<div class="feed-container">
+  <!-- Filter and Sort Bar -->
+  <div class="filter-sort-bar">
+    <div class="filter-group">
+      <span class="filter-chip active" data-niche="all" onclick="filterByNiche('all')">All</span>
+      <span class="filter-chip" data-niche="Music" onclick="filterByNiche('Music')">🎵 Music</span>
+      <span class="filter-chip" data-niche="Art" onclick="filterByNiche('Art')">🎨 Art</span>
+      <span class="filter-chip" data-niche="Fitness" onclick="filterByNiche('Fitness')">💪 Fitness</span>
+      <span class="filter-chip" data-niche="Gaming" onclick="filterByNiche('Gaming')">🎮 Gaming</span>
+      <span class="filter-chip" data-niche="Tech" onclick="filterByNiche('Tech')">💻 Tech</span>
+    </div>
+    <select class="sort-select" id="sort-select" onchange="sortCreators()">
+      <option value="likes">🔥 Most Liked</option>
+      <option value="newest">🕐 Newest First</option>
+      <option value="oldest">📅 Oldest First</option>
+      <option value="name">📝 Name A-Z</option>
+    </select>
+  </div>
+
+  <div id="feed-content">
+    <div class="loading-spinner">Loading creators and their videos...</div>
+  </div>
+  <button class="load-more-btn" id="load-more-btn" onclick="loadMoreCreators()" style="display: none;">Load More Creators</button>
 </div>
 
 <!-- Tip Modal -->
@@ -295,37 +415,22 @@
   <div class="modal-content">
     <h3>💝 Send Tip</h3>
     <p id="tip-creator-name" style="margin-bottom: 15px;">To: Creator</p>
-    
-    <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #a08070;">Pay with:</label>
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-      <button type="button" class="payment-source-btn" data-source="wallet" onclick="selectPaymentSource('wallet')" style="flex: 1; background: rgba(255,140,66,0.2); border: 1px solid #ff8c42; padding: 10px; border-radius: 40px; cursor: pointer;">💼 Wallet</button>
-      <button type="button" class="payment-source-btn" data-source="mpesa" onclick="selectPaymentSource('mpesa')" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 40px; cursor: pointer;">📱 M-Pesa</button>
-      <button type="button" class="payment-source-btn" data-source="paypal" onclick="selectPaymentSource('paypal')" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 40px; cursor: pointer;">💳 PayPal</button>
+      <button type="button" class="payment-source-btn" data-source="wallet" onclick="selectPaymentSource('wallet')" style="flex:1; background:rgba(255,140,66,0.2); border:1px solid #ff8c42; padding:10px; border-radius:40px; cursor:pointer;">💼 Wallet</button>
+      <button type="button" class="payment-source-btn" data-source="mpesa" onclick="selectPaymentSource('mpesa')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer;">📱 M-Pesa</button>
+      <button type="button" class="payment-source-btn" data-source="paypal" onclick="selectPaymentSource('paypal')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer;">💳 PayPal</button>
     </div>
-    
-    <input type="number" id="tip-amount" placeholder="Amount" min="1" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
-    <select id="tip-currency" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 14px; border-radius: 40px; margin-bottom: 15px; color: white;">
-      <option value="USD">USD ($)</option>
-      <option value="KES">KES (KSh)</option>
-      <option value="EUR">EUR (€)</option>
-      <option value="GBP">GBP (£)</option>
+    <input type="number" id="tip-amount" placeholder="Amount" min="1" oninput="updateCreatorReceives()">
+    <select id="tip-currency">
+      <option value="USD">USD ($)</option><option value="KES">KES (KSh)</option>
+      <option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option>
     </select>
-    
-    <div id="mpesa-details" style="display: none;">
-      <input type="tel" id="mpesa-phone" placeholder="M-Pesa Phone (254712345678)">
-    </div>
-    <div id="paypal-details" style="display: none;">
-      <input type="email" id="paypal-email" placeholder="PayPal Email">
-    </div>
-    
+    <div id="mpesa-details" style="display: none;"><input type="tel" id="mpesa-phone" placeholder="M-Pesa Phone (254712345678)"></div>
+    <div id="paypal-details" style="display: none;"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
     <div style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
       💡 5% fee | Creator gets: <span id="creator-receives">0.00</span>
     </div>
-    
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="sendTip()">Send Tip</button>
-      <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
-    </div>
+    <div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send Tip</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div>
   </div>
 </div>
 
@@ -334,11 +439,40 @@
   <div class="modal-content">
     <h3>💬 Comments</h3>
     <div id="comments-list" class="comments-list"></div>
-    <div style="display: flex; gap: 10px;">
-      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;">
-      <button class="save-btn" onclick="addComment()">Post</button>
-    </div>
+    <div style="display: flex; gap: 10px;"><input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;"><button class="save-btn" onclick="addComment()">Post</button></div>
     <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('comments-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" class="modal">
+  <div class="modal-content">
+    <h3>📤 Share Creator</h3>
+    <p id="share-creator-name" style="margin-bottom: 15px;"></p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button class="save-btn" onclick="shareTo('twitter')"><i class="ri-twitter-line"></i> Twitter</button>
+      <button class="save-btn" onclick="shareTo('facebook')"><i class="ri-facebook-line"></i> Facebook</button>
+      <button class="save-btn" onclick="shareTo('whatsapp')"><i class="ri-whatsapp-line"></i> WhatsApp</button>
+      <button class="save-btn" onclick="copyShareLink()"><i class="ri-link"></i> Copy Link</button>
+    </div>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('share-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div id="report-modal" class="modal">
+  <div class="modal-content">
+    <h3>🚨 Report Creator</h3>
+    <p id="report-creator-name" style="margin-bottom: 15px;"></p>
+    <select id="report-reason">
+      <option value="spam">Spam or misleading</option>
+      <option value="inappropriate">Inappropriate content</option>
+      <option value="harassment">Harassment or bullying</option>
+      <option value="fake">Fake account</option>
+      <option value="other">Other</option>
+    </select>
+    <textarea id="report-description" rows="3" placeholder="Additional details (optional)"></textarea>
+    <div class="modal-buttons"><button class="save-btn" onclick="submitReport()">Submit Report</button><button class="cancel-btn" onclick="closeModal('report-modal')">Cancel</button></div>
   </div>
 </div>
 
@@ -346,594 +480,251 @@
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
   let currentUser = null;
   let allCreators = [];
-  let currentTipCreatorId = null;
-  let currentTipCreatorName = '';
-  let selectedPaymentSource = 'wallet';
+  let filteredCreators = [];
+  let displayedCreators = [];
+  let currentOffset = 0;
+  const PAGE_SIZE = 5;
+  let currentNicheFilter = 'all';
+  let currentSort = 'likes';
+  let currentSearchQuery = '';
+  let notifications = [];
+  let following = new Set();
+  let currentTipCreatorId = null, currentTipCreatorName = '', selectedPaymentSource = 'wallet';
   let currentCommentCreatorId = null;
+  let currentShareCreatorId = null, currentShareCreatorName = '';
+  let currentReportCreatorId = null, currentReportCreatorName = '';
 
-  async function fetchJSON(url, options = {}) {
-    const token = localStorage.getItem('pebeto_token');
-    const res = await fetch(url, { 
-      ...options, 
-      headers: { 
-        'Content-Type': 'application/json', 
-        'Authorization': token ? `Bearer ${token}` : '',
-        ...options.headers 
-      } 
-    });
-    return res.json();
+  function showToast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+  function formatMoney(amt) { return `$${(amt || 0).toFixed(2)}`; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function logout() { localStorage.clear(); showToast('Logged out'); setTimeout(() => window.location.href = '/login.html', 500); }
+  function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+  function formatNumber(num) { if (num >= 1000000) return (num/1000000).toFixed(1) + 'M'; if (num >= 1000) return (num/1000).toFixed(1) + 'K'; return num.toString(); }
+
+  function toggleTheme() { 
+    document.body.classList.toggle('light-theme'); 
+    localStorage.setItem('pebeto_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
   }
 
-  function closeModal(id) { 
-    document.getElementById(id).style.display = 'none'; 
-  }
-  
+  function toggleNotifications() { document.getElementById('notification-dropdown').classList.toggle('show'); }
+  function addNotification(msg) { notifications.unshift({ message: msg, time: new Date() }); const badge = document.getElementById('notification-badge'); badge.style.display = 'flex'; badge.innerText = notifications.length; document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,5).map(n => `<div class="notification-item">${n.message}<br><small>${new Date(n.time).toLocaleString()}</small></div>`).join(''); }
+
+  async function fetchJSON(url, opts) { const token = localStorage.getItem('pebeto_token'); const res = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '', ...opts?.headers } }); return res.json(); }
+
   function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
-    
+    if (!token) { window.location.href = '/login.html'; return; }
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        if (user.role === 'creator') {
-          window.location.href = '/creator-dashboard.html';
-        } else if (user.role === 'business') {
-          window.location.href = '/business-dashboard.html';
-        } else if (user.role === 'admin') {
-          window.location.href = '/admin-dashboard.html';
-        } else {
-          window.location.href = '/creator-dashboard.html';
-        }
-      } catch(e) {
-        window.location.href = '/login.html';
-      }
-    } else {
-      window.location.href = '/login.html';
-    }
+        if (user.role === 'creator') window.location.href = '/creator-dashboard.html';
+        else if (user.role === 'business') window.location.href = '/business-dashboard.html';
+        else if (user.role === 'admin') window.location.href = '/admin-dashboard.html';
+        else window.location.href = '/creator-dashboard.html';
+      } catch(e) { window.location.href = '/login.html'; }
+    } else { window.location.href = '/login.html'; }
   }
 
   function selectPaymentSource(source) {
     selectedPaymentSource = source;
-    document.querySelectorAll('.payment-source-btn').forEach(btn => {
-      btn.style.background = 'rgba(255,255,255,0.05)';
-      btn.style.border = '1px solid rgba(255,140,66,0.3)';
-    });
+    document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
     const activeBtn = document.querySelector(`.payment-source-btn[data-source="${source}"]`);
-    if (activeBtn) {
-      activeBtn.style.background = 'rgba(255,140,66,0.2)';
-      activeBtn.style.border = '1px solid #ff8c42';
-    }
+    if (activeBtn) { activeBtn.style.background = 'rgba(255,140,66,0.2)'; activeBtn.style.border = '1px solid #ff8c42'; }
     document.getElementById('mpesa-details').style.display = source === 'mpesa' ? 'block' : 'none';
     document.getElementById('paypal-details').style.display = source === 'paypal' ? 'block' : 'none';
   }
-
-  function updateCreatorReceives() {
-    const amount = parseFloat(document.getElementById('tip-amount').value) || 0;
-    document.getElementById('creator-receives').innerHTML = (amount * 0.95).toFixed(2);
-  }
+  function updateCreatorReceives() { const amt = parseFloat(document.getElementById('tip-amount').value) || 0; document.getElementById('creator-receives').innerHTML = (amt * 0.95).toFixed(2); }
 
   async function loadCreators() {
     try {
       const response = await fetch(`${API_BASE}/api/creators`);
       const data = await response.json();
-      
-      if (data.success && data.creators && data.creators.length > 0) {
-        allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
-        // Load likes and comments for each creator
-        await loadCreatorEngagement();
-        renderFeed();
-      } else {
-        showSampleCreators();
-      }
-    } catch (error) {
-      console.error('Error loading creators:', error);
-      showSampleCreators();
-    }
+      if (data.success && data.creators && data.creators.length > 0) { allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube)); }
+      else { showSampleCreators(); }
+      await loadCreatorEngagement();
+      loadFollowingFromStorage();
+      applyFiltersAndSort();
+    } catch (error) { console.error('Error loading creators:', error); showSampleCreators(); }
   }
 
   async function loadCreatorEngagement() {
     const token = localStorage.getItem('pebeto_token');
     if (!token) return;
-    
     for (let creator of allCreators) {
       try {
-        const response = await fetch(`${API_BASE}/api/community/creators/${creator._id}/stats`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const response = await fetch(`${API_BASE}/api/community/creators/${creator._id}/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
-        if (data.success) {
-          creator.likeCount = data.likeCount || 0;
-          creator.isLiked = data.isLiked || false;
-          creator.commentCount = data.commentCount || 0;
-        }
-      } catch(e) {
-        console.error('Error loading engagement for creator:', creator._id);
-      }
+        if (data.success) { creator.likeCount = data.likeCount || 0; creator.isLiked = data.isLiked || false; creator.commentCount = data.commentCount || 0; }
+      } catch(e) {}
     }
   }
+
+  function loadFollowingFromStorage() {
+    const saved = localStorage.getItem('pebeto_following');
+    if (saved) { following = new Set(JSON.parse(saved)); }
+  }
+  function saveFollowing() { localStorage.setItem('pebeto_following', JSON.stringify([...following])); }
 
   function showSampleCreators() {
     allCreators = [
-      {
-        _id: 'sample1',
-        email: 'creator1@example.com',
-        profile: {
-          stageName: 'DJ Nova',
-          niche: 'Music',
-          avatarUrl: ''
-        },
-        socialLinks: {
-          tiktok: 'https://www.tiktok.com/@tiktok',
-          youtube: ''
-        },
-        likeCount: 1234,
-        isLiked: false,
-        commentCount: 89
-      },
-      {
-        _id: 'sample2',
-        email: 'creator2@example.com',
-        profile: {
-          stageName: 'Sarah Creates',
-          niche: 'Art',
-          avatarUrl: ''
-        },
-        socialLinks: {
-          tiktok: '',
-          youtube: 'https://www.youtube.com/@YouTube'
-        },
-        likeCount: 567,
-        isLiked: false,
-        commentCount: 34
-      },
-      {
-        _id: 'sample3',
-        email: 'creator3@example.com',
-        profile: {
-          stageName: 'Mike Fitness',
-          niche: 'Fitness',
-          avatarUrl: ''
-        },
-        socialLinks: {
-          tiktok: 'https://www.tiktok.com/@tiktok',
-          youtube: ''
-        },
-        likeCount: 2345,
-        isLiked: false,
-        commentCount: 156
-      }
+      { _id: 'sample1', email: 'dj@example.com', profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '' }, socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }, likeCount: 1234, isLiked: false, commentCount: 89, verified: true, viewCount: 15200, createdAt: '2024-01-15' },
+      { _id: 'sample2', email: 'sarah@example.com', profile: { stageName: 'Sarah Creates', niche: 'Art', avatarUrl: '' }, socialLinks: { tiktok: '', youtube: 'https://www.youtube.com/@YouTube' }, likeCount: 567, isLiked: false, commentCount: 34, verified: false, viewCount: 8900, createdAt: '2024-02-20' },
+      { _id: 'sample3', email: 'mike@example.com', profile: { stageName: 'Mike Fitness', niche: 'Fitness', avatarUrl: '' }, socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }, likeCount: 2345, isLiked: false, commentCount: 156, verified: true, viewCount: 45000, createdAt: '2024-01-05' }
     ];
-    renderFeed();
+    applyFiltersAndSort();
   }
 
-  function renderFeed() {
-    const container = document.getElementById('feed-container');
-    container.innerHTML = '';
-    
-    if (allCreators.length === 0) {
-      container.innerHTML = '<div class="no-videos">No creators have connected their social media yet.<br><br>🎨 <strong>Are you a creator?</strong><br>Go to your dashboard and connect your TikTok or YouTube!</div>';
-      return;
-    }
-    
-    allCreators.forEach(creator => {
-      const card = createCreatorCard(creator);
-      container.appendChild(card);
-    });
+  function applyFiltersAndSort() {
+    let filtered = [...allCreators];
+    if (currentNicheFilter !== 'all') { filtered = filtered.filter(c => (c.profile?.niche || '') === currentNicheFilter); }
+    if (currentSearchQuery) { filtered = filtered.filter(c => (c.profile?.stageName || '').toLowerCase().includes(currentSearchQuery) || (c.profile?.niche || '').toLowerCase().includes(currentSearchQuery)); }
+    if (currentSort === 'likes') filtered.sort((a,b) => (b.likeCount || 0) - (a.likeCount || 0));
+    else if (currentSort === 'newest') filtered.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    else if (currentSort === 'oldest') filtered.sort((a,b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    else if (currentSort === 'name') filtered.sort((a,b) => (a.profile?.stageName || '').localeCompare(b.profile?.stageName || ''));
+    filteredCreators = filtered;
+    currentOffset = 0;
+    displayedCreators = [];
+    renderMoreCreators();
+  }
 
-    if (window.tiktokEmbedLoad) {
-      window.tiktokEmbedLoad();
-    }
+  function renderMoreCreators() {
+    const newCreators = filteredCreators.slice(currentOffset, currentOffset + PAGE_SIZE);
+    displayedCreators.push(...newCreators);
+    currentOffset += PAGE_SIZE;
+    renderFeed();
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    loadMoreBtn.style.display = currentOffset >= filteredCreators.length ? 'none' : 'block';
+  }
+
+  function loadMoreCreators() { renderMoreCreators(); }
+
+  function renderFeed() {
+    const container = document.getElementById('feed-content');
+    if (displayedCreators.length === 0 && filteredCreators.length === 0) { container.innerHTML = '<div class="no-videos">No creators found.</div>'; return; }
+    container.innerHTML = '';
+    displayedCreators.forEach(creator => { container.appendChild(createCreatorCard(creator)); });
+    if (window.tiktokEmbedLoad) window.tiktokEmbedLoad();
   }
 
   function createCreatorCard(creator) {
-    const card = document.createElement('div');
-    card.className = 'creator-card';
-    card.dataset.creatorId = creator._id;
-    
+    const card = document.createElement('div'); card.className = 'creator-card'; card.dataset.creatorId = creator._id;
     const initial = (creator.profile?.stageName?.[0] || creator.email?.[0] || 'C').toUpperCase();
     const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
-    const username = creator.profile?.stageName ? `@${creator.profile.stageName.toLowerCase().replace(/\s/g, '')}` : '@creator';
+    const username = `@${displayName.toLowerCase().replace(/\s/g, '')}`;
     const niche = creator.profile?.niche || 'Creator';
-    const likeCount = creator.likeCount || 0;
-    const isLiked = creator.isLiked || false;
-    const commentCount = creator.commentCount || 0;
-    
+    const isFollowing = following.has(creator._id);
+    const isVerified = creator.verified || false;
+    const viewCount = creator.viewCount || 0;
     let embedHtml = '';
-    
     if (creator.socialLinks?.tiktok) {
       const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
       const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
-      embedHtml = `
-        <div class="video-embed-container tiktok-embed-container">
-          <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;">
-            <section>
-              <a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a>
-            </section>
-          </blockquote>
-        </div>
-      `;
+      embedHtml = `<div class="video-embed-container tiktok-embed-container"><div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div><blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;"><section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section></blockquote></div>`;
     } else if (creator.socialLinks?.youtube) {
-      let youtubeEmbedUrl = '';
-      if (creator.socialLinks.youtube.includes('/@')) {
-        const handle = creator.socialLinks.youtube.split('/@')[1];
-        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${handle}`;
-      } else {
-        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
-      }
-      embedHtml = `
-        <div class="video-embed-container">
-          <div class="youtube-embed-container">
-            <iframe 
-              src="${youtubeEmbedUrl}"
-              frameborder="0" 
-              allowfullscreen>
-            </iframe>
-          </div>
-        </div>
-      `;
-    } else {
-      embedHtml = `
-        <div class="video-embed-container">
-          <p style="color: #a08070; text-align: center; padding: 40px;">
-            No videos connected yet. Check back soon!
-          </p>
-        </div>
-      `;
-    }
-    
+      let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}` : `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
+      embedHtml = `<div class="video-embed-container"><div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div><div class="youtube-embed-container"><iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen></iframe></div></div>`;
+    } else { embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos connected yet.</p></div>`; }
     card.innerHTML = `
       <div class="creator-header">
-        <div class="creator-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">
-          ${!creator.profile?.avatarUrl ? initial : ''}
-        </div>
-        <div class="creator-info">
-          <h3>${escapeHtml(displayName)} <span style="font-size: 12px; color: #a08070;">${escapeHtml(username)}</span></h3>
-          <p>🎨 Creator</p>
-          <span class="creator-niche">${escapeHtml(niche)}</span>
-        </div>
+        <div class="creator-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">${!creator.profile?.avatarUrl ? initial : ''}${isVerified ? '<span class="verified-badge"><i class="ri-verified-badge-fill"></i></span>' : ''}</div>
+        <div class="creator-info"><h3>${escapeHtml(displayName)} ${isVerified ? '<i class="ri-verified-badge-fill" style="color:#1da1f2;"></i>' : ''}<span style="font-size:12px;color:#a08070;">${escapeHtml(username)}</span></h3><p>🎨 Creator</p><span class="creator-niche">${escapeHtml(niche)}</span></div>
+        <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${creator._id}', this)">${isFollowing ? 'Following' : 'Follow'}</button>
       </div>
       ${embedHtml}
       <div class="creator-actions">
-        <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, this, '${creator._id}')">
-          <i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
-          <span class="like-count">${formatNumber(likeCount)}</span>
-        </button>
-        <button class="action-btn comment-btn" onclick="openCommentsModal('${creator._id}', '${escapeHtml(displayName)}')">
-          <i class="ri-chat-3-line"></i>
-          <span class="comment-count">${formatNumber(commentCount)}</span>
-        </button>
-        <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')">
-          <i class="ri-coin-line"></i> Send Tip 💝
-        </button>
-        <button class="profile-btn" onclick="viewCreatorProfile('${creator._id}')">
-          <i class="ri-user-line"></i> View Profile
-        </button>
+        <button class="action-btn like-btn ${creator.isLiked ? 'liked' : ''}" onclick="toggleLike(event, this, '${creator._id}')"><i class="${creator.isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i><span class="like-count">${formatNumber(creator.likeCount || 0)}</span></button>
+        <button class="action-btn comment-btn" onclick="openCommentsModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-chat-3-line"></i><span class="comment-count">${formatNumber(creator.commentCount || 0)}</span></button>
+        <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-coin-line"></i> Send Tip</button>
+        <button class="profile-btn" onclick="viewCreatorProfile('${creator._id}')"><i class="ri-user-line"></i> Profile</button>
+        <button class="share-btn" onclick="openShareModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-share-line"></i> Share</button>
+        <button class="report-btn" onclick="openReportModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-flag-line"></i> Report</button>
       </div>
     `;
-    
     return card;
   }
 
   async function toggleLike(event, button, creatorId) {
-    event.stopPropagation();
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      alert('Please log in to like');
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    const icon = button.querySelector('i');
-    const countSpan = button.querySelector('.like-count');
+    event.stopPropagation(); const token = localStorage.getItem('pebeto_token');
+    if (!token) { alert('Please log in to like'); window.location.href = '/login.html'; return; }
+    const icon = button.querySelector('i'); const countSpan = button.querySelector('.like-count');
     const isCurrentlyLiked = button.classList.contains('liked');
     let currentCount = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
-    
-    // Optimistic UI update
-    if (isCurrentlyLiked) {
-      button.classList.remove('liked');
-      icon.classList.remove('ri-heart-fill');
-      icon.classList.add('ri-heart-line');
-      countSpan.innerText = formatNumber(currentCount - 1);
-    } else {
-      button.classList.add('liked');
-      icon.classList.remove('ri-heart-line');
-      icon.classList.add('ri-heart-fill');
-      countSpan.innerText = formatNumber(currentCount + 1);
-    }
-    
+    if (isCurrentlyLiked) { button.classList.remove('liked'); icon.classList.replace('ri-heart-fill', 'ri-heart-line'); countSpan.innerText = formatNumber(currentCount - 1); }
+    else { button.classList.add('liked'); icon.classList.replace('ri-heart-line', 'ri-heart-fill'); countSpan.innerText = formatNumber(currentCount + 1); }
     try {
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
-      const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        // Revert if API fails
-        if (isCurrentlyLiked) {
-          button.classList.add('liked');
-          icon.classList.remove('ri-heart-line');
-          icon.classList.add('ri-heart-fill');
-          countSpan.innerText = formatNumber(currentCount);
-        } else {
-          button.classList.remove('liked');
-          icon.classList.remove('ri-heart-fill');
-          icon.classList.add('ri-heart-line');
-          countSpan.innerText = formatNumber(currentCount);
-        }
-        console.error('Like API failed:', data.message);
-      } else {
-        // Update the creator object with new like count
-        const creator = allCreators.find(c => c._id === creatorId);
-        if (creator) {
-          creator.likeCount = data.likeCount || (isCurrentlyLiked ? currentCount - 1 : currentCount + 1);
-          creator.isLiked = !isCurrentlyLiked;
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      // Revert on network error
-      if (isCurrentlyLiked) {
-        button.classList.add('liked');
-        icon.classList.remove('ri-heart-line');
-        icon.classList.add('ri-heart-fill');
-        countSpan.innerText = formatNumber(currentCount);
-      } else {
-        button.classList.remove('liked');
-        icon.classList.remove('ri-heart-fill');
-        icon.classList.add('ri-heart-line');
-        countSpan.innerText = formatNumber(currentCount);
-      }
-    }
+      await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
+      const creator = allCreators.find(c => c._id === creatorId);
+      if (creator) { creator.likeCount = isCurrentlyLiked ? currentCount - 1 : currentCount + 1; creator.isLiked = !isCurrentlyLiked; }
+    } catch (error) { console.error('Error toggling like:', error); }
   }
+
+  async function toggleFollow(creatorId, btn) {
+    const isFollowing = following.has(creatorId);
+    if (isFollowing) { following.delete(creatorId); btn.classList.remove('following'); btn.innerText = 'Follow'; showToast('Unfollowed creator'); }
+    else { following.add(creatorId); btn.classList.add('following'); btn.innerText = 'Following'; showToast('Now following creator'); addNotification(`You started following ${btn.parentElement?.querySelector('.creator-info h3')?.innerText?.split(' ')[0] || 'a creator'}`); }
+    saveFollowing();
+  }
+
+  function filterByNiche(niche) { currentNicheFilter = niche; document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active')); document.querySelector(`.filter-chip[data-niche="${niche}"]`).classList.add('active'); applyFiltersAndSort(); }
+  function sortCreators() { currentSort = document.getElementById('sort-select').value; applyFiltersAndSort(); }
+  function searchGlobal() { currentSearchQuery = document.getElementById('global-search').value.toLowerCase(); applyFiltersAndSort(); }
 
   async function openCommentsModal(creatorId, creatorName) {
-    currentCommentCreatorId = creatorId;
-    const modal = document.getElementById('comments-modal');
-    const commentsList = document.getElementById('comments-list');
-    commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Loading comments...</div>';
-    modal.style.display = 'flex';
-    
+    currentCommentCreatorId = creatorId; const modal = document.getElementById('comments-modal'); const commentsList = document.getElementById('comments-list');
+    commentsList.innerHTML = '<div style="text-align:center;padding:20px;">Loading comments...</div>'; modal.style.display = 'flex';
     try {
-      const token = localStorage.getItem('pebeto_token');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const token = localStorage.getItem('pebeto_token'); const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/comments`, { headers });
-      const data = await response.json();
-      const comments = data.comments || [];
-      
-      if (comments.length === 0) {
-        commentsList.innerHTML = '<div style="text-align:center; padding:20px;">No comments yet. Be the first!</div>';
-      } else {
-        commentsList.innerHTML = comments.map(c => `
-          <div class="comment-item">
-            <div style="width:32px; height:32px; border-radius:50%; background:#ff8c42; display:flex; align-items:center; justify-content:center; font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
-            <div><strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong><p style="font-size:13px;">${escapeHtml(c.text)}</p></div>
-          </div>
-        `).join('');
-      }
-    } catch (error) {
-      console.error('Error loading comments:', error);
-      commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Failed to load comments</div>';
-    }
+      const data = await response.json(); const comments = data.comments || [];
+      if (comments.length === 0) commentsList.innerHTML = '<div style="text-align:center;padding:20px;">No comments yet. Be the first!</div>';
+      else commentsList.innerHTML = comments.map(c => `<div class="comment-item"><div style="width:32px;height:32px;border-radius:50%;background:#ff8c42;display:flex;align-items:center;justify-content:center;font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div><div><strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong><p style="font-size:13px;">${escapeHtml(c.text)}</p></div></div>`).join('');
+    } catch (error) { commentsList.innerHTML = '<div style="text-align:center;padding:20px;">Failed to load comments</div>'; }
+  }
+  async function addComment() { const input = document.getElementById('comment-input'); const text = input.value.trim(); if (!text || !currentCommentCreatorId) return; const token = localStorage.getItem('pebeto_token'); if (!token) { alert('Please login to comment'); window.location.href = '/login.html'; return; }
+    try { const response = await fetch(`${API_BASE}/api/community/creators/${currentCommentCreatorId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ text }) }); const data = await response.json();
+      if (data.success) { input.value = ''; await openCommentsModal(currentCommentCreatorId, ''); const creator = allCreators.find(c => c._id === currentCommentCreatorId); if (creator) { creator.commentCount = (creator.commentCount || 0) + 1; const card = document.querySelector(`.creator-card[data-creator-id="${currentCommentCreatorId}"]`); if (card) { const countSpan = card.querySelector('.comment-count'); if (countSpan) countSpan.innerText = formatNumber(creator.commentCount); } } }
+      else alert('Failed to add comment');
+    } catch (error) { alert('Network error'); }
   }
 
-  async function addComment() {
-    const input = document.getElementById('comment-input');
-    const text = input.value.trim();
-    if (!text || !currentCommentCreatorId) return;
-    
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      alert('Please login to comment');
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/api/community/creators/${currentCommentCreatorId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ text })
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        input.value = '';
-        await openCommentsModal(currentCommentCreatorId, '');
-        
-        // Update comment count in feed
-        const creator = allCreators.find(c => c._id === currentCommentCreatorId);
-        if (creator) {
-          creator.commentCount = (creator.commentCount || 0) + 1;
-          const card = document.querySelector(`.creator-card[data-creator-id="${currentCommentCreatorId}"]`);
-          if (card) {
-            const commentCountSpan = card.querySelector('.comment-count');
-            if (commentCountSpan) {
-              commentCountSpan.innerText = formatNumber(creator.commentCount);
-            }
-          }
-        }
-      } else {
-        alert('Failed to add comment: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      alert('Network error. Please try again.');
-    }
+  function openTipModal(creatorId, creatorName) { const token = localStorage.getItem('pebeto_token'); if (!token) { alert('Please log in to send tips'); window.location.href = '/login.html'; return; }
+    currentTipCreatorId = creatorId; currentTipCreatorName = creatorName; document.getElementById('tip-creator-name').innerHTML = `To: <strong>${escapeHtml(creatorName)}</strong>`; document.getElementById('tip-modal').style.display = 'flex';
+    document.getElementById('tip-amount').value = ''; document.getElementById('creator-receives').innerHTML = '0.00'; selectedPaymentSource = 'wallet';
+    document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
+    const walletBtn = document.querySelector('.payment-source-btn[data-source="wallet"]'); if (walletBtn) { walletBtn.style.background = 'rgba(255,140,66,0.2)'; walletBtn.style.border = '1px solid #ff8c42'; }
+    document.getElementById('mpesa-details').style.display = 'none'; document.getElementById('paypal-details').style.display = 'none';
+  }
+  async function sendTip() { const amount = parseFloat(document.getElementById('tip-amount').value); const currency = document.getElementById('tip-currency').value; if (!amount || amount <= 0) { alert('Please enter a valid amount'); return; }
+    const token = localStorage.getItem('pebeto_token'); if (!token) { alert('Please log in'); window.location.href = '/login.html'; return; }
+    let paymentDetails = { method: selectedPaymentSource };
+    if (selectedPaymentSource === 'mpesa') { const phone = document.getElementById('mpesa-phone').value; if (!phone) { alert('Enter M-Pesa phone number'); return; } paymentDetails.phoneNumber = phone; }
+    else if (selectedPaymentSource === 'paypal') { const email = document.getElementById('paypal-email').value; if (!email) { alert('Enter PayPal email'); return; } paymentDetails.paypalEmail = email; }
+    try { const response = await fetch(`${API_BASE}/api/wallet/tip`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ creatorId: currentTipCreatorId, amount, currency, paymentSource: selectedPaymentSource, paymentDetails }) }); const data = await response.json();
+      if (data.success) { alert(`💝 Tip of ${currency} ${amount} sent to ${currentTipCreatorName}!`); closeModal('tip-modal'); document.getElementById('tip-amount').value = ''; addNotification(`You sent a tip to ${currentTipCreatorName}`); }
+      else alert('Failed to send tip: ' + (data.message || 'Unknown error'));
+    } catch (error) { alert('Network error'); }
   }
 
-  function openTipModal(creatorId, creatorName) {
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      alert('Please log in to send tips');
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    currentTipCreatorId = creatorId;
-    currentTipCreatorName = creatorName;
-    document.getElementById('tip-creator-name').innerHTML = `To: <strong>${escapeHtml(creatorName)}</strong>`;
-    document.getElementById('tip-modal').style.display = 'flex';
-    
-    document.getElementById('tip-amount').value = '';
-    document.getElementById('creator-receives').innerHTML = '0.00';
-    selectedPaymentSource = 'wallet';
-    
-    document.querySelectorAll('.payment-source-btn').forEach(btn => {
-      btn.style.background = 'rgba(255,255,255,0.05)';
-      btn.style.border = '1px solid rgba(255,140,66,0.3)';
-    });
-    const walletBtn = document.querySelector('.payment-source-btn[data-source="wallet"]');
-    if (walletBtn) {
-      walletBtn.style.background = 'rgba(255,140,66,0.2)';
-      walletBtn.style.border = '1px solid #ff8c42';
-    }
-    document.getElementById('mpesa-details').style.display = 'none';
-    document.getElementById('paypal-details').style.display = 'none';
-    document.getElementById('tip-amount').removeEventListener('input', updateCreatorReceives);
-    document.getElementById('tip-amount').addEventListener('input', updateCreatorReceives);
+  function openShareModal(creatorId, creatorName) { currentShareCreatorId = creatorId; currentShareCreatorName = creatorName; document.getElementById('share-creator-name').innerHTML = `Share <strong>${escapeHtml(creatorName)}</strong>'s profile`; document.getElementById('share-modal').style.display = 'flex'; }
+  function shareTo(platform) { const url = encodeURIComponent(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); const text = encodeURIComponent(`Check out ${currentShareCreatorName} on Pebeto!`); let shareUrl = ''; if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`; else if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`; else if (platform === 'whatsapp') shareUrl = `https://wa.me/?text=${text}%20${url}`; if (shareUrl) window.open(shareUrl, '_blank'); closeModal('share-modal'); addNotification(`Shared ${currentShareCreatorName}'s profile`); }
+  function copyShareLink() { navigator.clipboard.writeText(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); showToast('Link copied to clipboard!'); closeModal('share-modal'); }
+
+  function openReportModal(creatorId, creatorName) { currentReportCreatorId = creatorId; currentReportCreatorName = creatorName; document.getElementById('report-creator-name').innerHTML = `Report <strong>${escapeHtml(creatorName)}</strong>`; document.getElementById('report-modal').style.display = 'flex'; }
+  async function submitReport() { const reason = document.getElementById('report-reason').value; const description = document.getElementById('report-description').value; if (!reason) { alert('Please select a reason'); return; } const token = localStorage.getItem('pebeto_token'); if (!token) { alert('Please log in'); window.location.href = '/login.html'; return; }
+    try { const response = await fetch(`${API_BASE}/api/community/report`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ creatorId: currentReportCreatorId, reason, description }) }); const data = await response.json();
+      if (data.success) { alert('Thank you for your report. We will review it.'); closeModal('report-modal'); document.getElementById('report-description').value = ''; addNotification(`Report submitted for ${currentReportCreatorName}`); }
+      else alert('Failed to submit report');
+    } catch (error) { alert('Network error'); }
   }
 
-  async function sendTip() {
-    const amount = parseFloat(document.getElementById('tip-amount').value);
-    const currency = document.getElementById('tip-currency').value;
-    
-    if (!amount || amount <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-    
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      alert('Please log in to send tips');
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    let paymentDetails = {};
-    if (selectedPaymentSource === 'mpesa') {
-      const phoneNumber = document.getElementById('mpesa-phone').value;
-      if (!phoneNumber) {
-        alert('Please enter M-Pesa phone number');
-        return;
-      }
-      paymentDetails = { phoneNumber, method: 'mpesa' };
-    } else if (selectedPaymentSource === 'paypal') {
-      const email = document.getElementById('paypal-email').value;
-      if (!email) {
-        alert('Please enter PayPal email');
-        return;
-      }
-      paymentDetails = { paypalEmail: email, method: 'paypal' };
-    } else {
-      paymentDetails = { method: 'wallet' };
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/api/wallet/tip`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          creatorId: currentTipCreatorId,
-          amount: amount,
-          currency: currency,
-          paymentSource: selectedPaymentSource,
-          paymentDetails: paymentDetails
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        alert(`💝 Tip of ${currency} ${amount} sent successfully to ${currentTipCreatorName}!`);
-        closeModal('tip-modal');
-        document.getElementById('tip-amount').value = '';
-      } else {
-        alert('Failed to send tip: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error sending tip:', error);
-      alert('Network error. Please try again.');
-    }
-  }
+  function viewCreatorProfile(creatorId) { localStorage.setItem('viewingCreatorId', creatorId); window.location.href = `/creator-profile.html?id=${creatorId}`; }
 
-  function viewCreatorProfile(creatorId) {
-    localStorage.setItem('viewingCreatorId', creatorId);
-    window.location.href = `/creator-profile.html?id=${creatorId}`;
-  }
-
-  function searchGlobal() {
-    const query = document.getElementById('global-search').value.toLowerCase();
-    if (!query) {
-      renderFeed();
-      return;
-    }
-    
-    const filtered = allCreators.filter(c => {
-      const displayName = c.profile?.stageName || c.email?.split('@')[0] || '';
-      const niche = c.profile?.niche || '';
-      return displayName.toLowerCase().includes(query) || niche.toLowerCase().includes(query);
-    });
-    
-    const container = document.getElementById('feed-container');
-    container.innerHTML = '';
-    
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="no-videos">No creators found matching your search.</div>';
-    } else {
-      filtered.forEach(creator => {
-        container.appendChild(createCreatorCard(creator));
-      });
-    }
-  }
-
-  function loadUserData() {
-    const userStr = localStorage.getItem('pebeto_user');
-    if (userStr) {
-      try {
-        currentUser = JSON.parse(userStr);
-        const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'U').toUpperCase();
-        document.getElementById('nav-avatar').innerHTML = initial;
-        if (currentUser.profile?.avatarUrl) {
-          document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
-          document.getElementById('nav-avatar').innerHTML = '';
-        }
-      } catch(e) {
-        console.error('Error parsing user data:', e);
-      }
-    }
-  }
-
-  function formatNumber(num) {
-    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
-    return num.toString();
-  }
-
-  function escapeHtml(str) { 
-    if (!str) return ''; 
-    return str.replace(/[&<>]/g, function(m) { 
-      if (m === '&') return '&amp;'; 
-      if (m === '<') return '&lt;'; 
-      if (m === '>') return '&gt;'; 
-      return m; 
-    }); 
-  }
-
-  loadUserData();
-  loadCreators();
+  function loadUserData() { const userStr = localStorage.getItem('pebeto_user'); if (userStr) { try { currentUser = JSON.parse(userStr); const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'U').toUpperCase(); document.getElementById('nav-avatar').innerHTML = initial; if (currentUser.profile?.avatarUrl) { document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`; document.getElementById('nav-avatar').innerHTML = ''; } } catch(e) {} } }
+  const savedTheme = localStorage.getItem('pebeto_theme'); if (savedTheme === 'light') document.body.classList.add('light-theme');
+  loadUserData(); loadCreators(); addNotification('Welcome to the Pebeto Community!');
 </script>
 </body>
 </html>
