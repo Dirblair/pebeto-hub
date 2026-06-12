@@ -8,182 +8,187 @@
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background: #000; 
-      color: #fff; 
-      overflow-x: hidden; 
-    }
+    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #fff; overflow-x: hidden; }
     .header {
       position: fixed; top: 0; left: 0; right: 0;
-      background: rgba(0,0,0,0.95);
-      backdrop-filter: blur(10px);
+      background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255,140,66,0.2);
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 100;
+      padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 100;
     }
     .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
     .search-bar {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.1); border-radius: 40px;
+      padding: 8px 16px; display: flex; align-items: center; gap: 8px; width: 300px;
+    }
+    .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; }
+    .nav-icons { display: flex; gap: 20px; align-items: center; }
+    .dashboard-btn {
+      background: rgba(255,140,66,0.15); border: 1px solid #ff8c42;
+      padding: 8px 16px; border-radius: 40px; color: #ffaa77;
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dashboard-btn:hover { background: #ff8c42; color: white; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-weight: bold; background-size: cover;
+    }
+    .feed-container { 
+      margin-top: 70px; 
+      padding: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .creator-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,140,66,0.2);
+      border-radius: 24px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .creator-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,140,66,0.4);
+    }
+    .creator-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .creator-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      background-size: cover;
+    }
+    .creator-info h3 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    .creator-info p {
+      font-size: 13px;
+      color: #a08070;
+    }
+    .creator-niche {
+      display: inline-block;
+      background: rgba(255,140,66,0.15);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+    .video-embed-container {
+      padding: 20px;
+      background: #000;
+    }
+    .tiktok-embed-container {
+      min-height: 600px;
+      background: #000;
+    }
+    .youtube-embed-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+    }
+    .youtube-embed-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .creator-actions {
+      display: flex;
+      gap: 15px;
+      padding: 15px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 20px;
       border-radius: 40px;
-      padding: 8px 16px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
-      width: 300px;
+      transition: all 0.2s;
     }
-    .search-bar input { 
-      background: transparent; 
-      border: none; 
-      color: white; 
-      width: 100%; 
-      outline: none; 
+    .action-btn:hover {
+      background: rgba(255,255,255,0.15);
     }
-    .nav-icons { display: flex; gap: 20px; align-items: center; }
-    .dashboard-btn {
-      background: rgba(255,140,66,0.15);
+    .action-btn.liked {
+      background: rgba(255,0,80,0.2);
+      border-color: #ff0050;
+      color: #ff0050;
+    }
+    .action-btn.liked i {
+      color: #ff0050;
+    }
+    .tip-btn {
+      background: rgba(255,140,66,0.2);
       border: 1px solid #ff8c42;
-      padding: 8px 16px;
+      padding: 8px 20px;
       border-radius: 40px;
       color: #ffaa77;
       cursor: pointer;
       font-size: 14px;
-      font-weight: 500;
       display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .dashboard-btn:hover { background: #ff8c42; color: white; }
-    .avatar {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-weight: bold;
-      background-size: cover;
-    }
-    
-    /* Video Feed - TikTok Style */
-    .feed-container {
-      margin-top: 70px;
-      height: calc(100vh - 70px);
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
-      scrollbar-width: none;
-    }
-    .feed-container::-webkit-scrollbar { display: none; }
-    
-    .video-post {
-      height: calc(100vh - 70px);
-      scroll-snap-align: start;
-      position: relative;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .video-post video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    
-    /* Overlay Content */
-    .post-overlay {
-      position: absolute;
-      bottom: 100px;
-      left: 16px;
-      right: 80px;
-      z-index: 10;
-    }
-    .post-author {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-    .author-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      background-size: cover;
-    }
-    .author-info h4 { font-size: 16px; margin-bottom: 2px; }
-    .author-info h4 span { font-weight: normal; color: #a08070; font-size: 12px; }
-    .author-info p { font-size: 12px; color: #a08070; }
-    .post-caption { font-size: 14px; margin-top: 8px; max-width: 80%; }
-    
-    /* Sound / Music Tag */
-    .sound-tag {
-      display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(0,0,0,0.5);
-      padding: 6px 12px;
+    }
+    .tip-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    .profile-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 20px;
       border-radius: 40px;
-      font-size: 12px;
-      margin-top: 10px;
+      color: white;
       cursor: pointer;
-    }
-    
-    /* Right Side Action Buttons */
-    .right-actions {
-      position: absolute;
-      right: 12px;
-      bottom: 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      z-index: 10;
-    }
-    .action-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
-    .action-btn:active { transform: scale(0.95); }
-    .action-btn i { font-size: 28px; color: white; }
-    .action-btn span { font-size: 12px; margin-top: 4px; color: white; }
-    .action-btn.liked i { color: #ff0050; }
-    
-    /* Unmute Button */
-    .unmute-btn {
-      position: absolute;
-      bottom: 30px;
-      right: 20px;
-      background: rgba(0,0,0,0.6);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      font-size: 14px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10;
+      gap: 8px;
     }
-    .unmute-btn i { font-size: 20px; color: white; }
-    
+    .profile-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .like-count {
+      font-size: 13px;
+      margin-left: 4px;
+    }
     .loading-spinner {
       text-align: center;
       padding: 50px;
       color: #ff8c42;
     }
-    
-    /* Modals */
+    .no-videos {
+      text-align: center;
+      padding: 50px;
+      color: #a08070;
+      background: rgba(255,255,255,0.03);
+      border-radius: 24px;
+    }
     .modal {
       display: none;
       position: fixed;
@@ -205,8 +210,11 @@
       width: 90%;
       border: 1px solid rgba(255,140,66,0.3);
     }
-    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select, .modal-content textarea {
+    .modal-content h3 {
+      margin-bottom: 20px;
+      color: #ff8c42;
+    }
+    .modal-content input, .modal-content select {
       width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -215,22 +223,40 @@
       margin-bottom: 15px;
       color: white;
     }
-    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
-    .save-btn { background: #ff8c42; color: white; }
-    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
-    .comments-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
-    .comment-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .payment-source-btn { transition: all 0.2s ease; }
-    .payment-source-btn:hover { transform: translateY(-1px); }
-    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+    }
+    .save-btn {
+      background: #ff8c42;
+      color: white;
+    }
+    .cancel-btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    .payment-source-btn {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .payment-source-btn:hover {
+      transform: translateY(-1px);
+    }
     @media (max-width: 768px) {
       .search-bar { display: none; }
-      .post-caption { font-size: 12px; max-width: 70%; }
-      .right-actions { gap: 16px; }
-      .action-btn i { font-size: 24px; }
+      .feed-container { padding: 15px; }
+      .creator-actions { justify-content: center; }
     }
   </style>
+  <!-- TikTok Embed Script -->
   <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
@@ -250,7 +276,7 @@
 </div>
 
 <div id="feed-container" class="feed-container">
-  <div class="loading-spinner">Loading videos...</div>
+  <div class="loading-spinner">Loading creators and their videos...</div>
 </div>
 
 <!-- Tip Modal -->
@@ -271,6 +297,7 @@
       <option value="USD">USD ($)</option>
       <option value="KES">KES (KSh)</option>
       <option value="EUR">EUR (€)</option>
+      <option value="GBP">GBP (£)</option>
     </select>
     
     <div id="mpesa-details" style="display: none;">
@@ -291,51 +318,57 @@
   </div>
 </div>
 
-<!-- Comments Modal -->
-<div id="comments-modal" class="modal">
-  <div class="modal-content">
-    <h3>💬 Comments</h3>
-    <div id="comments-list" class="comments-list"></div>
-    <div style="display: flex; gap: 10px;">
-      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;">
-      <button class="save-btn" onclick="addComment()">Post</button>
-    </div>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('comments-modal')">Close</button></div>
-  </div>
-</div>
-
 <script>
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
   let currentUser = null;
-  let allPosts = [];
-  let currentPostId = null;
+  let allCreators = [];
   let currentTipCreatorId = null;
   let currentTipCreatorName = '';
   let selectedPaymentSource = 'wallet';
-  let currentPlayingVideo = null;
-  let currentVideoElement = null;
 
-  // Helper functions
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  function formatNumber(num) {
-    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
-    return num.toString();
+  async function fetchJSON(url, options = {}) {
+    const token = localStorage.getItem('pebeto_token');
+    const res = await fetch(url, { 
+      ...options, 
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...options.headers 
+      } 
+    });
+    return res.json();
   }
 
-  function goToDashboard() {
+  function closeModal(id) { 
+    document.getElementById(id).style.display = 'none'; 
+  }
+  
+  function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
-    if (!token) { window.location.href = '/login.html'; return; }
+    if (!token) {
+      window.location.href = '/login.html';
+      return;
+    }
+    
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        if (user.role === 'creator') window.location.href = '/creator-dashboard.html';
-        else if (user.role === 'business') window.location.href = '/business-dashboard.html';
-        else if (user.role === 'admin') window.location.href = '/admin-dashboard.html';
-        else window.location.href = '/login.html';
-      } catch(e) { window.location.href = '/login.html'; }
-    } else { window.location.href = '/login.html'; }
+        if (user.role === 'creator') {
+          window.location.href = '/creator-dashboard.html';
+        } else if (user.role === 'business') {
+          window.location.href = '/business-dashboard.html';
+        } else if (user.role === 'admin') {
+          window.location.href = '/admin-dashboard.html';
+        } else {
+          window.location.href = '/creator-dashboard.html';
+        }
+      } catch(e) {
+        window.location.href = '/login.html';
+      }
+    } else {
+      window.location.href = '/login.html';
+    }
   }
 
   function selectPaymentSource(source) {
@@ -358,71 +391,68 @@
     document.getElementById('creator-receives').innerHTML = (amount * 0.95).toFixed(2);
   }
 
-  // Load posts from backend
-  async function loadPosts() {
+  async function loadCreators() {
     try {
-      const token = localStorage.getItem('pebeto_token');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const response = await fetch(`${API_BASE}/api/community/posts`, { headers });
+      const response = await fetch(`${API_BASE}/api/creators`);
       const data = await response.json();
-      allPosts = data.posts || [];
       
-      if (allPosts.length === 0) {
-        showSamplePosts();
-      } else {
+      if (data.success && data.creators && data.creators.length > 0) {
+        allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
         renderFeed();
+      } else {
+        showSampleCreators();
       }
     } catch (error) {
-      console.error('Error loading posts:', error);
-      showSamplePosts();
+      console.error('Error loading creators:', error);
+      showSampleCreators();
     }
   }
 
-  function showSamplePosts() {
-    allPosts = [
+  function showSampleCreators() {
+    allCreators = [
       {
-        _id: 'post1',
-        mediaUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
-        caption: 'Check out this amazing content! 🔥 #Pebeto',
-        author: {
-          _id: 'user1',
-          profile: { stageName: 'DJ Nova', avatarUrl: '' },
-          uniqueCode: '@djnova',
-          role: 'creator'
+        _id: 'sample1',
+        email: 'creator1@example.com',
+        profile: {
+          stageName: 'DJ Nova',
+          niche: 'Music',
+          avatarUrl: ''
+        },
+        socialLinks: {
+          tiktok: 'https://www.tiktok.com/@tiktok',
+          youtube: ''
         },
         likeCount: 1234,
-        commentCount: 89,
-        shareCount: 45,
         isLiked: false
       },
       {
-        _id: 'post2',
-        mediaUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4',
-        caption: 'Art tutorial coming soon! 🎨',
-        author: {
-          _id: 'user2',
-          profile: { stageName: 'Sarah Creates', avatarUrl: '' },
-          uniqueCode: '@sarahcreates',
-          role: 'creator'
+        _id: 'sample2',
+        email: 'creator2@example.com',
+        profile: {
+          stageName: 'Sarah Creates',
+          niche: 'Art',
+          avatarUrl: ''
+        },
+        socialLinks: {
+          tiktok: '',
+          youtube: 'https://www.youtube.com/@YouTube'
         },
         likeCount: 567,
-        commentCount: 34,
-        shareCount: 12,
         isLiked: false
       },
       {
-        _id: 'post3',
-        mediaUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_3mb.mp4',
-        caption: 'Morning workout routine! 💪',
-        author: {
-          _id: 'user3',
-          profile: { stageName: 'Mike Fitness', avatarUrl: '' },
-          uniqueCode: '@mikefitness',
-          role: 'creator'
+        _id: 'sample3',
+        email: 'creator3@example.com',
+        profile: {
+          stageName: 'Mike Fitness',
+          niche: 'Fitness',
+          avatarUrl: ''
+        },
+        socialLinks: {
+          tiktok: 'https://www.tiktok.com/@tiktok',
+          youtube: ''
         },
         likeCount: 2345,
-        commentCount: 156,
-        shareCount: 89,
         isLiked: false
       }
     ];
@@ -433,218 +463,183 @@
     const container = document.getElementById('feed-container');
     container.innerHTML = '';
     
-    if (allPosts.length === 0) {
-      container.innerHTML = '<div class="loading-spinner">No videos yet. Check back soon!</div>';
+    if (allCreators.length === 0) {
+      container.innerHTML = '<div class="no-videos">No creators have connected their social media yet.<br><br>🎨 <strong>Are you a creator?</strong><br>Go to your dashboard and connect your TikTok or YouTube!</div>';
       return;
     }
     
-    allPosts.forEach((post, index) => {
-      const postEl = createPostElement(post, index);
-      container.appendChild(postEl);
+    allCreators.forEach(creator => {
+      const card = createCreatorCard(creator);
+      container.appendChild(card);
     });
-    
-    // Setup intersection observer for autoplay
-    setupVideoAutoplay();
+
+    if (window.tiktokEmbedLoad) {
+      window.tiktokEmbedLoad();
+    }
   }
 
-  function createPostElement(post, index) {
-    const article = document.createElement('article');
-    article.className = 'video-post';
-    article.dataset.postId = post._id;
-    article.dataset.index = index;
+  function createCreatorCard(creator) {
+    const card = document.createElement('div');
+    card.className = 'creator-card';
+    card.dataset.creatorId = creator._id;
     
-    const authorName = post.author?.profile?.stageName || post.author?.uniqueCode?.replace('@', '') || 'Creator';
-    const authorUsername = post.author?.uniqueCode || `@${authorName.toLowerCase().replace(/\s/g, '')}`;
-    const authorAvatar = post.author?.profile?.avatarUrl || '';
-    const authorId = post.author?._id || 'unknown';
-    const isLiked = post.isLiked || false;
-    const likeIconClass = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
-    const likeIconColor = isLiked ? '#ff0050' : 'white';
+    const initial = (creator.profile?.stageName?.[0] || creator.email?.[0] || 'C').toUpperCase();
+    const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
+    const username = creator.profile?.stageName ? `@${creator.profile.stageName.toLowerCase().replace(/\s/g, '')}` : '@creator';
+    const niche = creator.profile?.niche || 'Creator';
+    const likeCount = creator.likeCount || 0;
+    const isLiked = creator.isLiked || false;
     
-    article.innerHTML = `
-      <video class="post-video" src="${post.mediaUrl}" loop muted playsinline preload="metadata"></video>
-      <div class="unmute-btn" onclick="toggleMute(this, event)">
-        <i class="ri-volume-mute-line"></i>
-      </div>
-      <div class="post-overlay">
-        <div class="post-author" onclick="viewProfile('${authorId}')">
-          <div class="author-avatar" style="background-image: url(${authorAvatar})">${!authorAvatar ? (authorName[0] || 'U') : ''}</div>
-          <div class="author-info">
-            <h4>${escapeHtml(authorName)} <span>${escapeHtml(authorUsername)}</span> • 🎨 Creator</h4>
-            <p>Content Creator</p>
+    let embedHtml = '';
+    
+    if (creator.socialLinks?.tiktok) {
+      const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
+      const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
+      embedHtml = `
+        <div class="video-embed-container tiktok-embed-container">
+          <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;">
+            <section>
+              <a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a>
+            </section>
+          </blockquote>
+        </div>
+      `;
+    } else if (creator.socialLinks?.youtube) {
+      let youtubeEmbedUrl = '';
+      if (creator.socialLinks.youtube.includes('/@')) {
+        const handle = creator.socialLinks.youtube.split('/@')[1];
+        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${handle}`;
+      } else {
+        youtubeEmbedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
+      }
+      embedHtml = `
+        <div class="video-embed-container">
+          <div class="youtube-embed-container">
+            <iframe 
+              src="${youtubeEmbedUrl}"
+              frameborder="0" 
+              allowfullscreen>
+            </iframe>
           </div>
         </div>
-        <div class="post-caption">${escapeHtml(post.caption || '')}</div>
-        <div class="sound-tag" onclick="alert('Sound info coming soon')">
-          <i class="ri-music-2-line"></i> Original Sound
+      `;
+    } else {
+      embedHtml = `
+        <div class="video-embed-container">
+          <p style="color: #a08070; text-align: center; padding: 40px;">
+            No videos connected yet. Check back soon!
+          </p>
+        </div>
+      `;
+    }
+    
+    card.innerHTML = `
+      <div class="creator-header">
+        <div class="creator-avatar" style="background-image: url('${creator.profile?.avatarUrl || ''}'); background-size: cover;">
+          ${!creator.profile?.avatarUrl ? initial : ''}
+        </div>
+        <div class="creator-info">
+          <h3>${escapeHtml(displayName)} <span style="font-size: 12px; color: #a08070;">${escapeHtml(username)}</span></h3>
+          <p>🎨 Creator</p>
+          <span class="creator-niche">${escapeHtml(niche)}</span>
         </div>
       </div>
-      <div class="right-actions">
-        <div class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post._id}', this)">
-          <i class="${likeIconClass}" style="color:${likeIconColor}"></i>
-          <span>${formatNumber(post.likeCount || 0)}</span>
-        </div>
-        <div class="action-btn" onclick="openComments('${post._id}')">
-          <i class="ri-chat-3-line"></i>
-          <span>${formatNumber(post.commentCount || 0)}</span>
-        </div>
-        <div class="action-btn" onclick="sharePost('${post._id}')">
-          <i class="ri-share-forward-line"></i>
-          <span>${formatNumber(post.shareCount || 0)}</span>
-        </div>
-        <div class="action-btn" onclick="openTipModal('${authorId}', '${escapeHtml(authorName)}')">
-          <i class="ri-coin-line"></i>
-          <span>Tip</span>
-        </div>
-        <div class="action-btn" onclick="viewProfile('${authorId}')">
-          <i class="ri-user-line"></i>
-          <span>Profile</span>
-        </div>
+      ${embedHtml}
+      <div class="creator-actions">
+        <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" data-creator-id="${creator._id}" onclick="toggleLike(event, this, '${creator._id}')">
+          <i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
+          <span class="like-count">${formatNumber(likeCount)}</span>
+        </button>
+        <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-coin-line"></i> Send Tip 💝
+        </button>
+        <button class="profile-btn" onclick="viewCreatorProfile('${creator._id}')">
+          <i class="ri-user-line"></i> View Profile
+        </button>
       </div>
     `;
     
-    return article;
+    return card;
   }
 
-  function setupVideoAutoplay() {
-    const videos = document.querySelectorAll('.post-video');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        const video = entry.target;
-        if (entry.isIntersecting) {
-          // Pause all other videos
-          document.querySelectorAll('.post-video').forEach(v => {
-            if (v !== video) v.pause();
-          });
-          // Play this video (muted)
-          video.play().catch(e => console.log('Autoplay prevented:', e));
-          currentPlayingVideo = video;
-        } else {
-          video.pause();
-        }
-      });
-    }, { threshold: 0.5 });
-    
-    videos.forEach(video => observer.observe(video));
-  }
-
-  function toggleMute(btn, event) {
+  async function toggleLike(event, button, creatorId) {
     event.stopPropagation();
-    const video = btn.closest('.video-post').querySelector('video');
-    if (video.muted) {
-      video.muted = false;
-      btn.innerHTML = '<i class="ri-volume-up-line"></i>';
-    } else {
-      video.muted = true;
-      btn.innerHTML = '<i class="ri-volume-mute-line"></i>';
-    }
-  }
-
-  async function toggleLike(postId, element) {
     const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please login to like'); window.location.href = '/login.html'; return; }
+    if (!token) {
+      alert('Please log in to like');
+      window.location.href = '/login.html';
+      return;
+    }
     
-    const icon = element.querySelector('i');
-    const countSpan = element.querySelector('span');
-    const isLiked = icon.classList.contains('ri-heart-fill');
+    const icon = button.querySelector('i');
+    const countSpan = button.querySelector('.like-count');
+    const isCurrentlyLiked = button.classList.contains('liked');
+    let currentCount = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
+    
+    // Optimistic UI update
+    if (isCurrentlyLiked) {
+      button.classList.remove('liked');
+      icon.classList.remove('ri-heart-fill');
+      icon.classList.add('ri-heart-line');
+      countSpan.innerText = formatNumber(currentCount - 1);
+    } else {
+      button.classList.add('liked');
+      icon.classList.remove('ri-heart-line');
+      icon.classList.add('ri-heart-fill');
+      countSpan.innerText = formatNumber(currentCount + 1);
+    }
     
     try {
-      const method = isLiked ? 'DELETE' : 'POST';
-      const response = await fetch(`${API_BASE}/api/community/posts/${postId}/like`, {
+      const method = isCurrentlyLiked ? 'DELETE' : 'POST';
+      const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, {
         method: method,
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
+      
       const data = await response.json();
       
-      if (data.success || data.liked !== undefined) {
-        if (!isLiked) {
+      if (!data.success) {
+        // Revert if API fails
+        if (isCurrentlyLiked) {
+          button.classList.add('liked');
           icon.classList.remove('ri-heart-line');
           icon.classList.add('ri-heart-fill');
-          icon.style.color = '#ff0050';
-          element.classList.add('liked');
-          countSpan.innerText = formatNumber((parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0) + 1);
+          countSpan.innerText = formatNumber(currentCount);
         } else {
+          button.classList.remove('liked');
           icon.classList.remove('ri-heart-fill');
           icon.classList.add('ri-heart-line');
-          icon.style.color = 'white';
-          element.classList.remove('liked');
-          countSpan.innerText = formatNumber(Math.max(0, (parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0) - 1));
+          countSpan.innerText = formatNumber(currentCount);
         }
+        console.error('Like API failed:', data.message);
       }
     } catch (error) {
-      console.error('Like error:', error);
-    }
-  }
-
-  async function openComments(postId) {
-    currentPostId = postId;
-    const modal = document.getElementById('comments-modal');
-    const commentsList = document.getElementById('comments-list');
-    commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Loading...</div>';
-    modal.style.display = 'flex';
-    
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const response = await fetch(`${API_BASE}/api/community/posts/${postId}/comments`, { headers });
-      const data = await response.json();
-      const comments = data.comments || [];
-      
-      if (comments.length === 0) {
-        commentsList.innerHTML = '<div style="text-align:center; padding:20px;">No comments yet. Be the first!</div>';
+      console.error('Error toggling like:', error);
+      // Revert on network error
+      if (isCurrentlyLiked) {
+        button.classList.add('liked');
+        icon.classList.remove('ri-heart-line');
+        icon.classList.add('ri-heart-fill');
+        countSpan.innerText = formatNumber(currentCount);
       } else {
-        commentsList.innerHTML = comments.map(c => `
-          <div class="comment-item">
-            <div style="width:32px; height:32px; border-radius:50%; background:#ff8c42; display:flex; align-items:center; justify-content:center; font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
-            <div><strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong><p style="font-size:13px;">${escapeHtml(c.text)}</p></div>
-          </div>
-        `).join('');
+        button.classList.remove('liked');
+        icon.classList.remove('ri-heart-fill');
+        icon.classList.add('ri-heart-line');
+        countSpan.innerText = formatNumber(currentCount);
       }
-    } catch (error) {
-      commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Failed to load comments</div>';
     }
-  }
-
-  async function addComment() {
-    const input = document.getElementById('comment-input');
-    const text = input.value.trim();
-    if (!text || !currentPostId) return;
-    
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please login to comment'); window.location.href = '/login.html'; return; }
-    
-    try {
-      await fetch(`${API_BASE}/api/community/posts/${currentPostId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ text })
-      });
-      input.value = '';
-      await openComments(currentPostId);
-      
-      // Update comment count in feed
-      const postElement = document.querySelector(`.video-post[data-post-id="${currentPostId}"]`);
-      if (postElement) {
-        const commentBtn = postElement.querySelector('.action-btn:nth-child(2) span');
-        if (commentBtn) {
-          let currentCount = parseInt(commentBtn.innerText.replace(/[^0-9]/g, '')) || 0;
-          commentBtn.innerText = formatNumber(currentCount + 1);
-        }
-      }
-    } catch (error) {
-      alert('Failed to add comment');
-    }
-  }
-
-  function sharePost(postId) {
-    const url = `${window.location.origin}/community.html?post=${postId}`;
-    navigator.clipboard.writeText(url);
-    alert('Link copied to clipboard!');
   }
 
   function openTipModal(creatorId, creatorName) {
     const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please login to send tips'); window.location.href = '/login.html'; return; }
+    if (!token) {
+      alert('Please log in to send tips');
+      window.location.href = '/login.html';
+      return;
+    }
     
     currentTipCreatorId = creatorId;
     currentTipCreatorName = creatorName;
@@ -674,19 +669,32 @@
     const amount = parseFloat(document.getElementById('tip-amount').value);
     const currency = document.getElementById('tip-currency').value;
     
-    if (!amount || amount <= 0) { alert('Enter valid amount'); return; }
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
     
     const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please login'); window.location.href = '/login.html'; return; }
+    if (!token) {
+      alert('Please log in to send tips');
+      window.location.href = '/login.html';
+      return;
+    }
     
     let paymentDetails = {};
     if (selectedPaymentSource === 'mpesa') {
-      const phone = document.getElementById('mpesa-phone').value;
-      if (!phone) { alert('Enter M-Pesa phone number'); return; }
-      paymentDetails = { phoneNumber: phone, method: 'mpesa' };
+      const phoneNumber = document.getElementById('mpesa-phone').value;
+      if (!phoneNumber) {
+        alert('Please enter M-Pesa phone number');
+        return;
+      }
+      paymentDetails = { phoneNumber, method: 'mpesa' };
     } else if (selectedPaymentSource === 'paypal') {
       const email = document.getElementById('paypal-email').value;
-      if (!email) { alert('Enter PayPal email'); return; }
+      if (!email) {
+        alert('Please enter PayPal email');
+        return;
+      }
       paymentDetails = { paypalEmail: email, method: 'paypal' };
     } else {
       paymentDetails = { method: 'wallet' };
@@ -695,7 +703,10 @@
     try {
       const response = await fetch(`${API_BASE}/api/wallet/tip`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           creatorId: currentTipCreatorId,
           amount: amount,
@@ -704,43 +715,49 @@
           paymentDetails: paymentDetails
         })
       });
+      
       const data = await response.json();
       
       if (data.success) {
-        alert(`💝 Tip sent to ${currentTipCreatorName}!`);
+        alert(`💝 Tip of ${currency} ${amount} sent successfully to ${currentTipCreatorName}!`);
         closeModal('tip-modal');
         document.getElementById('tip-amount').value = '';
       } else {
-        alert(data.message || 'Tip failed');
+        alert('Failed to send tip: ' + (data.message || 'Unknown error'));
       }
     } catch (error) {
-      alert('Network error');
+      console.error('Error sending tip:', error);
+      alert('Network error. Please try again.');
     }
   }
 
-  function viewProfile(userId) {
-    window.location.href = `/creator-profile.html?id=${userId}`;
+  function viewCreatorProfile(creatorId) {
+    localStorage.setItem('viewingCreatorId', creatorId);
+    window.location.href = `/creator-profile.html?id=${creatorId}`;
   }
 
-  async function searchGlobal() {
+  function searchGlobal() {
     const query = document.getElementById('global-search').value.toLowerCase();
-    if (!query) { loadPosts(); return; }
+    if (!query) {
+      renderFeed();
+      return;
+    }
     
-    const filtered = allPosts.filter(p => 
-      p.author?.profile?.stageName?.toLowerCase().includes(query) ||
-      p.author?.uniqueCode?.toLowerCase().includes(query) ||
-      p.caption?.toLowerCase().includes(query)
-    );
+    const filtered = allCreators.filter(c => {
+      const displayName = c.profile?.stageName || c.email?.split('@')[0] || '';
+      const niche = c.profile?.niche || '';
+      return displayName.toLowerCase().includes(query) || niche.toLowerCase().includes(query);
+    });
     
     const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    
     if (filtered.length === 0) {
-      container.innerHTML = '<div class="loading-spinner">No results found</div>';
+      container.innerHTML = '<div class="no-videos">No creators found matching your search.</div>';
     } else {
-      container.innerHTML = '';
-      filtered.forEach((post, idx) => {
-        container.appendChild(createPostElement(post, idx));
+      filtered.forEach(creator => {
+        container.appendChild(createCreatorCard(creator));
       });
-      setupVideoAutoplay();
     }
   }
 
@@ -755,17 +772,30 @@
           document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
           document.getElementById('nav-avatar').innerHTML = '';
         }
-      } catch(e) {}
+      } catch(e) {
+        console.error('Error parsing user data:', e);
+      }
     }
+  }
+
+  function formatNumber(num) {
+    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
+    return num.toString();
   }
 
   function escapeHtml(str) { 
     if (!str) return ''; 
-    return str.replace(/[&<>]/g, m => { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; });
+    return str.replace(/[&<>]/g, function(m) { 
+      if (m === '&') return '&amp;'; 
+      if (m === '<') return '&lt;'; 
+      if (m === '>') return '&gt;'; 
+      return m; 
+    }); 
   }
 
   loadUserData();
-  loadPosts();
+  loadCreators();
 </script>
 </body>
 </html>
