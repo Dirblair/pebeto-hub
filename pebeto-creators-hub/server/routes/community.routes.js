@@ -180,7 +180,7 @@ router.post('/posts/:postId/save', authenticate, async (req, res, next) => {
 });
 
 // ============================================
-// COMMENTS
+// COMMENTS (for Posts)
 // ============================================
 
 // GET /api/community/posts/:postId/comments - Get comments for a post
@@ -249,6 +249,207 @@ router.delete('/comments/:commentId', authenticate, async (req, res, next) => {
     }
     
     res.json({ success: true, message: 'Comment deleted' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// CREATOR COMMENTS & LIKES (Direct Creator Engagement)
+// ============================================
+
+// GET /api/community/creators/:creatorId/comments - Get comments for a creator
+router.get('/creators/:creatorId/comments', optionalAuthenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const { limit = 50 } = req.query;
+    
+    // Check if creator exists
+    const creator = await User.findById(creatorId);
+    if (!creator || creator.role !== 'creator') {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    // Find comments for this creator
+    const comments = await CommunityComment.find({ creatorId })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
+    
+    res.json({ success: true, comments });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/community/creators/:creatorId/comments - Add a comment to a creator
+router.post('/creators/:creatorId/comments', authenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const { text } = req.body;
+    
+    if (!text || !text.trim()) {
+      throw new AppError('Comment text is required', 400);
+    }
+    
+    // Check if creator exists
+    const creator = await User.findById(creatorId);
+    if (!creator || creator.role !== 'creator') {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    // Create comment with creatorId
+    const comment = await CommunityComment.create({
+      creatorId: creatorId,
+      authorId: req.user._id,
+      text: text.trim()
+    });
+    
+    const populatedComment = await CommunityComment.findById(comment._id).populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
+    
+    res.status(201).json({ success: true, comment: populatedComment });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/community/creators/:creatorId/comments/:commentId - Delete a comment from a creator
+router.delete('/creators/:creatorId/comments/:commentId', authenticate, async (req, res, next) => {
+  try {
+    const { creatorId, commentId } = req.params;
+    
+    const comment = await CommunityComment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: 'Comment not found' });
+    }
+    
+    // Check if comment belongs to this creator
+    if (comment.creatorId && comment.creatorId.toString() !== creatorId) {
+      return res.status(403).json({ success: false, message: 'Comment does not belong to this creator' });
+    }
+    
+    // Check if user is author or admin
+    if (comment.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'You can only delete your own comments' });
+    }
+    
+    await comment.deleteOne();
+    
+    res.json({ success: true, message: 'Comment deleted' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/community/creators/:creatorId/like - Like a creator
+router.post('/creators/:creatorId/like', authenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const userId = req.user._id;
+    
+    // Check if creator exists
+    const creator = await User.findById(creatorId);
+    if (!creator || creator.role !== 'creator') {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    // Initialize likedBy array if not exists
+    if (!creator.likedBy) creator.likedBy = [];
+    if (creator.likeCount === undefined) creator.likeCount = 0;
+    
+    const hasLiked = creator.likedBy.includes(userId);
+    
+    if (hasLiked) {
+      creator.likedBy = creator.likedBy.filter(id => id.toString() !== userId.toString());
+      creator.likeCount = Math.max(0, creator.likeCount - 1);
+    } else {
+      creator.likedBy.push(userId);
+      creator.likeCount += 1;
+    }
+    
+    await creator.save();
+    
+    res.json({ 
+      success: true, 
+      liked: !hasLiked, 
+      likeCount: creator.likeCount || 0 
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/community/creators/:creatorId/like - Unlike a creator (alternative method)
+router.delete('/creators/:creatorId/like', authenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const userId = req.user._id;
+    
+    const creator = await User.findById(creatorId);
+    if (!creator || creator.role !== 'creator') {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    if (!creator.likedBy) creator.likedBy = [];
+    
+    const hadLiked = creator.likedBy.includes(userId);
+    
+    if (hadLiked) {
+      creator.likedBy = creator.likedBy.filter(id => id.toString() !== userId.toString());
+      creator.likeCount = Math.max(0, (creator.likeCount || 0) - 1);
+      await creator.save();
+    }
+    
+    res.json({ 
+      success: true, 
+      liked: false, 
+      likeCount: creator.likeCount || 0 
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/community/creators/:creatorId/like - Check if user liked a creator
+router.get('/creators/:creatorId/like', authenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const userId = req.user._id;
+    
+    const creator = await User.findById(creatorId).select('likedBy likeCount');
+    if (!creator) {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    const isLiked = creator.likedBy ? creator.likedBy.includes(userId) : false;
+    
+    res.json({ 
+      success: true, 
+      isLiked, 
+      likeCount: creator.likeCount || 0 
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/community/creators/:creatorId/stats - Get creator engagement stats
+router.get('/creators/:creatorId/stats', optionalAuthenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const userId = req.user?._id;
+    
+    const creator = await User.findById(creatorId).select('likedBy likeCount');
+    const commentCount = await CommunityComment.countDocuments({ creatorId });
+    
+    const isLiked = userId && creator?.likedBy ? creator.likedBy.includes(userId) : false;
+    
+    res.json({ 
+      success: true, 
+      likeCount: creator?.likeCount || 0,
+      commentCount: commentCount,
+      isLiked: isLiked
+    });
   } catch (err) {
     next(err);
   }
