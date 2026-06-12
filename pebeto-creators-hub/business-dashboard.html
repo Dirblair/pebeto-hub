@@ -440,6 +440,31 @@
       color: white;
     }
     
+    /* NEW: Campaign Stats Summary Cards */
+    .campaign-stats-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .stat-card-small {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 16px;
+      padding: 15px;
+      text-align: center;
+    }
+    .stat-card-small h5 {
+      font-size: 12px;
+      color: #a08070;
+      margin-bottom: 8px;
+    }
+    .stat-card-small .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ff8c42;
+    }
+    
     @media (max-width: 768px) {
       .nav-icons { display: none; }
       .mobile-menu-btn { display: block; }
@@ -455,6 +480,7 @@
         border: 1px solid rgba(255,140,66,0.3);
       }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .campaign-stats-summary { grid-template-columns: repeat(2, 1fr); }
       .filter-bar { flex-direction: column; }
       .date-range { flex-direction: column; }
     }
@@ -548,6 +574,25 @@
         </div>
       </div>
     </div>
+    <!-- NEW: Campaign Stats Summary Cards -->
+    <div class="campaign-stats-summary" id="campaign-stats-summary">
+      <div class="stat-card-small">
+        <h5>💰 Total Budget</h5>
+        <div class="stat-number" id="campaign-stats-total-budget">$0</div>
+      </div>
+      <div class="stat-card-small">
+        <h5>📝 Total Bids</h5>
+        <div class="stat-number" id="campaign-stats-total-bids">0</div>
+      </div>
+      <div class="stat-card-small">
+        <h5>✅ Completed</h5>
+        <div class="stat-number" id="campaign-stats-completed">0</div>
+      </div>
+      <div class="stat-card-small">
+        <h5>📊 Avg. ROI</h5>
+        <div class="stat-number" id="campaign-stats-avg-roi">0%</div>
+      </div>
+    </div>
     <div style="overflow-x: auto;">
       <div id="campaigns-skeleton" class="skeleton-loader">
         <div class="skeleton skeleton-text"></div>
@@ -556,7 +601,7 @@
       </div>
       <table class="data-table" id="campaigns-table" style="display: none;">
         <thead>
-          <tr><th>Title</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Actions</th></tr>
+          <tr><th>Title</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Views</th><th>Actions</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -597,7 +642,7 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="active-projects-table" style="display: none;">
-        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></td></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -749,7 +794,7 @@
   <i class="ri-arrow-up-line"></i>
 </div>
 
-<!-- Modals -->
+<!-- Modals (same as existing, kept intact) -->
 <div id="deposit-modal" class="modal">
   <div class="modal-content">
     <h3>💰 Add Funds to Wallet</h3>
@@ -897,7 +942,6 @@
   </div>
 </div>
 
-<!-- Add Team Member Modal -->
 <div id="add-team-member-modal" class="modal">
   <div class="modal-content">
     <h3>👥 Add Team Member</h3>
@@ -914,7 +958,6 @@
   </div>
 </div>
 
-<!-- Add Webhook Modal -->
 <div id="add-webhook-modal" class="modal">
   <div class="modal-content">
     <h3>🔗 Add Webhook URL</h3>
@@ -933,7 +976,6 @@
   </div>
 </div>
 
-<!-- Withdrawal Confirmation Modal -->
 <div id="confirm-withdraw-modal" class="modal">
   <div class="modal-content">
     <h3>⚠️ Confirm Withdrawal</h3>
@@ -945,7 +987,6 @@
   </div>
 </div>
 
-<!-- 2FA Modal -->
 <div id="2fa-modal" class="modal">
   <div class="modal-content">
     <h3>🔐 Setup Two-Factor Authentication</h3>
@@ -1065,7 +1106,6 @@
     notifications.unshift({ message, time: new Date(), read: false });
     updateNotificationBadge();
     updateNotificationDropdown();
-    // Mark as unread in backend
     fetch(`${API_BASE}/api/notifications`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` },
@@ -1103,7 +1143,6 @@
     const notification = notifications.find(n => n.time.toString() === time);
     if (notification) notification.read = true;
     updateNotificationBadge();
-    // Sync to backend
     fetch(`${API_BASE}/api/notifications/read`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` },
@@ -1488,7 +1527,7 @@
         const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
         const tbody = document.querySelector('#campaigns-table tbody');
         if (myCampaigns.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div></tr><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div></tr><\/tr>';
         } else {
           tbody.innerHTML = myCampaigns.map(c => `
             <tr>
@@ -1499,6 +1538,7 @@
               <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
               <td><span class="status-badge ${c.status === 'paid' ? 'active' : ''}">${c.status}</span></td>
               <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
+              <td>${c.views || 0}</td>
               <td><div class="campaign-actions">
                 <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button>
                 <button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button>
@@ -1519,10 +1559,12 @@
     const totalBudget = myCampaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
     const totalBids = myCampaigns.reduce((sum, c) => sum + (c.bids?.length || 0), 0);
     const completedCampaigns = myCampaigns.filter(c => c.status === 'paid').length;
+    const avgRoi = completedCampaigns > 0 ? (myCampaigns.filter(c => c.status === 'paid').reduce((sum, c) => sum + (c.roi || 0), 0) / completedCampaigns) : 0;
     
-    document.getElementById('campaign-stats-total-budget')?.setAttribute('data-value', totalBudget);
-    document.getElementById('campaign-stats-total-bids')?.setAttribute('data-value', totalBids);
-    document.getElementById('campaign-stats-completed')?.setAttribute('data-value', completedCampaigns);
+    document.getElementById('campaign-stats-total-budget').innerHTML = formatMoney(totalBudget);
+    document.getElementById('campaign-stats-total-bids').innerText = totalBids;
+    document.getElementById('campaign-stats-completed').innerText = completedCampaigns;
+    document.getElementById('campaign-stats-avg-roi').innerText = avgRoi.toFixed(1) + '%';
   }
 
   function filterCampaigns() {
@@ -1544,7 +1586,7 @@
     
     const tbody = document.querySelector('#campaigns-table tbody');
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No campaigns match the filters</div></td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No campaigns match the filters</div></td><\/tr>';
     } else {
       tbody.innerHTML = filtered.map(c => `
         <tr>
@@ -1555,6 +1597,7 @@
           <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
           <td><span class="status-badge ${c.status === 'paid' ? 'active' : ''}">${c.status}</span></td>
           <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
+          <td>${c.views || 0}</td>
           <td><div class="campaign-actions">
             <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button>
             <button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button>
@@ -1756,7 +1799,7 @@
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
         const tbody = document.querySelector('#active-projects-table tbody');
         if (active.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No active projects</div></td><\/tr>';
+          tbody.innerHTML = '</table><td colspan="5"><div class="empty-state">No active projects</div></td><\/tr>';
         } else {
           tbody.innerHTML = active.map(c => {
             const acceptedBid = c.bids?.find(b => b.status === 'accepted');
