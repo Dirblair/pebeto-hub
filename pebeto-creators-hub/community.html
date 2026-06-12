@@ -173,7 +173,7 @@
     .profile-btn:hover {
       background: rgba(255,255,255,0.15);
     }
-    .like-count {
+    .like-count, .comment-count {
       font-size: 13px;
       margin-left: 4px;
     }
@@ -214,7 +214,7 @@
       margin-bottom: 20px;
       color: #ff8c42;
     }
-    .modal-content input, .modal-content select {
+    .modal-content input, .modal-content select, .modal-content textarea {
       width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -249,6 +249,17 @@
     }
     .payment-source-btn:hover {
       transform: translateY(-1px);
+    }
+    .comments-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     @media (max-width: 768px) {
       .search-bar { display: none; }
@@ -318,6 +329,19 @@
   </div>
 </div>
 
+<!-- Comments Modal -->
+<div id="comments-modal" class="modal">
+  <div class="modal-content">
+    <h3>💬 Comments</h3>
+    <div id="comments-list" class="comments-list"></div>
+    <div style="display: flex; gap: 10px;">
+      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;">
+      <button class="save-btn" onclick="addComment()">Post</button>
+    </div>
+    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('comments-modal')">Close</button></div>
+  </div>
+</div>
+
 <script>
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
   let currentUser = null;
@@ -325,6 +349,7 @@
   let currentTipCreatorId = null;
   let currentTipCreatorName = '';
   let selectedPaymentSource = 'wallet';
+  let currentCommentCreatorId = null;
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -398,6 +423,8 @@
       
       if (data.success && data.creators && data.creators.length > 0) {
         allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
+        // Load likes and comments for each creator
+        await loadCreatorEngagement();
         renderFeed();
       } else {
         showSampleCreators();
@@ -405,6 +432,27 @@
     } catch (error) {
       console.error('Error loading creators:', error);
       showSampleCreators();
+    }
+  }
+
+  async function loadCreatorEngagement() {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) return;
+    
+    for (let creator of allCreators) {
+      try {
+        const response = await fetch(`${API_BASE}/api/community/creators/${creator._id}/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          creator.likeCount = data.likeCount || 0;
+          creator.isLiked = data.isLiked || false;
+          creator.commentCount = data.commentCount || 0;
+        }
+      } catch(e) {
+        console.error('Error loading engagement for creator:', creator._id);
+      }
     }
   }
 
@@ -423,7 +471,8 @@
           youtube: ''
         },
         likeCount: 1234,
-        isLiked: false
+        isLiked: false,
+        commentCount: 89
       },
       {
         _id: 'sample2',
@@ -438,7 +487,8 @@
           youtube: 'https://www.youtube.com/@YouTube'
         },
         likeCount: 567,
-        isLiked: false
+        isLiked: false,
+        commentCount: 34
       },
       {
         _id: 'sample3',
@@ -453,7 +503,8 @@
           youtube: ''
         },
         likeCount: 2345,
-        isLiked: false
+        isLiked: false,
+        commentCount: 156
       }
     ];
     renderFeed();
@@ -489,6 +540,7 @@
     const niche = creator.profile?.niche || 'Creator';
     const likeCount = creator.likeCount || 0;
     const isLiked = creator.isLiked || false;
+    const commentCount = creator.commentCount || 0;
     
     let embedHtml = '';
     
@@ -546,9 +598,13 @@
       </div>
       ${embedHtml}
       <div class="creator-actions">
-        <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" data-creator-id="${creator._id}" onclick="toggleLike(event, this, '${creator._id}')">
+        <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, this, '${creator._id}')">
           <i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
           <span class="like-count">${formatNumber(likeCount)}</span>
+        </button>
+        <button class="action-btn comment-btn" onclick="openCommentsModal('${creator._id}', '${escapeHtml(displayName)}')">
+          <i class="ri-chat-3-line"></i>
+          <span class="comment-count">${formatNumber(commentCount)}</span>
         </button>
         <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')">
           <i class="ri-coin-line"></i> Send Tip 💝
@@ -615,6 +671,13 @@
           countSpan.innerText = formatNumber(currentCount);
         }
         console.error('Like API failed:', data.message);
+      } else {
+        // Update the creator object with new like count
+        const creator = allCreators.find(c => c._id === creatorId);
+        if (creator) {
+          creator.likeCount = data.likeCount || (isCurrentlyLiked ? currentCount - 1 : currentCount + 1);
+          creator.isLiked = !isCurrentlyLiked;
+        }
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -630,6 +693,81 @@
         icon.classList.add('ri-heart-line');
         countSpan.innerText = formatNumber(currentCount);
       }
+    }
+  }
+
+  async function openCommentsModal(creatorId, creatorName) {
+    currentCommentCreatorId = creatorId;
+    const modal = document.getElementById('comments-modal');
+    const commentsList = document.getElementById('comments-list');
+    commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Loading comments...</div>';
+    modal.style.display = 'flex';
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/comments`, { headers });
+      const data = await response.json();
+      const comments = data.comments || [];
+      
+      if (comments.length === 0) {
+        commentsList.innerHTML = '<div style="text-align:center; padding:20px;">No comments yet. Be the first!</div>';
+      } else {
+        commentsList.innerHTML = comments.map(c => `
+          <div class="comment-item">
+            <div style="width:32px; height:32px; border-radius:50%; background:#ff8c42; display:flex; align-items:center; justify-content:center; font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
+            <div><strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong><p style="font-size:13px;">${escapeHtml(c.text)}</p></div>
+          </div>
+        `).join('');
+      }
+    } catch (error) {
+      console.error('Error loading comments:', error);
+      commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Failed to load comments</div>';
+    }
+  }
+
+  async function addComment() {
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    if (!text || !currentCommentCreatorId) return;
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      alert('Please login to comment');
+      window.location.href = '/login.html';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/community/creators/${currentCommentCreatorId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ text })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        input.value = '';
+        await openCommentsModal(currentCommentCreatorId, '');
+        
+        // Update comment count in feed
+        const creator = allCreators.find(c => c._id === currentCommentCreatorId);
+        if (creator) {
+          creator.commentCount = (creator.commentCount || 0) + 1;
+          const card = document.querySelector(`.creator-card[data-creator-id="${currentCommentCreatorId}"]`);
+          if (card) {
+            const commentCountSpan = card.querySelector('.comment-count');
+            if (commentCountSpan) {
+              commentCountSpan.innerText = formatNumber(creator.commentCount);
+            }
+          }
+        }
+      } else {
+        alert('Failed to add comment: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      alert('Network error. Please try again.');
     }
   }
 
