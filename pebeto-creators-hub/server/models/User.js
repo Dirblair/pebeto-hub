@@ -329,7 +329,7 @@ const userSchema = new mongoose.Schema(
     },
     
     // ============================================
-    // NEW: SOCIAL MEDIA LINKS FOR CREATORS
+    // SOCIAL MEDIA LINKS FOR CREATORS
     // ============================================
     socialLinks: {
       tiktok: { type: String, default: '' },
@@ -354,6 +354,12 @@ const userSchema = new mongoose.Schema(
       totalWithdrawn: { type: Number, default: 0, min: 0 },
       campaignsCompleted: { type: Number, default: 0, min: 0 }
     },
+    
+    // ============================================
+    // NEW: Creator Likes Tracking (for community engagement)
+    // ============================================
+    likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    likeCount: { type: Number, default: 0 },
     
     // ========== Security ==========
     publicKey: { type: String, trim: true },
@@ -400,6 +406,10 @@ userSchema.index({ 'profile.tags': 1 });
 // Social metrics
 userSchema.index({ 'social.followerCount': -1 });
 userSchema.index({ 'social.totalTipsReceived': -1 });
+
+// Creator likes indexes (NEW)
+userSchema.index({ likeCount: -1 });
+userSchema.index({ likedBy: 1 });
 
 // Lockout and cleanup
 userSchema.index({ lockedUntil: 1 }, { expireAfterSeconds: 0, partialFilterExpression: { lockedUntil: { $exists: true } } });
