@@ -6,6 +6,7 @@
   <title>Creator Dashboard - Pebeto</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -398,6 +399,19 @@
       color: #a08070;
     }
     
+    .earnings-chart-container {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.15);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .earnings-chart-container h4 {
+      margin-bottom: 15px;
+      color: #ff8c42;
+    }
+    canvas { max-height: 250px; width: 100%; }
+    
     /* Loading Spinner Styles */
     .spinner {
       display: inline-block;
@@ -687,6 +701,12 @@
     </button>
   </div>
 
+  <!-- Earnings Chart -->
+  <div class="earnings-chart-container">
+    <h4>📈 Earnings Overview (Last 30 Days)</h4>
+    <canvas id="earnings-chart" style="height: 200px;"></canvas>
+  </div>
+
   <div class="stats-row">
     <div class="stat-card" onclick="showWalletDetails()">
       <h3>💰 Available Wallet</h3>
@@ -710,11 +730,15 @@
     <button class="tab-btn" data-tab="demographics">📊 Demographics</button>
     <button class="tab-btn" data-tab="activity">🔐 Activity Log</button>
     <button class="tab-btn" data-tab="security">🛡️ Security</button>
+    <button class="tab-btn" data-tab="withdrawals">📤 Withdrawals</button>
+    <button class="tab-btn" data-tab="referrals">🔗 Referrals</button>
   </div>
 
+  <!-- Active Projects Tab -->
   <div id="tab-active" class="tab-content active">
     <div style="overflow-x: auto;">
       <div id="active-skeleton" class="skeleton-loader">
+        <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
       </div>
@@ -728,32 +752,45 @@
     </div>
   </div>
 
+  <!-- Under Review Tab -->
   <div id="tab-review" class="tab-content">
     <div style="overflow-x: auto;">
       <div id="review-skeleton" class="skeleton-loader">
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
       </div>
-      <table class="data-table" id="review-table" style="display: none;"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      <table class="data-table" id="review-table" style="display: none;">
+        <thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <div id="review-pagination">
       <button class="load-more-btn" onclick="loadMoreCampaigns('review')">Load More</button>
     </div>
   </div>
 
+  <!-- Completed Works Tab -->
   <div id="tab-completed" class="tab-content">
     <div style="overflow-x: auto;">
       <div id="completed-skeleton" class="skeleton-loader">
         <div class="skeleton skeleton-text"></div>
         <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
       </div>
-      <table class="data-table" id="completed-table" style="display: none;"><thead></tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      <table class="data-table" id="completed-table" style="display: none;">
+        <thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <div id="completed-pagination">
       <button class="load-more-btn" onclick="loadMoreCampaigns('completed')">Load More</button>
     </div>
   </div>
 
+  <!-- Tips Received Tab -->
   <div id="tab-tips" class="tab-content">
-    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
+    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
       <p>Share your unique code with fans to receive tips!</p>
       <div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div>
       <button class="copy-btn" onclick="copyUniqueCode()">📋 Copy Code</button>
@@ -762,9 +799,16 @@
         <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
         <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
       </div>
+      <div style="margin-top: 20px;">
+        <h4>📋 Recent Tips Received</h4>
+        <div id="tips-list" style="max-height: 300px; overflow-y: auto;">
+          <div class="loading-spinner">Loading tips...</div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Demographics Tab -->
   <div id="tab-demographics" class="tab-content">
     <div class="demographics-grid" id="demographics-grid">
       <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div></div>
@@ -776,15 +820,19 @@
     </div>
   </div>
 
+  <!-- Activity Log Tab -->
   <div id="tab-activity" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table">
         <thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead>
-        <tbody id="activity-list"></tbody>
+        <tbody id="activity-list">
+          <tr><td colspan="4">Loading activity...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
 
+  <!-- Security Tab -->
   <div id="tab-security" class="tab-content">
     <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
       <h3 style="margin-bottom: 20px;">🔐 Security Settings</h3>
@@ -792,6 +840,7 @@
         <p><strong>Two-Factor Authentication (2FA)</strong></p>
         <p style="font-size: 13px; color: #a08070;">Add an extra layer of security to your account</p>
         <button class="save-social-btn" onclick="enable2FA()" style="margin-top: 10px;">Enable 2FA</button>
+        <div id="2fa-status" style="margin-top: 10px;"></div>
       </div>
       <div>
         <p><strong>Login Alerts</strong></p>
@@ -799,6 +848,50 @@
         <label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
           <input type="checkbox" id="loginAlertsToggle"> Send email alerts for new logins
         </label>
+      </div>
+      <div style="margin-top: 20px;">
+        <p><strong>Recent Login Sessions</strong></p>
+        <div id="active-sessions" style="font-size: 13px; color: #a08070;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Withdrawals Tab -->
+  <div id="tab-withdrawals" class="tab-content">
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th></tr></thead>
+        <tbody id="withdrawals-list">
+          <tr><td colspan="5">Loading withdrawals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Referrals Tab -->
+  <div id="tab-referrals" class="tab-content">
+    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
+      <h3>🔗 Referral Program</h3>
+      <p>Share your referral link and earn 10% of your referrals' platform fees!</p>
+      <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin: 15px 0;">
+        <p><strong>Your Referral Link:</strong></p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="referral-link" readonly style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 30px; color: white;">
+          <button class="copy-btn" onclick="copyReferralLink()">Copy Link</button>
+        </div>
+      </div>
+      <div>
+        <p><strong>Referral Stats</strong></p>
+        <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 10px;">
+          <div><strong id="ref-total">0</strong><br><small>Total Referrals</small></div>
+          <div><strong id="ref-earned">$0</strong><br><small>Earned from Referrals</small></div>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <h4>📋 Your Referrals</h4>
+        <div id="referrals-list" style="max-height: 200px; overflow-y: auto;">
+          <div class="loading-spinner">Loading referrals...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -940,6 +1033,7 @@
   let campaignOffset = { active: 0, review: 0, completed: 0 };
   let campaignHasMore = { active: true, review: true, completed: true };
   let ws = null;
+  let earningsChart = null;
 
   // ============================================
   // HELPER FUNCTIONS
@@ -1024,6 +1118,7 @@
           loadWallet();
           showToast(`💝 You received a tip of ${data.amount}!`, 'success');
           addNotification(`💝 You received a tip of ${data.amount}!`);
+          loadTipsReceived();
         }
       };
       ws.onclose = () => setTimeout(connectWebSocket, 5000);
@@ -1373,9 +1468,9 @@
       showToast('No transactions to export', 'error');
       return;
     }
-    let csv = 'Type,Amount,Date,Status\n';
+    let csv = 'Type,Amount,Date,Status,Payment Method\n';
     allTransactions.forEach(t => {
-      csv += `${t.type},${t.grossAmount},${new Date(t.createdAt).toLocaleString()},${t.status}\n`;
+      csv += `${t.type},${t.grossAmount},${new Date(t.createdAt).toLocaleString()},${t.status},${t.paymentMethod || '-'}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -1385,6 +1480,139 @@
     a.click();
     URL.revokeObjectURL(url);
     showToast('Transactions exported!', 'success');
+  }
+
+  // ============================================
+  // EARNINGS CHART
+  // ============================================
+  async function loadEarningsChart() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/wallet/earnings?days=30`);
+      if (data.success && data.earnings) {
+        const ctx = document.getElementById('earnings-chart').getContext('2d');
+        if (earningsChart) earningsChart.destroy();
+        earningsChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+              label: 'Earnings ($)',
+              data: data.earnings || [0, 0, 0, 0],
+              borderColor: '#ff8c42',
+              backgroundColor: 'rgba(255,140,66,0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: true }
+        });
+      }
+    } catch(e) { console.error('Error loading earnings chart:', e); }
+  }
+
+  // ============================================
+  // TIPS RECEIVED
+  // ============================================
+  async function loadTipsReceived() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/creator/tips`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success && data.tips) {
+        const tipsList = document.getElementById('tips-list');
+        if (data.tips.length === 0) {
+          tipsList.innerHTML = '<div class="empty-state">No tips received yet</div>';
+        } else {
+          tipsList.innerHTML = data.tips.map(t => `
+            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span><strong>${formatMoney(t.amount)}</strong> from ${escapeHtml(t.fromUser?.email || 'Anonymous')}</span>
+              <span style="font-size:12px;">${new Date(t.createdAt).toLocaleString()}</span>
+            </div>
+          `).join('');
+        }
+      }
+    } catch(e) { console.error('Error loading tips:', e); }
+  }
+
+  // ============================================
+  // WITHDRAWALS HISTORY
+  // ============================================
+  async function loadWithdrawalsHistory() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/wallet/withdrawals`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success && data.withdrawals) {
+        const withdrawalsList = document.getElementById('withdrawals-list');
+        if (data.withdrawals.length === 0) {
+          withdrawalsList.innerHTML = '<tr><td colspan="5">No withdrawals yet</td></tr>';
+        } else {
+          withdrawalsList.innerHTML = data.withdrawals.map(w => `
+            <tr>
+              <td>${new Date(w.createdAt).toLocaleDateString()}</td>
+              <td style="color:#ff8c42;">${formatMoney(w.grossAmount)}</td>
+              <td><span class="status-badge">${w.payoutMethod}</span></td>
+              <td><span class="status-badge ${w.status === 'completed' ? 'active' : ''}">${w.status}</span></td>
+              <td>${w.reference || '-'}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch(e) { console.error('Error loading withdrawals:', e); }
+  }
+
+  // ============================================
+  // REFERRALS
+  // ============================================
+  async function loadReferrals() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/user/referrals`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('ref-total').innerText = data.totalReferrals || 0;
+        document.getElementById('ref-earned').innerHTML = formatMoney(data.earnedFromReferrals || 0);
+        document.getElementById('referral-link').value = `${window.location.origin}/signup.html?ref=${currentUser?.uniqueCode || ''}`;
+        
+        const referralsList = document.getElementById('referrals-list');
+        if (data.referrals && data.referrals.length > 0) {
+          referralsList.innerHTML = data.referrals.map(r => `
+            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>${escapeHtml(r.email)}</span>
+              <span style="font-size:12px;">Joined: ${new Date(r.createdAt).toLocaleDateString()}</span>
+            </div>
+          `).join('');
+        } else {
+          referralsList.innerHTML = '<div class="empty-state">No referrals yet. Share your link!</div>';
+        }
+      }
+    } catch(e) { console.error('Error loading referrals:', e); }
+  }
+
+  function copyReferralLink() {
+    const link = document.getElementById('referral-link');
+    link.select();
+    document.execCommand('copy');
+    showToast('Referral link copied!', 'success');
+  }
+
+  // ============================================
+  // ACTIVE SESSIONS
+  // ============================================
+  async function loadActiveSessions() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/user/sessions`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success && data.sessions) {
+        document.getElementById('active-sessions').innerHTML = data.sessions.map(s => `
+          <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span>${s.device || 'Unknown device'}</span>
+            <span style="float: right;">${new Date(s.lastActive).toLocaleString()}</span>
+          </div>
+        `).join('') || '<div>No active sessions</div>';
+      }
+    } catch(e) { console.error('Error loading sessions:', e); }
   }
 
   // ============================================
@@ -1406,9 +1634,9 @@
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
         
-        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
-        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
-        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
+        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
+        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
         
         showTableWithSkeleton('active-table', 'active-skeleton', active.length > 0);
         showTableWithSkeleton('review-table', 'review-skeleton', review.length > 0);
@@ -1506,6 +1734,12 @@
         showToast('Please enter a valid M-Pesa phone number (e.g., 0712345678)', 'error');
         return;
       }
+      const mpesaLimit = 70000; // KES
+      const usdToKes = exchangeRates.KES || 130;
+      if (usdAmount * usdToKes > mpesaLimit) {
+        showToast(`M-Pesa withdrawal limit is ${formatMoney(mpesaLimit / usdToKes)} USD per transaction`, 'error');
+        return;
+      }
     }
     
     if (selectedMethod === 'paypal') {
@@ -1556,7 +1790,7 @@
     withdrawConfirmLoading = true;
     const confirmBtn = document.getElementById('confirm-withdraw-btn');
     const originalText = confirmBtn.innerText;
-    confirmBtn.innerText = 'Processing...';
+    confirmBtn.innerText = 'Processing... <div class="spinner" style="display:inline-block; margin-left:10px;"></div>';
     confirmBtn.disabled = true;
     
     try {
@@ -1574,6 +1808,7 @@
       if (data.success) { 
         showToast('Withdrawal submitted successfully!', 'success');
         loadWallet(); 
+        loadWithdrawalsHistory();
         document.getElementById('withdraw-amount').value = '';
         closeModal('confirm-withdraw-modal');
       } else {
@@ -1617,14 +1852,19 @@
       const res = await fetch(`${API_BASE}/api/user/activity`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
       if (data.success) {
-        document.getElementById('activity-list').innerHTML = (data.activities || []).map(a => `
-          <tr>
-            <td>${escapeHtml(a.action)}</td>
-            <td>${a.ipAddress || '-'}</td>
-            <td>${a.device || '-'}</td>
-            <td>${new Date(a.createdAt).toLocaleString()}</td>
-          </tr>
-        `).join('');
+        const activityList = document.getElementById('activity-list');
+        if (data.activities && data.activities.length > 0) {
+          activityList.innerHTML = data.activities.map(a => `
+            <tr>
+              <td>${escapeHtml(a.action)}</td>
+              <td>${a.ipAddress || '-'}</td>
+              <td>${a.device || '-'}</td>
+              <td>${new Date(a.createdAt).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        } else {
+          activityList.innerHTML = '<tr><td colspan="4">No activity recorded</td></tr>';
+        }
       }
     } catch(e) { console.error(e); }
   }
@@ -1642,6 +1882,8 @@
         document.getElementById('2fa-secret').value = data.secret;
         document.getElementById('2fa-qr').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.otpauth_url)}" alt="QR Code">`;
         document.getElementById('2fa-modal').style.display = 'flex';
+      } else {
+        showToast('Could not setup 2FA', 'error');
       }
     });
   }
@@ -1658,6 +1900,7 @@
       if (data.success) {
         showToast('2FA enabled successfully!', 'success');
         closeModal('2fa-modal');
+        document.getElementById('2fa-status').innerHTML = '<span class="connected-badge">✓ 2FA Enabled</span>';
       } else {
         showToast('Invalid code', 'error');
       }
@@ -1695,6 +1938,11 @@
       if (currentUser.socialLinks.youtube) document.getElementById('youtubeUrl').value = currentUser.socialLinks.youtube;
     }
     updateConnectedBadges();
+    
+    // Check 2FA status
+    if (currentUser.twoFactorEnabled) {
+      document.getElementById('2fa-status').innerHTML = '<span class="connected-badge">✓ 2FA Enabled</span>';
+    }
   }
 
   function copyUniqueCode() {
@@ -1713,7 +1961,15 @@
   }
 
   function resendVerification() {
-    showToast('Verification email sent!', 'success');
+    fetch(`${API_BASE}/api/user/email/resend`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) showToast('Verification email sent!', 'success');
+      else showToast('Failed to send verification email', 'error');
+    });
   }
 
   // ============================================
@@ -1725,6 +1981,10 @@
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+      
+      // Load data when tab is clicked
+      if (btn.dataset.tab === 'withdrawals') loadWithdrawalsHistory();
+      if (btn.dataset.tab === 'referrals') loadReferrals();
     });
   });
   
@@ -1746,6 +2006,11 @@
   loadDemographics();
   connectWebSocket();
   loadActivityLog();
+  loadEarningsChart();
+  loadTipsReceived();
+  loadWithdrawalsHistory();
+  loadReferrals();
+  loadActiveSessions();
   
   setTimeout(() => {
     if (currentUser && !currentUser.emailVerified) {
@@ -1761,6 +2026,12 @@
     if (loginAlerts === 'true') document.getElementById('loginAlertsToggle').checked = true;
     document.getElementById('loginAlertsToggle').addEventListener('change', (e) => {
       localStorage.setItem('pebeto_login_alerts', e.target.checked);
+      if (e.target.checked) {
+        fetch(`${API_BASE}/api/user/alerts/login`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
+        });
+      }
     });
   }, 1000);
 </script>
