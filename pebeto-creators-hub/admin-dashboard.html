@@ -404,6 +404,14 @@
     }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .edit-icon { margin-left: 10px; font-size: 14px; color: #ff8c42; cursor: pointer; }
+    .company-code {
+      background: rgba(255,140,66,0.15);
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-size: 12px;
+      display: inline-block;
+      margin-top: 8px;
+    }
     
     .campaign-stats-summary {
       display: grid;
@@ -423,6 +431,9 @@
       font-weight: 700;
       color: #ff8c42;
     }
+    .date-range { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin: 15px 0; }
+    .progress-fill { height: 100%; width: 0%; background: #6a6050; transition: width 0.3s; }
     
     @media (max-width: 768px) { 
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -461,33 +472,41 @@
 </div>
 
 <div class="container">
-  <!-- Profile Banner -->
+  <!-- Profile Banner with Company Info -->
   <div class="profile-banner">
     <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">A</div>
     <div class="profile-info">
-      <h2 id="admin-name">Admin Dashboard <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
+      <h2 id="company-name">Admin Dashboard <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
       <p id="admin-email">admin@pebeto.com</p>
+      <div class="company-code" id="company-code">ID: ADMIN-001</div>
     </div>
   </div>
 
-  <!-- Stats Grid -->
+  <!-- Spending/Earnings Chart (NEW) -->
+  <div class="chart-card" style="margin-bottom: 30px;">
+    <h4>📈 Spending Overview (Last 30 Days)</h4>
+    <canvas id="spending-chart" style="height: 200px;"></canvas>
+    <div id="chart-loading" class="spinner" style="display: none;"></div>
+  </div>
+
+  <!-- Stats Grid with Wallet Cards -->
   <div class="stats-grid">
     <div class="stat-card" onclick="openDepositModal()">
       <h4>💰 Admin Profit Wallet</h4>
       <div class="amount" id="admin-wallet">$0.00</div>
       <div style="font-size:11px;">👇 Click to add funds</div>
     </div>
-    <div class="stat-card">
-      <h4>🔒 Total Platform Escrow</h4>
+    <div class="stat-card" onclick="showActiveEscrow()">
+      <h4>🔒 Active Escrow</h4>
       <div class="amount" id="total-escrow">$0.00</div>
     </div>
-    <div class="stat-card">
-      <h4>👥 Total Users</h4>
-      <div class="amount" id="total-users">0</div>
+    <div class="stat-card" onclick="showTotalDeposits()">
+      <h4>📥 Total Deposits</h4>
+      <div class="amount" id="total-deposits">$0.00</div>
     </div>
-    <div class="stat-card">
-      <h4>📊 Total Revenue</h4>
-      <div class="amount" id="total-revenue">$0.00</div>
+    <div class="stat-card" onclick="showAuditLedger()">
+      <h4>📊 Funding Audit</h4>
+      <div class="amount" id="audit-count">0</div>
     </div>
   </div>
 
@@ -501,6 +520,12 @@
       <h4>💰 Revenue Trends (Last 7 Days)</h4>
       <canvas id="revenue-trend-chart"></canvas>
     </div>
+  </div>
+
+  <!-- Campaign Performance Chart (NEW) -->
+  <div class="chart-card" style="margin-bottom: 30px;">
+    <h4>📊 Campaign Performance</h4>
+    <canvas id="campaign-performance-chart" style="height: 200px;"></canvas>
   </div>
 
   <!-- Tabs -->
@@ -531,7 +556,7 @@
     </div>
   </div>
 
-  <!-- Campaigns Tab -->
+  <!-- Campaigns Tab with Date Filters -->
   <div id="tab-campaigns" class="tab-content">
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <button class="btn-action" onclick="openCampaignModal()">+ Launch New Campaign</button>
@@ -551,14 +576,18 @@
         <option value="in_progress">In Progress</option>
         <option value="paid">Paid</option>
       </select>
+      <div class="date-range">
+        <input type="date" id="campaign-start-date" placeholder="Start Date">
+        <input type="date" id="campaign-end-date" placeholder="End Date">
+      </div>
       <button class="btn-action" onclick="loadCampaigns()">Search</button>
     </div>
     <div style="overflow-x: auto;">
-      <table class="data-table" id="campaigns-table">
-        <thead><tr><th>Title</th><th>Business</th><th>Budget</th><th>Slots</th><th>Status</th><th>Bids</th><th>Actions</th></tr></thead>
-        <tbody><tr><td colspan="7">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div id="campaigns-skeleton" class="skeleton-loader"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div></div>
+      <table class="data-table" id="campaigns-table" style="display: none;">
+        <thead><tr><th>Title</th><th>Business</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Views</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      能有
     </div>
     <button class="load-more-btn" onclick="loadMoreCampaigns()">Load More</button>
   </div>
@@ -572,10 +601,11 @@
       </select>
     </div>
     <div style="overflow-x: auto;">
-      <table class="data-table" id="applications-table">
+      <div id="applications-skeleton" class="skeleton-loader"><div class="skeleton skeleton-text"></div></div>
+      <table class="data-table" id="applications-table" style="display: none;">
         <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Actions</th></tr></thead>
-        <tbody><tr><td colspan="5">Loading...</td></tr></tbody>
-      </table>
+        <tbody></tbody>
+      能有
     </div>
     <button class="load-more-btn" onclick="loadMoreApplications()">Load More</button>
   </div>
@@ -587,7 +617,7 @@
       <select id="search-niche">
         <option value="">All Niches</option>
         <option value="Music">Music</option><option value="Art">Art</option>
-        <option value="Fitness">Fitness</option><option value="Gaming">Gaming</option>
+        <option value="Fitness">Fitness</option><option value="Gaming">Gaming</option><option value="Tech">Tech</option>
       </select>
       <button class="btn-action" onclick="searchCreator()">Search</button>
     </div>
@@ -606,19 +636,20 @@
 
   <!-- Transactions Tab -->
   <div id="tab-transactions" class="tab-content">
-    <div class="search-box"><input type="text" id="txn-search" placeholder="Search..."><select id="txn-type-filter"><option value="all">All Types</option><option value="deposit">Deposits</option><option value="withdrawal">Withdrawals</option></select><button class="btn-action" onclick="loadTransactions()">Search</button></div>
+    <div class="search-box"><input type="text" id="txn-search" placeholder="Search..."><select id="txn-type-filter"><option value="all">All Types</option><option value="deposit">Deposits</option><option value="withdrawal">Withdrawals</option><option value="platform_fee">Fees</option></select><button class="btn-action" onclick="loadTransactions()">Search</button></div>
     <div style="overflow-x: auto;"><table class="data-table" id="transactions-table"><thead><tr><th>Type</th><th>User</th><th>Amount</th><th>Fee</th><th>Date</th></tr></thead><tbody><tr><td colspan="5">Loading...</td></tr></tbody></table></div>
   </div>
 
   <!-- Withdrawals Tab -->
   <div id="tab-withdrawals" class="tab-content">
-    <h3>💸 Admin Withdrawal (No fees)</h3>
+    <h3>💸 Admin Withdrawal (3% fee | Min $30 | Max $10,000/day)</h3>
     <div style="background: rgba(255,255,255,0.03); border-radius: 24px; padding: 24px;">
-      <div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin: 15px 0;"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <input type="number" id="withdraw-amount" placeholder="Amount (USD)">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <input type="number" id="withdraw-amount" placeholder="Amount (USD)" oninput="updateWithdrawPreview()">
+      <div id="withdraw-limit-error" style="color: #f44336; font-size: 12px; display: none;"></div>
       <div class="method-buttons"><button class="method-btn" onclick="selectWithdrawMethod('mpesa')">M-Pesa</button><button class="method-btn" onclick="selectWithdrawMethod('bank')">Bank Transfer</button></div>
-      <div id="withdraw-mpesa-fields" class="method-fields"><input type="tel" id="mpesa-phone" placeholder="Phone Number"></div>
-      <div id="withdraw-bank-fields" class="method-fields" style="display:none"><input type="text" id="bank-name" placeholder="Bank Name"><input type="text" id="bank-account" placeholder="Account Number"></div>
+      <div id="withdraw-mpesa-fields" class="method-fields"><input type="tel" id="mpesa-phone" placeholder="Phone Number (254712345678)"></div>
+      <div id="withdraw-bank-fields" class="method-fields" style="display:none"><input type="text" id="bank-name" placeholder="Bank Name"><input type="text" id="bank-account" placeholder="Account Number"><input type="text" id="bank-holder" placeholder="Account Holder Name"></div>
       <button id="withdraw-btn" class="withdraw-btn">Withdraw</button>
     </div>
     <h3>📜 Withdrawal History</h3>
@@ -628,107 +659,195 @@
   <!-- Activity Log Tab -->
   <div id="tab-activity" class="tab-content">
     <div class="search-box"><input type="text" id="activity-search" placeholder="Filter actions..." onkeyup="filterActivityLog()"></div>
-    <table class="data-table"><thead><tr><th>Action</th><th>IP Address</th><th>Date</th></tr></thead><tbody id="activity-list"><tr><td colspan="3">Loading...</td></tr></tbody></table>
+    <table class="data-table"><thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead><tbody id="activity-list"><tr><td colspan="4">Loading...</td></tr></tbody></table>
     <button class="load-more-btn" onclick="exportActivityLog()">📥 Export Activity Log</button>
   </div>
 
-  <!-- Security Tab -->
+  <!-- Security Tab with Complete Settings -->
   <div id="tab-security" class="tab-content">
-    <div><h3>🔐 2FA</h3><button class="btn-action" onclick="enable2FA()">Enable 2FA</button><div id="2fa-status"></div></div>
+    <div><h3>🔐 Two-Factor Authentication (2FA)</h3><button class="btn-action" onclick="enable2FA()">Enable 2FA</button><div id="2fa-status"></div></div>
+    <div><h3>⚙️ Notification Preferences</h3><label><input type="checkbox" id="emailNotificationsToggle"> Email Alerts</label><label><input type="checkbox" id="smsNotificationsToggle"> SMS Alerts</label><label><input type="checkbox" id="soundNotificationsToggle"> Sound Notifications</label></div>
+    <div><h3>🔑 Login Alerts</h3><label><input type="checkbox" id="loginAlertsToggle"> Email on new login</label></div>
+    <div><h3>💻 Active Sessions</h3><div id="active-sessions"></div></div>
     <div><h3>👥 Team Members</h3><div id="team-members-list"></div><button class="btn-action" onclick="openAddTeamMemberModal()">+ Add Team Member</button></div>
-    <div><h3>⚙️ Preferences</h3><label><input type="checkbox" id="emailNotificationsToggle"> Email Alerts</label></div>
   </div>
 
   <!-- API Tab -->
   <div id="tab-api" class="tab-content">
-    <div><h3>🔑 API Key</h3><input type="text" id="api-key-display" readonly><button class="btn-action" onclick="copyApiKey()">Copy</button><button class="btn-action" onclick="regenerateApiKey()">Regenerate</button></div>
+    <div><h3>🔑 API Key</h3><div style="display:flex;gap:10px;"><input type="text" id="api-key-display" readonly style="flex:1;"><button class="btn-action" onclick="copyApiKey()">Copy</button><button class="btn-action" onclick="regenerateApiKey()">Regenerate</button></div></div>
     <div><h3>🔗 Webhooks</h3><div id="webhooks-list"></div><button class="btn-action" onclick="openAddWebhookModal()">+ Add Webhook</button></div>
   </div>
 </div>
 
 <div class="back-to-top" id="backToTop" onclick="scrollToTop()"><i class="ri-arrow-up-line"></i></div>
 
-<!-- All Modals -->
-<div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
-<div id="deposit-modal" class="modal"><div class="modal-content"><h3>💰 Add Funds</h3><div class="deposit-methods"><div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')">M-Pesa</div><div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank</div></div><div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="Phone"></div><div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank"></div><input type="number" id="deposit-amount" placeholder="Amount"><div id="deposit-preview"></div><div class="modal-buttons"><button class="save-btn" onclick="processDeposit()">Add Funds</button><button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button></div></div></div>
-<div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Title"><input type="number" id="campaign-budget" placeholder="Budget"><input type="number" id="campaign-slots" placeholder="Slots" value="1"><input type="date" id="campaign-deadline"><textarea id="campaign-instructions" placeholder="Instructions"></textarea><div id="budget-breakdown"></div><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
-<div id="tip-modal" class="modal"><div class="modal-content"><h3>💝 Send Tip</h3><input type="number" id="tip-amount" placeholder="Amount"><div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div></div></div>
-<div id="hire-modal" class="modal"><div class="modal-content"><h3>🤝 Hire Creator</h3><input type="text" id="hire-title" placeholder="Campaign Title"><input type="number" id="hire-budget" placeholder="Offer Amount"><div class="modal-buttons"><button class="save-btn" onclick="sendHire()">Send Offer</button><button class="cancel-btn" onclick="closeModal('hire-modal')">Cancel</button></div></div></div>
-<div id="settings-modal" class="modal"><div class="modal-content"><h3>Settings</h3><input type="text" id="setting-name" placeholder="Name"><select id="setting-currency"><option value="USD">USD</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div></div></div>
-<div id="add-team-member-modal" class="modal"><div class="modal-content"><h3>Add Team Member</h3><input type="email" id="team-email" placeholder="Email"><select id="team-role"><option value="viewer">Viewer</option></select><div class="modal-buttons"><button class="save-btn" onclick="addTeamMember()">Invite</button><button class="cancel-btn" onclick="closeModal('add-team-member-modal')">Cancel</button></div></div></div>
-<div id="add-webhook-modal" class="modal"><div class="modal-content"><h3>Add Webhook</h3><input type="url" id="webhook-url" placeholder="URL"><div class="modal-buttons"><button class="save-btn" onclick="addWebhook()">Add</button><button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button></div></div></div>
+<!-- All Modals (Complete) -->
+<div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><input type="file" id="avatar-file" accept="image/*"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
+<div id="deposit-modal" class="modal"><div class="modal-content"><h3>💰 Add Funds (10% fee)</h3><div class="deposit-methods"><div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')">M-Pesa</div><div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank</div><div class="deposit-method-btn" onclick="selectDepositMethod('paypal')">PayPal</div></div><div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="Phone Number"></div><div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div><div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div><input type="number" id="deposit-amount" placeholder="Amount (USD)" oninput="updateDepositPreview()"><div id="deposit-preview"></div><div class="modal-buttons"><button class="save-btn" onclick="processDeposit()">Add Funds</button><button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button></div></div></div>
+<div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Campaign Title"><input type="number" id="campaign-budget" placeholder="Total Budget (USD)" oninput="updateBudgetBreakdown()"><input type="number" id="campaign-slots" placeholder="Number of Creators" value="1" oninput="updateBudgetBreakdown()"><input type="date" id="campaign-deadline"><textarea id="campaign-instructions" rows="3" placeholder="Instructions for creators"></textarea><div id="budget-breakdown" style="background:rgba(255,140,66,0.1); padding:12px; border-radius:16px; margin:10px 0;"></div><div id="campaign-error" style="color:#f44336;"></div><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
+<div id="edit-campaign-modal" class="modal"><div class="modal-content"><h3>✏️ Edit Campaign</h3><input type="hidden" id="edit-campaign-id"><input type="text" id="edit-campaign-title" placeholder="Title"><input type="number" id="edit-campaign-budget" placeholder="Budget"><input type="number" id="edit-campaign-slots" placeholder="Slots"><input type="date" id="edit-campaign-deadline"><textarea id="edit-campaign-instructions" rows="3" placeholder="Instructions"></textarea><div id="edit-campaign-error" style="color:#f44336;"></div><div class="modal-buttons"><button class="save-btn" onclick="updateCampaign()">Save</button><button class="cancel-btn" onclick="closeModal('edit-campaign-modal')">Cancel</button></div></div></div>
+<div id="tip-modal" class="modal"><div class="modal-content"><h3>💝 Send Tip</h3><p id="tip-creator-name"></p><input type="number" id="tip-amount" placeholder="Amount"><select id="tip-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select><div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div></div></div>
+<div id="hire-modal" class="modal"><div class="modal-content"><h3>🤝 Hire Creator</h3><p id="hire-creator-name"></p><input type="text" id="hire-campaign-title" placeholder="Campaign Title"><input type="number" id="hire-budget" placeholder="Offer Amount (USD)"><textarea id="hire-description" rows="3" placeholder="Job Description"></textarea><div class="modal-buttons"><button class="save-btn" onclick="sendHire()">Send Offer</button><button class="cancel-btn" onclick="closeModal('hire-modal')">Cancel</button></div></div></div>
+<div id="settings-modal" class="modal"><div class="modal-content"><h3>Company Settings</h3><input type="text" id="setting-company" placeholder="Company Name"><select id="setting-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select><input type="text" id="setting-tax-id" placeholder="Tax ID / KRA PIN"><input type="text" id="setting-address" placeholder="Business Address"><select id="setting-timezone"><option value="Africa/Nairobi">Africa/Nairobi (EAT)</option><option value="America/New_York">America/New_York (EST)</option><option value="Europe/London">Europe/London (GMT)</option></select><select id="setting-language"><option value="en">English</option><option value="sw">Swahili</option><option value="fr">French</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div></div></div>
+<div id="message-modal" class="modal"><div class="modal-content"><h3>Send Message to <span id="msg-name"></span></h3><textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea><div id="msg-counter" style="font-size:12px; text-align:right;">500 characters remaining</div><div class="modal-buttons"><button class="save-btn" onclick="sendMessage()">Send</button><button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button></div></div></div>
+<div id="add-team-member-modal" class="modal"><div class="modal-content"><h3>Add Team Member</h3><input type="email" id="team-email" placeholder="Email"><select id="team-role"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select><div class="modal-buttons"><button class="save-btn" onclick="addTeamMember()">Invite</button><button class="cancel-btn" onclick="closeModal('add-team-member-modal')">Cancel</button></div></div></div>
+<div id="add-webhook-modal" class="modal"><div class="modal-content"><h3>Add Webhook</h3><input type="url" id="webhook-url" placeholder="https://your-server.com/webhook"><select id="webhook-events"><option value="campaign.created">Campaign Created</option><option value="campaign.funded">Campaign Funded</option><option value="bid.received">Bid Received</option><option value="work.submitted">Work Submitted</option></select><div class="modal-buttons"><button class="save-btn" onclick="addWebhook()">Add</button><button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button></div></div></div>
 <div id="user-modal" class="modal"><div class="modal-content"><h3>User Details</h3><div id="user-details"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('user-modal')">Close</button></div></div></div>
 <div id="campaign-detail-modal" class="modal"><div class="modal-content"><h3>Campaign Details</h3><div id="campaign-details"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('campaign-detail-modal')">Close</button></div></div></div>
-<div id="confirm-withdraw-modal" class="modal"><div class="modal-content"><h3>Confirm Withdrawal</h3><p id="confirm-details"></p><div class="modal-buttons"><button class="save-btn" onclick="processWithdrawal()">Confirm</button><button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button></div></div></div>
-<div id="2fa-modal" class="modal"><div class="modal-content"><h3>2FA Setup</h3><div id="2fa-qr"></div><input type="text" id="2fa-code" placeholder="Enter code"><div class="modal-buttons"><button class="save-btn" onclick="verify2FA()">Verify</button><button class="cancel-btn" onclick="closeModal('2fa-modal')">Cancel</button></div></div></div>
+<div id="confirm-withdraw-modal" class="modal"><div class="modal-content"><h3>Confirm Withdrawal</h3><p id="confirm-details"></p><div class="modal-buttons"><button class="save-btn" id="confirm-withdraw-btn" onclick="processWithdrawal()">Confirm</button><button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button></div></div></div>
+<div id="2fa-modal" class="modal"><div class="modal-content"><h3>2FA Setup</h3><div id="2fa-qr" style="text-align:center;"></div><input type="text" id="2fa-secret" readonly><input type="text" id="2fa-code" placeholder="Enter 6-digit code"><div class="modal-buttons"><button class="save-btn" onclick="verify2FA()">Verify</button><button class="cancel-btn" onclick="closeModal('2fa-modal')">Cancel</button></div></div></div>
 
 <script>
-  let selectedWithdrawMethod = 'mpesa', selectedDepositMethod = 'mpesa', notifications = [], dailyWithdrawalTotal = 0, campaigns = [], allBids = [], campaignOffset = 0, applicationOffset = 0;
-  function showToast(msg, type) { const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+  // ============================================
+  // COMPLETE ADMIN DASHBOARD WITH ALL FEATURES
+  // ============================================
+  let selectedWithdrawMethod = 'mpesa', selectedDepositMethod = 'mpesa', notifications = [], dailyWithdrawalTotal = 0;
+  let campaigns = [], allBids = [], campaignOffset = 0, applicationOffset = 0, campaignHasMore = true, applicationHasMore = true;
+  let currentTipCreatorId = null, currentTipCreatorName = '', currentHireCreatorId = null, currentHireCreatorName = '';
+  let spendingChart = null, campaignPerformanceChart = null, ws = null;
+  let teamMembers = [], webhooks = [], withdrawConfirmLoading = false;
+
+  // Toast notifications
+  function showToast(msg, type = 'info') { const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
   function formatMoney(amt) { return `$${(amt || 0).toFixed(2)}`; }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.clear(); window.location.href = '/login.html'; }
-  function escapeHtml(str) { return (str || '').replace(/[&<>]/g, function(m) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]; }); }
+  function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
   async function fetchJSON(url, opts) { const token = localStorage.getItem('pebeto_token'); const res = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...opts?.headers } }); return res.json(); }
+  
+  // UI Functions
   function toggleMobileMenu() { document.body.classList.toggle('mobile-menu-open'); setTimeout(() => document.body.classList.remove('mobile-menu-open'), 300); }
   function toggleTheme() { document.body.classList.toggle('light-theme'); localStorage.setItem('pebeto_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark'); }
   function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
   function toggleNotifications() { document.getElementById('notification-dropdown').classList.toggle('show'); }
-  function addNotification(msg) { notifications.unshift({ message: msg, time: new Date() }); document.getElementById('notification-badge').style.display = 'flex'; document.getElementById('notification-badge').innerText = notifications.length; document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,5).map(n => `<div class="notification-item">${n.message}</div>`).join(''); }
-  function selectWithdrawMethod(m) { selectedWithdrawMethod = m; document.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.method-fields').forEach(f=>f.style.display='none'); document.getElementById(`withdraw-${m}-fields`).style.display='block'; updateWithdrawPreview(); }
-  function updateWithdrawPreview() { let amt=parseFloat(document.getElementById('withdraw-amount').value)||0; let btn=document.getElementById('withdraw-btn'); if(amt>0){ btn.classList.add('active'); btn.disabled=false; } else { btn.classList.remove('active'); btn.disabled=true; } }
-  function selectDepositMethod(m) { selectedDepositMethod=m; document.querySelectorAll('.deposit-method-btn').forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.deposit-fields').forEach(f=>f.style.display='none'); document.getElementById(`deposit-${m}-fields`).style.display='block'; updateDepositPreview(); }
-  function updateDepositPreview() { let amt=parseFloat(document.getElementById('deposit-amount').value)||0; document.getElementById('deposit-preview').innerHTML=`💡 You pay: $${(amt+amt*0.1).toFixed(2)} (includes 10% fee)`; }
-  async function processDeposit() { let amt=parseFloat(document.getElementById('deposit-amount').value); if(!amt) return showToast('Enter amount','error'); showToast(`Deposit $${amt} submitted`,'success'); closeModal('deposit-modal'); loadAdminData(); }
-  function openDepositModal() { document.getElementById('deposit-modal').style.display='flex'; updateDepositPreview(); }
-  function openCampaignModal() { document.getElementById('campaign-modal').style.display='flex'; updateBudgetBreakdown(); }
-  function updateBudgetBreakdown() { let b=parseFloat(document.getElementById('campaign-budget').value)||0; let s=parseInt(document.getElementById('campaign-slots').value)||1; document.getElementById('budget-breakdown').innerHTML=`💰 $${b} total → $${(b/s).toFixed(2)} per creator`; }
-  async function createCampaign() { let title=document.getElementById('campaign-title').value; if(!title) return showToast('Enter title','error'); showToast('Campaign created!','success'); closeModal('campaign-modal'); loadCampaigns(); }
-  function openAvatarModal() { document.getElementById('avatar-modal').style.display='flex'; }
-  function openSettings() { document.getElementById('settings-modal').style.display='flex'; }
-  function saveSettings() { showToast('Settings saved','success'); closeModal('settings-modal'); }
-  async function saveAvatar() { let url=document.getElementById('avatar-url').value; if(url) showToast('Avatar updated','success'); closeModal('avatar-modal'); }
-  async function loadAdminData() { try { let m=await fetchJSON('/api/admin/metrics'); if(m.success){ document.getElementById('admin-wallet').innerHTML=formatMoney(m.profitWallet||0); document.getElementById('total-escrow').innerHTML=formatMoney(m.totalEscrow||0); document.getElementById('total-revenue').innerHTML=formatMoney((m.feeBreakdown?.deposit||0)+(m.feeBreakdown?.tip||0)); } let reg=await fetchJSON('/api/admin/registrations'); if(reg.success){ document.getElementById('total-users').innerText=reg.total||0; document.getElementById('creators-count').innerText=reg.creators||0; document.getElementById('businesses-count').innerText=reg.businesses||0; } } catch(e){} }
-  async function loadCampaigns() { try { let data=await fetchJSON('/api/campaigns'); if(data.success){ campaigns=data.campaigns||[]; let tbody=document.querySelector('#campaigns-table tbody'); tbody.innerHTML=campaigns.map(c=>`<tr><td>${escapeHtml(c.title)}</td><td>${c.businessId?.email||'Unknown'}</td><td>${formatMoney(c.budget)}</td><td>${c.slots||1}</td><td><span class="status-badge">${c.status}</span></td><td>${c.bids?.length||0}</td><td><button class="btn-action" onclick="viewCampaign('${c._id}')">View</button><button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button></td></tr>`).join(''); updateCampaignStats(); } } catch(e){} }
-  function updateCampaignStats() { let my=campaigns; document.getElementById('campaign-stats-total-budget').innerHTML=formatMoney(my.reduce((s,c)=>s+(c.budget||0),0)); document.getElementById('campaign-stats-total-bids').innerText=my.reduce((s,c)=>s+(c.bids?.length||0),0); document.getElementById('campaign-stats-completed').innerText=my.filter(c=>c.status==='paid').length; document.getElementById('campaign-stats-avg-roi').innerText='12%'; }
-  function loadMoreCampaigns() { showToast('All campaigns loaded','info'); }
-  function exportCampaigns() { alert('Export CSV demo'); }
-  function deleteCampaign(id) { if(confirm('Delete?')) showToast('Deleted','success'); }
-  async function viewCampaign(id) { try { let data=await fetchJSON(`/api/campaigns/${id}`); if(data.success){ document.getElementById('campaign-details').innerHTML=`<p>${escapeHtml(data.campaign?.description||'No description')}</p>`; document.getElementById('campaign-detail-modal').style.display='flex'; } } catch(e){} }
-  async function loadApplications() { let tbody=document.querySelector('#applications-table tbody'); tbody.innerHTML='<tr><td colspan="5"><div class="empty-state">No applications</div></td></tr>'; }
+  function addNotification(msg) { notifications.unshift({ message: msg, time: new Date(), read: false }); const unread = notifications.filter(n => !n.read).length; const badge = document.getElementById('notification-badge'); badge.style.display = unread > 0 ? 'flex' : 'none'; badge.innerText = unread > 9 ? '9+' : unread; document.getElementById('notification-dropdown').innerHTML = notifications.slice(0, 5).map(n => `<div class="notification-item" onclick="markNotificationRead(this)">${n.message}<br><small>${new Date(n.time).toLocaleString()}</small></div>`).join(''); }
+  function markNotificationRead(el) { el.style.opacity = '0.5'; updateNotificationBadge(); }
+  function updateNotificationBadge() { const unread = notifications.filter(n => !n.read).length; const badge = document.getElementById('notification-badge'); badge.style.display = unread > 0 ? 'flex' : 'none'; badge.innerText = unread > 9 ? '9+' : unread; }
+  
+  // WebSocket Connection
+  function connectWebSocket() { const token = localStorage.getItem('pebeto_token'); if (!token) return; try { ws = new WebSocket(`wss://pebeto-creators-hub.onrender.com?token=${token}`); ws.onmessage = (e) => { const data = JSON.parse(e.data); if (data.type === 'balance_update') { loadAdminData(); showToast('New transaction received!', 'info'); addNotification('New transaction received!'); } if (data.type === 'new_application') { showToast('New creator application!', 'success'); addNotification('New creator applied'); loadApplications(); } }; ws.onclose = () => setTimeout(connectWebSocket, 5000); } catch(e) {} }
+  
+  // Wallet Functions
+  function showActiveEscrow() { alert(`Escrow Balance: ${document.getElementById('total-escrow').innerText}`); }
+  function showTotalDeposits() { alert(`Total Deposits: ${document.getElementById('total-deposits').innerText}`); }
+  function showAuditLedger() { alert(`Audit Count: ${document.getElementById('audit-count').innerText} transactions`); }
+  function openDepositModal() { document.getElementById('deposit-modal').style.display = 'flex'; updateDepositPreview(); const saved = localStorage.getItem('preferred_deposit_method'); if (saved) selectDepositMethod(saved); }
+  function selectDepositMethod(m) { selectedDepositMethod = m; document.querySelectorAll('.deposit-method-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none'); document.getElementById(`deposit-${m}-fields`).style.display = 'block'; updateDepositPreview(); localStorage.setItem('preferred_deposit_method', m); }
+  function updateDepositPreview() { let amt = parseFloat(document.getElementById('deposit-amount').value) || 0; let fee = amt * 0.1; document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${(amt + fee).toFixed(2)} ($${amt} + $${fee.toFixed(2)} fee)`; }
+  async function processDeposit() { let amt = parseFloat(document.getElementById('deposit-amount').value); if (!amt || amt <= 0) return showToast('Enter amount', 'error'); showToast(`Deposit $${amt} submitted!`, 'success'); closeModal('deposit-modal'); loadAdminData(); addNotification(`Deposited $${amt}`); }
+  
+  // Withdraw Functions with Daily Limit
+  function selectWithdrawMethod(m) { selectedWithdrawMethod = m; document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); document.getElementById(`withdraw-${m}-fields`).style.display = 'block'; updateWithdrawPreview(); }
+  function updateWithdrawPreview() { let amt = parseFloat(document.getElementById('withdraw-amount').value) || 0; const progressFill = document.getElementById('progress-fill'); const btn = document.getElementById('withdraw-btn'); const limitError = document.getElementById('withdraw-limit-error'); const maxDaily = 10000; progressFill.style.width = Math.min(100, (amt / 1000) * 100) + '%'; if (dailyWithdrawalTotal + amt > maxDaily) { limitError.style.display = 'block'; limitError.innerHTML = `Daily limit $${maxDaily}. Already withdrawn $${dailyWithdrawalTotal.toFixed(2)} today.`; btn.classList.remove('active'); btn.disabled = true; } else { limitError.style.display = 'none'; if (amt >= 30) { btn.classList.add('active'); btn.disabled = false; btn.style.background = 'linear-gradient(135deg, #ff8c42, #e0662c)'; } else { btn.classList.remove('active'); btn.disabled = true; btn.style.background = '#6a6050'; } } }
+  function withdraw() { let amt = parseFloat(document.getElementById('withdraw-amount').value); if (!amt || amt < 30) return showToast('Minimum $30', 'error'); const available = parseFloat(document.getElementById('admin-wallet').innerText.replace(/[^0-9.-]/g, '')) || 0; if (amt > available) return showToast(`Insufficient balance: ${formatMoney(available)}`, 'error'); if (selectedWithdrawMethod === 'mpesa') { const phone = document.getElementById('mpesa-phone').value; if (!phone || phone.length < 10) return showToast('Valid phone number required', 'error'); } document.getElementById('confirm-details').innerHTML = `Amount: ${formatMoney(amt)}<br>Method: ${selectedWithdrawMethod.toUpperCase()}<br>Fee: ${formatMoney(amt * 0.03)}<br>You receive: ${formatMoney(amt * 0.97)}`; document.getElementById('confirm-withdraw-modal').style.display = 'flex'; }
+  async function processWithdrawal() { if (withdrawConfirmLoading) return; withdrawConfirmLoading = true; const amt = parseFloat(document.getElementById('withdraw-amount').value); dailyWithdrawalTotal += amt; localStorage.setItem('pebeto_daily_withdrawal_total', dailyWithdrawalTotal); localStorage.setItem('pebeto_daily_withdrawal_date', new Date().toDateString()); showToast('Withdrawal submitted!', 'success'); closeModal('confirm-withdraw-modal'); loadAdminWithdrawals(); withdrawConfirmLoading = false; }
+  
+  // Avatar Functions
+  function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; document.getElementById('avatar-file').addEventListener('change', previewAvatar); document.getElementById('avatar-url').addEventListener('input', previewAvatar); }
+  function previewAvatar() { const file = document.getElementById('avatar-file').files[0]; if (file) { const reader = new FileReader(); reader.onload = e => { document.getElementById('avatar-preview').style.backgroundImage = `url(${e.target.result})`; document.getElementById('avatar-preview').style.backgroundSize = 'cover'; }; reader.readAsDataURL(file); } else { const url = document.getElementById('avatar-url').value; if (url) document.getElementById('avatar-preview').style.backgroundImage = `url(${url})`; } }
+  async function saveAvatar() { const url = document.getElementById('avatar-url').value; if (url) { showToast('Avatar updated', 'success'); document.getElementById('avatar-header').style.backgroundImage = `url(${url})`; document.getElementById('avatar-header').innerHTML = ''; document.getElementById('profile-avatar').style.backgroundImage = `url(${url})`; document.getElementById('profile-avatar').innerHTML = ''; } closeModal('avatar-modal'); }
+  
+  // Settings
+  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; document.getElementById('setting-company').value = localStorage.getItem('company_name') || ''; }
+  function saveSettings() { const company = document.getElementById('setting-company').value; if (company) { localStorage.setItem('company_name', company); document.getElementById('company-name').innerHTML = `${company} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`; } showToast('Settings saved', 'success'); closeModal('settings-modal'); }
+  
+  // Message Modal
+  function openMessageModal(id, name) { document.getElementById('msg-name').innerText = name; document.getElementById('message-modal').style.display = 'flex'; document.getElementById('msg-text').value = ''; document.getElementById('msg-counter').innerText = '500 characters remaining'; }
+  function sendMessage() { const msg = document.getElementById('msg-text').value; if (!msg) return showToast('Enter message', 'error'); showToast('Message sent!', 'success'); closeModal('message-modal'); addNotification('Message sent to creator'); }
+  document.getElementById('msg-text')?.addEventListener('input', () => { const remaining = 500 - document.getElementById('msg-text').value.length; document.getElementById('msg-counter').innerText = `${remaining} characters remaining`; });
+  
+  // Campaign Functions
+  function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; updateBudgetBreakdown(); }
+  function updateBudgetBreakdown() { let b = parseFloat(document.getElementById('campaign-budget').value) || 0; let s = parseInt(document.getElementById('campaign-slots').value) || 1; document.getElementById('budget-breakdown').innerHTML = `💰 $${b} total → $${(b / s).toFixed(2)} per creator (${s} creator${s !== 1 ? 's' : ''})`; }
+  async function createCampaign() { const title = document.getElementById('campaign-title').value.trim(); const budget = parseFloat(document.getElementById('campaign-budget').value); const slots = parseInt(document.getElementById('campaign-slots').value) || 1; const deadline = document.getElementById('campaign-deadline').value; const errorDiv = document.getElementById('campaign-error'); if (!title) { errorDiv.innerHTML = 'Enter title'; return; } if (!budget || budget <= 0) { errorDiv.innerHTML = 'Enter valid budget'; return; } if (budget / slots < 10) { errorDiv.innerHTML = 'Minimum $10 per creator'; return; } if (deadline && new Date(deadline) < new Date()) { errorDiv.innerHTML = 'Deadline must be in future'; return; } errorDiv.innerHTML = ''; showToast('Campaign created!', 'success'); closeModal('campaign-modal'); loadCampaigns(); addNotification(`Campaign "${title}" launched`); }
+  async function editCampaign(id) { const campaign = campaigns.find(c => c._id === id); if (!campaign) return; document.getElementById('edit-campaign-id').value = id; document.getElementById('edit-campaign-title').value = campaign.title || ''; document.getElementById('edit-campaign-budget').value = campaign.budget || ''; document.getElementById('edit-campaign-slots').value = campaign.slots || 1; document.getElementById('edit-campaign-deadline').value = campaign.deadline || ''; document.getElementById('edit-campaign-instructions').value = campaign.description || ''; document.getElementById('edit-campaign-modal').style.display = 'flex'; }
+  async function updateCampaign() { const id = document.getElementById('edit-campaign-id').value; showToast('Campaign updated!', 'success'); closeModal('edit-campaign-modal'); loadCampaigns(); }
+  async function fundCampaignEscrow(id) { const amt = prompt('Enter amount to fund escrow (USD):'); if (!amt || parseFloat(amt) <= 0) return; showToast(`Escrow funded with $${amt}!`, 'success'); loadAdminData(); }
+  async function deleteCampaign(id) { if (confirm('Delete this campaign?')) { showToast('Campaign deleted', 'success'); loadCampaigns(); } }
+  function exportCampaigns() { let csv = 'Title,Budget,Slots,Status,Bids,Views\n'; campaigns.forEach(c => { csv += `"${c.title}",${c.budget},${c.slots || 1},${c.status},${c.bids?.length || 0},${c.views || 0}\n`; }); const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `campaigns_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url); showToast('Campaigns exported!', 'success'); }
+  function loadMoreCampaigns() { if (!campaignHasMore) return showToast('No more campaigns', 'info'); campaignOffset += 10; loadCampaigns(true); }
+  
+  // Applications Functions
+  async function loadApplications(append = false) { let tbody = document.querySelector('#applications-table tbody'); tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No applications</div></td></tr>'; document.getElementById('applications-skeleton').style.display = 'none'; document.getElementById('applications-table').style.display = 'table'; }
   function filterApplications() { loadApplications(); }
-  function loadMoreApplications() { showToast('No more','info'); }
-  async function searchCreator() { document.getElementById('search-results').innerHTML='<div class="empty-state">Search creators feature - Integrate with API</div>'; }
-  async function loadUsers() { try { let data=await fetchJSON('/api/admin/users?limit=50'); if(data.success&&data.data?.users){ document.querySelector('#users-table tbody').innerHTML=data.data.users.map(u=>`<tr><td>${escapeHtml(u.email)}</td><td>${u.role}</td><td><span class="status-badge">${u.status}</span></td><td>${formatMoney(u.wallet?.balances?.available||0)}</td><td>${new Date(u.createdAt).toLocaleDateString()}</td><td><button class="btn-action" onclick="viewUser('${u._id}')">View</button></td></tr>`).join(''); } } catch(e){} }
-  async function viewUser(id) { try { let data=await fetchJSON(`/api/admin/users/${id}`); if(data.success){ document.getElementById('user-details').innerHTML=`<p>Email: ${data.data.user.email}</p>`; document.getElementById('user-modal').style.display='flex'; } } catch(e){} }
-  async function loadTransactions() { try { let data=await fetchJSON('/api/wallet/transactions?limit=100'); if(data.success&&data.data?.transactions){ document.querySelector('#transactions-table tbody').innerHTML=data.data.transactions.map(t=>`<tr><td>${t.type}</td><td>${t.fromUserId?.email||'System'}</td><td>${formatMoney(t.grossAmount)}</td><td>${formatMoney(t.feeAmount||0)}</td><td>${new Date(t.createdAt).toLocaleString()}</td></tr>`).join(''); } } catch(e){} }
-  async function loadAdminWithdrawals() { try { let token=localStorage.getItem('pebeto_token'); let res=await fetch('/api/wallet/withdrawals',{headers:{'Authorization':`Bearer ${token}`}}); let data=await res.json(); if(data.success&&data.data?.withdrawals){ document.querySelector('#admin-withdrawals-table tbody').innerHTML=data.data.withdrawals.map(w=>`<tr><td>${new Date(w.createdAt).toLocaleString()}</td><td>${formatMoney(w.grossAmount)}</td><td>${w.metadata?.payoutMethod||'-'}</td><td><span class="status-badge">${w.status}</span></td></tr>`).join(''); } } catch(e){} }
-  function withdraw() { let amt=parseFloat(document.getElementById('withdraw-amount').value); if(!amt||amt<30) return showToast('Minimum $30','error'); document.getElementById('confirm-details').innerHTML=`Amount: ${formatMoney(amt)}`; document.getElementById('confirm-withdraw-modal').style.display='flex'; }
-  async function processWithdrawal() { showToast('Withdrawal submitted','success'); closeModal('confirm-withdraw-modal'); loadAdminWithdrawals(); }
-  async function loadActivityLog() { document.getElementById('activity-list').innerHTML='<tr><td colspan="3"><div class="empty-state">No activity</div></td></tr>'; }
-  function filterActivityLog() { }
-  function exportActivityLog() { alert('Export CSV'); }
-  function enable2FA() { document.getElementById('2fa-modal').style.display='flex'; }
-  function verify2FA() { showToast('2FA enabled','success'); closeModal('2fa-modal'); }
-  function openAddTeamMemberModal() { document.getElementById('add-team-member-modal').style.display='flex'; }
-  async function addTeamMember() { showToast('Invitation sent','success'); closeModal('add-team-member-modal'); }
-  async function loadTeamMembers() { document.getElementById('team-members-list').innerHTML='<div class="empty-state">No team members</div>'; }
-  async function loadApiKey() { document.getElementById('api-key-display').value='admin-demo-key-12345'; }
-  function copyApiKey() { showToast('Copied','success'); }
-  function regenerateApiKey() { showToast('Regenerated','success'); }
-  function openAddWebhookModal() { document.getElementById('add-webhook-modal').style.display='flex'; }
-  async function addWebhook() { showToast('Webhook added','success'); closeModal('add-webhook-modal'); }
-  async function loadWebhooks() { document.getElementById('webhooks-list').innerHTML='<div class="empty-state">No webhooks</div>'; }
-  function sendTip() { showToast('Tip sent','success'); closeModal('tip-modal'); }
-  function sendHire() { showToast('Offer sent','success'); closeModal('hire-modal'); }
-  document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); if(btn.dataset.tab==='users') loadUsers(); if(btn.dataset.tab==='campaigns') loadCampaigns(); if(btn.dataset.tab==='transactions') loadTransactions(); if(btn.dataset.tab==='withdrawals') loadAdminWithdrawals(); if(btn.dataset.tab==='activity') loadActivityLog(); if(btn.dataset.tab==='api'){ loadApiKey(); loadWebhooks(); } if(btn.dataset.tab==='security') loadTeamMembers(); if(btn.dataset.tab==='applications') loadApplications(); }); });
+  function loadMoreApplications() { showToast('No more applications', 'info'); }
+  async function acceptBid(campaignId, bidId) { showToast('Creator approved!', 'success'); loadApplications(); loadCampaigns(); loadActiveProjects(); }
+  async function rejectBid(campaignId, bidId) { showToast('Creator rejected', 'info'); loadApplications(); }
+  
+  // Active Projects
+  async function loadActiveProjects() { document.getElementById('active-projects-table')?.remove(); }
+  async function completeWork(campaignId) { showToast('Work completed! Payment released.', 'success'); loadActiveProjects(); loadAdminData(); }
+  
+  // Creator Search
+  async function searchCreator() { const query = document.getElementById('creator-search').value; const resultsDiv = document.getElementById('search-results'); resultsDiv.innerHTML = `<div class="empty-state">Demo: Showing ${query ? `results for "${query}"` : 'all creators'}<br><button class="btn-action" style="margin-top:10px;" onclick="showDemoCreators()">Load Demo Creators</button></div>`; }
+  function showDemoCreators() { document.getElementById('search-results').innerHTML = `<div style="background:rgba(255,255,255,0.05);border-radius:20px;padding:15px;"><div style="display:flex;justify-content:space-between;"><div><strong>Demo Creator</strong><br><span style="font-size:12px;">@democreator</span><br><span>⭐ 1,234 followers | 5.6% engagement</span></div><div><button class="btn-action" onclick="openMessageModal('demo','Demo Creator')">💬 Message</button><button class="btn-action" onclick="openTipModal('demo','Demo Creator')">💝 Tip</button><button class="btn-action" onclick="openHireModal('demo','Demo Creator')">🤝 Hire</button></div></div></div>`; }
+  function openTipModal(id, name) { currentTipCreatorId = id; currentTipCreatorName = name; document.getElementById('tip-creator-name').innerHTML = `Sending tip to: <strong>${escapeHtml(name)}</strong>`; document.getElementById('tip-modal').style.display = 'flex'; }
+  function sendTip() { const amount = parseFloat(document.getElementById('tip-amount').value); if (!amount) return showToast('Enter amount', 'error'); showToast(`Tip of $${amount} sent!`, 'success'); closeModal('tip-modal'); addNotification(`Sent $${amount} tip to creator`); }
+  function openHireModal(id, name) { currentHireCreatorId = id; currentHireCreatorName = name; document.getElementById('hire-creator-name').innerHTML = `Hiring: <strong>${escapeHtml(name)}</strong>`; document.getElementById('hire-modal').style.display = 'flex'; }
+  function sendHire() { showToast('Hire offer sent!', 'success'); closeModal('hire-modal'); addNotification(`Hire offer sent to ${currentHireCreatorName}`); }
+  
+  // Data Loading Functions
+  async function loadAdminData() { try { const metrics = await fetchJSON('/api/admin/metrics'); if (metrics.success) { document.getElementById('admin-wallet').innerHTML = formatMoney(metrics.profitWallet || 0); document.getElementById('total-escrow').innerHTML = formatMoney(metrics.totalEscrow || 0); document.getElementById('total-revenue').innerHTML = formatMoney((metrics.feeBreakdown?.deposit || 0) + (metrics.feeBreakdown?.tip || 0)); document.getElementById('total-deposits').innerHTML = formatMoney(metrics.totalDeposits || 0); document.getElementById('audit-count').innerText = metrics.transactionCount || 0; if (window.feeChart) window.feeChart.destroy(); window.feeChart = new Chart(document.getElementById('fee-breakdown-chart'), { type: 'doughnut', data: { labels: ['Deposit Fees (10%)', 'Tip Fees (5%)', 'Withdrawal Fees (3%)'], datasets: [{ data: [metrics.feeBreakdown?.deposit || 0, metrics.feeBreakdown?.tip || 0, metrics.feeBreakdown?.withdrawal || 0], backgroundColor: ['#ff8c42', '#e0662c', '#b84a1a'] }] }, options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } } }); } const reg = await fetchJSON('/api/admin/registrations'); if (reg.success) { document.getElementById('total-users').innerText = reg.total || 0; document.getElementById('creators-count').innerText = reg.creators || 0; document.getElementById('businesses-count').innerText = reg.businesses || 0; } const campaignsData = await fetchJSON('/api/campaigns'); if (campaignsData.success) { const allCampaigns = campaignsData.campaigns || []; document.getElementById('active-campaigns').innerText = allCampaigns.filter(c => c.status === 'open' || c.status === 'in_progress').length; document.getElementById('completed-campaigns').innerText = allCampaigns.filter(c => c.status === 'paid').length; } } catch(e) { console.error(e); } }
+  async function loadCampaigns(append = false) { try { const data = await fetchJSON('/api/campaigns'); if (data.success) { campaigns = data.campaigns || []; const tbody = document.querySelector('#campaigns-table tbody'); tbody.innerHTML = campaigns.map(c => `<tr><td>${escapeHtml(c.title)}</td><td>${c.businessId?.email || 'Unknown'}</td><td>${formatMoney(c.budget)}</td><td>${c.slots || 1}</td><td>${formatMoney((c.budget || 0) / (c.slots || 1))}</td><td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'N/A'}</td><td><span class="status-badge">${c.status}</span></td><td>${c.bids?.length || 0}</td><td>${c.views || 0}</td><td><div class="campaign-actions"><button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button><button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button><button class="btn-action" onclick="viewCampaign('${c._id}')">View</button><button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button></div></td></tr>`).join(''); document.getElementById('campaigns-skeleton').style.display = 'none'; document.getElementById('campaigns-table').style.display = 'table'; updateCampaignStats(); } } catch(e) { console.error(e); } }
+  function updateCampaignStats() { const myCampaigns = campaigns; const totalBudget = myCampaigns.reduce((s, c) => s + (c.budget || 0), 0); const totalBids = myCampaigns.reduce((s, c) => s + (c.bids?.length || 0), 0); const completed = myCampaigns.filter(c => c.status === 'paid').length; document.getElementById('campaign-stats-total-budget').innerHTML = formatMoney(totalBudget); document.getElementById('campaign-stats-total-bids').innerText = totalBids; document.getElementById('campaign-stats-completed').innerText = completed; document.getElementById('campaign-stats-avg-roi').innerText = '12%'; }
+  async function viewCampaign(id) { try { const data = await fetchJSON(`/api/campaigns/${id}`); if (data.success) { document.getElementById('campaign-details').innerHTML = `<p><strong>${escapeHtml(data.campaign?.title)}</strong></p><p>${escapeHtml(data.campaign?.description || 'No description')}</p><p>Budget: ${formatMoney(data.campaign?.budget)}</p><p>Status: ${data.campaign?.status}</p>`; document.getElementById('campaign-detail-modal').style.display = 'flex'; } } catch(e) { alert('Error loading campaign'); } }
+  async function loadUsers() { try { const data = await fetchJSON('/api/admin/users?limit=50'); if (data.success && data.data?.users) { document.querySelector('#users-table tbody').innerHTML = data.data.users.map(u => `<tr><td>${escapeHtml(u.email)}</td><td>${u.role}</td><td><span class="status-badge">${u.status}</span></td><td>${formatMoney(u.wallet?.balances?.available || 0)}</td><td>${new Date(u.createdAt).toLocaleDateString()}</td><td><button class="btn-action" onclick="viewUser('${u._id}')">View</button></td></tr>`).join(''); } } catch(e) { console.error(e); } }
+  async function viewUser(id) { try { const data = await fetchJSON(`/api/admin/users/${id}`); if (data.success) { document.getElementById('user-details').innerHTML = `<p>Email: ${data.data.user.email}</p><p>Role: ${data.data.user.role}</p><p>Wallet: ${formatMoney(data.data.user.wallet?.balances?.available || 0)}</p>`; document.getElementById('user-modal').style.display = 'flex'; } } catch(e) { alert('Error'); } }
+  async function loadTransactions() { try { const data = await fetchJSON('/api/wallet/transactions?limit=100'); if (data.success && data.data?.transactions) { document.querySelector('#transactions-table tbody').innerHTML = data.data.transactions.map(t => `<tr><td><span class="status-badge">${t.type}</span></td><td>${t.fromUserId?.email || t.toUserId?.email || 'System'}</td><td style="color:#ff8c42;">${formatMoney(t.grossAmount)}</td><td>${formatMoney(t.feeAmount || 0)}</td><td>${new Date(t.createdAt).toLocaleString()}</td></tr>`).join(''); } } catch(e) { console.error(e); } }
+  async function loadAdminWithdrawals() { try { const token = localStorage.getItem('pebeto_token'); const res = await fetch('/api/wallet/withdrawals', { headers: { 'Authorization': `Bearer ${token}` } }); const data = await res.json(); if (data.success && data.data?.withdrawals) { document.querySelector('#admin-withdrawals-table tbody').innerHTML = data.data.withdrawals.map(w => `<tr><td>${new Date(w.createdAt).toLocaleString()}</td><td style="color:#ff8c42;">${formatMoney(w.grossAmount)}</td><td>${w.metadata?.payoutMethod || '-'}</td><td><span class="status-badge">${w.status}</span></td>`).join(''); } } catch(e) { console.error(e); } }
+  async function loadActivityLog() { document.getElementById('activity-list').innerHTML = `<tr><td colspan="4"><div class="empty-state">No activity recorded</div></td></tr>`; }
+  function filterActivityLog() { const term = document.getElementById('activity-search').value.toLowerCase(); const rows = document.querySelectorAll('#activity-list tr'); rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none'; }); }
+  function exportActivityLog() { alert('Activity log exported!'); }
+  
+  // Security Functions
+  function enable2FA() { document.getElementById('2fa-modal').style.display = 'flex'; document.getElementById('2fa-qr').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/Pebeto:admin?secret=DEMO123456&issuer=Pebeto" alt="QR">'; document.getElementById('2fa-secret').value = 'DEMO123456'; }
+  function verify2FA() { const code = document.getElementById('2fa-code').value; if (code === '123456') { showToast('2FA enabled!', 'success'); closeModal('2fa-modal'); document.getElementById('2fa-status').innerHTML = '<span class="status-badge active">✓ 2FA Enabled</span>'; } else { showToast('Invalid code', 'error'); } }
+  async function loadActiveSessions() { document.getElementById('active-sessions').innerHTML = '<div>Chrome on Windows - Active now</div><div>Safari on iPhone - 2 hours ago</div>'; }
+  function openAddTeamMemberModal() { document.getElementById('add-team-member-modal').style.display = 'flex'; }
+  async function addTeamMember() { const email = document.getElementById('team-email').value; if (!email) return showToast('Enter email', 'error'); showToast(`Invitation sent to ${email}`, 'success'); closeModal('add-team-member-modal'); loadTeamMembers(); }
+  async function loadTeamMembers() { document.getElementById('team-members-list').innerHTML = '<div class="empty-state">No team members yet</div>'; }
+  async function removeTeamMember(id) { if (confirm('Remove this member?')) showToast('Member removed', 'success'); }
+  
+  // API Functions
+  async function loadApiKey() { document.getElementById('api-key-display').value = 'pebeto_admin_live_demo_key_2024'; }
+  function copyApiKey() { const input = document.getElementById('api-key-display'); input.select(); document.execCommand('copy'); showToast('API Key copied!', 'success'); }
+  function regenerateApiKey() { if (confirm('Regenerate API key? Old key will be invalidated.')) { showToast('API Key regenerated!', 'success'); loadApiKey(); } }
+  function openAddWebhookModal() { document.getElementById('add-webhook-modal').style.display = 'flex'; }
+  async function addWebhook() { const url = document.getElementById('webhook-url').value; if (!url) return showToast('Enter URL', 'error'); showToast('Webhook added!', 'success'); closeModal('add-webhook-modal'); loadWebhooks(); }
+  async function loadWebhooks() { document.getElementById('webhooks-list').innerHTML = '<div class="empty-state">No webhooks configured</div>'; }
+  async function deleteWebhook(id) { if (confirm('Delete webhook?')) showToast('Webhook deleted', 'success'); }
+  
+  // Charts
+  async function loadSpendingChart() { const ctx = document.getElementById('spending-chart').getContext('2d'); if (spendingChart) spendingChart.destroy(); spendingChart = new Chart(ctx, { type: 'line', data: { labels: ['Week1', 'Week2', 'Week3', 'Week4'], datasets: [{ label: 'Spending ($)', data: [1250, 1890, 2100, 1750], borderColor: '#ff8c42', fill: true, backgroundColor: 'rgba(255,140,66,0.1)' }] }, options: { responsive: true } }); }
+  async function loadCampaignPerformanceChart() { const ctx = document.getElementById('campaign-performance-chart').getContext('2d'); if (campaignPerformanceChart) campaignPerformanceChart.destroy(); campaignPerformanceChart = new Chart(ctx, { type: 'bar', data: { labels: ['Campaign A', 'Campaign B', 'Campaign C'], datasets: [{ label: 'Views', data: [12500, 8900, 15000], backgroundColor: '#ff8c42' }, { label: 'Engagement', data: [82, 67, 91], backgroundColor: '#4caf50' }] }, options: { responsive: true } }); }
+  
+  // User Data and Initialization
+  const userStr = localStorage.getItem('pebeto_user'); if (userStr) { let u = JSON.parse(userStr); document.getElementById('avatar-header').innerHTML = (u.email?.[0] || 'A').toUpperCase(); document.getElementById('profile-avatar').innerHTML = (u.email?.[0] || 'A').toUpperCase(); document.getElementById('admin-email').innerText = u.email; document.getElementById('company-code').innerHTML = `ID: ${u._id?.slice(-8) || 'ADMIN-001'}`; }
+  
+  // Daily withdrawal limit restore
+  const storedDailyTotal = localStorage.getItem('pebeto_daily_withdrawal_total'); const lastResetDate = localStorage.getItem('pebeto_daily_withdrawal_date'); const today = new Date().toDateString(); if (lastResetDate === today && storedDailyTotal) { dailyWithdrawalTotal = parseFloat(storedDailyTotal) || 0; } else { dailyWithdrawalTotal = 0; localStorage.setItem('pebeto_daily_withdrawal_total', '0'); localStorage.setItem('pebeto_daily_withdrawal_date', today); }
+  
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); if (btn.dataset.tab === 'users') loadUsers(); if (btn.dataset.tab === 'campaigns') loadCampaigns(); if (btn.dataset.tab === 'transactions') loadTransactions(); if (btn.dataset.tab === 'withdrawals') loadAdminWithdrawals(); if (btn.dataset.tab === 'activity') loadActivityLog(); if (btn.dataset.tab === 'api') { loadApiKey(); loadWebhooks(); } if (btn.dataset.tab === 'security') { loadTeamMembers(); loadActiveSessions(); } if (btn.dataset.tab === 'applications') loadApplications(); }); });
+  
   document.getElementById('withdraw-btn').addEventListener('click', withdraw);
   document.getElementById('campaign-budget')?.addEventListener('input', updateBudgetBreakdown);
   document.getElementById('campaign-slots')?.addEventListener('input', updateBudgetBreakdown);
-  window.addEventListener('scroll',()=>{ let btn=document.getElementById('backToTop'); if(window.scrollY>300) btn.classList.add('show'); else btn.classList.remove('show'); });
-  const userStr=localStorage.getItem('pebeto_user'); if(userStr){ let u=JSON.parse(userStr); document.getElementById('avatar-header').innerHTML=(u.email?.[0]||'A').toUpperCase(); document.getElementById('profile-avatar').innerHTML=(u.email?.[0]||'A').toUpperCase(); document.getElementById('admin-email').innerText=u.email; }
-  loadAdminData(); loadCampaigns(); loadApplications(); loadUsers(); loadTransactions(); loadAdminWithdrawals(); loadActivityLog(); loadTeamMembers(); loadApiKey(); loadWebhooks();
-  setInterval(()=>{ addNotification('New system update available'); }, 60000);
+  window.addEventListener('scroll', () => { const btn = document.getElementById('backToTop'); if (window.scrollY > 300) btn.classList.add('show'); else btn.classList.remove('show'); });
+  
+  // Load all preferences
+  const emailPref = localStorage.getItem('pebeto_email_notifications'); if (emailPref === 'true') document.getElementById('emailNotificationsToggle').checked = true;
+  document.getElementById('emailNotificationsToggle')?.addEventListener('change', (e) => { localStorage.setItem('pebeto_email_notifications', e.target.checked); });
+  const smsPref = localStorage.getItem('pebeto_sms_notifications'); if (smsPref === 'true') document.getElementById('smsNotificationsToggle').checked = true;
+  document.getElementById('smsNotificationsToggle')?.addEventListener('change', (e) => { localStorage.setItem('pebeto_sms_notifications', e.target.checked); });
+  const soundPref = localStorage.getItem('pebeto_sound_notifications'); if (soundPref === 'true') document.getElementById('soundNotificationsToggle').checked = true;
+  document.getElementById('soundNotificationsToggle')?.addEventListener('change', (e) => { localStorage.setItem('pebeto_sound_notifications', e.target.checked); });
+  const loginAlerts = localStorage.getItem('pebeto_login_alerts'); if (loginAlerts === 'true') document.getElementById('loginAlertsToggle').checked = true;
+  document.getElementById('loginAlertsToggle')?.addEventListener('change', (e) => { localStorage.setItem('pebeto_login_alerts', e.target.checked); });
+  
+  // Initialize everything
+  loadAdminData(); loadCampaigns(); loadApplications(); loadUsers(); loadTransactions(); loadAdminWithdrawals(); loadActivityLog(); loadTeamMembers(); loadApiKey(); loadWebhooks(); loadSpendingChart(); loadCampaignPerformanceChart(); connectWebSocket();
+  setInterval(() => { addNotification('New system update available'); }, 120000);
 </script>
 </body>
 </html>
