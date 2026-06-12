@@ -245,6 +245,11 @@
     }
     .btn-action.danger { background: #ef4444; }
     .btn-action.danger:hover { background: #dc2626; }
+    .campaign-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
     
     .modal {
       display: none;
@@ -408,9 +413,31 @@
       color: #a08070;
     }
     
-    .campaign-actions {
+    .filter-bar {
       display: flex;
-      gap: 8px;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-bar select, .filter-bar input {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 8px 12px;
+      border-radius: 30px;
+      color: white;
+    }
+    .date-range {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .date-range input {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 8px 12px;
+      border-radius: 30px;
+      color: white;
     }
     
     @media (max-width: 768px) {
@@ -428,6 +455,8 @@
         border: 1px solid rgba(255,140,66,0.3);
       }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .filter-bar { flex-direction: column; }
+      .date-range { flex-direction: column; }
     }
   </style>
 </head>
@@ -497,12 +526,27 @@
     <button class="tab-btn" data-tab="search">🔍 Find Creators</button>
     <button class="tab-btn" data-tab="activity">🔐 Activity Log</button>
     <button class="tab-btn" data-tab="security">🛡️ Security</button>
+    <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
+    <button class="tab-btn" data-tab="api">🔑 API Keys</button>
   </div>
 
+  <!-- My Campaigns Tab -->
   <div id="tab-campaigns" class="tab-content active">
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <button class="btn-action" onclick="openCampaignModal()">+ Launch New Campaign</button>
       <button class="btn-action" onclick="exportCampaigns()">📥 Export CSV</button>
+      <div class="filter-bar">
+        <select id="campaign-status-filter" onchange="filterCampaigns()">
+          <option value="all">All Status</option>
+          <option value="open">Open</option>
+          <option value="in_progress">In Progress</option>
+          <option value="paid">Paid</option>
+        </select>
+        <div class="date-range">
+          <input type="date" id="campaign-start-date" placeholder="Start Date" onchange="filterCampaigns()">
+          <input type="date" id="campaign-end-date" placeholder="End Date" onchange="filterCampaigns()">
+        </div>
+      </div>
     </div>
     <div style="overflow-x: auto;">
       <div id="campaigns-skeleton" class="skeleton-loader">
@@ -522,7 +566,14 @@
     </div>
   </div>
 
+  <!-- Creator Applications Tab -->
   <div id="tab-applications" class="tab-content">
+    <div class="filter-bar">
+      <select id="application-status-filter" onchange="filterApplications()">
+        <option value="pending">Pending</option>
+        <option value="all">All</option>
+      </select>
+    </div>
     <div style="overflow-x: auto;">
       <div id="applications-skeleton" class="skeleton-loader">
         <div class="skeleton skeleton-text"></div>
@@ -538,6 +589,7 @@
     </div>
   </div>
 
+  <!-- Active Projects Tab -->
   <div id="tab-active" class="tab-content">
     <div style="overflow-x: auto;">
       <div id="active-skeleton" class="skeleton-loader">
@@ -551,6 +603,7 @@
     </div>
   </div>
 
+  <!-- Find Creators Tab -->
   <div id="tab-search" class="tab-content">
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <input type="text" id="creator-search" placeholder="Search by username or unique code..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white;">
@@ -567,7 +620,11 @@
     <div id="search-results"></div>
   </div>
 
+  <!-- Activity Log Tab -->
   <div id="tab-activity" class="tab-content">
+    <div class="filter-bar">
+      <input type="text" id="activity-search" placeholder="Filter actions..." style="flex:1;" onkeyup="filterActivityLog()">
+    </div>
     <div style="overflow-x: auto;">
       <table class="data-table">
         <thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead>
@@ -576,8 +633,10 @@
         </tbody>
       </table>
     </div>
+    <button class="load-more-btn" onclick="exportActivityLog()">📥 Export Activity Log</button>
   </div>
 
+  <!-- Security Tab -->
   <div id="tab-security" class="tab-content">
     <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
       <h3 style="margin-bottom: 20px;">🔐 Security Settings</h3>
@@ -606,6 +665,62 @@
         <label style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
           <input type="checkbox" id="smsNotificationsToggle"> Receive SMS for urgent updates
         </label>
+        <label style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+          <input type="checkbox" id="soundNotificationsToggle"> Play sound for notifications
+        </label>
+      </div>
+      <div style="margin-top: 20px;">
+        <p><strong>Team Members</strong></p>
+        <div id="team-members-list"></div>
+        <button class="btn-action" onclick="openAddTeamMemberModal()" style="margin-top: 10px;">+ Add Team Member</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="earnings-chart-container">
+      <h4>📈 Campaign Performance</h4>
+      <canvas id="campaign-performance-chart" style="height: 200px;"></canvas>
+    </div>
+    <div class="stats-grid" style="margin-top: 20px;">
+      <div class="stat-card">
+        <h4>👁️ Total Views</h4>
+        <div class="amount" id="total-views">0</div>
+      </div>
+      <div class="stat-card">
+        <h4>🖱️ Click-Through Rate</h4>
+        <div class="amount" id="ctr-rate">0%</div>
+      </div>
+      <div class="stat-card">
+        <h4>💰 ROI</h4>
+        <div class="amount" id="roi-value">0%</div>
+      </div>
+      <div class="stat-card">
+        <h4>📊 Engagement Score</h4>
+        <div class="amount" id="engagement-score">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Keys Tab -->
+  <div id="tab-api" class="tab-content">
+    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
+      <h3 style="margin-bottom: 20px;">🔑 API Access</h3>
+      <p>Use these keys to integrate Pebeto with your systems.</p>
+      <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px; margin: 15px 0;">
+        <p><strong>API Key:</strong></p>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="api-key-display" readonly style="flex:1; font-family: monospace;">
+          <button class="btn-action" onclick="copyApiKey()">Copy</button>
+          <button class="btn-action" onclick="regenerateApiKey()">Regenerate</button>
+        </div>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px;">
+        <p><strong>Webhooks</strong></p>
+        <p style="font-size: 13px; color: #a08070;">Receive real-time updates for campaign events.</p>
+        <div id="webhooks-list"></div>
+        <button class="btn-action" onclick="openAddWebhookModal()" style="margin-top: 10px;">+ Add Webhook URL</button>
       </div>
     </div>
   </div>
@@ -678,7 +793,6 @@
   </div>
 </div>
 
-<!-- Edit Campaign Modal -->
 <div id="edit-campaign-modal" class="modal">
   <div class="modal-content">
     <h3>✏️ Edit Campaign</h3>
@@ -753,6 +867,17 @@
     </select>
     <input type="text" id="setting-tax-id" placeholder="Tax ID / KRA PIN">
     <input type="text" id="setting-address" placeholder="Business Address">
+    <select id="setting-timezone">
+      <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
+      <option value="America/New_York">America/New_York (EST)</option>
+      <option value="Europe/London">Europe/London (GMT)</option>
+      <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+    </select>
+    <select id="setting-language">
+      <option value="en">English</option>
+      <option value="sw">Swahili</option>
+      <option value="fr">French</option>
+    </select>
     <div class="modal-buttons">
       <button class="save-btn" onclick="saveSettings()">Save Changes</button>
       <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
@@ -764,9 +889,46 @@
   <div class="modal-content">
     <h3>Send Message to <span id="msg-name"></span></h3>
     <textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea>
+    <div id="msg-counter" style="font-size: 12px; color: #a08070; text-align: right; margin-top: 5px;">500 characters remaining</div>
     <div class="modal-buttons">
       <button class="save-btn" onclick="sendMessage()">Send</button>
       <button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Team Member Modal -->
+<div id="add-team-member-modal" class="modal">
+  <div class="modal-content">
+    <h3>👥 Add Team Member</h3>
+    <input type="email" id="team-email" placeholder="Email Address">
+    <select id="team-role">
+      <option value="viewer">Viewer - Can only view</option>
+      <option value="editor">Editor - Can create campaigns</option>
+      <option value="admin">Admin - Full access</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="addTeamMember()">Invite</button>
+      <button class="cancel-btn" onclick="closeModal('add-team-member-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Webhook Modal -->
+<div id="add-webhook-modal" class="modal">
+  <div class="modal-content">
+    <h3>🔗 Add Webhook URL</h3>
+    <input type="url" id="webhook-url" placeholder="https://your-server.com/webhook">
+    <select id="webhook-events">
+      <option value="campaign.created">Campaign Created</option>
+      <option value="campaign.funded">Campaign Funded</option>
+      <option value="bid.received">Bid Received</option>
+      <option value="work.submitted">Work Submitted</option>
+      <option value="payment.released">Payment Released</option>
+    </select>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="addWebhook()">Add Webhook</button>
+      <button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -814,7 +976,7 @@
   let selectedDepositMethod = 'mpesa';
   let campaigns = [];
   let allCreators = [];
-  let allBids = []; // FIXED: declared allBids variable
+  let allBids = [];
   let currentTipCreatorId = null;
   let currentTipCreatorName = '';
   let currentHireCreatorId = null;
@@ -826,8 +988,11 @@
   let notifications = [];
   let withdrawConfirmLoading = false;
   let spendingChart = null;
+  let campaignPerformanceChart = null;
   let ws = null;
   let dailyWithdrawalTotal = 0;
+  let teamMembers = [];
+  let webhooks = [];
 
   // ============================================
   // HELPER FUNCTIONS
@@ -884,6 +1049,10 @@
           addNotification('New creator applied to your campaign');
           loadApplications();
         }
+        if (data.type === 'campaign_update') {
+          loadCampaigns();
+          addNotification(`Campaign "${data.title}" updated`);
+        }
       };
       ws.onclose = () => setTimeout(connectWebSocket, 5000);
     } catch(e) { console.log('WebSocket connection failed'); }
@@ -896,6 +1065,12 @@
     notifications.unshift({ message, time: new Date(), read: false });
     updateNotificationBadge();
     updateNotificationDropdown();
+    // Mark as unread in backend
+    fetch(`${API_BASE}/api/notifications`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` },
+      body: JSON.stringify({ message })
+    }).catch(e => console.log('Notification save failed'));
   }
 
   function updateNotificationBadge() {
@@ -916,15 +1091,24 @@
       return;
     }
     dropdown.innerHTML = notifications.slice(0, 10).map(n => `
-      <div class="notification-item" onclick="markNotificationRead(this)">
+      <div class="notification-item" onclick="markNotificationRead(this, '${n.time}')">
         <div><strong>${n.message}</strong></div>
         <small style="color: #a08070;">${new Date(n.time).toLocaleString()}</small>
       </div>
     `).join('');
   }
 
-  function markNotificationRead(element) {
+  function markNotificationRead(element, time) {
     element.style.opacity = '0.5';
+    const notification = notifications.find(n => n.time.toString() === time);
+    if (notification) notification.read = true;
+    updateNotificationBadge();
+    // Sync to backend
+    fetch(`${API_BASE}/api/notifications/read`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` },
+      body: JSON.stringify({ time })
+    }).catch(e => console.log('Mark read failed'));
   }
 
   function toggleNotifications() {
@@ -937,7 +1121,6 @@
   // ============================================
   function toggleMobileMenu() {
     document.body.classList.toggle('mobile-menu-open');
-    // Close menu after clicking a link
     setTimeout(() => {
       document.body.classList.remove('mobile-menu-open');
     }, 300);
@@ -1036,13 +1219,15 @@
     const currency = document.getElementById('setting-currency').value;
     const taxId = document.getElementById('setting-tax-id').value;
     const address = document.getElementById('setting-address').value;
+    const timezone = document.getElementById('setting-timezone').value;
+    const language = document.getElementById('setting-language').value;
     try {
       const token = localStorage.getItem('pebeto_token');
       await fetch(`${API_BASE}/api/user/profile`, { 
         method: 'PUT', 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
         body: JSON.stringify({ 
-          profile: { companyName, taxId, address }, 
+          profile: { companyName, taxId, address, timezone, language }, 
           preferredCurrency: currency 
         }) 
       });
@@ -1084,7 +1269,6 @@
     document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none');
     document.getElementById(`deposit-${method}-fields`).style.display = 'block';
     updateDepositPreview();
-    // Save preference to localStorage
     localStorage.setItem('preferred_deposit_method', method);
   }
 
@@ -1094,7 +1278,6 @@
     const withdrawBtn = document.getElementById('withdraw-btn');
     const limitError = document.getElementById('withdraw-limit-error');
     
-    // Check daily limit
     const maxDaily = 10000;
     if (dailyWithdrawalTotal + amount > maxDaily) {
       limitError.style.display = 'block';
@@ -1169,7 +1352,6 @@
   function openDepositModal() { 
     document.getElementById('deposit-modal').style.display = 'flex'; 
     updateDepositPreview();
-    // Restore saved deposit method
     const savedMethod = localStorage.getItem('preferred_deposit_method');
     if (savedMethod) selectDepositMethod(savedMethod);
   }
@@ -1202,9 +1384,9 @@
       showToast('No campaigns to export', 'error');
       return;
     }
-    let csv = 'Title,Budget,Slots,Per Creator,Deadline,Status,Bids\n';
+    let csv = 'Title,Budget,Slots,Per Creator,Deadline,Status,Bids,Views,CTR\n';
     myCampaigns.forEach(c => {
-      csv += `"${escapeHtml(c.title)}",${c.budget},${c.slots || 1},${(c.budget || 0) / (c.slots || 1)},${c.deadline || 'Not set'},${c.status},${c.bids?.length || 0}\n`;
+      csv += `"${escapeHtml(c.title)}",${c.budget},${c.slots || 1},${(c.budget || 0) / (c.slots || 1)},${c.deadline || 'Not set'},${c.status},${c.bids?.length || 0},${c.views || 0},${c.ctr || 0}%\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -1242,13 +1424,51 @@
           },
           options: { responsive: true, maintainAspectRatio: true }
         });
-      } else {
-        console.log('No spending data available');
       }
     } catch(e) { 
       console.error('Error loading spending chart:', e);
       document.getElementById('chart-loading').style.display = 'none';
     }
+  }
+
+  // ============================================
+  // CAMPAIGN PERFORMANCE CHART
+  // ============================================
+  async function loadCampaignPerformanceChart() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/campaigns/performance`);
+      if (data.success && data.performance) {
+        const ctx = document.getElementById('campaign-performance-chart').getContext('2d');
+        if (campaignPerformanceChart) campaignPerformanceChart.destroy();
+        campaignPerformanceChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.labels || ['Campaign 1', 'Campaign 2', 'Campaign 3'],
+            datasets: [
+              {
+                label: 'Views',
+                data: data.views || [0, 0, 0],
+                backgroundColor: '#ff8c42',
+                borderColor: '#ff8c42',
+                borderWidth: 1
+              },
+              {
+                label: 'Engagement',
+                data: data.engagement || [0, 0, 0],
+                backgroundColor: '#4caf50',
+                borderColor: '#4caf50',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: true }
+        });
+        document.getElementById('total-views').innerText = data.totalViews || 0;
+        document.getElementById('ctr-rate').innerText = (data.ctr || 0) + '%';
+        document.getElementById('roi-value').innerText = (data.roi || 0) + '%';
+        document.getElementById('engagement-score').innerText = data.engagementScore || 0;
+      }
+    } catch(e) { console.error('Error loading campaign performance:', e); }
   }
 
   // ============================================
@@ -1268,7 +1488,7 @@
         const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
         const tbody = document.querySelector('#campaigns-table tbody');
         if (myCampaigns.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div></td><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div></tr><\/tr>';
         } else {
           tbody.innerHTML = myCampaigns.map(c => `
             <tr>
@@ -1277,7 +1497,7 @@
               <td>${c.slots || 1}</td>
               <td>${formatMoney((c.budget || 0) / (c.slots || 1))}</td>
               <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
-              <td><span class="status-badge">${c.status}</span></td>
+              <td><span class="status-badge ${c.status === 'paid' ? 'active' : ''}">${c.status}</span></td>
               <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
               <td><div class="campaign-actions">
                 <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button>
@@ -1289,8 +1509,60 @@
         }
         document.getElementById('campaigns-skeleton').style.display = 'none';
         document.getElementById('campaigns-table').style.display = 'table';
+        updateCampaignStats();
       }
     } catch(e) { console.error(e); }
+  }
+
+  function updateCampaignStats() {
+    const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
+    const totalBudget = myCampaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
+    const totalBids = myCampaigns.reduce((sum, c) => sum + (c.bids?.length || 0), 0);
+    const completedCampaigns = myCampaigns.filter(c => c.status === 'paid').length;
+    
+    document.getElementById('campaign-stats-total-budget')?.setAttribute('data-value', totalBudget);
+    document.getElementById('campaign-stats-total-bids')?.setAttribute('data-value', totalBids);
+    document.getElementById('campaign-stats-completed')?.setAttribute('data-value', completedCampaigns);
+  }
+
+  function filterCampaigns() {
+    const statusFilter = document.getElementById('campaign-status-filter').value;
+    const startDate = document.getElementById('campaign-start-date').value;
+    const endDate = document.getElementById('campaign-end-date').value;
+    const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
+    
+    let filtered = myCampaigns;
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(c => c.status === statusFilter);
+    }
+    if (startDate) {
+      filtered = filtered.filter(c => new Date(c.createdAt) >= new Date(startDate));
+    }
+    if (endDate) {
+      filtered = filtered.filter(c => new Date(c.createdAt) <= new Date(endDate));
+    }
+    
+    const tbody = document.querySelector('#campaigns-table tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No campaigns match the filters</div></td><\/tr>';
+    } else {
+      tbody.innerHTML = filtered.map(c => `
+        <tr>
+          <td>${escapeHtml(c.title)}</td>
+          <td>${formatMoney(c.budget)}</td>
+          <td>${c.slots || 1}</td>
+          <td>${formatMoney((c.budget || 0) / (c.slots || 1))}</td>
+          <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
+          <td><span class="status-badge ${c.status === 'paid' ? 'active' : ''}">${c.status}</span></td>
+          <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
+          <td><div class="campaign-actions">
+            <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button>
+            <button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button>
+            <button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button>
+          </div></td>
+         </tr>
+      `).join('');
+    }
   }
 
   async function loadMoreCampaigns() {
@@ -1388,6 +1660,34 @@
   // ============================================
   // APPLICATIONS
   // ============================================
+  function filterApplications() {
+    const filter = document.getElementById('application-status-filter').value;
+    const pendingBids = allBids.filter(b => b.status === 'pending');
+    const tbody = document.querySelector('#applications-table tbody');
+    
+    let displayBids = allBids;
+    if (filter === 'pending') {
+      displayBids = pendingBids;
+    }
+    
+    if (displayBids.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No applications found</div></td><\/tr>';
+    } else {
+      tbody.innerHTML = displayBids.map(b => `
+        <tr>
+          <td>${escapeHtml(b.campaignTitle)}</td>
+          <td>${escapeHtml(b.uniqueCode)}</td>
+          <td>${formatMoney(b.amount)}</td>
+          <td>${escapeHtml(b.proposal?.substring(0, 50))}...</td>
+          <td><div class="campaign-actions">
+            <button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve</button>
+            <button class="btn-action danger" onclick="rejectBid('${b.campaignId}','${b._id}')">Reject</button>
+          </div></td>
+         </tr>
+      `).join('');
+    }
+  }
+
   async function loadApplications(append = false) {
     try {
       const data = await fetchJSON(`${API_BASE}/api/campaigns/bids?businessId=${currentUser?._id}&limit=10&offset=${applicationOffset}`);
@@ -1399,24 +1699,7 @@
         } else {
           allBids = newBids;
         }
-        const pendingBids = allBids.filter(b => b.status === 'pending');
-        const tbody = document.querySelector('#applications-table tbody');
-        if (pendingBids.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No pending applications</div></td><\/tr>';
-        } else {
-          tbody.innerHTML = pendingBids.map(b => `
-            <tr>
-              <td>${escapeHtml(b.campaignTitle)}</td>
-              <td>${escapeHtml(b.uniqueCode)}</td>
-              <td>${formatMoney(b.amount)}</td>
-              <td>${escapeHtml(b.proposal?.substring(0, 50))}...</td>
-              <td><div class="campaign-actions">
-                <button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve</button>
-                <button class="btn-action danger" onclick="rejectBid('${b.campaignId}','${b._id}')">Reject</button>
-              </div></td>
-             </tr>
-          `).join('');
-        }
+        filterApplications();
         document.getElementById('applications-skeleton').style.display = 'none';
         document.getElementById('applications-table').style.display = 'table';
       }
@@ -1588,6 +1871,7 @@
             <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
               <span class="status-badge">👥 ${u.social?.followerCount || 0} followers</span>
               <span class="status-badge">🎯 Niche: ${u.profile?.niche || 'Not set'}</span>
+              <span class="status-badge">⭐ Engagement: ${u.social?.engagementRate || 0}%</span>
             </div>
           </div>
         `).join('');
@@ -1773,6 +2057,38 @@
     } catch(e) { console.error(e); }
   }
 
+  function filterActivityLog() {
+    const searchTerm = document.getElementById('activity-search').value.toLowerCase();
+    const rows = document.querySelectorAll('#activity-list tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      if (text.includes(searchTerm)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  function exportActivityLog() {
+    const rows = document.querySelectorAll('#activity-list tr');
+    let csv = 'Action,IP Address,Device,Date\n';
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 4) {
+        csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}"\n`;
+      }
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity_log_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Activity log exported!', 'success');
+  }
+
   // ============================================
   // SECURITY (2FA)
   // ============================================
@@ -1822,6 +2138,186 @@
   }
 
   // ============================================
+  // TEAM MEMBERS
+  // ============================================
+  function openAddTeamMemberModal() {
+    document.getElementById('add-team-member-modal').style.display = 'flex';
+  }
+
+  async function addTeamMember() {
+    const email = document.getElementById('team-email').value;
+    const role = document.getElementById('team-role').value;
+    if (!email) { showToast('Enter email address', 'error'); return; }
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/team/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ email, role })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Invitation sent to ${email}`, 'success');
+        closeModal('add-team-member-modal');
+        loadTeamMembers();
+        document.getElementById('team-email').value = '';
+      } else {
+        showToast(data.message || 'Failed to add team member', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+
+  async function loadTeamMembers() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/team/members`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success && data.members) {
+        teamMembers = data.members;
+        const container = document.getElementById('team-members-list');
+        if (teamMembers.length === 0) {
+          container.innerHTML = '<div class="empty-state">No team members yet</div>';
+        } else {
+          container.innerHTML = teamMembers.map(m => `
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div>
+                <strong>${escapeHtml(m.email)}</strong>
+                <span class="status-badge" style="margin-left: 10px;">${m.role}</span>
+              </div>
+              <button class="btn-action danger" onclick="removeTeamMember('${m._id}')">Remove</button>
+            </div>
+          `).join('');
+        }
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function removeTeamMember(memberId) {
+    if (!confirm('Remove this team member?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/team/members/${memberId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast('Team member removed', 'success');
+        loadTeamMembers();
+      } else {
+        showToast('Failed to remove team member', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+
+  // ============================================
+  // API KEYS & WEBHOOKS
+  // ============================================
+  async function loadApiKey() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/api-keys`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success && data.apiKey) {
+        document.getElementById('api-key-display').value = data.apiKey.key;
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  function copyApiKey() {
+    const keyInput = document.getElementById('api-key-display');
+    keyInput.select();
+    document.execCommand('copy');
+    showToast('API Key copied!', 'success');
+  }
+
+  async function regenerateApiKey() {
+    if (!confirm('Regenerating your API key will invalidate the old one. Continue?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/api-keys/regenerate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('API Key regenerated!', 'success');
+        loadApiKey();
+      } else {
+        showToast('Failed to regenerate API key', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+
+  function openAddWebhookModal() {
+    document.getElementById('add-webhook-modal').style.display = 'flex';
+  }
+
+  async function addWebhook() {
+    const url = document.getElementById('webhook-url').value;
+    const events = document.getElementById('webhook-events').value;
+    if (!url) { showToast('Enter webhook URL', 'error'); return; }
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/webhooks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ url, events: [events] })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Webhook added!', 'success');
+        closeModal('add-webhook-modal');
+        loadWebhooks();
+        document.getElementById('webhook-url').value = '';
+      } else {
+        showToast(data.message || 'Failed to add webhook', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+
+  async function loadWebhooks() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/webhooks`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success && data.webhooks) {
+        webhooks = data.webhooks;
+        const container = document.getElementById('webhooks-list');
+        if (webhooks.length === 0) {
+          container.innerHTML = '<div class="empty-state">No webhooks configured</div>';
+        } else {
+          container.innerHTML = webhooks.map(w => `
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div>
+                <strong>${escapeHtml(w.url)}</strong>
+                <div><small>Events: ${w.events?.join(', ') || 'All'}</small></div>
+              </div>
+              <button class="btn-action danger" onclick="deleteWebhook('${w._id}')">Delete</button>
+            </div>
+          `).join('');
+        }
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function deleteWebhook(webhookId) {
+    if (!confirm('Delete this webhook?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/webhooks/${webhookId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast('Webhook deleted', 'success');
+        loadWebhooks();
+      } else {
+        showToast('Failed to delete webhook', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+
+  // ============================================
   // USER DATA
   // ============================================
   async function loadUserData() {
@@ -1859,6 +2355,8 @@
       if (btn.dataset.tab === 'applications') loadApplications();
       if (btn.dataset.tab === 'active') loadActiveProjects();
       if (btn.dataset.tab === 'activity') loadActivityLog();
+      if (btn.dataset.tab === 'analytics') loadCampaignPerformanceChart();
+      if (btn.dataset.tab === 'api') { loadApiKey(); loadWebhooks(); }
     });
   });
 
@@ -1874,6 +2372,16 @@
       backToTop.classList.remove('show');
     }
   });
+
+  // Message character counter
+  const msgText = document.getElementById('msg-text');
+  const msgCounter = document.getElementById('msg-counter');
+  if (msgText && msgCounter) {
+    msgText.addEventListener('input', () => {
+      const remaining = 500 - msgText.value.length;
+      msgCounter.innerText = `${remaining} characters remaining`;
+    });
+  }
 
   // Load saved notification preferences
   const emailNotifications = localStorage.getItem('pebeto_email_notifications');
@@ -1894,6 +2402,12 @@
     localStorage.setItem('pebeto_sms_notifications', e.target.checked);
   });
 
+  const soundNotifications = localStorage.getItem('pebeto_sound_notifications');
+  if (soundNotifications === 'true') document.getElementById('soundNotificationsToggle').checked = true;
+  document.getElementById('soundNotificationsToggle').addEventListener('change', (e) => {
+    localStorage.setItem('pebeto_sound_notifications', e.target.checked);
+  });
+
   // Initialize
   loadUserData();
   loadWallet();
@@ -1904,6 +2418,8 @@
   connectWebSocket();
   loadActivityLog();
   loadActiveSessions();
+  loadTeamMembers();
+  loadCampaignPerformanceChart();
   
   setTimeout(() => {
     const savedTheme = localStorage.getItem('pebeto_theme');
@@ -1932,14 +2448,6 @@
       localStorage.setItem('pebeto_daily_withdrawal_total', '0');
       localStorage.setItem('pebeto_daily_withdrawal_date', today);
     }
-    
-    // Add message input character counter
-    const msgText = document.getElementById('msg-text');
-    msgText.addEventListener('input', () => {
-      const remaining = 500 - msgText.value.length;
-      const counter = document.getElementById('msg-counter');
-      if (counter) counter.innerText = `${remaining} characters remaining`;
-    });
   }, 1000);
 </script>
 </body>
