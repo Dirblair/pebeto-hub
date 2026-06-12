@@ -176,6 +176,29 @@
       background: rgba(244, 67, 54, 0.2);
       color: #f44336;
     }
+    .connected-badge {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 10px;
+      display: inline-block;
+    }
+    .remove-link-btn {
+      background: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 11px;
+      margin-left: 10px;
+    }
+    .remove-link-btn:hover {
+      background: #f44336;
+      color: white;
+    }
     
     .stats-row {
       display: grid;
@@ -350,6 +373,11 @@
     }
     .dem-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .dem-card .value { font-size: 28px; font-weight: 700; color: #ff8c42; }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #a08070;
+    }
     
     /* Loading Spinner Styles */
     .spinner {
@@ -395,6 +423,67 @@
       color: white;
     }
     
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1a1510;
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 2001;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { border-left: 4px solid #4caf50; }
+    .toast.error { border-left: 4px solid #f44336; }
+    .toast.info { border-left: 4px solid #2196f3; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .copy-btn {
+      background: rgba(255,140,66,0.2);
+      border: 1px solid #ff8c42;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .copy-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    
+    .load-more-btn {
+      background: rgba(255,140,66,0.15);
+      border: 1px solid #ff8c42;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #ffaa77;
+      cursor: pointer;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .load-more-btn:hover {
+      background: #ff8c42;
+      color: white;
+    }
+    
+    .view-all-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      color: #ff8c42;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: 1fr; }
       .profile-banner { flex-direction: column; text-align: center; }
@@ -438,11 +527,12 @@
     </button>
     
     <div id="socialStatus" class="social-status" style="display: none;"></div>
+    <div id="connectedBadges" style="margin-top: 10px;"></div>
   </div>
 
   <!-- Deposit Button Added -->
   <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-    <button class="deposit-btn" onclick="window.location.href='/manual-deposit.html'">
+    <button class="deposit-btn" onclick="checkDepositPage()">
       <i class="ri-add-line"></i> Add Funds / Deposit
     </button>
   </div>
@@ -478,21 +568,25 @@
         </tbody>
       </table>
     </div>
+    <div id="active-pagination"></div>
   </div>
 
   <div id="tab-review" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...<div class="spinner" style="margin-left: 10px;"></div></td></tr></tbody></table></div>
+    <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...<div class="spinner" style="margin-left: 10px;"></div></td></tr></tbody></td></div>
+    <div id="review-pagination"></div>
   </div>
 
   <div id="tab-completed" class="tab-content">
     <div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...<div class="spinner" style="margin-left: 10px;"></div></td></tr></tbody></table></div>
+    <div id="completed-pagination"></div>
   </div>
 
   <div id="tab-tips" class="tab-content">
     <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; text-align: center;">
       <p>Share your unique code with fans to receive tips!</p>
       <div class="unique-code" id="tip-code" style="font-size: 20px; margin: 15px 0;">Loading...</div>
-      <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+      <button class="copy-btn" onclick="copyUniqueCode()">📋 Copy Code</button>
+      <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
         <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
         <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
         <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
@@ -501,7 +595,7 @@
   </div>
 
   <div id="tab-demographics" class="tab-content">
-    <div class="demographics-grid">
+    <div class="demographics-grid" id="demographics-grid">
       <div class="dem-card"><h4>👥 Followers</h4><div class="value" id="dem-followers">0</div></div>
       <div class="dem-card"><h4>❤️ Likes</h4><div class="value" id="dem-likes">0</div></div>
       <div class="dem-card"><h4>💬 Comments</h4><div class="value" id="dem-comments">0</div></div>
@@ -513,7 +607,7 @@
 
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
-    <p>Minimum $30 USD | 3% fee</p>
+    <p>Minimum $30 USD | Maximum $10,000 USD per day | 3% fee</p>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <div id="threshold-text" style="font-size: 13px;">$0.00 / $30.00</div>
     <div class="withdraw-input-group">
@@ -521,21 +615,26 @@
       <select id="withdraw-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
     </div>
     <div>
-      <button class="method-btn active" onclick="selectMethod('mpesa')">M-Pesa</button>
-      <button class="method-btn" onclick="selectMethod('paypal')">PayPal</button>
-      <button class="method-btn" onclick="selectMethod('wire')">Wire Transfer</button>
+      <button class="method-btn active" onclick="selectMethod('mpesa', event)">M-Pesa</button>
+      <button class="method-btn" onclick="selectMethod('paypal', event)">PayPal</button>
+      <button class="method-btn" onclick="selectMethod('wire', event)">Wire Transfer</button>
     </div>
-    <div id="mpesa-fields" class="method-fields active"><input type="tel" id="mpesa-phone" placeholder="Phone Number"></div>
+    <div id="mpesa-fields" class="method-fields active"><input type="tel" id="mpesa-phone" placeholder="Phone Number (e.g., 0712345678)"></div>
     <div id="paypal-fields" class="method-fields" style="display:none"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
-    <div id="wire-fields" class="method-fields" style="display:none"><input type="text" id="wire-bank" placeholder="Bank Name"><input type="text" id="wire-account" placeholder="Account Number"></div>
+    <div id="wire-fields" class="method-fields" style="display:none">
+      <input type="text" id="wire-bank" placeholder="Bank Name">
+      <input type="text" id="wire-account" placeholder="Account Number">
+      <input type="text" id="wire-holder" placeholder="Account Holder Name">
+      <input type="text" id="wire-swift" placeholder="SWIFT Code (for international)">
+    </div>
     <button id="withdraw-btn" class="withdraw-btn">Withdraw (min $30)</button>
   </div>
 </div>
 
-<div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
-<div id="settings-modal" class="modal"><div class="modal-content"><h3>Profile Settings</h3><input type="text" id="setting-stageName" placeholder="Stage Name"><input type="text" id="setting-niche" placeholder="Niche"><select id="setting-currency"><option value="USD">USD</option><option value="KES">KES</option><option value="EUR">EUR</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div></div></div>
+<div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><button class="save-btn" onclick="previewAvatar()">Preview</button><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
+<div id="settings-modal" class="modal"><div class="modal-content"><h3>Profile Settings</h3><input type="text" id="setting-stageName" placeholder="Stage Name"><input type="text" id="setting-niche" placeholder="Niche"><select id="setting-currency"><option value="USD">USD</option><option value="KES">KES</option><option value="EUR">EUR</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save Changes</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div></div></div>
 <div id="wallet-modal" class="modal"><div class="modal-content"><h3>Wallet Balance</h3><p>Available: <strong id="wallet-detail-available">$0</strong></p><p>Tips: <strong id="wallet-detail-tips">$0</strong></p><p>Escrow: <strong id="wallet-detail-escrow">$0</strong></p><button class="cancel-btn" onclick="closeModal('wallet-modal')">Close</button></div></div>
-<div id="txn-modal" class="modal"><div class="modal-content"><h3>Transaction History</h3><div id="txn-list" style="max-height: 400px; overflow-y: auto;"></div><button class="cancel-btn" onclick="closeModal('txn-modal')">Close</button></div></div>
+<div id="txn-modal" class="modal"><div class="modal-content"><h3>Transaction History</h3><div id="txn-list" style="max-height: 300px; overflow-y: auto;"></div><div class="view-all-link" onclick="loadAllTransactions()">View All Transactions →</div><button class="cancel-btn" onclick="closeModal('txn-modal')">Close</button></div></div>
 <div id="project-modal" class="modal"><div class="modal-content"><h3 id="project-title">Project Details</h3><div id="project-details"></div><div id="project-work-section"></div><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div></div>
 
 <!-- Withdrawal Confirmation Modal -->
@@ -544,7 +643,7 @@
     <h3>⚠️ Confirm Withdrawal</h3>
     <p id="confirm-details"></p>
     <div class="modal-buttons">
-      <button class="save-btn" onclick="processWithdrawal()">Confirm Withdrawal</button>
+      <button class="save-btn" id="confirm-withdraw-btn" onclick="processWithdrawal()">Confirm Withdrawal</button>
       <button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button>
     </div>
   </div>
@@ -563,6 +662,17 @@
   let pendingWithdrawAmount = null;
   let pendingWithdrawMethod = null;
   let pendingWithdrawDetails = null;
+  let allTransactions = [];
+  let withdrawConfirmLoading = false;
+
+  // Toast notification
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="ri-${type === 'success' ? 'checkbox-circle-line' : type === 'error' ? 'error-warning-line' : 'information-line'}"></i> ${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -574,12 +684,21 @@
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.removeItem('pebeto_token'); localStorage.removeItem('pebeto_user'); window.location.href = '/signup.html'; }
 
-  function selectMethod(method) {
+  // Fixed: Added event parameter
+  function selectMethod(method, event) {
     selectedMethod = method;
     document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) event.target.classList.add('active');
     document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none');
     document.getElementById(`${method}-fields`).style.display = 'block';
+  }
+
+  // M-Pesa phone validation
+  function validateMpesaPhone(phone) {
+    const cleaned = phone.replace(/\D/g, '');
+    const regex = /^(07|01|2547|2541)\d{8}$/;
+    const regex2 = /^\d{9}$/;
+    return regex.test(cleaned) || regex2.test(cleaned);
   }
 
   // URL Validation for Social Links
@@ -598,6 +717,22 @@
     }
   }
 
+  function updateConnectedBadges() {
+    const tiktokUrl = document.getElementById('tiktokUrl').value;
+    const youtubeUrl = document.getElementById('youtubeUrl').value;
+    const badgesDiv = document.getElementById('connectedBadges');
+    let html = '';
+    if (tiktokUrl) html += `<span class="connected-badge">✓ TikTok Connected <button class="remove-link-btn" onclick="removeSocialLink('tiktok')">Remove</button></span> `;
+    if (youtubeUrl) html += `<span class="connected-badge">✓ YouTube Connected <button class="remove-link-btn" onclick="removeSocialLink('youtube')">Remove</button></span> `;
+    badgesDiv.innerHTML = html;
+  }
+
+  async function removeSocialLink(platform) {
+    if (platform === 'tiktok') document.getElementById('tiktokUrl').value = '';
+    else document.getElementById('youtubeUrl').value = '';
+    await saveSocialLinks();
+  }
+
   async function saveSocialLinks() {
     let tiktokUrl = document.getElementById('tiktokUrl').value.trim();
     let youtubeUrl = document.getElementById('youtubeUrl').value.trim();
@@ -611,7 +746,6 @@
       return;
     }
     
-    // Validate URLs
     if (tiktokUrl && !isValidUrl(tiktokUrl, 'tiktok')) {
       statusDiv.style.display = 'block';
       statusDiv.className = 'social-status error';
@@ -644,8 +778,10 @@
       if (data.success) {
         statusDiv.style.display = 'block';
         statusDiv.className = 'social-status success';
-        statusDiv.innerHTML = '✓ Social links saved successfully! Your videos will now appear on your public profile.';
+        statusDiv.innerHTML = '✓ Social links saved successfully!';
         setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+        updateConnectedBadges();
+        showToast('Social links saved!', 'success');
       } else {
         statusDiv.style.display = 'block';
         statusDiv.className = 'social-status error';
@@ -661,24 +797,43 @@
     }
   }
 
+  function previewAvatar() {
+    const avatarUrl = document.getElementById('avatar-url').value;
+    if (avatarUrl) {
+      document.getElementById('avatar-preview').style.backgroundImage = `url(${avatarUrl})`;
+      document.getElementById('avatar-preview').style.backgroundSize = 'cover';
+    }
+  }
+
   async function saveAvatar() {
     const avatarUrl = document.getElementById('avatar-url').value;
     if (!avatarUrl) { alert('Enter image URL'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
       await fetch(`${API_BASE}/api/user/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { avatarUrl } }) });
-      alert('Profile picture updated!');
-      location.reload();
-    } catch(e) { alert('Error'); }
+      showToast('Profile picture updated!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } catch(e) { showToast('Error updating profile picture', 'error'); }
   }
 
   async function saveSettings() {
     const token = localStorage.getItem('pebeto_token');
+    const stageName = document.getElementById('setting-stageName').value;
+    const niche = document.getElementById('setting-niche').value;
+    const currency = document.getElementById('setting-currency').value;
     try {
-      await fetch(`${API_BASE}/api/user/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { stageName: document.getElementById('setting-stageName').value, niche: document.getElementById('setting-niche').value }, preferredCurrency: document.getElementById('setting-currency').value }) });
-      alert('Settings saved!');
-      location.reload();
-    } catch(e) { alert('Error'); }
+      await fetch(`${API_BASE}/api/user/profile`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ profile: { stageName, niche }, preferredCurrency: currency }) 
+      });
+      // Update UI without reload
+      if (stageName) document.getElementById('profile-name').innerHTML = `${stageName} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`;
+      if (niche) document.getElementById('profile-niche').innerHTML = `Niche: ${niche}`;
+      if (currency) document.getElementById('profile-currency').innerHTML = `Currency: ${currency}`;
+      showToast('Settings saved!', 'success');
+      closeModal('settings-modal');
+    } catch(e) { showToast('Error saving settings', 'error'); }
   }
 
   async function loadUserData() {
@@ -708,6 +863,7 @@
       if (currentUser.socialLinks.tiktok) document.getElementById('tiktokUrl').value = currentUser.socialLinks.tiktok;
       if (currentUser.socialLinks.youtube) document.getElementById('youtubeUrl').value = currentUser.socialLinks.youtube;
     }
+    updateConnectedBadges();
   }
 
   async function loadWallet() {
@@ -745,7 +901,6 @@
     const update = () => {
       let localAmount = parseFloat(amountInput.value) || 0;
       let usdAmount = localAmount;
-      // Currency conversion
       if (currencySelect.value !== 'USD') {
         usdAmount = localAmount / exchangeRates[currencySelect.value];
       }
@@ -780,9 +935,9 @@
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
         
-        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
-        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
-        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
+        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
+        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
       }
     } catch(e) { console.error(e); }
   }
@@ -813,16 +968,25 @@
 
   async function showTransactions() {
     document.getElementById('txn-modal').style.display = 'flex';
+    await loadTransactions(50);
+  }
+
+  async function loadTransactions(limit = 50) {
     try {
-      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?limit=50`);
+      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?limit=${limit}`);
       if (data.success && data.data?.transactions) {
-        const txs = data.data.transactions;
-        document.getElementById('txn-count').innerText = txs.length;
-        document.getElementById('txn-list').innerHTML = txs.map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span>${new Date(t.createdAt).toLocaleDateString()}</span></div>`).join('');
+        allTransactions = data.data.transactions;
+        document.getElementById('txn-count').innerText = allTransactions.length;
+        document.getElementById('txn-list').innerHTML = allTransactions.map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span>${new Date(t.createdAt).toLocaleDateString()}</span></div>`).join('');
       } else {
         document.getElementById('txn-list').innerHTML = 'No transactions found';
       }
     } catch(e) { document.getElementById('txn-list').innerHTML = 'Error loading transactions'; }
+  }
+
+  async function loadAllTransactions() {
+    await loadTransactions(1000);
+    showToast('Loaded all transactions', 'info');
   }
 
   function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
@@ -830,54 +994,103 @@
   function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
   function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; }
 
-  // Withdrawal with confirmation modal
+  function copyUniqueCode() {
+    const code = document.getElementById('tip-code').innerText;
+    navigator.clipboard.writeText(code);
+    showToast('Unique code copied to clipboard!', 'success');
+  }
+
+  function checkDepositPage() {
+    window.location.href = '/manual-deposit.html';
+  }
+
   function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
     const currency = document.getElementById('withdraw-currency').value;
     
-    if (!amount || amount <= 0) { alert('Enter amount'); return; }
+    if (!amount || amount <= 0) { showToast('Enter amount', 'error'); return; }
     
-    // Convert to USD if needed
     let usdAmount = amount;
     if (currency !== 'USD') {
       usdAmount = amount / exchangeRates[currency];
     }
     
-    // Validate minimum
     if (usdAmount < 30) {
-      alert(`Minimum withdrawal is $30 USD. Your ${currency} ${amount} equals $${usdAmount.toFixed(2)}`);
+      showToast(`Minimum withdrawal is $30 USD. Your ${currency} ${amount} equals $${usdAmount.toFixed(2)}`, 'error');
       return;
     }
     
-    // Check balance
+    const maxWithdrawal = 10000;
+    if (usdAmount > maxWithdrawal) {
+      showToast(`Maximum withdrawal per day is $${maxWithdrawal} USD`, 'error');
+      return;
+    }
+    
     const availableBalance = parseFloat(document.getElementById('wallet-balance').innerText.replace(/[^0-9.-]/g, '')) || 0;
     if (usdAmount > availableBalance) {
-      alert(`Insufficient balance. Available: ${formatMoney(availableBalance)}`);
+      showToast(`Insufficient balance. Available: ${formatMoney(availableBalance)}`, 'error');
       return;
     }
     
-    // Store pending withdrawal details
+    if (selectedMethod === 'mpesa') {
+      const phone = document.getElementById('mpesa-phone').value;
+      if (!validateMpesaPhone(phone)) {
+        showToast('Please enter a valid M-Pesa phone number (e.g., 0712345678)', 'error');
+        return;
+      }
+    }
+    
+    if (selectedMethod === 'paypal') {
+      const email = document.getElementById('paypal-email').value;
+      if (!email) {
+        showToast('Please enter PayPal email', 'error');
+        return;
+      }
+    }
+    
+    if (selectedMethod === 'wire') {
+      const bankName = document.getElementById('wire-bank').value;
+      const accountNumber = document.getElementById('wire-account').value;
+      const accountHolder = document.getElementById('wire-holder').value;
+      if (!bankName || !accountNumber || !accountHolder) {
+        showToast('Please fill all wire transfer details', 'error');
+        return;
+      }
+    }
+    
     pendingWithdrawAmount = usdAmount;
     pendingWithdrawMethod = selectedMethod;
     
     let payoutDetails = {};
     if (selectedMethod === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
     else if (selectedMethod === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
-    else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value };
+    else payoutDetails = { 
+      bankName: document.getElementById('wire-bank').value, 
+      accountNumber: document.getElementById('wire-account').value,
+      accountHolderName: document.getElementById('wire-holder').value,
+      swiftCode: document.getElementById('wire-swift').value
+    };
     
     pendingWithdrawDetails = payoutDetails;
     
-    // Show confirmation modal
     document.getElementById('confirm-details').innerHTML = `
       Amount: ${formatMoney(usdAmount)}<br>
       Method: ${selectedMethod.toUpperCase()}<br>
       Fee: ${formatMoney(usdAmount * 0.03)}<br>
-      You will receive: ${formatMoney(usdAmount * 0.97)}
+      You will receive: ${formatMoney(usdAmount * 0.97)}<br>
+      <small style="color:#a08070;">Funds will be processed within 24-48 hours</small>
     `;
     document.getElementById('confirm-withdraw-modal').style.display = 'flex';
   }
 
   async function processWithdrawal() {
+    if (withdrawConfirmLoading) return;
+    withdrawConfirmLoading = true;
+    const confirmBtn = document.getElementById('confirm-withdraw-btn');
+    const originalText = confirmBtn.innerText;
+    confirmBtn.innerText = 'Processing...';
+    confirmBtn.disabled = true;
+    
     try {
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch(`${API_BASE}/api/wallet/withdraw`, { 
@@ -891,15 +1104,19 @@
       });
       const data = await res.json();
       if (data.success) { 
-        alert('Withdrawal submitted!'); 
+        showToast('Withdrawal submitted successfully!', 'success');
         loadWallet(); 
         document.getElementById('withdraw-amount').value = '';
         closeModal('confirm-withdraw-modal');
       } else {
-        alert(data.message || 'Withdrawal failed');
+        showToast(data.message || 'Withdrawal failed', 'error');
       }
     } catch(e) { 
-      alert('Error processing withdrawal'); 
+      showToast('Error processing withdrawal', 'error');
+    } finally {
+      withdrawConfirmLoading = false;
+      confirmBtn.innerText = originalText;
+      confirmBtn.disabled = false;
     }
   }
 
@@ -907,13 +1124,15 @@
     try {
       const res = await fetch(`${API_BASE}/api/creator/stats`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` } });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.followers !== undefined) {
         document.getElementById('dem-followers').innerText = data.followers || 0;
         document.getElementById('dem-likes').innerText = data.likes || 0;
         document.getElementById('dem-comments').innerText = data.comments || 0;
         document.getElementById('dem-country').innerText = data.topCountry || 'Kenya';
         document.getElementById('dem-engagement').innerText = (data.engagementRate || 4.5) + '%';
         document.getElementById('dem-campaigns').innerText = data.campaignsCompleted || 0;
+      } else {
+        document.getElementById('demographics-grid').innerHTML = '<div class="empty-state">No demographic data available yet.<br>Start engaging with your audience to see stats!</div>';
       }
     } catch(e) { console.error(e); }
   }
