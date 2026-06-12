@@ -130,7 +130,6 @@
       margin-left: auto;
       margin-right: auto;
     }
-    /* Tab Bar - For You / Following */
     .feed-tabs {
       display: flex;
       gap: 4px;
@@ -191,7 +190,6 @@
       color: white;
       cursor: pointer;
     }
-    /* Creator Card */
     .creator-card {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,140,66,0.2);
@@ -200,7 +198,6 @@
       overflow: hidden;
       transition: transform 0.2s, opacity 0.3s;
     }
-    .creator-card.virtual { position: absolute; visibility: hidden; }
     .creator-card:hover {
       transform: translateY(-2px);
       border-color: rgba(255,140,66,0.4);
@@ -313,7 +310,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.2s;
     }
+    .video-control-btn:hover { background: #ff8c42; }
     .view-count-badge {
       position: absolute;
       bottom: 40px;
@@ -351,18 +350,6 @@
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
-    }
-    .skeleton-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-    }
-    .skeleton-text {
-      height: 16px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 8px;
-      margin: 8px 0;
     }
     .tiktok-embed-container { min-height: 600px; background: #000; }
     .youtube-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
@@ -500,21 +487,6 @@
     .bottom-nav-item.active, .bottom-nav-item:hover { color: #ff8c42; }
     .bottom-nav-item i { font-size: 22px; }
     .bottom-nav-item span { font-size: 10px; }
-    .create-post-btn {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 56px;
-      height: 56px;
-      background: #ff8c42;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(255,140,66,0.4);
-      z-index: 98;
-    }
     .toast {
       position: fixed;
       bottom: 80px;
@@ -531,19 +503,6 @@
     @keyframes slideUp {
       from { transform: translateX(-50%) translateY(100%); opacity: 0; }
       to { transform: translateX(-50%) translateY(0); opacity: 1; }
-    }
-    .leaderboard {
-      background: rgba(255,255,255,0.03);
-      border-radius: 20px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .leaderboard h4 { margin-bottom: 10px; color: #ff8c42; }
-    .leaderboard-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     @media (max-width: 768px) {
       .search-bar { display: none; }
@@ -589,7 +548,6 @@
 </div>
 
 <div class="feed-container">
-  <!-- Feed Tabs: For You / Following / Saved / Trending -->
   <div class="feed-tabs">
     <div class="feed-tab active" data-feed="foryou" onclick="switchFeedTab('foryou')">For You</div>
     <div class="feed-tab" data-feed="following" onclick="switchFeedTab('following')">Following</div>
@@ -597,13 +555,6 @@
     <div class="feed-tab" data-feed="trending" onclick="switchFeedTab('trending')">🔥 Trending</div>
   </div>
 
-  <!-- Leaderboard Section -->
-  <div class="leaderboard" id="leaderboard">
-    <h4>🏆 Top Tippers This Week</h4>
-    <div id="top-tippers-list">Loading...</div>
-  </div>
-
-  <!-- Filter and Sort Bar -->
   <div class="filter-sort-bar">
     <div class="filter-group">
       <span class="filter-chip active" data-niche="all" onclick="filterByNiche('all')">All</span>
@@ -622,19 +573,16 @@
     </select>
   </div>
 
-  <!-- Content Container -->
   <div id="feed-content"></div>
   <div id="infinite-scroll-trigger" class="infinite-scroll-trigger"></div>
 </div>
 
-<!-- Bottom Navigation Bar -->
 <div class="bottom-nav">
   <div class="bottom-nav-item active" data-nav="foryou" onclick="switchFeedTab('foryou')"><i class="ri-home-5-line"></i><span>Home</span></div>
   <div class="bottom-nav-item" data-nav="trending" onclick="switchFeedTab('trending')"><i class="ri-fire-line"></i><span>Trending</span></div>
   <div class="bottom-nav-item" data-nav="notifications" onclick="toggleNotifications()"><i class="ri-notification-3-line"></i><span>Alerts</span></div>
   <div class="bottom-nav-item" data-nav="profile" onclick="goToDashboard()"><i class="ri-user-line"></i><span>Profile</span></div>
 </div>
-<div class="create-post-btn" onclick="showComingSoon('Create Post')"><i class="ri-add-line" style="font-size: 28px;"></i></div>
 
 <!-- Tip Modal -->
 <div id="tip-modal" class="modal">
@@ -661,7 +609,6 @@
   </div>
 </div>
 
-<!-- Comments Modal with Replies and Edit/Delete -->
 <div id="comments-modal" class="modal">
   <div class="modal-content">
     <h3>💬 Comments</h3>
@@ -671,7 +618,6 @@
   </div>
 </div>
 
-<!-- Edit Comment Modal -->
 <div id="edit-comment-modal" class="modal">
   <div class="modal-content">
     <h3>✏️ Edit Comment</h3>
@@ -680,7 +626,6 @@
   </div>
 </div>
 
-<!-- Share Modal with more platforms -->
 <div id="share-modal" class="modal">
   <div class="modal-content">
     <h3>📤 Share Creator</h3>
@@ -702,7 +647,6 @@
   </div>
 </div>
 
-<!-- Report Modal -->
 <div id="report-modal" class="modal">
   <div class="modal-content">
     <h3>🚨 Report Creator</h3>
@@ -719,7 +663,6 @@
   </div>
 </div>
 
-<!-- DM Modal -->
 <div id="dm-modal" class="modal">
   <div class="modal-content">
     <h3>💬 Message <span id="dm-creator-name"></span></h3>
@@ -728,7 +671,6 @@
   </div>
 </div>
 
-<!-- Block/Confirm Modal -->
 <div id="confirm-modal" class="modal">
   <div class="modal-content">
     <h3 id="confirm-title">Confirm Action</h3>
@@ -771,8 +713,11 @@
   let debounceTimer = null;
   let cache = new Map();
   let autoRefreshInterval = null;
+  
+  // Video autoplay tracking
+  let currentlyPlayingVideo = null;
+  let videoObserver = null;
 
-  // ========== HELPER FUNCTIONS ==========
   function showToast(msg) { 
     const t = document.createElement('div'); 
     t.className = 'toast'; 
@@ -838,7 +783,6 @@
     } else { window.location.href = '/login.html'; }
   }
 
-  // ========== SEARCH HISTORY ==========
   function saveSearchHistory(query) {
     if (!query) return;
     searchHistory = searchHistory.filter(q => q !== query);
@@ -861,13 +805,11 @@
     searchGlobal();
   }
 
-  // ========== DEBOUNCED SEARCH ==========
   function debouncedSearch() {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => { searchGlobal(); }, 300);
   }
 
-  // ========== FEED TABS ==========
   function switchFeedTab(tab) {
     currentFeedTab = tab;
     document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
@@ -879,7 +821,6 @@
     applyFiltersAndSort();
   }
 
-  // ========== SAVE / BLOCK / MUTE ==========
   function toggleSaveCreator(creatorId, btn) {
     if (savedCreators.has(creatorId)) { savedCreators.delete(creatorId); btn.classList.remove('saved'); btn.innerText = 'Save'; showToast('Removed from saved'); }
     else { savedCreators.add(creatorId); btn.classList.add('saved'); btn.innerText = 'Saved'; showToast('Saved to your collection'); addNotification('Creator saved to your collection'); }
@@ -904,7 +845,6 @@
     applyFiltersAndSort();
   }
 
-  // ========== LOAD SAVED DATA ==========
   function loadSavedData() {
     const saved = localStorage.getItem('pebeto_saved_creators');
     if (saved) savedCreators = new Set(JSON.parse(saved));
@@ -916,7 +856,6 @@
     if (followingSaved) following = new Set(JSON.parse(followingSaved));
   }
 
-  // ========== SELECT PAYMENT SOURCE ==========
   function selectPaymentSource(source) {
     selectedPaymentSource = source;
     document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
@@ -935,7 +874,6 @@
     updateCreatorReceives();
   }
 
-  // ========== TIP VALIDATION ==========
   async function loadUserBalance() {
     try {
       const token = localStorage.getItem('pebeto_token');
@@ -945,7 +883,6 @@
     } catch(e) {}
   }
 
-  // ========== LOAD CREATORS ==========
   async function loadCreators() {
     try {
       const response = await fetch(`${API_BASE}/api/creators`);
@@ -972,7 +909,6 @@
     }
   }
 
-  // ========== SAMPLE CREATORS ==========
   function showSampleCreators() {
     allCreators = [
       { _id: 'sample1', email: 'dj@example.com', profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '', bio: 'Professional DJ and music producer' }, socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }, likeCount: 1234, isLiked: false, commentCount: 89, verified: true, viewCount: 15200, createdAt: '2024-01-15', isOnline: true, isLive: false, engagementRate: 5.2, milestones: { followers: 15000, views: 50000 } },
@@ -982,7 +918,6 @@
     applyFiltersAndSort();
   }
 
-  // ========== APPLY FILTERS AND SORT ==========
   function applyFiltersAndSort() {
     let filtered = [...allCreators];
     if (blockedCreators.size > 0) filtered = filtered.filter(c => !blockedCreators.has(c._id));
@@ -1000,13 +935,52 @@
     filteredCreators = filtered;
     currentOffset = 0;
     renderFeed();
-    updateLeaderboard();
   }
 
-  // ========== VIRTUAL SCROLLING ==========
+  // Video Autoplay Observer - plays video when visible, pauses when not
+  function setupVideoAutoplay() {
+    if (videoObserver) videoObserver.disconnect();
+    videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const videoContainer = entry.target;
+        const iframe = videoContainer.querySelector('iframe');
+        if (!iframe) return;
+        
+        if (entry.isIntersecting) {
+          // Video is visible - attempt to play
+          if (currentlyPlayingVideo && currentlyPlayingVideo !== videoContainer) {
+            const prevIframe = currentlyPlayingVideo.querySelector('iframe');
+            if (prevIframe) {
+              // Pause previous video by reloading or sending postMessage
+              prevIframe.src = prevIframe.src;
+            }
+          }
+          currentlyPlayingVideo = videoContainer;
+          // Send play message to iframe (works for YouTube)
+          if (iframe.src.includes('youtube')) {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          }
+        } else {
+          // Video not visible - pause it
+          if (currentlyPlayingVideo === videoContainer) {
+            if (iframe.src.includes('youtube')) {
+              iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            }
+            currentlyPlayingVideo = null;
+          }
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    document.querySelectorAll('.video-embed-container').forEach(container => {
+      videoObserver.observe(container);
+    });
+  }
+
   function setupVirtualScroll() {
     if (virtualScrollObserver) virtualScrollObserver.disconnect();
     const container = document.getElementById('feed-content');
+    if (!container) return;
     virtualScrollObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -1018,7 +992,6 @@
     }, { threshold: 0.1 });
   }
 
-  // ========== INFINITE SCROLL ==========
   function setupInfiniteScroll() {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && !isLoading && hasMore) {
@@ -1029,7 +1002,6 @@
     if (trigger) observer.observe(trigger);
   }
 
-  // ========== LOAD MORE CREATORS ==========
   function loadMoreCreators() {
     if (isLoading || currentOffset >= filteredCreators.length) {
       hasMore = false;
@@ -1043,7 +1015,6 @@
     isLoading = false;
   }
 
-  // ========== RENDER FEED ==========
   function renderFeed() {
     const container = document.getElementById('feed-content');
     const toRender = filteredCreators.slice(0, PAGE_SIZE);
@@ -1053,14 +1024,37 @@
     hasMore = filteredCreators.length > PAGE_SIZE;
     setupVirtualScroll();
     setupInfiniteScroll();
+    // Setup video autoplay after cards are rendered
+    setTimeout(setupVideoAutoplay, 500);
   }
 
   function appendFeed(creators) {
     const container = document.getElementById('feed-content');
     creators.forEach(creator => { container.appendChild(createCreatorCard(creator)); });
+    setTimeout(setupVideoAutoplay, 100);
   }
 
-  // ========== CREATE CREATOR CARD ==========
+  // Unmute video button handler
+  function unmuteVideo(btn, iframe) {
+    if (iframe && iframe.src.includes('youtube')) {
+      iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+      btn.innerHTML = '<i class="ri-volume-up-line"></i>';
+      btn.onclick = () => muteVideo(btn, iframe);
+      showToast('Sound enabled');
+    } else if (iframe && iframe.src.includes('tiktok')) {
+      showToast('Tap the TikTok video to unmute');
+    }
+  }
+  
+  function muteVideo(btn, iframe) {
+    if (iframe && iframe.src.includes('youtube')) {
+      iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+      btn.innerHTML = '<i class="ri-volume-mute-line"></i>';
+      btn.onclick = () => unmuteVideo(btn, iframe);
+      showToast('Sound muted');
+    }
+  }
+
   function createCreatorCard(creator) {
     const card = document.createElement('div'); 
     card.className = 'creator-card'; 
@@ -1081,28 +1075,30 @@
     const isLive = creator.isLive || false;
     
     let embedHtml = '';
+    let videoId = `video-${creator._id}`;
+    
     if (creator.socialLinks?.tiktok) {
       const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
       const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
-      embedHtml = `<div class="video-embed-container tiktok-embed-container">
+      embedHtml = `<div id="${videoId}" class="video-embed-container tiktok-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div>
         <div class="video-controls">
-          <button class="video-control-btn" onclick="toggleMute(this)"><i class="ri-volume-up-line"></i></button>
+          <button class="video-control-btn" onclick="muteVideo(this, this.closest('.video-embed-container')?.querySelector('iframe'))"><i class="ri-volume-mute-line"></i></button>
           <button class="video-control-btn" onclick="toggleFullscreen(this)"><i class="ri-fullscreen-line"></i></button>
         </div>
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
         <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;"><section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section></blockquote>
       </div>`;
     } else if (creator.socialLinks?.youtube) {
-      let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}` : `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}`;
-      embedHtml = `<div class="video-embed-container">
+      let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}&autoplay=0&mute=1&playsinline=1` : `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}&autoplay=0&mute=1&playsinline=1`;
+      embedHtml = `<div id="${videoId}" class="video-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div>
         <div class="video-controls">
-          <button class="video-control-btn" onclick="toggleMute(this)"><i class="ri-volume-up-line"></i></button>
+          <button class="video-control-btn" onclick="muteVideo(this, this.closest('.video-embed-container')?.querySelector('iframe'))"><i class="ri-volume-mute-line"></i></button>
           <button class="video-control-btn" onclick="toggleFullscreen(this)"><i class="ri-fullscreen-line"></i></button>
         </div>
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
-        <div class="youtube-embed-container"><iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen></iframe></div>
+        <div class="youtube-embed-container"><iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%; height:100%;"></iframe></div>
       </div>`;
     } else { embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos connected yet.</p></div>`; }
     
@@ -1144,22 +1140,12 @@
     return card;
   }
 
-  // ========== VIDEO CONTROLS ==========
-  function toggleMute(btn) {
-    const video = btn.closest('.video-embed-container')?.querySelector('iframe');
-    if (video) {
-      // Note: Cross-origin restrictions apply, this is a visual indicator
-      btn.innerHTML = btn.innerHTML.includes('volume-up') ? '<i class="ri-volume-mute-line"></i>' : '<i class="ri-volume-up-line"></i>';
-      showToast('Audio control - works on platform native player');
-    }
-  }
   function toggleFullscreen(btn) {
     const container = btn.closest('.video-embed-container');
     if (container?.requestFullscreen) container.requestFullscreen();
     else showToast('Fullscreen not available');
   }
 
-  // ========== LIKE ANIMATION ==========
   function showLikeAnimation(x, y) {
     const anim = document.createElement('div');
     anim.className = 'like-animation';
@@ -1170,7 +1156,6 @@
     setTimeout(() => anim.remove(), 800);
   }
 
-  // ========== TOGGLE LIKE ==========
   async function toggleLike(event, button, creatorId) {
     event.stopPropagation();
     if (pendingLike) return;
@@ -1195,7 +1180,6 @@
     pendingLike = false;
   }
 
-  // ========== TOGGLE FOLLOW ==========
   async function toggleFollow(creatorId, btn) {
     const isFollowing = following.has(creatorId);
     if (isFollowing) { following.delete(creatorId); btn.classList.remove('following'); btn.innerText = 'Follow'; showToast('Unfollowed creator'); }
@@ -1204,7 +1188,6 @@
     if (currentFeedTab === 'following') applyFiltersAndSort();
   }
 
-  // ========== FILTERS ==========
   function filterByNiche(niche) { 
     currentNicheFilter = niche; 
     document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active')); 
@@ -1218,7 +1201,6 @@
     applyFiltersAndSort(); 
   }
 
-  // ========== COMMENTS WITH REPLIES ==========
   async function openCommentsModal(creatorId, creatorName) {
     currentCommentCreatorId = creatorId; 
     const modal = document.getElementById('comments-modal'); 
@@ -1246,10 +1228,7 @@
             </div>
           </div>
         `).join('');
-        // Load replies for each comment
-        for (let comment of comments) {
-          loadReplies(comment._id);
-        }
+        for (let comment of comments) { loadReplies(comment._id); }
       }
     } catch (error) { commentsList.innerHTML = '<div style="text-align:center;padding:20px;">Failed to load comments</div>'; }
   }
@@ -1366,7 +1345,6 @@
     pendingComment = false;
   }
 
-  // ========== TIP MODAL ==========
   function openTipModal(creatorId, creatorName) { 
     const token = localStorage.getItem('pebeto_token'); 
     if (!token) { alert('Please log in to send tips'); window.location.href = '/login.html'; return; }
@@ -1418,7 +1396,6 @@
     pendingTip = false;
   }
 
-  // ========== DM FUNCTION ==========
   function openDMModal(creatorId, creatorName) {
     currentDMRecipientId = creatorId;
     currentDMRecipientName = creatorName;
@@ -1445,7 +1422,6 @@
     } catch(e) { alert('Network error'); }
   }
 
-  // ========== SHARE FUNCTIONS ==========
   function openShareModal(creatorId, creatorName) { 
     currentShareCreatorId = creatorId; 
     currentShareCreatorName = creatorName; 
@@ -1483,12 +1459,9 @@
   function showQRCode() {
     const canvas = document.getElementById('qr-code-canvas');
     canvas.style.display = 'block';
-    const url = `${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`;
-    // QR code would be generated with a library like QRCode.js
-    showToast('QR code would appear here');
+    showToast('QR code feature - integrates with QR library');
   }
 
-  // ========== REPORT ==========
   let lastReportTime = 0;
   function openReportModal(creatorId, creatorName) { 
     currentReportCreatorId = creatorId; 
@@ -1521,31 +1494,11 @@
     } catch (error) { alert('Network error'); }
   }
 
-  // ========== LEADERBOARD ==========
-  function updateLeaderboard() {
-    const topTippers = [
-      { name: 'CryptoKing', amount: 1250 },
-      { name: 'ArtLover', amount: 890 },
-      { name: 'MusicFan', amount: 560 },
-      { name: 'TechBro', amount: 430 },
-      { name: 'FitnessFreak', amount: 320 }
-    ];
-    const leaderboardHtml = topTippers.map((t, i) => `<div class="leaderboard-item"><span>${i+1}. ${t.name}</span><span>${formatMoney(t.amount)}</span></div>`).join('');
-    document.getElementById('top-tippers-list').innerHTML = leaderboardHtml;
-  }
-
-  // ========== VIEW PROFILE ==========
   function viewCreatorProfile(creatorId) { 
     localStorage.setItem('viewingCreatorId', creatorId); 
     window.location.href = `/creator-profile.html?id=${creatorId}`; 
   }
 
-  // ========== COMING SOON ==========
-  function showComingSoon(feature) {
-    showToast(`${feature} - Coming soon!`);
-  }
-
-  // ========== LOAD USER DATA ==========
   function loadUserData() { 
     const userStr = localStorage.getItem('pebeto_user'); 
     if (userStr) { 
@@ -1561,7 +1514,6 @@
     } 
   }
 
-  // ========== AUTO-REFRESH ==========
   function startAutoRefresh() {
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     autoRefreshInterval = setInterval(() => {
@@ -1571,12 +1523,10 @@
     }, 30000);
   }
 
-  // ========== PWA OFFLINE SUPPORT ==========
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
   }
 
-  // ========== KEYBOARD NAVIGATION ==========
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown') {
       const cards = document.querySelectorAll('.creator-card');
@@ -1592,7 +1542,6 @@
     }
   });
 
-  // ========== INITIALIZATION ==========
   const savedTheme = localStorage.getItem('pebeto_theme'); 
   if (savedTheme === 'light') document.body.classList.add('light-theme');
   loadUserData(); 
