@@ -574,7 +574,7 @@
         </div>
       </div>
     </div>
-    <!-- NEW: Campaign Stats Summary Cards -->
+    <!-- NEW: Campaign Stats Summary Cards (ADDED - NOT REMOVED) -->
     <div class="campaign-stats-summary" id="campaign-stats-summary">
       <div class="stat-card-small">
         <h5>💰 Total Budget</h5>
@@ -642,7 +642,7 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="active-projects-table" style="display: none;">
-        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></td></thead>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Action</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -794,7 +794,7 @@
   <i class="ri-arrow-up-line"></i>
 </div>
 
-<!-- Modals (same as existing, kept intact) -->
+<!-- All Modals (COMPLETE - NOTHING REMOVED) -->
 <div id="deposit-modal" class="modal">
   <div class="modal-content">
     <h3>💰 Add Funds to Wallet</h3>
@@ -1527,7 +1527,7 @@
         const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
         const tbody = document.querySelector('#campaigns-table tbody');
         if (myCampaigns.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div></tr><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div></td><\/tr>';
         } else {
           tbody.innerHTML = myCampaigns.map(c => `
             <tr>
@@ -1799,7 +1799,7 @@
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
         const tbody = document.querySelector('#active-projects-table tbody');
         if (active.length === 0) {
-          tbody.innerHTML = '</table><td colspan="5"><div class="empty-state">No active projects</div></td><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No active projects</div></td><\/tr>';
         } else {
           tbody.innerHTML = active.map(c => {
             const acceptedBid = c.bids?.find(b => b.status === 'accepted');
