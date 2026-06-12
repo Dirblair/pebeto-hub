@@ -351,6 +351,50 @@
     .dem-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .dem-card .value { font-size: 28px; font-weight: 700; color: #ff8c42; }
     
+    /* Loading Spinner Styles */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #ff8c42;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .deposit-btn {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid #4caf50;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #4caf50;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 10px;
+    }
+    .deposit-btn:hover {
+      background: #4caf50;
+      color: white;
+    }
+    
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: 1fr; }
       .profile-banner { flex-direction: column; text-align: center; }
@@ -385,8 +429,8 @@
     <p>Paste your TikTok and YouTube links below. Your videos will appear on your public profile for brands and fans to see.</p>
     
     <div class="social-input-group">
-      <input type="url" id="tiktokUrl" placeholder="TikTok URL (example: https://www.tiktok.com/@username)">
-      <input type="url" id="youtubeUrl" placeholder="YouTube URL (example: https://www.youtube.com/@channelname)">
+      <input type="text" id="tiktokUrl" placeholder="TikTok URL (example: https://www.tiktok.com/@username)">
+      <input type="text" id="youtubeUrl" placeholder="YouTube URL (example: https://www.youtube.com/@channelname)">
     </div>
     
     <button class="save-social-btn" onclick="saveSocialLinks()">
@@ -394,6 +438,13 @@
     </button>
     
     <div id="socialStatus" class="social-status" style="display: none;"></div>
+  </div>
+
+  <!-- Deposit Button Added -->
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+    <button class="deposit-btn" onclick="window.location.href='/manual-deposit.html'">
+      <i class="ri-add-line"></i> Add Funds / Deposit
+    </button>
   </div>
 
   <div class="stats-row">
@@ -423,17 +474,18 @@
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-table">
         <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="4">Loading...</td></tr>
+        <tbody><tr><td colspan="4">Loading...<div class="spinner" style="margin-left: 10px;"></div></td></tr>
+        </tbody>
       </table>
     </div>
   </div>
 
   <div id="tab-review" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...</td></tr></tbody></table></div>
+    <div style="overflow-x: auto;"><table class="data-table" id="review-table"><thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...<div class="spinner" style="margin-left: 10px;"></div></td></tr></tbody></table></div>
   </div>
 
   <div id="tab-completed" class="tab-content">
-    <div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...</td></tr></tbody></table></div>
+    <div style="overflow-x: auto;"><table class="data-table" id="completed-table"><thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead><tbody><tr><td colspan="4">Loading...<div class="spinner" style="margin-left: 10px;"></div></td></tr></tbody></table></div>
   </div>
 
   <div id="tab-tips" class="tab-content">
@@ -486,6 +538,18 @@
 <div id="txn-modal" class="modal"><div class="modal-content"><h3>Transaction History</h3><div id="txn-list" style="max-height: 400px; overflow-y: auto;"></div><button class="cancel-btn" onclick="closeModal('txn-modal')">Close</button></div></div>
 <div id="project-modal" class="modal"><div class="modal-content"><h3 id="project-title">Project Details</h3><div id="project-details"></div><div id="project-work-section"></div><button class="cancel-btn" onclick="closeModal('project-modal')">Close</button></div></div>
 
+<!-- Withdrawal Confirmation Modal -->
+<div id="confirm-withdraw-modal" class="modal">
+  <div class="modal-content">
+    <h3>⚠️ Confirm Withdrawal</h3>
+    <p id="confirm-details"></p>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="processWithdrawal()">Confirm Withdrawal</button>
+      <button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ============================================
   // API BASE URL - Your backend on Render
@@ -496,6 +560,9 @@
   let selectedMethod = 'mpesa';
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
   let projectsData = [];
+  let pendingWithdrawAmount = null;
+  let pendingWithdrawMethod = null;
+  let pendingWithdrawDetails = null;
 
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -515,15 +582,48 @@
     document.getElementById(`${method}-fields`).style.display = 'block';
   }
 
+  // URL Validation for Social Links
+  function isValidUrl(url, platform) {
+    if (!url) return true;
+    try {
+      const urlObj = new URL(url);
+      if (platform === 'tiktok') {
+        return urlObj.hostname.includes('tiktok.com') && url.includes('@');
+      } else if (platform === 'youtube') {
+        return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
+      }
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
   async function saveSocialLinks() {
-    const tiktokUrl = document.getElementById('tiktokUrl').value.trim();
-    const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
+    let tiktokUrl = document.getElementById('tiktokUrl').value.trim();
+    let youtubeUrl = document.getElementById('youtubeUrl').value.trim();
     const statusDiv = document.getElementById('socialStatus');
     
     if (!tiktokUrl && !youtubeUrl) {
       statusDiv.style.display = 'block';
       statusDiv.className = 'social-status error';
       statusDiv.innerHTML = 'Please enter at least one social media link';
+      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+      return;
+    }
+    
+    // Validate URLs
+    if (tiktokUrl && !isValidUrl(tiktokUrl, 'tiktok')) {
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'social-status error';
+      statusDiv.innerHTML = 'Please enter a valid TikTok URL (e.g., https://www.tiktok.com/@username)';
+      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+      return;
+    }
+    
+    if (youtubeUrl && !isValidUrl(youtubeUrl, 'youtube')) {
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'social-status error';
+      statusDiv.innerHTML = 'Please enter a valid YouTube URL (e.g., https://www.youtube.com/@channelname)';
       setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
       return;
     }
@@ -626,8 +726,14 @@
         document.getElementById('tips-fee').innerHTML = formatMoney(tips * 0.05);
         document.getElementById('tips-net').innerHTML = formatMoney(tips * 0.95);
         updateWithdrawUI(available);
+      } else {
+        console.error('Wallet API error:', data.message);
+        document.getElementById('wallet-balance').innerHTML = formatMoney(0);
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      console.error('Error loading wallet:', e);
+      document.getElementById('wallet-balance').innerHTML = formatMoney(0);
+    }
   }
 
   function updateWithdrawUI(available) {
@@ -639,6 +745,10 @@
     const update = () => {
       let localAmount = parseFloat(amountInput.value) || 0;
       let usdAmount = localAmount;
+      // Currency conversion
+      if (currencySelect.value !== 'USD') {
+        usdAmount = localAmount / exchangeRates[currencySelect.value];
+      }
       const percent = Math.min(100, (usdAmount / minUSD) * 100);
       progressFill.style.width = percent + '%';
       if (usdAmount >= minUSD) progressFill.classList.add('active');
@@ -651,6 +761,8 @@
         withdrawBtn.disabled = true;
       }
     };
+    amountInput.removeEventListener('input', update);
+    currencySelect.removeEventListener('change', update);
     amountInput.addEventListener('input', update);
     currencySelect.addEventListener('change', update);
     update();
@@ -668,9 +780,9 @@
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
         
-        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
-        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
-        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
+        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
+        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
       }
     } catch(e) { console.error(e); }
   }
@@ -707,8 +819,10 @@
         const txs = data.data.transactions;
         document.getElementById('txn-count').innerText = txs.length;
         document.getElementById('txn-list').innerHTML = txs.map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span>${new Date(t.createdAt).toLocaleDateString()}</span></div>`).join('');
+      } else {
+        document.getElementById('txn-list').innerHTML = 'No transactions found';
       }
-    } catch(e) { document.getElementById('txn-list').innerHTML = 'Error loading'; }
+    } catch(e) { document.getElementById('txn-list').innerHTML = 'Error loading transactions'; }
   }
 
   function showWalletDetails() { document.getElementById('wallet-modal').style.display = 'flex'; }
@@ -716,21 +830,77 @@
   function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
   function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; }
 
-  async function withdraw() {
+  // Withdrawal with confirmation modal
+  function withdraw() {
     let amount = parseFloat(document.getElementById('withdraw-amount').value);
+    const currency = document.getElementById('withdraw-currency').value;
+    
     if (!amount || amount <= 0) { alert('Enter amount'); return; }
-    const method = selectedMethod;
+    
+    // Convert to USD if needed
+    let usdAmount = amount;
+    if (currency !== 'USD') {
+      usdAmount = amount / exchangeRates[currency];
+    }
+    
+    // Validate minimum
+    if (usdAmount < 30) {
+      alert(`Minimum withdrawal is $30 USD. Your ${currency} ${amount} equals $${usdAmount.toFixed(2)}`);
+      return;
+    }
+    
+    // Check balance
+    const availableBalance = parseFloat(document.getElementById('wallet-balance').innerText.replace(/[^0-9.-]/g, '')) || 0;
+    if (usdAmount > availableBalance) {
+      alert(`Insufficient balance. Available: ${formatMoney(availableBalance)}`);
+      return;
+    }
+    
+    // Store pending withdrawal details
+    pendingWithdrawAmount = usdAmount;
+    pendingWithdrawMethod = selectedMethod;
+    
     let payoutDetails = {};
-    if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
-    else if (method === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
+    if (selectedMethod === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
+    else if (selectedMethod === 'paypal') payoutDetails = { paypalEmail: document.getElementById('paypal-email').value };
     else payoutDetails = { bankName: document.getElementById('wire-bank').value, accountNumber: document.getElementById('wire-account').value };
+    
+    pendingWithdrawDetails = payoutDetails;
+    
+    // Show confirmation modal
+    document.getElementById('confirm-details').innerHTML = `
+      Amount: ${formatMoney(usdAmount)}<br>
+      Method: ${selectedMethod.toUpperCase()}<br>
+      Fee: ${formatMoney(usdAmount * 0.03)}<br>
+      You will receive: ${formatMoney(usdAmount * 0.97)}
+    `;
+    document.getElementById('confirm-withdraw-modal').style.display = 'flex';
+  }
+
+  async function processWithdrawal() {
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/wallet/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ amountUsd: amount, payoutMethod: method, payoutDetails }) });
+      const res = await fetch(`${API_BASE}/api/wallet/withdraw`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ 
+          amountUsd: pendingWithdrawAmount, 
+          payoutMethod: pendingWithdrawMethod, 
+          payoutDetails: pendingWithdrawDetails 
+        }) 
+      });
       const data = await res.json();
-      if (data.success) { alert('Withdrawal submitted!'); loadWallet(); document.getElementById('withdraw-amount').value = ''; }
-      else alert(data.message);
-    } catch(e) { alert('Error'); }
+      if (data.success) { 
+        alert('Withdrawal submitted!'); 
+        loadWallet(); 
+        document.getElementById('withdraw-amount').value = '';
+        closeModal('confirm-withdraw-modal');
+      } else {
+        alert(data.message || 'Withdrawal failed');
+      }
+    } catch(e) { 
+      alert('Error processing withdrawal'); 
+    }
   }
 
   async function loadDemographics() {
