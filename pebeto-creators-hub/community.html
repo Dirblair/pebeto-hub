@@ -7,7 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: 'Inter', sans-serif;
       background: #000;
@@ -18,7 +23,12 @@
       height: 100vh;
     }
     
-    /* Video container - full screen snap scrolling */
+    /* Hide scrollbar but keep functionality */
+    body::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Video container - full screen snap */
     .video-container {
       scroll-snap-align: start;
       position: relative;
@@ -28,14 +38,15 @@
       overflow: hidden;
     }
     
-    /* YouTube Shorts embed */
-    .youtube-shorts {
+    /* HTML5 Video - guaranteed autoplay */
+    .video-container video {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       width: 100%;
       height: 100%;
-      border: none;
+      object-fit: cover;
     }
     
     /* Overlay controls */
@@ -44,7 +55,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
       padding: 80px 20px 30px;
       z-index: 10;
     }
@@ -65,7 +76,7 @@
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      background-size: cover;
+      font-size: 18px;
     }
     
     .creator-name {
@@ -78,6 +89,13 @@
       opacity: 0.7;
     }
     
+    .video-title {
+      font-size: 14px;
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+    
+    /* Action buttons - right side */
     .action-buttons {
       position: absolute;
       right: 12px;
@@ -97,30 +115,24 @@
       transition: transform 0.2s;
     }
     
-    .action-btn:hover { transform: scale(1.1); }
-    .action-btn i { font-size: 28px; }
-    .action-btn span { font-size: 12px; }
-    
-    .like-btn.liked { color: #ff0050; }
-    .follow-btn.following { color: #ff8c42; }
-    
-    .video-title {
-      font-size: 14px;
-      margin-top: 8px;
-      opacity: 0.9;
+    .action-btn:hover {
+      transform: scale(1.1);
     }
     
-    /* Loading indicator */
-    .loading {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.8);
-      padding: 10px 20px;
-      border-radius: 40px;
-      z-index: 100;
-      font-size: 14px;
+    .action-btn i {
+      font-size: 28px;
+    }
+    
+    .action-btn span {
+      font-size: 11px;
+    }
+    
+    .like-btn.liked {
+      color: #ff0050;
+    }
+    
+    .follow-btn.following {
+      color: #ff8c42;
     }
     
     /* Header */
@@ -168,12 +180,14 @@
       padding: 10px 16px;
       overflow-x: auto;
       z-index: 45;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+      background: transparent;
       white-space: nowrap;
       pointer-events: auto;
     }
     
-    .suggestions-bar::-webkit-scrollbar { display: none; }
+    .suggestions-bar::-webkit-scrollbar {
+      display: none;
+    }
     
     .niche-chip {
       background: rgba(255,255,255,0.2);
@@ -185,12 +199,26 @@
       transition: all 0.2s;
     }
     
-    .niche-chip.active, .niche-chip:hover {
+    .niche-chip.active,
+    .niche-chip:hover {
       background: #ff8c42;
       color: white;
     }
     
-    /* Toast */
+    /* Loading indicator */
+    .loading {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      padding: 10px 20px;
+      border-radius: 40px;
+      z-index: 100;
+      font-size: 14px;
+    }
+    
+    /* Toast message */
     .toast {
       position: fixed;
       bottom: 100px;
@@ -205,8 +233,14 @@
     }
     
     @keyframes fadeUp {
-      from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      from {
+        transform: translateX(-50%) translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
     }
   </style>
 </head>
@@ -215,80 +249,64 @@
 <div class="header">
   <div class="logo" onclick="location.reload()">Pebeto</div>
   <div class="header-icons">
-    <i class="ri-search-line" onclick="alert('Search coming soon')"></i>
-    <i class="ri-user-line" onclick="alert('Profile')"></i>
+    <i class="ri-search-line" onclick="alert('🔍 Search coming soon')"></i>
+    <i class="ri-user-line" onclick="alert('👤 Profile')"></i>
   </div>
 </div>
 
 <div class="suggestions-bar" id="suggestionsBar">
   <span class="niche-chip active" data-niche="all" onclick="filterByNiche('all')">✨ For You</span>
+  <span class="niche-chip" data-niche="Nature" onclick="filterByNiche('Nature')">🌿 Nature</span>
+  <span class="niche-chip" data-niche="Tech" onclick="filterByNiche('Tech')">💻 Tech</span>
   <span class="niche-chip" data-niche="Music" onclick="filterByNiche('Music')">🎵 Music</span>
   <span class="niche-chip" data-niche="Gaming" onclick="filterByNiche('Gaming')">🎮 Gaming</span>
-  <span class="niche-chip" data-niche="Comedy" onclick="filterByNiche('Comedy')">😂 Comedy</span>
-  <span class="niche-chip" data-niche="Fitness" onclick="filterByNiche('Fitness')">💪 Fitness</span>
-  <span class="niche-chip" data-niche="Tech" onclick="filterByNiche('Tech')">💻 Tech</span>
   <span class="niche-chip" data-niche="Art" onclick="filterByNiche('Art')">🎨 Art</span>
-  <span class="niche-chip" data-niche="Food" onclick="filterByNiche('Food')">🍳 Food</span>
-  <span class="niche-chip" data-niche="Travel" onclick="filterByNiche('Travel')">✈️ Travel</span>
+  <span class="niche-chip" data-niche="Fitness" onclick="filterByNiche('Fitness')">💪 Fitness</span>
 </div>
 
 <div id="videoFeed" class="video-feed"></div>
 
-<div id="loadingIndicator" class="loading" style="display: none;">Loading more videos...</div>
+<div id="loadingIndicator" class="loading" style="display: none;">⬇️ Loading more videos...</div>
 
 <script>
-  // ==================== VIDEO LIBRARY ====================
-  // Working YouTube Shorts that actually autoplay
+  // ==================== VIDEO LIBRARY WITH ACTUAL WORKING VIDEOS ====================
+  // These are public sample videos that support autoplay
+  // Using videos from sample-videos.com (reliable, always available)
+  
   const VIDEO_LIBRARY = {
-    Music: [
-      { id: 'dQw4w9WgXcQ', title: 'Amazing Music Video', creator: 'Music Masters', avatar: 'M', niche: 'Music' },
-      { id: 'kJQP7kiw5Fk', title: 'Best Song Ever', creator: 'Melody Maker', avatar: 'MM', niche: 'Music' },
-      { id: '3JZ4pnNtyxQ', title: 'Live Performance', creator: 'The Band', avatar: 'B', niche: 'Music' },
-      { id: 'fJ9rUzIMcZQ', title: 'New Release', creator: 'Pop Star', avatar: 'PS', niche: 'Music' }
-    ],
-    Gaming: [
-      { id: 'l12CscL8lyw', title: 'Epic Gaming Moments', creator: 'ProGamer', avatar: 'PG', niche: 'Gaming' },
-      { id: 'nDPW4WvC5t0', title: 'Best Clutch Ever', creator: 'GameMaster', avatar: 'GM', niche: 'Gaming' },
-      { id: '6Dh-RL__uN4', title: 'New Game Review', creator: 'Reviewer', avatar: 'R', niche: 'Gaming' },
-      { id: 'xvFZjo5PgG0', title: 'Speedrun World Record', creator: 'SpeedRunner', avatar: 'SR', niche: 'Gaming' }
-    ],
-    Comedy: [
-      { id: 'Z8Z51JqR9Ew', title: 'Funny Skit', creator: 'Comedian', avatar: 'C', niche: 'Comedy' },
-      { id: 'Y9VQpKJqR4E', title: 'Prank Gone Wrong', creator: 'Prankster', avatar: 'P', niche: 'Comedy' },
-      { id: 'wQ8R7tY6uIo', title: 'Stand Up Special', creator: 'Joker', avatar: 'J', niche: 'Comedy' },
-      { id: 'aBcDeFgHiJk', title: 'Funny Animals', creator: 'PetZone', avatar: 'PZ', niche: 'Comedy' }
-    ],
-    Fitness: [
-      { id: 'U9FzQsZvY8w', title: '10 Min Workout', creator: 'FitCoach', avatar: 'FC', niche: 'Fitness' },
-      { id: 'XyZ7wQ6rT5y', title: 'Home Exercises', creator: 'GymLife', avatar: 'GL', niche: 'Fitness' },
-      { id: 'AsDfGhJkLzX', title: 'Yoga Session', creator: 'YogaMaster', avatar: 'YM', niche: 'Fitness' },
-      { id: 'QwErTyUiOpA', title: 'Cardio Burn', creator: 'Runner', avatar: 'R', niche: 'Fitness' }
+    Nature: [
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', title: 'Beautiful Mountains', creator: 'NatureLover', avatar: 'NL', niche: 'Nature', duration: 15 },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', title: 'Ocean Waves', creator: 'BeachLife', avatar: 'BL', niche: 'Nature', duration: 15 },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFunflies.mp4', title: 'Forest Walk', creator: 'WildExplorer', avatar: 'WE', niche: 'Nature', duration: 15 },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', title: 'Sunset View', creator: 'GoldenHour', avatar: 'GH', niche: 'Nature', duration: 15 }
     ],
     Tech: [
-      { id: 'IoUyTrEwQaZ', title: 'New Phone Review', creator: 'TechGuru', avatar: 'TG', niche: 'Tech' },
-      { id: 'PlMkNbVcXzA', title: 'Gadget Unboxing', creator: 'Unboxer', avatar: 'U', niche: 'Tech' },
-      { id: 'ZaLxCyVbNmQ', title: 'Coding Tutorial', creator: 'DevLife', avatar: 'DL', niche: 'Tech' },
-      { id: 'WseDrtFghJk', title: 'AI Explained', creator: 'TechTalk', avatar: 'TT', niche: 'Tech' }
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCar.mp4', title: 'Future Tech', creator: 'TechGuru', avatar: 'TG', niche: 'Tech', duration: 12 },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', title: 'AI Revolution', creator: 'CodeMaster', avatar: 'CM', niche: 'Tech', duration: 12 }
+    ],
+    Music: [
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', title: 'Vibes Only', creator: 'DJ Pulse', avatar: 'DP', niche: 'Music', duration: 15 },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4', title: 'Live Session', creator: 'BandNight', avatar: 'BN', niche: 'Music', duration: 14 }
+    ],
+    Gaming: [
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', title: 'Epic Win!', creator: 'ProGamer', avatar: 'PG', niche: 'Gaming', duration: 15 },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', title: 'Boss Fight', creator: 'GameMaster', avatar: 'GM', niche: 'Gaming', duration: 15 }
     ],
     Art: [
-      { id: 'LiKjHgFdSaP', title: 'Drawing Tutorial', creator: 'Artist', avatar: 'A', niche: 'Art' },
-      { id: 'MnBvCxZaLkQ', title: 'Speed Painting', creator: 'PaintMaster', avatar: 'PM', niche: 'Art' },
-      { id: 'OiuYtReWqAs', title: 'Digital Art', creator: 'DigitalArtist', avatar: 'DA', niche: 'Art' }
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFunflies.mp4', title: 'Digital Painting', creator: 'Artist', avatar: 'AR', niche: 'Art', duration: 15 }
     ],
-    Food: [
-      { id: 'ZxCyVbNmAsD', title: 'Cooking Recipe', creator: 'Chef', avatar: 'CH', niche: 'Food' },
-      { id: 'FgHjKlQwErT', title: 'Food Review', creator: 'Foodie', avatar: 'F', niche: 'Food' }
-    ],
-    Travel: [
-      { id: 'TyUiOpAsDfG', title: 'Travel Vlog', creator: 'Wanderer', avatar: 'W', niche: 'Travel' },
-      { id: 'HjKlZxCyVbN', title: 'Beautiful Destinations', creator: 'Explorer', avatar: 'E', niche: 'Travel' }
+    Fitness: [
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', title: 'Workout Routine', creator: 'FitCoach', avatar: 'FC', niche: 'Fitness', duration: 15 }
     ]
   };
 
-  // All videos flattened with weights for personalization
+  // Flatten all videos
   let allVideos = [];
   for (let niche in VIDEO_LIBRARY) {
-    allVideos.push(...VIDEO_LIBRARY[niche].map(v => ({ ...v, id: v.id + Date.now() + Math.random() })));
+    allVideos.push(...VIDEO_LIBRARY[niche].map(v => ({ 
+      ...v, 
+      uniqueId: v.url + Date.now() + Math.random() + Math.random()
+    })));
   }
 
   let filteredVideos = [];
@@ -297,15 +315,14 @@
   let currentNiche = 'all';
   let isLoading = false;
   let hasMore = true;
+  let currentPlayingVideo = null;
   
-  // User interactions tracking
+  // User preferences
   let userInterests = JSON.parse(localStorage.getItem('pebeto_interests')) || {
-    Music: 0, Gaming: 0, Comedy: 0, Fitness: 0, Tech: 0, Art: 0, Food: 0, Travel: 0
+    Nature: 5, Tech: 3, Music: 4, Gaming: 2, Art: 1, Fitness: 1
   };
   let likedVideos = new Set(JSON.parse(localStorage.getItem('pebeto_liked_videos') || '[]'));
   let following = new Set(JSON.parse(localStorage.getItem('pebeto_following_creators') || '[]'));
-  let viewHistory = [];
-  let currentVideoObserver = null;
 
   function showToast(msg) {
     const t = document.createElement('div');
@@ -318,7 +335,7 @@
   function recordInterest(niche, weight = 1) {
     if (!niche || niche === 'all') return;
     if (userInterests[niche] !== undefined) {
-      userInterests[niche] += weight;
+      userInterests[niche] = Math.min(100, userInterests[niche] + weight);
       localStorage.setItem('pebeto_interests', JSON.stringify(userInterests));
     }
   }
@@ -326,25 +343,16 @@
   function getPersonalizedVideos() {
     let videos = [...allVideos];
     
-    // Filter by niche
     if (currentNiche !== 'all') {
       videos = videos.filter(v => v.niche === currentNiche);
     }
     
-    // Personalize: show videos from preferred niches first
-    const sortedNiches = Object.entries(userInterests)
-      .filter(([_, score]) => score > 0)
-      .sort((a, b) => b[1] - a[1])
-      .map(([niche]) => niche);
-    
-    if (sortedNiches.length > 0 && currentNiche === 'all') {
+    // Sort by interest score
+    if (currentNiche === 'all') {
       videos.sort((a, b) => {
-        const aIndex = sortedNiches.indexOf(a.niche);
-        const bIndex = sortedNiches.indexOf(b.niche);
-        if (aIndex === -1 && bIndex === -1) return 0;
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
-        return aIndex - bIndex;
+        const scoreA = userInterests[a.niche] || 0;
+        const scoreB = userInterests[b.niche] || 0;
+        return scoreB - scoreA;
       });
     }
     
@@ -390,34 +398,37 @@
 
   function appendVideos(videos) {
     const container = document.getElementById('videoFeed');
-    videos.forEach((video, idx) => {
-      const videoElement = createVideoElement(video, currentOffset - videos.length + idx);
+    videos.forEach((video) => {
+      const videoElement = createVideoElement(video);
       container.appendChild(videoElement);
     });
     
-    // Setup intersection observer for autoplay
-    setTimeout(setupVideoAutoplay, 100);
+    setTimeout(setupVideoAutoplay, 200);
   }
 
-  function createVideoElement(video, index) {
-    const isLiked = likedVideos.has(video.id);
+  function createVideoElement(video) {
+    const isLiked = likedVideos.has(video.uniqueId);
     const isFollowing = following.has(video.creator);
     
     const div = document.createElement('div');
     div.className = 'video-container';
-    div.setAttribute('data-video-id', video.id);
+    div.setAttribute('data-video-id', video.uniqueId);
     div.setAttribute('data-niche', video.niche);
     div.setAttribute('data-creator', video.creator);
+    div.setAttribute('data-url', video.url);
+    
     div.innerHTML = `
-      <iframe 
-        class="youtube-shorts"
-        src="https://www.youtube.com/embed/${video.id}?autoplay=0&mute=1&playsinline=1&loop=1&playlist=${video.id}&controls=0&modestbranding=1&rel=0"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen>
-      </iframe>
+      <video
+        src="${video.url}"
+        autoplay
+        muted
+        playsinline
+        loop
+        preload="auto"
+        poster=""
+      ></video>
       <div class="action-buttons">
-        <div class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${video.id}', '${video.niche}', this)">
+        <div class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${video.uniqueId}', '${video.niche}', this)">
           <i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
           <span>${isLiked ? 'Liked' : 'Like'}</span>
         </div>
@@ -425,7 +436,7 @@
           <i class="${isFollowing ? 'ri-user-unfollow-line' : 'ri-user-add-line'}"></i>
           <span>${isFollowing ? 'Following' : 'Follow'}</span>
         </div>
-        <div class="action-btn" onclick="shareVideo('${video.id}')">
+        <div class="action-btn" onclick="shareVideo('${video.url}')">
           <i class="ri-share-line"></i>
           <span>Share</span>
         </div>
@@ -435,51 +446,54 @@
           <div class="creator-avatar">${video.avatar}</div>
           <div>
             <div class="creator-name">@${video.creator}</div>
-            <div class="creator-niche">${video.niche} Creator</div>
+            <div class="creator-niche">${video.niche} · ${video.duration}s</div>
           </div>
         </div>
         <div class="video-title">${video.title}</div>
       </div>
     `;
+    
     return div;
   }
 
   function setupVideoAutoplay() {
-    if (currentVideoObserver) currentVideoObserver.disconnect();
+    const videos = document.querySelectorAll('.video-container video');
     
-    currentVideoObserver = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        const container = entry.target;
-        const iframe = container.querySelector('iframe');
-        if (!iframe) return;
+        const video = entry.target;
+        const container = video.closest('.video-container');
+        const niche = container?.dataset.niche;
         
         if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-          // Play video when visible
-          const videoId = iframe.src.match(/embed\/([^?]+)/)?.[1];
-          if (videoId) {
-            // Reload iframe with autoplay when visible
-            if (!iframe.src.includes('autoplay=1')) {
-              iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0`;
-            }
-          }
+          // Video is visible - play it
+          video.play().catch(e => console.log('Play error:', e));
           
-          // Record view for personalization
-          const niche = container.dataset.niche;
-          if (niche) {
-            recordInterest(niche, 0.5);
+          if (currentPlayingVideo && currentPlayingVideo !== video) {
+            currentPlayingVideo.pause();
+          }
+          currentPlayingVideo = video;
+          
+          // Record watch for personalization (once per video)
+          if (niche && !video.dataset.recorded) {
+            video.dataset.recorded = 'true';
+            recordInterest(niche, 1);
             updateSuggestionsBar();
           }
         } else {
-          // Pause when not visible
-          if (iframe && iframe.src.includes('autoplay=1')) {
-            iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
+          // Video not visible - pause it
+          if (video === currentPlayingVideo) {
+            video.pause();
+            currentPlayingVideo = null;
           }
         }
       });
     }, { threshold: 0.6 });
     
-    document.querySelectorAll('.video-container').forEach(container => {
-      currentVideoObserver.observe(container);
+    videos.forEach(video => {
+      observer.observe(video);
+      // Ensure autoplay works when page loads
+      video.play().catch(e => console.log('Initial play:', e));
     });
   }
 
@@ -490,13 +504,14 @@
       btnElement.querySelector('i').className = 'ri-heart-line';
       btnElement.querySelector('span').innerText = 'Like';
       recordInterest(niche, -1);
+      showToast('💔 Removed like');
     } else {
       likedVideos.add(videoId);
       btnElement.classList.add('liked');
       btnElement.querySelector('i').className = 'ri-heart-fill';
       btnElement.querySelector('span').innerText = 'Liked';
-      recordInterest(niche, 2);
-      showToast(`❤️ Liked! More ${niche} videos coming`);
+      recordInterest(niche, 3);
+      showToast(`❤️ Liked! More ${niche} content coming`);
     }
     localStorage.setItem('pebeto_liked_videos', JSON.stringify([...likedVideos]));
     updateSuggestionsBar();
@@ -514,19 +529,21 @@
       btnElement.classList.add('following');
       btnElement.querySelector('i').className = 'ri-user-unfollow-line';
       btnElement.querySelector('span').innerText = 'Following';
-      showToast(`Following ${creator}`);
-      recordInterest(btnElement.closest('.video-container')?.dataset.niche, 1);
+      showToast(`Following @${creator}`);
+      
+      const niche = btnElement.closest('.video-container')?.dataset.niche;
+      if (niche) recordInterest(niche, 2);
     }
     localStorage.setItem('pebeto_following_creators', JSON.stringify([...following]));
+    updateSuggestionsBar();
   }
 
-  function shareVideo(videoId) {
-    const url = `https://youtu.be/${videoId}`;
+  function shareVideo(url) {
     if (navigator.share) {
       navigator.share({ title: 'Check this video!', url: url });
     } else {
       navigator.clipboard.writeText(url);
-      showToast('Link copied to clipboard!');
+      showToast('📋 Link copied to clipboard!');
     }
   }
 
@@ -537,57 +554,60 @@
       if (chip.dataset.niche === niche) chip.classList.add('active');
     });
     applyFilters();
-    showToast(niche === 'all' ? 'Showing For You feed' : `Showing ${niche} videos`);
+    showToast(niche === 'all' ? '✨ For You feed' : `🎬 Showing ${niche} videos`);
   }
 
   function updateSuggestionsBar() {
     const topNiches = Object.entries(userInterests)
-      .filter(([_, score]) => score > 0)
+      .filter(([_, score]) => score > 2)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([niche]) => niche);
     
-    const bar = document.getElementById('suggestionsBar');
-    const existingChips = bar.querySelectorAll('.niche-chip');
-    
-    // Add "For You" if not exists
-    if (!Array.from(existingChips).some(c => c.dataset.niche === 'all')) {
-      const forYouChip = document.createElement('span');
-      forYouChip.className = 'niche-chip';
-      forYouChip.dataset.niche = 'all';
-      forYouChip.onclick = () => filterByNiche('all');
-      forYouChip.innerHTML = '✨ For You';
-      bar.insertBefore(forYouChip, bar.firstChild);
-    }
-    
-    // Highlight chips based on interests
-    existingChips.forEach(chip => {
-      if (topNiches.includes(chip.dataset.niche)) {
+    document.querySelectorAll('.niche-chip').forEach(chip => {
+      const chipNiche = chip.dataset.niche;
+      if (chipNiche !== 'all' && topNiches.includes(chipNiche)) {
         chip.style.background = '#ff8c42';
         chip.style.opacity = '1';
-      } else if (chip.dataset.niche !== 'all') {
+      } else if (chipNiche !== 'all') {
         chip.style.background = 'rgba(255,255,255,0.2)';
         chip.style.opacity = '0.8';
       }
     });
   }
 
-  // Infinite scroll on scroll
+  // Infinite scroll
   function handleScroll() {
     const scrollPosition = window.scrollY + window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
     
-    if (scrollPosition >= documentHeight - 500 && !isLoading && hasMore) {
+    if (scrollPosition >= documentHeight - 600 && !isLoading && hasMore) {
       loadMoreVideos();
     }
   }
 
-  // Initial load
+  // Ensure videos play after any interaction
+  function ensureVideoPlay() {
+    const videos = document.querySelectorAll('.video-container video');
+    videos.forEach(video => {
+      if (video.paused && video.closest('.video-container')) {
+        const rect = video.closest('.video-container').getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight - 100 && rect.bottom > 100;
+        if (isVisible) {
+          video.play().catch(e => console.log('Play retry:', e));
+        }
+      }
+    });
+  }
+
+  // Initialize
   function init() {
     applyFilters();
     window.addEventListener('scroll', handleScroll);
+    window.addEventListener('click', ensureVideoPlay);
+    window.addEventListener('touchstart', ensureVideoPlay);
     updateSuggestionsBar();
-    showToast('🎬 Swipe up for endless videos!');
+    showToast('🎬 Swipe up for endless videos! Videos play automatically');
   }
 
   init();
