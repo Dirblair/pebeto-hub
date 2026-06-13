@@ -1,7 +1,7 @@
 /**
  * User Routes for Pebeto Creator's Hub
  * 
- * Handles user profile, activity log, sessions, 2FA, and API keys.
+ * Handles user profile, activity log, sessions, 2FA, API keys, and notification preferences.
  * 
  * @module routes/user
  */
@@ -506,6 +506,83 @@ router.post('/api-keys/:keyId/regenerate', [
       regeneratedAt: new Date()
     },
     message: 'API key regenerated successfully. Copy your new key now.'
+  });
+}));
+
+// ============================================
+// ============================================
+// NEW: Email Notification Preferences
+// ============================================
+// ============================================
+
+/**
+ * GET /api/user/notification-preferences
+ * Get user's notification preferences
+ */
+router.get('/notification-preferences', catchAsync(async (req, res) => {
+  const user = await User.findById(req.user._id).select('notificationPreferences');
+  
+  const defaultPreferences = {
+    emailOnLogin: true,
+    emailOnTip: true,
+    emailOnBidAccepted: true,
+    emailOnCampaignUpdate: true,
+    emailOnWithdrawal: true,
+    pushOnTip: true,
+    pushOnMessage: true
+  };
+  
+  const preferences = user.notificationPreferences || defaultPreferences;
+  
+  res.json({
+    success: true,
+    data: preferences
+  });
+}));
+
+/**
+ * PUT /api/user/notification-preferences
+ * Update notification preferences
+ */
+router.put('/notification-preferences', [
+  body('emailOnLogin').optional().isBoolean(),
+  body('emailOnTip').optional().isBoolean(),
+  body('emailOnBidAccepted').optional().isBoolean(),
+  body('emailOnCampaignUpdate').optional().isBoolean(),
+  body('emailOnWithdrawal').optional().isBoolean(),
+  body('pushOnTip').optional().isBoolean(),
+  body('pushOnMessage').optional().isBoolean()
+], catchAsync(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new AppError(errors.array()[0].msg, 400);
+  }
+  
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  
+  if (!user.notificationPreferences) {
+    user.notificationPreferences = {};
+  }
+  
+  // Update only the fields provided
+  Object.keys(req.body).forEach(key => {
+    if (typeof req.body[key] === 'boolean') {
+      user.notificationPreferences[key] = req.body[key];
+    }
+  });
+  
+  await user.save();
+  
+  logger.info(`Notification preferences updated for user ${req.user._id}`);
+  
+  res.json({
+    success: true,
+    message: 'Notification preferences updated',
+    data: user.notificationPreferences
   });
 }));
 
