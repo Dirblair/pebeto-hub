@@ -17,7 +17,7 @@ const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { AppError } = require('../utils/errors');
-const { roundUsd, calculateTip } = require('../services/feeService');
+const { roundUsd, calculateTip } = require('./feeService');
 const logger = require('../utils/logger');
 
 // ============================================
@@ -237,7 +237,7 @@ async function debitWallet(walletId, field, amount, session = null) {
 }
 
 /**
- * Debit from available balance first, then tips balance
+ * Debit from available balance first, then tips balance (NEW - FIXED)
  * @param {string} walletId - Wallet ID
  * @param {number} amount - Amount to debit
  * @param {Object} session - Mongoose session (optional)
@@ -254,7 +254,7 @@ async function debitWithdrawable(walletId, amount, session = null) {
     throw new AppError('Wallet not found', 404);
   }
 
-  const totalWithdrawable = wallet.balances.available + wallet.balances.tips;
+  const totalWithdrawable = (wallet.balances.available || 0) + (wallet.balances.tips || 0);
   if (totalWithdrawable < roundedAmount) {
     throw new AppError(
       `Insufficient withdrawable balance. Available: ${totalWithdrawable}, Requested: ${roundedAmount}`,
@@ -306,6 +306,28 @@ async function debitWithdrawable(walletId, amount, session = null) {
   return updated;
 }
 
+/**
+ * Run a function within a database transaction (NEW - FIXED)
+ * @param {Function} fn - Async function to run with session
+ * @returns {Promise<any>} Result of the function
+ */
+async function runInTransaction(fn) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    const result = await fn(session);
+    await session.commitTransaction();
+    return result;
+  } catch (err) {
+    await session.abortTransaction();
+    logger.error('Transaction aborted', { error: err.message });
+    throw err;
+  } finally {
+    session.endSession();
+  }
+}
+
 // ============================================
 // Transaction Recording
 // ============================================
@@ -355,7 +377,7 @@ async function getTransaction(transactionId) {
 }
 
 /**
- * Get transaction history for a user
+ * Get transaction history for a user (FIXED - Complete)
  * @param {string} userId - User ID
  * @param {Object} options - Pagination and filter options
  * @returns {Promise<Object>} Transactions with pagination
@@ -433,7 +455,7 @@ async function processTip(senderId, recipientId, amount, idempotencyKey = null) 
   const { admin, wallet: profitWallet } = await getAdminProfitWallet();
 
   // Check sufficient balance
-  const totalWithdrawable = senderWallet.balances.available + senderWallet.balances.tips;
+  const totalWithdrawable = (senderWallet.balances.available || 0) + (senderWallet.balances.tips || 0);
   if (totalWithdrawable < breakdown.grossUsd) {
     throw new AppError(
       `Insufficient balance. Need $${breakdown.grossUsd}. Available: $${totalWithdrawable}`,
@@ -520,30 +542,8 @@ async function processTip(senderId, recipientId, amount, idempotencyKey = null) 
 }
 
 // ============================================
-// Transaction Management
+// Platform Stats
 // ============================================
-
-/**
- * Run a function within a database transaction
- * @param {Function} fn - Async function to run with session
- * @returns {Promise<any>} Result of the function
- */
-async function runInTransaction(fn) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
-  try {
-    const result = await fn(session);
-    await session.commitTransaction();
-    return result;
-  } catch (err) {
-    await session.abortTransaction();
-    logger.error('Transaction aborted', { error: err.message });
-    throw err;
-  } finally {
-    session.endSession();
-  }
-}
 
 /**
  * Get platform-wide wallet statistics
@@ -582,13 +582,13 @@ module.exports = {
   getWalletBalance,
   creditWallet,
   debitWallet,
-  debitWithdrawable,
+  debitWithdrawable,      // ✓ FIXED - Now exported
+  runInTransaction,       // ✓ FIXED - Now exported
   
   // Transaction operations
   recordTransaction,
   getTransaction,
-  getTransactionHistory,
-  runInTransaction,
+  getTransactionHistory,  // ✓ FIXED - Now exported
   
   // Tip processing
   processTip,
