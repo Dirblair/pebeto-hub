@@ -2,7 +2,7 @@
  * Admin Routes for Pebeto Creator's Hub
  * 
  * Provides administrative endpoints for platform metrics, user management,
- * transaction monitoring, and system configuration.
+ * transaction monitoring, system configuration, and moderation queue.
  * 
  * @module routes/admin
  */
@@ -788,6 +788,220 @@ router.get('/dashboard-stats', async (_req, res, next) => {
           week: weekVolume[0]?.total || 0,
           month: monthVolume[0]?.total || 0
         }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// ============================================
+// NEW: Moderation Queue Endpoints
+// ============================================
+// ============================================
+
+/**
+ * GET /api/admin/reports
+ * Get pending reports (moderation queue)
+ */
+router.get('/reports', [
+  query('status').optional().isIn(['pending', 'reviewing', 'resolved', 'dismissed']),
+  validatePagination
+], async (req, res, next) => {
+  try {
+    const { status = 'pending' } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+    
+    const Report = require('../models/Report');
+    
+    const [reports, total] = await Promise.all([
+      Report.find({ status })
+        .sort({ createdAt: 1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('reporterId', 'email uniqueCode role profile.stageName profile.companyName')
+        .populate('reportedUserId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl')
+        .populate('reportedPostId', 'caption mediaUrl mediaType createdAt')
+        .lean(),
+      Report.countDocuments({ status })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        reports,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + reports.length < total
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/reports/:reportId
+ * Get single report details
+ */
+router.get('/reports/:reportId', [
+  param('reportId').isMongoId().withMessage('Invalid report ID')
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { reportId } = req.params;
+    const Report = require('../models/Report');
+    
+    const report = await Report.findById(reportId)
+      .populate('reporterId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl')
+      .populate('reportedUserId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl')
+      .populate('reportedPostId', 'caption mediaUrl mediaType createdAt likeCount commentCount')
+      .lean();
+    
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+    
+    res.json({
+      success: true,
+      data: report
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * PUT /api/admin/reports/:reportId
+ * Update report status (resolve/dismiss)
+ */
+router.put('/reports/:reportId', [
+  param('reportId').isMongoId().withMessage('Invalid report ID'),
+  body('status').isIn(['resolved', 'dismissed', 'reviewing']).withMessage('Invalid status'),
+  body('resolution').optional().isString().trim().isLength({ max: 1000 }),
+  body('action').optional().isIn(['none', 'warn', 'suspend', 'ban', 'delete_post'])
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { reportId } = req.params;
+    const { status, resolution, action = 'none' } = req.body;
+    
+    const Report = require('../models/Report');
+    
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+    
+    // Update report
+    report.status = status;
+    report.resolution = resolution || report.resolution;
+    report.reviewedBy = req.user._id;
+    report.reviewedAt = new Date();
+    await report.save();
+    
+    // Take action on reported content/user
+    if (status === 'resolved') {
+      switch (action) {
+        case 'warn':
+          // Add warning to user account
+          await User.findByIdAndUpdate(report.reportedUserId, {
+            $push: { warnings: { message: resolution, issuedBy: req.user._id, issuedAt: new Date() } }
+          });
+          console.log(`[ADMIN] Warning issued to user ${report.reportedUserId} by ${req.user._id}`);
+          break;
+          
+        case 'suspend':
+          await User.findByIdAndUpdate(report.reportedUserId, { status: 'suspended', statusReason: resolution });
+          console.log(`[ADMIN] User ${report.reportedUserId} suspended by ${req.user._id}`);
+          break;
+          
+        case 'ban':
+          await User.findByIdAndUpdate(report.reportedUserId, { status: 'banned', statusReason: resolution });
+          console.log(`[ADMIN] User ${report.reportedUserId} banned by ${req.user._id}`);
+          break;
+          
+        case 'delete_post':
+          if (report.reportedPostId) {
+            const CommunityPost = require('../models/CommunityPost');
+            await CommunityPost.findByIdAndDelete(report.reportedPostId);
+            console.log(`[ADMIN] Post ${report.reportedPostId} deleted by ${req.user._id}`);
+          }
+          break;
+          
+        default:
+          break;
+      }
+    }
+    
+    logger.info(`Report ${reportId} ${status} by admin ${req.user._id}, action: ${action}`);
+    
+    res.json({
+      success: true,
+      message: `Report ${status}`,
+      data: report
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/reports/stats
+ * Get report statistics
+ */
+router.get('/reports/stats', async (req, res, next) => {
+  try {
+    const Report = require('../models/Report');
+    
+    const stats = await Report.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    const byReason = await Report.aggregate([
+      {
+        $group: {
+          _id: '$reason',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    const pendingCount = await Report.countDocuments({ status: 'pending' });
+    const resolvedToday = await Report.countDocuments({
+      status: 'resolved',
+      reviewedAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        byStatus: stats,
+        byReason,
+        pendingCount,
+        resolvedToday,
+        totalReports: await Report.countDocuments()
       }
     });
   } catch (err) {
