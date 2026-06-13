@@ -73,6 +73,27 @@ const { initSockets } = require('./sockets');
 const logger = require('./utils/logger');
 
 // ============================================
+// DEBUG: Check service imports (ADDED)
+// ============================================
+console.log('\n🔍 CHECKING SERVICE IMPORTS...');
+console.log('='.repeat(40));
+
+try { require('./services/walletService'); console.log('✅ walletService OK'); } 
+catch(e) { console.error('❌ walletService FAILED:', e.message); process.exit(1); }
+
+try { require('./services/withdrawalService'); console.log('✅ withdrawalService OK'); } 
+catch(e) { console.error('❌ withdrawalService FAILED:', e.message); process.exit(1); }
+
+try { require('./services/depositService'); console.log('✅ depositService OK'); } 
+catch(e) { console.error('❌ depositService FAILED:', e.message); process.exit(1); }
+
+try { require('./services/exchangeRateService'); console.log('✅ exchangeRateService OK'); } 
+catch(e) { console.error('❌ exchangeRateService FAILED:', e.message); process.exit(1); }
+
+console.log('='.repeat(40));
+console.log('✅ All service imports verified!\n');
+
+// ============================================
 // Helper function to safely require routes
 // ============================================
 
@@ -463,7 +484,7 @@ async function bootstrap() {
     console.error(error);
     console.error('='.repeat(60));
     
-    // Provide helpful error messages based on error type
+    // Provide helpful messages for common errors
     if (error.message.includes('MONGO_URI')) {
       console.error('\n💡 Database Configuration Error:');
       console.error('   Please ensure MONGO_URI is set in your environment variables');
