@@ -16,7 +16,8 @@ const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
 const { getWalletBalance, getTransactionHistory } = require('../services/walletService');
 const { previewWithdrawal, getWithdrawalHistory } = require('../services/withdrawalService');
-const { previewDeposit } = require('../services/depositService');
+const { previewDeposit, processDeposit } = require('../services/depositService');
+const { processWithdrawal } = require('../services/withdrawalService');
 const { sendTip } = require('../controllers/wallet.controller');
 const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../services/exchangeRateService');
 const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
@@ -50,6 +51,39 @@ const withdrawalPreviewValidation = [
     .optional()
     .isString()
     .isLength({ min: 3, max: 3 }),
+];
+
+// NEW: Deposit validation rules
+const depositValidation = [
+  body('intentUsd')
+    .isFloat({ min: 1 })
+    .withMessage('Deposit amount must be at least $1')
+    .toFloat(),
+];
+
+// NEW: Withdraw validation rules
+const withdrawValidation = [
+  body('payoutMethod')
+    .isIn(['mpesa', 'paypal', 'swift', 'bank_transfer'])
+    .withMessage('Invalid payout method. Must be: mpesa, paypal, swift, or bank_transfer'),
+  body('payoutDetails')
+    .isObject()
+    .withMessage('Payout details are required'),
+  body('amountUsd')
+    .optional()
+    .isFloat({ min: 1 })
+    .withMessage('Amount in USD must be at least $1')
+    .toFloat(),
+  body('amountLocal')
+    .optional()
+    .isFloat({ min: 1 })
+    .withMessage('Amount in local currency must be at least 1')
+    .toFloat(),
+  body('currency')
+    .optional()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Currency must be a 3-letter code (e.g., USD, KES)')
+    .toUpperCase(),
 ];
 
 const tipValidation = [
@@ -178,6 +212,45 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   });
 }));
 
+// ============================================
+// NEW: POST /api/wallet/deposit
+// Add funds to wallet (internal wallet transfer)
+// ============================================
+router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new AppError(errors.array()[0].msg, 400);
+  }
+
+  const { intentUsd, campaignId, idempotencyKey } = req.body;
+
+  const result = await processDeposit({
+    businessUser: req.user,
+    intentUsd,
+    campaignId,
+    idempotencyKey,
+    paymentMethod: 'wallet'
+  });
+
+  logger.info('Deposit processed', {
+    userId: req.user._id,
+    amount: intentUsd,
+    campaignId,
+    transactionId: result.transactionId
+  });
+
+  res.json({
+    success: true,
+    message: `Successfully deposited $${intentUsd} to escrow.`,
+    data: {
+      transactionId: result.transactionId,
+      breakdown: result.breakdown,
+      escrowCredit: result.breakdown.escrowCreditUsd,
+      feePaid: result.breakdown.feeUsd
+    }
+  });
+}));
+
 /**
  * POST /api/wallet/withdraw/preview
  * Preview withdrawal fees
@@ -201,6 +274,56 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
   res.json({
     success: true,
     data: preview,
+  });
+}));
+
+// ============================================
+// NEW: POST /api/wallet/withdraw
+// Withdraw funds from wallet to external account
+// ============================================
+router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new AppError(errors.array()[0].msg, 400);
+  }
+
+  const { amountUsd, amountLocal, currency, payoutMethod, payoutDetails, idempotencyKey } = req.body;
+
+  if (!amountUsd && (!amountLocal || !currency)) {
+    throw new AppError('Provide amountUsd or amountLocal with currency', 400);
+  }
+
+  const result = await processWithdrawal({
+    user: req.user,
+    amountUsd,
+    amountLocal,
+    currency,
+    payoutMethod,
+    payoutDetails,
+    idempotencyKey
+  });
+
+  logger.info('Withdrawal processed', {
+    userId: req.user._id,
+    amount: result.grossUsd,
+    netAmount: result.netToUserUsd,
+    method: payoutMethod,
+    transactionId: result.withdrawal._id
+  });
+
+  res.json({
+    success: true,
+    message: result.message,
+    data: {
+      withdrawalId: result.withdrawal._id,
+      transactionId: result.withdrawal.transactionId,
+      amount: result.grossUsd,
+      fee: result.feeUsd,
+      netAmount: result.netToUserUsd,
+      method: payoutMethod,
+      status: result.withdrawal.status,
+      providerReference: result.payoutResult?.reference
+    }
   });
 }));
 
