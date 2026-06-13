@@ -14,7 +14,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Campaign = require('../models/Campaign');
 const { authenticate, authorize } = require('../middleware/auth');
-const { attachFeeService } = require('../middleware/feeService');
+// attachFeeService is already applied globally in server.js
 const { rateLimit } = require('express-rate-limit');
 const { body, query, param, validationResult } = require('express-validator');
 
@@ -31,7 +31,7 @@ const adminRateLimit = rateLimit({
   keyGenerator: (req) => req.user?._id?.toString() || req.ip,
 });
 
-router.use(authenticate, authorize('admin'), attachFeeService, adminRateLimit);
+router.use(authenticate, authorize('admin'), adminRateLimit);
 
 // ============================================
 // Validation Helpers
