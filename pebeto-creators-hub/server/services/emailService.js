@@ -6,6 +6,7 @@
  * - Password reset
  * - Email verification
  * - Notifications (tips, campaign updates, withdrawals)
+ * - Account deletion confirmation
  * 
  * @module services/emailService
  */
@@ -51,6 +52,12 @@ const EMAIL_TEMPLATES = {
   ACCOUNT_VERIFIED: 'account_verified',
   ACCOUNT_SUSPENDED: 'account_suspended',
   LOGIN_ALERT: 'login_alert',
+  
+  // ============================================
+  // NEW: Account Deletion Email Templates
+  // ============================================
+  ACCOUNT_DELETION_CONFIRMATION: 'account_deletion',
+  DATA_EXPORT_READY: 'data_export_ready',
 };
 
 // ============================================
@@ -116,6 +123,7 @@ function renderTemplate(templateName, data) {
       .footer { text-align: center; padding: 20px 0; font-size: 12px; color: #999; border-top: 1px solid #eee; }
       .amount { font-size: 32px; font-weight: bold; color: #ff8c42; }
       .details { background: #f5f5f5; padding: 15px; border-radius: 12px; margin: 20px 0; }
+      .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
     </style>
   `;
   
@@ -137,12 +145,14 @@ function renderTemplate(templateName, data) {
       <p>Thanks for signing up! Please verify your email address to get started with Pebeto.</p>
       <a href="${data.verificationUrl}" class="button">Verify Email</a>
       <p>This link will expire in 24 hours.</p>
+      <p>If you didn't create an account with Pebeto, please ignore this email.</p>
     `,
     
     [EMAIL_TEMPLATES.PASSWORD_RESET]: `
       <h1>Reset Your Password</h1>
       <p>We received a request to reset your password. Click the button below to create a new password.</p>
       <a href="${data.resetUrl}" class="button">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
       <p>If you didn't request this, please ignore this email.</p>
     `,
     
@@ -188,6 +198,37 @@ function renderTemplate(templateName, data) {
       </div>
       <p>If this wasn't you, please reset your password immediately.</p>
       <a href="${data.resetUrl}" class="button">Secure Account</a>
+    `,
+    
+    // ============================================
+    // NEW: Account Deletion Confirmation Template
+    // ============================================
+    [EMAIL_TEMPLATES.ACCOUNT_DELETION_CONFIRMATION]: `
+      <h1>⚠️ Account Deletion Request</h1>
+      <p>We received a request to permanently delete your Pebeto account.</p>
+      <div class="warning">
+        <p><strong>This action cannot be undone.</strong> All your data will be permanently removed.</p>
+        <p><strong>Deletion Code:</strong> <code style="font-size: 20px; font-weight: bold;">${data.deletionCode}</code></p>
+      </div>
+      <p>To confirm account deletion, please enter this code on the account deletion page.</p>
+      <p>This code will expire in <strong>7 days</strong>.</p>
+      <a href="${data.deletionUrl}" class="button">Confirm Account Deletion</a>
+      <p>If you did not request this, please contact support immediately at support@pebeto.com</p>
+    `,
+    
+    // ============================================
+    // NEW: Data Export Ready Template
+    // ============================================
+    [EMAIL_TEMPLATES.DATA_EXPORT_READY]: `
+      <h1>📁 Your Data Export is Ready</h1>
+      <p>As requested, your Pebeto account data has been exported and is ready for download.</p>
+      <div class="details">
+        <p><strong>Export Date:</strong> ${data.exportDate}</p>
+        <p><strong>Data Included:</strong> Profile information, transaction history, campaign data</p>
+      </div>
+      <a href="${data.downloadUrl}" class="button">Download Your Data</a>
+      <p>This download link will expire in <strong>30 days</strong>.</p>
+      <p>For security reasons, please download your data as soon as possible.</p>
     `,
   };
   
@@ -347,6 +388,57 @@ async function sendLoginAlertEmail(to, data) {
 }
 
 // ============================================
+// NEW: Account Deletion Email Functions
+// ============================================
+
+/**
+ * Send account deletion confirmation email
+ * @param {string} to - Recipient email
+ * @param {string} deletionCode - Deletion confirmation code
+ * @param {string} deletionUrl - Deletion confirmation URL
+ * @returns {Promise<boolean>}
+ */
+async function sendAccountDeletionEmail(to, deletionCode, deletionUrl) {
+  return sendEmail({
+    to,
+    subject: '⚠️ Account Deletion Request - Pebeto',
+    template: EMAIL_TEMPLATES.ACCOUNT_DELETION_CONFIRMATION,
+    data: { deletionCode, deletionUrl },
+  });
+}
+
+/**
+ * Send data export ready email
+ * @param {string} to - Recipient email
+ * @param {string} downloadUrl - Download link for data export
+ * @returns {Promise<boolean>}
+ */
+async function sendDataExportReadyEmail(to, downloadUrl) {
+  return sendEmail({
+    to,
+    subject: '📁 Your Pebeto Data Export is Ready',
+    template: EMAIL_TEMPLATES.DATA_EXPORT_READY,
+    data: { downloadUrl, exportDate: new Date().toLocaleDateString() },
+  });
+}
+
+/**
+ * Send account suspended notification
+ * @param {string} to - Recipient email
+ * @param {string} reason - Suspension reason
+ * @param {string} appealUrl - Appeal URL
+ * @returns {Promise<boolean>}
+ */
+async function sendAccountSuspendedEmail(to, reason, appealUrl) {
+  return sendEmail({
+    to,
+    subject: '⚠️ Your Pebeto Account Has Been Suspended',
+    template: EMAIL_TEMPLATES.ACCOUNT_SUSPENDED,
+    data: { reason, appealUrl },
+  });
+}
+
+// ============================================
 // Exports
 // ============================================
 
@@ -359,5 +451,9 @@ module.exports = {
   sendWithdrawalCompletedEmail,
   sendBidAcceptedEmail,
   sendLoginAlertEmail,
+  // NEW Exports
+  sendAccountDeletionEmail,
+  sendDataExportReadyEmail,
+  sendAccountSuspendedEmail,
   EMAIL_TEMPLATES,
 };
