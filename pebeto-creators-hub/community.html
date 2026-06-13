@@ -361,13 +361,68 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
-    .tiktok-embed-container { min-height: 600px; background: #000; }
-    /* TikTok autoplay helper - force iframe to be clickable */
-    .tiktok-embed-container iframe {
-      pointer-events: auto !important;
-    }
     .youtube-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
     .youtube-embed-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    
+    /* TikTok Play Button Overlay */
+    .tiktok-player-container {
+      position: relative;
+      background: #000;
+      min-height: 550px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tiktok-play-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      cursor: pointer;
+      z-index: 20;
+      transition: opacity 0.3s;
+    }
+    .tiktok-play-overlay:hover {
+      background: rgba(0,0,0,0.5);
+    }
+    .tiktok-play-btn {
+      width: 70px;
+      height: 70px;
+      background: #ff8c42;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      transition: transform 0.2s;
+    }
+    .tiktok-play-overlay:hover .tiktok-play-btn {
+      transform: scale(1.1);
+    }
+    .tiktok-message {
+      color: white;
+      font-size: 14px;
+      background: rgba(0,0,0,0.7);
+      padding: 8px 16px;
+      border-radius: 40px;
+    }
+    .tiktok-iframe {
+      width: 100%;
+      min-height: 550px;
+      border: none;
+      display: none;
+    }
+    .tiktok-iframe.loaded {
+      display: block;
+    }
+    
     .creator-actions {
       display: flex;
       gap: 12px;
@@ -554,7 +609,6 @@
     }
   </style>
   <link rel="manifest" href="/manifest.json">
-  <script async src="https://www.tiktok.com/embed.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
@@ -696,50 +750,53 @@
     container.innerHTML = `<span style="opacity:0.7;">🎯 For you:</span> ${top.map(n => `<span class="niche-badge">${n}</span>`).join('')}`;
   }
 
-  // ==================== TIKTOK AUTOPLAY ====================
-  // TikTok doesn't have official autoplay API. Workaround: find play button inside iframe and click it
-  function triggerTikTokPlay(container) {
-    try {
-      const iframe = container.querySelector('iframe');
-      if (!iframe || !iframe.src.includes('tiktok')) return false;
-      
-      // Method 1: Try to click the video area inside iframe
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (iframeDoc) {
-        const videoElement = iframeDoc.querySelector('video');
-        if (videoElement) {
-          videoElement.muted = true;
-          videoElement.play().catch(e => console.log('TikTok autoplay failed:', e));
-          return true;
-        }
-        const playButton = iframeDoc.querySelector('[aria-label*="play"], .play-button, button[data-e2e="video-play"]');
-        if (playButton) { playButton.click(); return true; }
+  // ==================== TIKTOK CLICK-TO-PLAY (WORKING) ====================
+  function loadTikTokVideo(container, tiktokUrl, creatorId) {
+    const overlay = container.querySelector('.tiktok-play-overlay');
+    const iframe = container.querySelector('.tiktok-iframe');
+    const playerContainer = container.querySelector('.tiktok-player-container');
+    
+    if (overlay) overlay.style.display = 'none';
+    if (iframe) {
+      iframe.src = tiktokUrl;
+      iframe.classList.add('loaded');
+    }
+    
+    // Record watch time start
+    const startTime = Date.now();
+    const checkInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      if (elapsed >= 10) {
+        const creator = allCreators.find(c => c._id === creatorId);
+        if (creator) recordWatchTime(creatorId, creator.profile?.niche, elapsed);
+        clearInterval(checkInterval);
       }
-      
-      // Method 2: Simulate click on the container (triggers TikTok's embed click handler)
-      const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
-      container.dispatchEvent(clickEvent);
-      
-      // Method 3: Refresh embed with autoplay parameter (limited success)
-      const currentSrc = iframe.src;
-      if (currentSrc && !currentSrc.includes('autoplay=1')) {
-        const newSrc = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'autoplay=1&muted=1';
-        iframe.src = newSrc;
-      }
-      return true;
-    } catch(e) { console.log('TikTok autoplay error:', e); return false; }
+    }, 10000);
+    
+    showToast('▶️ TikTok video playing - tap video for sound');
   }
 
-  function pauseTikTokVideo(container) {
-    try {
-      const iframe = container.querySelector('iframe');
-      if (!iframe || !iframe.src.includes('tiktok')) return;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (iframeDoc) {
-        const videoElement = iframeDoc.querySelector('video');
-        if (videoElement && !videoElement.paused) videoElement.pause();
-      }
-    } catch(e) {}
+  function createTikTokPlayer(tiktokUrl, creatorId, viewCount) {
+    // Extract video ID for better embed
+    const videoIdMatch = tiktokUrl.match(/video\/(\d+)/);
+    let embedUrl = tiktokUrl;
+    if (videoIdMatch) {
+      embedUrl = `https://www.tiktok.com/embed/v2/${videoIdMatch[1]}`;
+    }
+    
+    return `
+      <div class="tiktok-player-container">
+        <div class="tiktok-play-overlay" onclick="loadTikTokVideo(this.parentElement.parentElement, '${embedUrl}', '${creatorId}')">
+          <div class="tiktok-play-btn">
+            <i class="ri-play-fill"></i>
+          </div>
+          <div class="tiktok-message">
+            <i class="ri-tiktok-fill"></i> Tap to play TikTok video
+          </div>
+        </div>
+        <iframe class="tiktok-iframe" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      </div>
+    `;
   }
 
   // ==================== YOUTUBE AUTOPLAY ====================
@@ -774,40 +831,34 @@
     });
   }
 
-  // ==================== UNIFIED VIDEO AUTOPLAY ====================
+  // ==================== VIDEO AUTOPLAY FOR YOUTUBE ONLY ====================
   function setupVideoAutoplay() {
     if (videoObserver) videoObserver.disconnect();
     videoObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         const container = entry.target;
-        const isTikTok = container.classList.contains('tiktok-embed-container') || container.querySelector('blockquote.tiktok-embed');
-        const isYouTube = container.querySelector('.youtube-embed-container iframe') || container.querySelector('iframe[src*="youtube"]');
+        const isYouTube = container.querySelector('.youtube-embed-container iframe');
         
         if (entry.isIntersecting) {
-          // Pause any other playing video
           if (currentlyPlayingVideo && currentlyPlayingVideo !== container) {
-            if (currentlyPlayingVideo.classList.contains('tiktok-embed-container')) pauseTikTokVideo(currentlyPlayingVideo);
-            else {
-              const prevIframe = currentlyPlayingVideo.querySelector('iframe');
-              if (prevIframe && prevIframe.src.includes('youtube')) prevIframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            const prevIframe = currentlyPlayingVideo.querySelector('iframe');
+            if (prevIframe && prevIframe.src.includes('youtube')) {
+              prevIframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
             }
           }
           currentlyPlayingVideo = container;
           
-          // Play current video
           if (isYouTube) {
             const iframe = container.querySelector('iframe');
-            if (iframe && iframe.src.includes('youtube')) iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          } else if (isTikTok) {
-            triggerTikTokPlay(container);
+            if (iframe && iframe.src.includes('youtube')) {
+              iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            }
           }
         } else {
-          // Pause when out of view
-          if (currentlyPlayingVideo === container) {
-            if (isTikTok) pauseTikTokVideo(container);
-            else if (isYouTube) {
-              const iframe = container.querySelector('iframe');
-              if (iframe && iframe.src.includes('youtube')) iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+          if (currentlyPlayingVideo === container && isYouTube) {
+            const iframe = container.querySelector('iframe');
+            if (iframe && iframe.src.includes('youtube')) {
+              iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
             }
             currentlyPlayingVideo = null;
           }
@@ -815,10 +866,10 @@
       });
     }, { threshold: 0.5 });
     
-    document.querySelectorAll('.video-embed-container, .tiktok-embed-container').forEach(c => videoObserver.observe(c));
+    document.querySelectorAll('.video-embed-container').forEach(c => videoObserver.observe(c));
   }
 
-  // ==================== EXISTING FUNCTIONS (condensed) ====================
+  // ==================== EXISTING FUNCTIONS ====================
   function showToast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.clear(); showToast('Logged out'); setTimeout(() => window.location.href = '/login.html', 500); }
@@ -841,7 +892,7 @@
   function validateTipAmount() { const amt = parseFloat(document.getElementById('tip-amount').value) || 0; if (amt < 1 && amt > 0) document.getElementById('tip-amount').value = 1; document.getElementById('creator-receives').innerHTML = (amt * 0.95).toFixed(2); }
   async function loadUserBalance() { try { const token = localStorage.getItem('pebeto_token'); if (!token) return; const data = await fetchJSON(`${API_BASE}/api/wallet/balance`); if (data.success) userWalletBalance = data.data?.balances?.available || 0; } catch(e) {} }
   async function loadCreators() { try { const res = await fetch(`${API_BASE}/api/creators`); const data = await res.json(); if (data.success && data.creators?.length) allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube)); else showSampleCreators(); loadSavedData(); applyFiltersAndSort(); } catch(e) { showSampleCreators(); } }
-  function showSampleCreators() { allCreators = [{ _id:'sample1', email:'dj@example.com', profile:{ stageName:'DJ Nova', niche:'Music' }, socialLinks:{ tiktok:'https://www.tiktok.com/@tiktok' }, likeCount:1234, isLiked:false, commentCount:89, verified:true, viewCount:15200, createdAt:'2024-01-15', isOnline:true, engagementRate:5.2, milestones:{ followers:15000 } }, { _id:'sample2', email:'sarah@example.com', profile:{ stageName:'Sarah Creates', niche:'Art' }, socialLinks:{ youtube:'https://www.youtube.com/@YouTube' }, likeCount:567, isLiked:false, commentCount:34, verified:false, viewCount:8900, createdAt:'2024-02-20', engagementRate:3.8 }, { _id:'sample3', email:'mike@example.com', profile:{ stageName:'Mike Fitness', niche:'Fitness' }, socialLinks:{ tiktok:'https://www.tiktok.com/@tiktok' }, likeCount:2345, isLiked:false, commentCount:156, verified:true, viewCount:45000, createdAt:'2024-01-05', isLive:true, engagementRate:7.2 }]; applyFiltersAndSort(); }
+  function showSampleCreators() { allCreators = [{ _id:'sample1', email:'dj@example.com', profile:{ stageName:'DJ Nova', niche:'Music' }, socialLinks:{ tiktok:'https://www.tiktok.com/@tiktok/video/123456789' }, likeCount:1234, isLiked:false, commentCount:89, verified:true, viewCount:15200, createdAt:'2024-01-15', isOnline:true, engagementRate:5.2, milestones:{ followers:15000 } }, { _id:'sample2', email:'sarah@example.com', profile:{ stageName:'Sarah Creates', niche:'Art' }, socialLinks:{ youtube:'https://www.youtube.com/@YouTube' }, likeCount:567, isLiked:false, commentCount:34, verified:false, viewCount:8900, createdAt:'2024-02-20', engagementRate:3.8 }, { _id:'sample3', email:'mike@example.com', profile:{ stageName:'Mike Fitness', niche:'Fitness' }, socialLinks:{ tiktok:'https://www.tiktok.com/@tiktok/video/987654321' }, likeCount:2345, isLiked:false, commentCount:156, verified:true, viewCount:45000, createdAt:'2024-01-05', isLive:true, engagementRate:7.2 }]; applyFiltersAndSort(); }
 
   function applyFiltersAndSort() {
     let filtered = [...allCreators].filter(c => !notInterestedCreators.has(c._id) && !blockedCreators.has(c._id));
@@ -868,7 +919,10 @@
     container.innerHTML = '';
     toRender.forEach(creator => container.appendChild(createCreatorCard(creator)));
     hasMore = filteredCreators.length > PAGE_SIZE;
-    setTimeout(setupVideoAutoplay, 300);
+    setTimeout(() => {
+      setupVideoAutoplay();
+      if (typeof YT !== 'undefined' && YT.loaded) onYouTubeIframeAPIReady();
+    }, 300);
   }
 
   function createCreatorCard(creator) {
@@ -881,19 +935,23 @@
     
     let embedHtml = '';
     if (creator.socialLinks?.tiktok) {
-      const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
-      const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
-      embedHtml = `<div class="video-embed-container tiktok-embed-container" data-video-id="${creator._id}">
+      embedHtml = `<div class="video-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(creator.viewCount||0)} views</div>
+        <div class="video-controls">
+          <button class="video-control-btn" onclick="toggleFullscreen(this)"><i class="ri-fullscreen-line"></i></button>
+        </div>
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
-        <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator"><section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section></blockquote>
+        ${createTikTokPlayer(creator.socialLinks.tiktok, creator._id, creator.viewCount)}
       </div>`;
     } else if (creator.socialLinks?.youtube) {
       let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}&autoplay=0&mute=1&playsinline=1` : `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}&autoplay=0&mute=1&playsinline=1`;
       embedHtml = `<div class="video-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(creator.viewCount||0)} views</div>
+        <div class="video-controls">
+          <button class="video-control-btn" onclick="toggleFullscreen(this)"><i class="ri-fullscreen-line"></i></button>
+        </div>
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
-        <div class="youtube-embed-container"><iframe src="${youtubeEmbedUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
+        <div class="youtube-embed-container"><iframe id="yt-${creator._id}" src="${youtubeEmbedUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
       </div>`;
     } else embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos</p></div>`;
     
@@ -919,7 +977,11 @@
     return card;
   }
 
-  // ==================== SIMPLIFIED STUB FUNCTIONS (placeholder for full implementation) ====================
+  function toggleFullscreen(btn) {
+    const container = btn.closest('.video-embed-container');
+    if (container?.requestFullscreen) container.requestFullscreen();
+  }
+
   function toggleLike(event, btn, id) { 
     event.stopPropagation(); 
     const creator = allCreators.find(c => c._id === id);
