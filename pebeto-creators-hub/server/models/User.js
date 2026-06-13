@@ -147,6 +147,41 @@ const loginAttemptSchema = new mongoose.Schema({
 }, { _id: false });
 
 // ============================================
+// NEW: API Key Sub-Schema
+// ============================================
+
+const apiKeySchema = new mongoose.Schema({
+  id: { 
+    type: String, 
+    required: true 
+  },
+  name: { 
+    type: String, 
+    default: 'Default API Key',
+    trim: true,
+    maxlength: 50
+  },
+  key: { 
+    type: String, 
+    required: true 
+  },
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+  lastUsedAt: { 
+    type: Date 
+  },
+  regeneratedAt: { 
+    type: Date 
+  },
+  isActive: { 
+    type: Boolean, 
+    default: true 
+  }
+}, { _id: false });
+
+// ============================================
 // Main User Schema
 // ============================================
 
@@ -187,6 +222,9 @@ const userSchema = new mongoose.Schema(
     emailVerificationExpires: { type: Date, select: false },
     
     // Session management
+    // ============================================
+    // NEW: tokenVersion for session invalidation
+    // ============================================
     tokenVersion: { 
       type: Number, 
       default: 0,
@@ -356,7 +394,7 @@ const userSchema = new mongoose.Schema(
     },
     
     // ============================================
-    // NEW: Creator Likes Tracking (for community engagement)
+    // Creator Likes Tracking (for community engagement)
     // ============================================
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     likeCount: { type: Number, default: 0 },
@@ -364,7 +402,19 @@ const userSchema = new mongoose.Schema(
     // ========== Security ==========
     publicKey: { type: String, trim: true },
     twoFactorEnabled: { type: Boolean, default: false },
-    twoFactorSecret: { type: String, select: false },
+    
+    // ============================================
+    // NEW: twoFactorSecret for 2FA
+    // ============================================
+    twoFactorSecret: { 
+      type: String, 
+      select: false  // Don't return by default
+    },
+    
+    // ============================================
+    // NEW: API Keys array
+    // ============================================
+    apiKeys: [apiKeySchema],
     
     // ========== Metadata ==========
     metadata: {
