@@ -65,7 +65,10 @@ const crypto = require('crypto');
 const env = require('./config/env');
 const { connectDB, disconnectDB, getDatabaseHealth } = require('./config/db');
 const { errorHandler, notFoundHandler, catchAsync } = require('./middleware/errorHandler');
-const { attachFeeService } = require('./services/feeService');
+// ============================================
+// CHANGED: Now importing from middleware/feeService.js instead of services/feeService.js
+// ============================================
+const attachFeeService = require('./middleware/feeService');
 const { initSockets } = require('./sockets');
 const logger = require('./utils/logger');
 
