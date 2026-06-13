@@ -70,11 +70,49 @@ function isCurrencySupported(currency) {
  * @returns {number} Rounded amount
  */
 function roundAmount(amount, currency = BASE_CURRENCY) {
-  // Different currencies have different decimal places
   const zeroDecimalCurrencies = ['JPY', 'KRW', 'VND', 'UGX', 'TZS'];
   const decimals = zeroDecimalCurrencies.includes(normalizeCurrency(currency)) ? 0 : 2;
   const multiplier = Math.pow(10, decimals);
   return Math.round(amount * multiplier) / multiplier;
+}
+
+/**
+ * Format amount with currency symbol
+ * @param {number} amount - Amount to format
+ * @param {string} currency - Currency code
+ * @returns {string} Formatted amount
+ */
+function formatCurrency(amount, currency = BASE_CURRENCY) {
+  const normalized = normalizeCurrency(currency);
+  const rounded = roundAmount(amount, normalized);
+  
+  const symbols = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    KES: 'KSh',
+    NGN: '₦',
+    ZAR: 'R',
+    GHS: '₵',
+    TZS: 'TSh',
+    UGX: 'USh',
+    JPY: '¥',
+    CNY: '¥',
+    INR: '₹',
+    CHF: 'Fr',
+    CAD: 'C$',
+    AUD: 'A$',
+    SEK: 'kr',
+    NZD: 'NZ$',
+  };
+  
+  const symbol = symbols[normalized] || normalized;
+  const isSymbolFirst = !['KES', 'NGN', 'TZS', 'UGX', 'SEK'].includes(normalized);
+  
+  if (isSymbolFirst) {
+    return `${symbol} ${rounded.toFixed(2)}`;
+  }
+  return `${rounded.toFixed(2)} ${symbol}`;
 }
 
 // ============================================
@@ -86,7 +124,6 @@ function roundAmount(amount, currency = BASE_CURRENCY) {
  * @returns {Promise<Object>} Exchange rates object
  */
 async function fetchRatesFromApi() {
-  // If no API key, return fallback rates
   if (!env.exchangeRateApiKey) {
     logger.warn('No exchange rate API key provided. Using fallback rates.');
     return { ...DEFAULT_FALLBACK_RATES };
@@ -113,7 +150,6 @@ async function fetchRatesFromApi() {
       throw new AppError('Invalid exchange rate API response', 502);
     }
     
-    // Filter and format rates
     const rates = {};
     for (const [currency, rate] of Object.entries(data.conversion_rates)) {
       if (SUPPORTED_CURRENCIES.includes(currency) || Object.keys(DEFAULT_FALLBACK_RATES).includes(currency)) {
@@ -121,7 +157,6 @@ async function fetchRatesFromApi() {
       }
     }
     
-    // Ensure base currency is always 1
     rates[BASE_CURRENCY] = 1;
     
     logger.info('Exchange rates fetched successfully', {
@@ -154,7 +189,6 @@ async function getRatesMap(forceRefresh = false) {
   const now = new Date();
   const cached = await ExchangeRateCache.findOne({ base: BASE_CURRENCY });
   
-  // Check if cache is valid
   const isCacheValid = cached && cached.expiresAt && cached.expiresAt > now && !forceRefresh;
   
   if (isCacheValid) {
@@ -166,13 +200,11 @@ async function getRatesMap(forceRefresh = false) {
     return cached.rates;
   }
   
-  // Fetch fresh rates
   let rates;
   try {
     rates = await fetchRatesFromApi();
     logger.info('Exchange rates fetched from API', { currencies: Object.keys(rates).length });
   } catch (error) {
-    // If fetch fails but we have stale cache, use it
     if (cached && cached.rates) {
       logger.warn('Using stale cache due to API failure', {
         staleSince: cached.expiresAt,
@@ -181,12 +213,10 @@ async function getRatesMap(forceRefresh = false) {
       return cached.rates;
     }
     
-    // Fallback to default rates
     logger.error('Using fallback rates due to API failure', { error: error.message });
     rates = { ...DEFAULT_FALLBACK_RATES };
   }
   
-  // Update cache
   await ExchangeRateCache.findOneAndUpdate(
     { base: BASE_CURRENCY },
     {
@@ -203,7 +233,7 @@ async function getRatesMap(forceRefresh = false) {
 }
 
 /**
- * Convert USD amount to local currency
+ * Convert USD amount to local currency - FIXED EXPORT
  * @param {number} usdAmount - Amount in USD
  * @param {string} currency - Target currency code
  * @param {Object} rates - Exchange rates object (optional, will fetch if not provided)
@@ -235,7 +265,7 @@ async function convertUsdToLocal(usdAmount, currency, rates = null) {
 }
 
 /**
- * Convert local currency amount to USD
+ * Convert local currency amount to USD - FIXED EXPORT
  * @param {number} localAmount - Amount in local currency
  * @param {string} currency - Source currency code
  * @param {Object} rates - Exchange rates object (optional, will fetch if not provided)
@@ -283,7 +313,6 @@ async function getExchangeRate(fromCurrency, toCurrency, rates = null) {
     rates = await getRatesMap();
   }
   
-  // Convert through base currency
   const fromRate = from === BASE_CURRENCY ? 1 : rates[from];
   const toRate = to === BASE_CURRENCY ? 1 : rates[to];
   
@@ -298,45 +327,6 @@ async function getExchangeRate(fromCurrency, toCurrency, rates = null) {
 }
 
 /**
- * Format amount with currency symbol
- * @param {number} amount - Amount to format
- * @param {string} currency - Currency code
- * @returns {string} Formatted amount
- */
-function formatCurrency(amount, currency = BASE_CURRENCY) {
-  const normalized = normalizeCurrency(currency);
-  const rounded = roundAmount(amount, normalized);
-  
-  const symbols = {
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    KES: 'KSh',
-    NGN: '₦',
-    ZAR: 'R',
-    GHS: '₵',
-    TZS: 'TSh',
-    UGX: 'USh',
-    JPY: '¥',
-    CNY: '¥',
-    INR: '₹',
-    CHF: 'Fr',
-    CAD: 'C$',
-    AUD: 'A$',
-    SEK: 'kr',
-    NZD: 'NZ$',
-  };
-  
-  const symbol = symbols[normalized] || normalized;
-  const isSymbolFirst = !['KES', 'NGN', 'TZS', 'UGX', 'SEK'].includes(normalized);
-  
-  if (isSymbolFirst) {
-    return `${symbol} ${rounded.toFixed(2)}`;
-  }
-  return `${rounded.toFixed(2)} ${symbol}`;
-}
-
-/**
  * Get all supported currencies with their current rates
  * @param {string} baseCurrency - Base currency (default: USD)
  * @returns {Promise<Object>} Currencies with rates
@@ -345,7 +335,6 @@ async function getSupportedCurrencies(baseCurrency = BASE_CURRENCY) {
   const rates = await getRatesMap();
   const base = normalizeCurrency(baseCurrency);
   
-  // Calculate rates relative to requested base
   const relativeRates = {};
   const baseRate = rates[base] || 1;
   
@@ -455,10 +444,10 @@ function attachExchangeService(req, res, next) {
 module.exports = {
   // Main functions
   getRatesMap,
-  convertUsdToLocal,
-  convertLocalToUsd,
+  convertUsdToLocal,      // ✓ FIXED - Now exported
+  convertLocalToUsd,      // ✓ FIXED - Now exported
   getExchangeRate,
-  formatCurrency,
+  formatCurrency,         // ✓ FIXED - Now exported
   
   // Admin functions
   invalidateCache,
