@@ -7,6 +7,8 @@ const CommunityPost = require('../models/CommunityPost');
 const CommunityComment = require('../models/CommunityComment');
 const User = require('../models/User');
 const { AppError } = require('../utils/errors');
+const { body, validationResult } = require('express-validator');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -530,6 +532,108 @@ router.get('/user/:userId/posts', optionalAuthenticate, async (req, res, next) =
     
     res.json({ success: true, posts });
   } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// ============================================
+// NEW: Report Endpoint
+// ============================================
+// ============================================
+
+/**
+ * POST /api/community/report
+ * Report a user or post for inappropriate content
+ */
+router.post('/report', authenticate, [
+  body('reportedUserId').optional().isMongoId().withMessage('Invalid user ID'),
+  body('reportedPostId').optional().isMongoId().withMessage('Invalid post ID'),
+  body('reason').isIn(['spam', 'inappropriate', 'harassment', 'fake_account', 'copyright', 'other']).withMessage('Invalid report reason'),
+  body('description').optional().isString().trim().isLength({ max: 1000 }).withMessage('Description too long')
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: errors.array()[0].msg });
+    }
+    
+    const { reportedUserId, reportedPostId, reason, description } = req.body;
+    
+    // Must report either a user or a post
+    if (!reportedUserId && !reportedPostId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Must report either a user or a post' 
+      });
+    }
+    
+    const Report = require('../models/Report');
+    
+    // Check for duplicate report (same reporter, same target, pending)
+    const existingReport = await Report.findOne({
+      reporterId: req.user._id,
+      reportedUserId: reportedUserId || null,
+      reportedPostId: reportedPostId || null,
+      status: { $in: ['pending', 'reviewing'] }
+    });
+    
+    if (existingReport) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You have already reported this content. It is under review.' 
+      });
+    }
+    
+    // Verify the reported user exists (if provided)
+    if (reportedUserId) {
+      const reportedUser = await User.findById(reportedUserId);
+      if (!reportedUser) {
+        return res.status(404).json({ success: false, message: 'Reported user not found' });
+      }
+    }
+    
+    // Verify the reported post exists (if provided)
+    if (reportedPostId) {
+      const reportedPost = await CommunityPost.findById(reportedPostId);
+      if (!reportedPost) {
+        return res.status(404).json({ success: false, message: 'Reported post not found' });
+      }
+    }
+    
+    // Create the report
+    const report = await Report.create({
+      reporterId: req.user._id,
+      reportedUserId: reportedUserId || null,
+      reportedPostId: reportedPostId || null,
+      reason,
+      description: description || null,
+      status: 'pending'
+    });
+    
+    logger.info(`Report created by user ${req.user._id} for ${reportedUserId ? `user ${reportedUserId}` : `post ${reportedPostId}`}`, {
+      reason,
+      reportId: report._id
+    });
+    
+    // Notify admins via Socket.IO
+    const io = req.app.get('io');
+    if (io) {
+      io.to('status:global').emit('moderation:new-report', {
+        reportId: report._id,
+        reason,
+        createdAt: report.createdAt
+      });
+    }
+    
+    res.status(201).json({
+      success: true,
+      message: 'Report submitted. Our moderation team will review it shortly.',
+      data: { reportId: report._id }
+    });
+    
+  } catch (err) {
+    logger.error('Report creation error:', err);
     next(err);
   }
 });
