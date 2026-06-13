@@ -416,6 +416,19 @@ const userSchema = new mongoose.Schema(
     // ============================================
     apiKeys: [apiKeySchema],
     
+    // ============================================
+    // NEW: Notification Preferences
+    // ============================================
+    notificationPreferences: {
+      emailOnLogin: { type: Boolean, default: true },
+      emailOnTip: { type: Boolean, default: true },
+      emailOnBidAccepted: { type: Boolean, default: true },
+      emailOnCampaignUpdate: { type: Boolean, default: true },
+      emailOnWithdrawal: { type: Boolean, default: true },
+      pushOnTip: { type: Boolean, default: true },
+      pushOnMessage: { type: Boolean, default: true }
+    },
+    
     // ========== Metadata ==========
     metadata: {
       registrationIp: { type: String },
