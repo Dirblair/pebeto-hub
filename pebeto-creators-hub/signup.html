@@ -2,519 +2,209 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Community - Pebeto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Pebeto</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow-x: hidden; }
-    .header {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,140,66,0.2);
-      padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 100;
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1208 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    .logo { font-size: 24px; font-weight: 800; color: #ff8c42; cursor: pointer; }
-    .search-bar {
-      background: rgba(255,255,255,0.1); border-radius: 40px;
-      padding: 8px 16px; display: flex; align-items: center; gap: 8px; width: 300px;
+    .container {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 28px;
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
     }
-    .search-bar input { background: transparent; border: none; color: white; width: 100%; outline: none; }
-    .nav-icons { display: flex; gap: 20px; align-items: center; }
-    .nav-icons i { font-size: 24px; cursor: pointer; color: #b8a99a; }
-    .nav-icons i:hover { color: #ffaa77; }
-    .dashboard-btn {
-      background: rgba(255,140,66,0.15); border: 1px solid #ff8c42;
-      padding: 8px 16px; border-radius: 40px; color: #ffaa77;
-      cursor: pointer; font-size: 14px; font-weight: 500;
-      display: flex; align-items: center; gap: 6px;
+    h1 { text-align: center; margin-bottom: 30px; color: #ff8c42; }
+    .logo { text-align: center; font-size: 28px; font-weight: 800; color: #ff8c42; margin-bottom: 20px; cursor: pointer; }
+    .role-selector {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
     }
-    .dashboard-btn:hover { background: #ff8c42; color: white; }
-    .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-weight: bold; background-size: cover;
+    .role-option {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 40px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .feed-container { margin-top: 70px; height: calc(100vh - 70px); overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-    .feed-container::-webkit-scrollbar { display: none; }
-    .video-post { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
-    .video-post video { width: 100%; height: 100%; object-fit: contain; }
-    .post-overlay { position: absolute; bottom: 100px; left: 16px; right: 80px; z-index: 10; }
-    .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-    .author-avatar {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: linear-gradient(135deg, #ff8c42, #e0662c);
-      display: flex; align-items: center; justify-content: center; font-weight: bold;
-      background-size: cover;
+    .role-option.active {
+      background: #ff8c42;
+      border-color: #ff8c42;
+      color: white;
     }
-    .author-info h4 { font-size: 16px; margin-bottom: 2px; }
-    .author-info h4 span { font-weight: normal; color: #a08070; font-size: 12px; }
-    .author-info p { font-size: 12px; color: #a08070; }
-    .post-caption { font-size: 14px; margin-top: 8px; max-width: 80%; }
-    .right-actions { position: absolute; right: 12px; bottom: 120px; display: flex; flex-direction: column; gap: 24px; z-index: 10; }
-    .action-btn { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-    .action-btn i { font-size: 28px; color: white; }
-    .action-btn span { font-size: 12px; margin-top: 4px; }
-    .trending-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(0,0,0,0.9); padding: 12px 20px;
-      display: flex; gap: 16px; overflow-x: auto; z-index: 99;
-      border-top: 1px solid rgba(255,140,66,0.2);
+    .role-option:hover { background: rgba(255,140,66,0.2); }
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 14px;
+      border-radius: 40px;
+      margin-bottom: 15px;
+      color: white;
+      font-size: 16px;
     }
-    .trending-sound-item {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.1); padding: 6px 12px;
-      border-radius: 40px; cursor: pointer; white-space: nowrap;
+    input:focus, select:focus {
+      outline: none;
+      border-color: #ff8c42;
     }
-    .modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95); backdrop-filter: blur(8px);
-      z-index: 1000; justify-content: center; align-items: center;
+    button {
+      width: 100%;
+      background: #ff8c42;
+      border: none;
+      padding: 14px;
+      border-radius: 40px;
+      color: #1a1208;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .modal-content {
-      background: #1a1510; border-radius: 28px; padding: 30px;
-      max-width: 500px; width: 90%; border: 1px solid rgba(255,140,66,0.3);
+    button:hover { background: #e0662c; transform: translateY(-1px); }
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      padding: 10px;
+      border-radius: 20px;
     }
-    .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select, .modal-content textarea {
-      width: 100%; background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,140,66,0.3); padding: 12px;
-      border-radius: 30px; margin-bottom: 15px; color: white;
+    .message.error { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+    .message.success { color: #4caf50; background: rgba(76,175,80,0.1); }
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #a08070;
     }
-    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
-    .save-btn { background: #ff8c42; color: white; }
-    .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
-    .comments-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
-    .comment-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    @media (max-width: 768px) { .search-bar { display: none; } }
+    .login-link a {
+      color: #ff8c42;
+      text-decoration: none;
+    }
+    .login-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="logo" onclick="window.location.href='/community.html'">Pebeto</div>
-  <div class="search-bar">
-    <i class="ri-search-line"></i>
-    <input type="text" id="global-search" placeholder="Search users..." onkeyup="searchGlobal()">
+<div class="container">
+  <div class="logo" onclick="window.location.href='/'">Pebeto</div>
+  <h1>Create Account</h1>
+  
+  <div class="role-selector">
+    <div class="role-option active" data-role="creator" onclick="selectRole('creator')">🎨 Creator</div>
+    <div class="role-option" data-role="business" onclick="selectRole('business')">🏢 Business</div>
   </div>
-  <div class="nav-icons">
-    <button class="dashboard-btn" onclick="goToDashboard()">
-      <i class="ri-dashboard-line"></i> Dashboard
-    </button>
-    <i class="ri-camera-add-line" onclick="openUploadModal()" title="Upload"></i>
-    <i class="ri-live-line" onclick="startLive()" title="Go Live"></i>
-    <div class="avatar" id="nav-avatar" onclick="goToDashboard()">U</div>
+  
+  <input type="email" id="email" placeholder="Email address" autocomplete="email">
+  <input type="password" id="password" placeholder="Password (min 8 characters)" autocomplete="new-password">
+  <input type="password" id="confirm-password" placeholder="Confirm password">
+  
+  <div id="stage-name-group" style="display: block;">
+    <input type="text" id="stage-name" placeholder="Stage Name / Display Name">
   </div>
-</div>
-
-<div id="feed-container" class="feed-container"></div>
-<div class="trending-bar" id="trending-bar"></div>
-
-<!-- Upload Modal -->
-<div id="upload-modal" class="modal">
-  <div class="modal-content">
-    <h3>📤 Upload Video</h3>
-    <input type="text" id="video-caption" placeholder="Caption">
-    <input type="file" id="video-file" accept="video/*">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="uploadVideo()">Post</button>
-      <button class="cancel-btn" onclick="closeModal('upload-modal')">Cancel</button>
-    </div>
+  <div id="company-name-group" style="display: none;">
+    <input type="text" id="company-name" placeholder="Company Name">
   </div>
-</div>
-
-<!-- Comments Modal -->
-<div id="comments-modal" class="modal">
-  <div class="modal-content">
-    <h3>💬 Comments</h3>
-    <div id="comments-list" class="comments-list"></div>
-    <div style="display: flex; gap: 10px;">
-      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;">
-      <button class="save-btn" onclick="addComment()">Post</button>
-    </div>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('comments-modal')">Close</button></div>
-  </div>
-</div>
-
-<!-- Live Modal -->
-<div id="live-modal" class="modal">
-  <div class="modal-content">
-    <h3>🔴 Go Live</h3>
-    <p>Live streaming coming soon!</p>
-    <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('live-modal')">Close</button></div>
-  </div>
-</div>
-
-<!-- Tip Modal -->
-<div id="tip-modal" class="modal">
-  <div class="modal-content">
-    <h3>💝 Send Tip</h3>
-    <p id="tip-creator-name">To: Creator</p>
-    <input type="number" id="tip-amount" placeholder="Amount (USD)" min="1">
-    <p style="font-size:12px; margin:10px 0;">5% platform fee. Creator receives 95%.</p>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="sendTip()">Send Tip</button>
-      <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
-    </div>
-  </div>
+  
+  <button onclick="signup()">Sign Up</button>
+  <div id="message" class="message"></div>
+  <div class="login-link">Already have an account? <a href="/login.html">Login</a></div>
 </div>
 
 <script>
-  let currentUser = null;
-  let currentPostId = null;
-  let allPosts = [];
+  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  let selectedRole = 'creator';
 
-  async function fetchJSON(url, options = {}) {
-    const token = localStorage.getItem('pebeto_token');
-    const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
-    return res.json();
-  }
-
-  function formatNumber(num) {
-    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num/1000).toFixed(1) + 'K';
-    return num.toString();
-  }
-
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  
-  function goToDashboard() {
-    const userStr = localStorage.getItem('pebeto_user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user.role === 'admin') window.location.href = '/admin-dashboard.html';
-      else if (user.role === 'business') window.location.href = '/business-dashboard.html';
-      else window.location.href = '/creator-dashboard.html';
+  function selectRole(role) {
+    selectedRole = role;
+    document.querySelectorAll('.role-option').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.role-option[data-role="${role}"]`).classList.add('active');
+    
+    const stageNameGroup = document.getElementById('stage-name-group');
+    const companyNameGroup = document.getElementById('company-name-group');
+    
+    if (role === 'creator') {
+      stageNameGroup.style.display = 'block';
+      companyNameGroup.style.display = 'none';
     } else {
-      window.location.href = '/signup.html';
+      stageNameGroup.style.display = 'none';
+      companyNameGroup.style.display = 'block';
     }
   }
 
-  async function loadUserData() {
-    const userStr = localStorage.getItem('pebeto_user');
-    if (userStr) {
-      currentUser = JSON.parse(userStr);
-      const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
-      document.getElementById('nav-avatar').innerHTML = initial;
-      if (currentUser.profile?.avatarUrl) {
-        document.getElementById('nav-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
-        document.getElementById('nav-avatar').innerHTML = '';
-      }
+  async function signup() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const messageDiv = document.getElementById('message');
+    
+    if (!email || !password) {
+      messageDiv.innerHTML = 'Please enter email and password';
+      messageDiv.className = 'message error';
+      return;
     }
-    await loadPosts();
-    await loadTrendingSounds();
-  }
-
-  async function loadPosts() {
-    try {
-      const container = document.getElementById('feed-container');
-      container.innerHTML = '<div style="text-align:center; padding:50px;">Loading videos...</div>';
-      
-      // Fetch real posts from community API
-      const data = await fetchJSON('/api/community/posts');
-      allPosts = data.posts || [];
-      
-      if (allPosts.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:50px;">No posts yet. Be the first to upload!</div>';
-        return;
-      }
-      
-      container.innerHTML = '';
-      for (const post of allPosts) {
-        const postEl = await createPostElement(post);
-        container.appendChild(postEl);
-      }
-    } catch (error) {
-      console.error('Error loading posts:', error);
-      document.getElementById('feed-container').innerHTML = '<div style="text-align:center; padding:50px;">Failed to load posts. Please refresh.</div>';
+    
+    if (password.length < 8) {
+      messageDiv.innerHTML = 'Password must be at least 8 characters';
+      messageDiv.className = 'message error';
+      return;
     }
-  }
-
-  async function createPostElement(post) {
-    const article = document.createElement('article');
-    article.className = 'video-post';
-    article.dataset.postId = post._id;
     
-    const isLiked = post.isLikedByCurrentUser || false;
-    const likeIcon = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
-    const likeColor = isLiked ? '#ff0050' : 'white';
-    
-    // Get user details (author)
-    const author = post.author || {};
-    const authorName = author.profile?.stageName || author.uniqueCode || author.email?.split('@')[0] || 'User';
-    const authorUsername = author.uniqueCode || `@${author.email?.split('@')[0]}`;
-    const authorRole = author.role || 'creator';
-    const authorAvatar = author.profile?.avatarUrl || '';
-    const authorNiche = author.profile?.niche || 'Creator';
-    
-    article.innerHTML = `
-      ${post.isLive ? `<div class="live-badge" style="position:absolute; top:20px; left:16px; background:#ff0050; padding:4px 12px; border-radius:20px; font-size:12px; display:flex; align-items:center; gap:6px;"><span class="live-dot" style="width:8px; height:8px; background:white; border-radius:50%;"></span> LIVE</div>` : ''}
-      <video class="post-video" src="${post.mediaUrl || post.videoUrl}" loop muted playsinline poster="${post.thumbnailUrl || ''}"></video>
-      <div class="post-overlay">
-        <div class="post-author" onclick="viewProfile('${author._id}')" style="cursor:pointer;">
-          <div class="author-avatar" style="background-image: url(${authorAvatar})">${!authorAvatar ? (authorName[0] || 'U') : ''}</div>
-          <div class="author-info">
-            <h4>${escapeHtml(authorName)} <span>${escapeHtml(authorUsername)}</span> • ${authorRole === 'creator' ? '🎨 Creator' : '🏢 Brand'}</h4>
-            <p>${escapeHtml(authorNiche)}</p>
-          </div>
-        </div>
-        <div class="post-caption">${escapeHtml(post.caption || '')}</div>
-        ${post.sound ? `<div class="trending-sound" style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12px; color:#ffaa77; cursor:pointer;" onclick="useSound('${post.sound}')"><i class="ri-music-2-line"></i> ${escapeHtml(post.sound)}</div>` : ''}
-      </div>
-      <div class="right-actions">
-        <div class="action-btn" onclick="toggleLike('${post._id}', this)">
-          <i class="${likeIcon}" style="color:${likeColor}"></i>
-          <span>${formatNumber(post.likeCount || 0)}</span>
-        </div>
-        <div class="action-btn" onclick="openComments('${post._id}')">
-          <i class="ri-chat-3-fill"></i>
-          <span>${formatNumber(post.commentCount || 0)}</span>
-        </div>
-        <div class="action-btn" onclick="openTipModal('${author._id}', '${escapeHtml(authorName)}')">
-          <i class="ri-hand-coin-line"></i>
-          <span>Tip</span>
-        </div>
-        <div class="action-btn" onclick="sharePost('${post._id}')">
-          <i class="ri-share-forward-line"></i>
-          <span>Share</span>
-        </div>
-        <div class="action-btn" onclick="savePost('${post._id}')">
-          <i class="ri-bookmark-line"></i>
-          <span>Save</span>
-        </div>
-      </div>
-    `;
-    
-    const video = article.querySelector('video');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) video.play().catch(e => {});
-        else video.pause();
-      });
-    }, { threshold: 0.5 });
-    observer.observe(article);
-    
-    return article;
-  }
-
-  async function toggleLike(postId, element) {
-    try {
-      const icon = element.querySelector('i');
-      const countSpan = element.querySelector('span');
-      const data = await fetchJSON(`/api/community/posts/${postId}/like`, { method: 'POST' });
-      
-      if (data.liked) {
-        icon.classList.remove('ri-heart-line');
-        icon.classList.add('ri-heart-fill');
-        icon.style.color = '#ff0050';
-      } else {
-        icon.classList.remove('ri-heart-fill');
-        icon.classList.add('ri-heart-line');
-        icon.style.color = 'white';
-      }
-      countSpan.innerText = formatNumber(data.likeCount);
-    } catch (error) {
-      console.error('Error toggling like:', error);
+    if (password !== confirmPassword) {
+      messageDiv.innerHTML = 'Passwords do not match';
+      messageDiv.className = 'message error';
+      return;
     }
-  }
-
-  async function openComments(postId) {
-    currentPostId = postId;
-    const modal = document.getElementById('comments-modal');
-    const commentsList = document.getElementById('comments-list');
-    commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Loading comments...</div>';
-    modal.style.display = 'flex';
+    
+    const profile = {};
+    if (selectedRole === 'creator') {
+      const stageName = document.getElementById('stage-name').value;
+      if (stageName) profile.stageName = stageName;
+    } else {
+      const companyName = document.getElementById('company-name').value;
+      if (companyName) profile.companyName = companyName;
+    }
+    
+    messageDiv.innerHTML = 'Creating account...';
+    messageDiv.className = 'message';
     
     try {
-      const data = await fetchJSON(`/api/community/posts/${postId}/comments`);
-      const comments = data.comments || [];
-      
-      if (comments.length === 0) {
-        commentsList.innerHTML = '<div style="text-align:center; padding:20px;">No comments yet. Be the first!</div>';
-      } else {
-        commentsList.innerHTML = comments.map(c => `
-          <div class="comment-item">
-            <div class="comment-avatar" style="width:32px; height:32px; border-radius:50%; background:#ff8c42; display:flex; align-items:center; justify-content:center; font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
-            <div class="comment-text"><strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong><p>${escapeHtml(c.text)}</p></div>
-          </div>
-        `).join('');
-      }
-    } catch (error) {
-      commentsList.innerHTML = '<div style="text-align:center; padding:20px;">Failed to load comments</div>';
-    }
-  }
-
-  async function addComment() {
-    const input = document.getElementById('comment-input');
-    const text = input.value.trim();
-    if (!text || !currentPostId) return;
-    
-    try {
-      await fetchJSON(`/api/community/posts/${currentPostId}/comments`, {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
-        body: JSON.stringify({ text })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: selectedRole, profile })
       });
-      input.value = '';
-      await openComments(currentPostId);
+      const data = await response.json();
       
-      // Update comment count in feed
-      const postElement = document.querySelector(`.video-post[data-post-id="${currentPostId}"]`);
-      if (postElement) {
-        const commentCountSpan = postElement.querySelector('.action-btn:nth-child(2) span');
-        if (commentCountSpan) {
-          let currentCount = parseInt(commentCountSpan.innerText.replace(/[^0-9]/g, '')) || 0;
-          commentCountSpan.innerText = formatNumber(currentCount + 1);
-        }
-      }
-    } catch (error) {
-      alert('Failed to add comment');
-    }
-  }
-
-  function openTipModal(userId, name) {
-    document.getElementById('tip-creator-name').innerHTML = `To: ${name}`;
-    document.getElementById('tip-modal').dataset.userId = userId;
-    document.getElementById('tip-modal').style.display = 'flex';
-  }
-
-  async function sendTip() {
-    const amount = parseFloat(document.getElementById('tip-amount').value);
-    const userId = document.getElementById('tip-modal').dataset.userId;
-    if (!amount || amount <= 0) { alert('Enter valid amount'); return; }
-    
-    try {
-      const data = await fetchJSON('/api/wallet/tip', {
-        method: 'POST',
-        body: JSON.stringify({ recipientId: userId, amount: amount })
-      });
-      alert(`💝 Tip of $${amount} sent! Creator receives $${(amount * 0.95).toFixed(2)}`);
-      closeModal('tip-modal');
-      document.getElementById('tip-amount').value = '';
-    } catch (error) {
-      alert('Failed to send tip: ' + error.message);
-    }
-  }
-
-  function sharePost(postId) {
-    navigator.clipboard.writeText(`${window.location.origin}/community.html?post=${postId}`);
-    alert('Link copied to clipboard!');
-  }
-
-  async function savePost(postId) {
-    try {
-      await fetchJSON(`/api/community/posts/${postId}/save`, { method: 'POST' });
-      alert('Post saved to your profile!');
-    } catch (error) {
-      alert('Failed to save post');
-    }
-  }
-
-  function useSound(soundName) {
-    alert(`Using sound: ${soundName}`);
-    openUploadModal();
-  }
-
-  async function loadTrendingSounds() {
-    try {
-      const data = await fetchJSON('/api/community/trending-sounds');
-      const sounds = data.sounds || [];
-      const bar = document.getElementById('trending-bar');
-      if (sounds.length === 0) {
-        bar.innerHTML = '<div style="color:#a08070;">No trending sounds yet</div>';
-        return;
-      }
-      bar.innerHTML = sounds.map(s => `
-        <div class="trending-sound-item" onclick="useSound('${s.name}')">
-          <i class="ri-fire-line"></i> ${escapeHtml(s.name)} • ${formatNumber(s.uses)} uses
-        </div>
-      `).join('');
-    } catch (error) {
-      console.error('Error loading trending sounds:', error);
-    }
-  }
-
-  function openUploadModal() { document.getElementById('upload-modal').style.display = 'flex'; }
-  function startLive() { document.getElementById('live-modal').style.display = 'flex'; }
-
-  async function uploadVideo() {
-    const caption = document.getElementById('video-caption').value;
-    const fileInput = document.getElementById('video-file');
-    if (!fileInput.files.length) { alert('Select a video file'); return; }
-    
-    const formData = new FormData();
-    formData.append('media', fileInput.files[0]);
-    formData.append('caption', caption);
-    
-    const btn = document.querySelector('#upload-modal .save-btn');
-    btn.disabled = true;
-    btn.innerText = 'Uploading...';
-    
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch('/api/community/posts', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert('Video uploaded successfully!');
-        closeModal('upload-modal');
-        document.getElementById('video-caption').value = '';
-        document.getElementById('video-file').value = '';
-        await loadPosts();
+      if (data.success) {
+        messageDiv.innerHTML = 'Account created successfully! Redirecting to login...';
+        messageDiv.className = 'message success';
+        setTimeout(() => {
+          window.location.href = '/login.html';
+        }, 1500);
       } else {
-        alert(data.message || 'Upload failed');
+        messageDiv.innerHTML = data.message || 'Signup failed. Email may already exist.';
+        messageDiv.className = 'message error';
       }
     } catch (error) {
-      alert('Upload failed: ' + error.message);
-    } finally {
-      btn.disabled = false;
-      btn.innerText = 'Post';
+      console.error('Signup error:', error);
+      messageDiv.innerHTML = 'Network error. Please try again.';
+      messageDiv.className = 'message error';
     }
   }
-
-  function viewProfile(userId) {
-    window.location.href = `/profile.html?userId=${userId}`;
-  }
-
-  async function searchGlobal() {
-    const query = document.getElementById('global-search').value.toLowerCase().trim();
-    if (!query) { await loadPosts(); return; }
-    
-    try {
-      const data = await fetchJSON(`/api/community/search?q=${encodeURIComponent(query)}`);
-      const results = data.users || [];
-      const container = document.getElementById('feed-container');
-      
-      if (results.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:50px;">No users found</div>';
-        return;
-      }
-      
-      container.innerHTML = results.map(user => `
-        <div style="background:rgba(255,255,255,0.05); border-radius:20px; padding:20px; margin-bottom:15px; cursor:pointer;" onclick="viewProfile('${user._id}')">
-          <div style="display:flex; align-items:center; gap:15px;">
-            <div class="author-avatar" style="width:60px; height:60px;">${(user.profile?.stageName?.[0] || user.email[0]).toUpperCase()}</div>
-            <div>
-              <h3>${escapeHtml(user.profile?.stageName || user.email.split('@')[0])}</h3>
-              <p style="color:#a08070;">${user.uniqueCode || user.email}</p>
-              <p style="font-size:12px;">${user.role === 'creator' ? '🎨 Creator' : '🏢 Brand'} • ${user.profile?.niche || 'No niche'}</p>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    } catch (error) {
-      console.error('Search error:', error);
-    }
-  }
-
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
-
-  loadUserData();
 </script>
 </body>
 </html>
