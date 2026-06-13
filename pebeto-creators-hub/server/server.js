@@ -148,6 +148,11 @@ const withdrawalRoutes = safeRequire('./routes/withdrawal.routes', 'withdrawal.r
 const creatorRoutes = safeRequire('./routes/creator.routes', 'creator.routes');
 
 // ============================================
+// NEW: User Routes Import (for activity, sessions, 2FA, API keys)
+// ============================================
+const userRoutes = safeRequire('./routes/user.routes', 'user.routes');
+
+// ============================================
 // Request ID Middleware
 // ============================================
 
@@ -353,6 +358,16 @@ async function bootstrap() {
     
     // Campaign routes
     app.use('/api/campaigns', campaignRoutes);
+    
+    // ============================================
+    // NEW: User Routes (activity, sessions, 2FA, API keys, avatar)
+    // ============================================
+    if (userRoutes) {
+      app.use('/api/user', userRoutes);
+      console.log('✅ Mounted user routes (/api/user/*)');
+    } else {
+      console.log('⚠️ User routes skipped - file not found');
+    }
     
     // ============================================
     // NEW: Creator Routes (Social Media Links)
