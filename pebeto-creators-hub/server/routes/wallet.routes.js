@@ -398,44 +398,251 @@ router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) =
   });
 }));
 
-/**
- * POST /api/wallet/tip
- * Send a tip to a creator
- */
-router.post('/tip', tipValidation, catchAsync(async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new AppError(errors.array()[0].msg, 400);
-  }
-
-  req.body.recipientUsername = req.body.recipientUsername || req.body.recipientUniqueCode;
-  await sendTip(req, res, next);
-}));
-
-/**
- * POST /api/wallet/tip/preview
- * Preview tip amount and fees
- */
-router.post('/tip/preview', catchAsync(async (req, res) => {
-  const { amount } = req.body;
+// ============================================
+// NEW: GET /api/wallet/earnings
+// Get creator earnings overview (last 30 days)
+// ============================================
+router.get('/earnings', catchAsync(async (req, res) => {
+  const { days = 30 } = req.query;
+  const daysInt = parseInt(days) || 30;
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - daysInt);
   
-  if (!amount || amount <= 0) {
-    throw new AppError('Amount must be a positive number', 400);
+  // Get all completed tip transactions where user is recipient
+  const earningsData = await Transaction.aggregate([
+    {
+      $match: {
+        toUserId: req.user._id,
+        type: 'tip',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$netAmount' },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { '_id.date': 1 } }
+  ]);
+  
+  // Also get earnings from completed campaigns
+  const campaignEarnings = await Transaction.aggregate([
+    {
+      $match: {
+        toUserId: req.user._id,
+        type: 'escrow_release',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$netAmount' },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { '_id.date': 1 } }
+  ]);
+  
+  // Merge both sources
+  const earningsMap = new Map();
+  
+  earningsData.forEach(item => {
+    earningsMap.set(item._id.date, {
+      tips: item.total,
+      campaigns: 0,
+      total: item.total
+    });
+  });
+  
+  campaignEarnings.forEach(item => {
+    if (earningsMap.has(item._id.date)) {
+      const existing = earningsMap.get(item._id.date);
+      existing.campaigns = item.total;
+      existing.total = existing.tips + item.total;
+    } else {
+      earningsMap.set(item._id.date, {
+        tips: 0,
+        campaigns: item.total,
+        total: item.total
+      });
+    }
+  });
+  
+  // Generate date range labels
+  const labels = [];
+  const earnings = [];
+  const tipsData = [];
+  const campaignsData = [];
+  
+  for (let i = daysInt - 1; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    labels.push(label);
+    
+    const dayData = earningsMap.get(dateStr) || { tips: 0, campaigns: 0, total: 0 };
+    earnings.push(dayData.total);
+    tipsData.push(dayData.tips);
+    campaignsData.push(dayData.campaigns);
   }
-
-  const feeRate = FEE_RATES.TIP;
-  const fee = amount * feeRate;
-  const netToCreator = amount - fee;
-
+  
+  // Calculate summary stats
+  const totalTips = earningsData.reduce((sum, item) => sum + item.total, 0);
+  const totalCampaigns = campaignEarnings.reduce((sum, item) => sum + item.total, 0);
+  const totalEarnings = totalTips + totalCampaigns;
+  
   res.json({
     success: true,
     data: {
-      grossAmount: amount,
-      feeAmount: fee,
-      feePercentage: feeRate * 100,
-      netToCreator: netToCreator,
-      message: `Creator will receive ${netToCreator} after ${feeRate * 100}% platform fee`,
+      labels,
+      earnings,
+      breakdown: {
+        tips: tipsData,
+        campaigns: campaignsData
+      },
+      summary: {
+        totalEarnings,
+        totalTips,
+        totalCampaigns,
+        period: `${daysInt} days`,
+        averagePerDay: totalEarnings / daysInt
+      }
+    }
+  });
+}));
+
+// ============================================
+// NEW: GET /api/wallet/spending
+// Get business spending overview (last 30 days)
+// ============================================
+router.get('/spending', catchAsync(async (req, res) => {
+  const { days = 30 } = req.query;
+  const daysInt = parseInt(days) || 30;
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - daysInt);
+  
+  // Get all deposit transactions where user is sender
+  const spendingData = await Transaction.aggregate([
+    {
+      $match: {
+        fromUserId: req.user._id,
+        type: 'deposit',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
     },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$grossAmount' },
+        fee: { $sum: '$feeAmount' }
+      }
+    },
+    { $sort: { '_id.date': 1 } }
+  ]);
+  
+  // Also get campaign funding
+  const campaignFunding = await Transaction.aggregate([
+    {
+      $match: {
+        fromUserId: req.user._id,
+        type: 'campaign_fund',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$grossAmount' }
+      }
+    },
+    { $sort: { '_id.date': 1 } }
+  ]);
+  
+  const spendingMap = new Map();
+  
+  spendingData.forEach(item => {
+    spendingMap.set(item._id.date, {
+      deposits: item.total,
+      fees: item.fee,
+      campaigns: 0,
+      total: item.total
+    });
+  });
+  
+  campaignFunding.forEach(item => {
+    if (spendingMap.has(item._id.date)) {
+      const existing = spendingMap.get(item._id.date);
+      existing.campaigns = item.total;
+      existing.total = existing.deposits + item.total;
+    } else {
+      spendingMap.set(item._id.date, {
+        deposits: 0,
+        fees: 0,
+        campaigns: item.total,
+        total: item.total
+      });
+    }
+  });
+  
+  // Generate date range labels
+  const labels = [];
+  const spending = [];
+  const depositsData = [];
+  const campaignsData = [];
+  const feesData = [];
+  
+  for (let i = daysInt - 1; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    labels.push(label);
+    
+    const dayData = spendingMap.get(dateStr) || { deposits: 0, fees: 0, campaigns: 0, total: 0 };
+    spending.push(dayData.total);
+    depositsData.push(dayData.deposits);
+    campaignsData.push(dayData.campaigns);
+    feesData.push(dayData.fees);
+  }
+  
+  // Calculate summary stats
+  const totalSpending = spendingData.reduce((sum, item) => sum + item.total, 0) +
+                        campaignFunding.reduce((sum, item) => sum + item.total, 0);
+  const totalFees = spendingData.reduce((sum, item) => sum + (item.fee || 0), 0);
+  
+  res.json({
+    success: true,
+    data: {
+      labels,
+      spending,
+      breakdown: {
+        deposits: depositsData,
+        campaigns: campaignsData,
+        fees: feesData
+      },
+      summary: {
+        totalSpending,
+        totalFees,
+        period: `${daysInt} days`,
+        averagePerDay: totalSpending / daysInt
+      }
+    }
   });
 }));
 
