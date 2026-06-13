@@ -512,4 +512,93 @@ router.post(
   })
 );
 
+// ============================================
+// NEW: GET /api/campaigns/performance
+// Get campaign performance metrics for analytics
+// ============================================
+router.get('/performance', catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const userRole = req.user.role;
+  
+  let campaignQuery = {};
+  
+  if (userRole === 'business') {
+    campaignQuery = { businessId: userId };
+  } else if (userRole === 'creator') {
+    campaignQuery = { assignedCreatorId: userId };
+  }
+  // Admin sees all campaigns
+  
+  const Campaign = require('../models/Campaign');
+  const campaigns = await Campaign.find(campaignQuery)
+    .select('title status budget views bids createdAt completedAt ctr roi')
+    .sort({ createdAt: -1 })
+    .limit(10);
+  
+  // Calculate performance metrics
+  const totalViews = campaigns.reduce((sum, c) => sum + (c.views || 0), 0);
+  const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
+  const completedCampaigns = campaigns.filter(c => c.status === 'paid').length;
+  const totalCampaigns = campaigns.length;
+  
+  // Calculate average CTR (Click Through Rate)
+  const avgCtr = totalCampaigns > 0 
+    ? campaigns.reduce((sum, c) => sum + (c.ctr || 0), 0) / totalCampaigns 
+    : 0;
+  
+  // Calculate ROI for completed campaigns
+  let totalRoi = 0;
+  let roiCount = 0;
+  campaigns.forEach(c => {
+    if (c.status === 'paid' && c.roi) {
+      totalRoi += c.roi;
+      roiCount++;
+    }
+  });
+  const avgRoi = roiCount > 0 ? totalRoi / roiCount : 0;
+  
+  // Engagement score calculation
+  const engagementScore = totalCampaigns > 0
+    ? Math.min(100, Math.round((totalViews / Math.max(totalBudget, 1)) * 10))
+    : 0;
+  
+  // Prepare chart data
+  const labels = campaigns.slice(0, 7).map(c => c.title?.substring(0, 20) || 'Untitled');
+  const viewsData = campaigns.slice(0, 7).map(c => c.views || 0);
+  const engagementData = campaigns.slice(0, 7).map(c => {
+    const engagement = c.status === 'paid' ? 85 : c.status === 'in_progress' ? 45 : 20;
+    return engagement;
+  });
+  
+  res.json({
+    success: true,
+    data: {
+      performance: {
+        totalViews,
+        totalBudget,
+        completedCampaigns,
+        totalCampaigns,
+        ctr: Math.round(avgCtr * 100) / 100,
+        roi: Math.round(avgRoi * 100) / 100,
+        engagementScore
+      },
+      chart: {
+        labels,
+        views: viewsData,
+        engagement: engagementData
+      },
+      campaigns: campaigns.map(c => ({
+        id: c._id,
+        title: c.title,
+        status: c.status,
+        budget: c.budget,
+        views: c.views || 0,
+        ctr: c.ctr || 0,
+        roi: c.roi || 0,
+        createdAt: c.createdAt
+      }))
+    }
+  });
+}));
+
 module.exports = router;
