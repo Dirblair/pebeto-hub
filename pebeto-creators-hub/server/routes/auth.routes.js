@@ -6,6 +6,7 @@ const { body, query, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const env = require('../config/env');
+// Email service is disabled - functions will log instead of send
 const { sendVerificationEmail, sendPasswordResetEmail, sendLoginAlertEmail } = require('../services/emailService');
 const { catchAsync, AppError } = require('../middleware/errorHandler');
 
@@ -19,7 +20,7 @@ const validateEmail = body('email').isEmail().withMessage('Valid email required'
 const validatePassword = body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters');
 
 // ============================================
-// REGISTER
+// REGISTER - Email verification disabled (auto-verified)
 // ============================================
 router.post('/register', async (req, res) => {
   console.log('📝 REGISTER:', req.body.email);
@@ -44,8 +45,8 @@ router.post('/register', async (req, res) => {
       passwordHash,
       role,
       profile: profile || {},
-      status: 'pending',
-      emailVerified: false
+      status: 'active',           // Changed from 'pending' to 'active'
+      emailVerified: true         // Changed from false to true (auto-verify)
     });
     
     // Create wallet
@@ -61,18 +62,26 @@ router.post('/register', async (req, res) => {
       console.log('⚠️ Wallet note:', err.message);
     }
     
-    // Generate and send verification email
-    const verificationToken = user.generateEmailVerificationToken();
-    await user.save();
+    // Generate token immediately (no email verification required)
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
+      env.jwtSecret,
+      { expiresIn: '30d' }
+    );
     
-    const verificationUrl = `${process.env.CLIENT_ORIGIN || 'https://pebeto.com'}/verify-email?token=${verificationToken}&id=${user._id}`;
-    await sendVerificationEmail(user.email, verificationUrl);
+    console.log('✅ REGISTER SUCCESS:', email);
     
-    // Don't send token until email is verified
     res.json({
       success: true,
-      message: 'Registration successful! Please check your email to verify your account.',
-      requiresVerification: true
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        profile: user.profile,
+        emailVerified: true
+      },
+      message: 'Registration successful! You are now logged in.'
     });
     
   } catch (err) {
@@ -100,14 +109,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Check if email is verified
-    if (!user.emailVerified) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
-        requiresVerification: true
-      });
-    }
+    // Email verification check removed (all users are auto-verified)
+    // if (!user.emailVerified) { ... } - REMOVED
     
     // Check if account is locked
     if (user.isLocked) {
@@ -128,7 +131,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Send login alert if enabled
+    // Send login alert if enabled (email service is disabled, will just log)
     if (user.notificationPreferences?.emailOnLogin !== false) {
       await sendLoginAlertEmail(user.email, {
         time: new Date().toLocaleString(),
@@ -167,12 +170,12 @@ router.post('/login', async (req, res) => {
 });
 
 // ============================================
-// Email Verification
+// Email Verification - DISABLED (returns success without sending)
 // ============================================
 
 /**
- * POST /api/auth/verify-email/resend
- * Resend verification email
+ * POST /api/auth/verify-email/resend - DISABLED
+ * Returns success without sending email
  */
 router.post('/verify-email/resend', [
   body('email').isEmail().withMessage('Valid email required')
@@ -197,15 +200,16 @@ router.post('/verify-email/resend', [
       return res.status(400).json({ success: false, message: 'Email already verified' });
     }
 
-    const verificationToken = user.generateEmailVerificationToken();
+    // Email sending is disabled - just mark as verified
+    user.emailVerified = true;
+    if (user.status === 'pending') {
+      user.status = 'active';
+    }
     await user.save();
-
-    const verificationUrl = `${process.env.CLIENT_ORIGIN || 'https://pebeto.com'}/verify-email?token=${verificationToken}&id=${user._id}`;
-    await sendVerificationEmail(user.email, verificationUrl);
 
     res.json({
       success: true,
-      message: 'Verification email sent. Please check your inbox.'
+      message: 'Email verified automatically (email service disabled). You can now log in.'
     });
   } catch (err) {
     console.error('Resend verification error:', err);
@@ -214,8 +218,7 @@ router.post('/verify-email/resend', [
 });
 
 /**
- * GET /api/auth/verify-email
- * Verify email with token
+ * GET /api/auth/verify-email - DISABLED (auto-verifies)
  */
 router.get('/verify-email', [
   query('token').notEmpty().withMessage('Verification token required'),
@@ -241,11 +244,12 @@ router.get('/verify-email', [
       });
     }
 
-    const verified = await user.verifyEmail(token);
-
-    if (!verified) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+    // Auto-verify regardless of token (email disabled)
+    user.emailVerified = true;
+    if (user.status === 'pending') {
+      user.status = 'active';
     }
+    await user.save();
 
     res.json({
       success: true,
@@ -258,12 +262,11 @@ router.get('/verify-email', [
 });
 
 // ============================================
-// Password Reset Flow
+// Password Reset Flow - DISABLED (returns success without sending)
 // ============================================
 
 /**
- * POST /api/auth/forgot-password
- * Request password reset
+ * POST /api/auth/forgot-password - DISABLED (returns success without sending)
  */
 router.post('/forgot-password', [
   body('email').isEmail().withMessage('Valid email required')
@@ -281,19 +284,14 @@ router.post('/forgot-password', [
     if (!user) {
       return res.json({
         success: true,
-        message: 'If an account exists with that email, you will receive a password reset link.'
+        message: 'Password reset functionality is currently disabled. Please contact support for password changes.'
       });
     }
 
-    const resetToken = user.generatePasswordResetToken();
-    await user.save();
-
-    const resetUrl = `${process.env.CLIENT_ORIGIN || 'https://pebeto.com'}/reset-password?token=${resetToken}`;
-    await sendPasswordResetEmail(user.email, resetUrl);
-
+    // Email sending is disabled
     res.json({
       success: true,
-      message: 'Password reset email sent. Please check your inbox.'
+      message: 'Password reset functionality is currently disabled. Please contact support for password changes.'
     });
   } catch (err) {
     console.error('Forgot password error:', err);
@@ -302,8 +300,7 @@ router.post('/forgot-password', [
 });
 
 /**
- * POST /api/auth/reset-password
- * Reset password with token
+ * POST /api/auth/reset-password - DISABLED (returns error)
  */
 router.post('/reset-password', [
   body('token').notEmpty().withMessage('Reset token required'),
@@ -335,7 +332,7 @@ router.post('/reset-password', [
     user.passwordHash = await bcrypt.hash(password, salt);
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
-    user.tokenVersion += 1; // Invalidate all existing sessions
+    user.tokenVersion += 1;
 
     await user.save();
 
