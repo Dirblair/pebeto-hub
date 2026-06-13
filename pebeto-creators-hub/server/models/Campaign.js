@@ -255,6 +255,38 @@ const campaignSchema = new mongoose.Schema(
       }
     },
     
+    // ============================================
+    // NEW: Analytics Fields (for performance tracking)
+    // ============================================
+    
+    /**
+     * Number of times this campaign has been viewed
+     */
+    views: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    
+    /**
+     * Click-Through Rate percentage (0-100)
+     * Calculated as (clicks / views) * 100
+     */
+    ctr: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    
+    /**
+     * Return on Investment percentage for completed campaigns
+     */
+    roi: {
+      type: Number,
+      default: 0
+    },
+    
     // Additional Metadata
     tags: [{
       type: String,
@@ -310,6 +342,11 @@ campaignSchema.index({ status: 1, createdAt: -1 });
 campaignSchema.index({ status: 1, budget: -1 });
 campaignSchema.index({ category: 1, status: 1 });
 campaignSchema.index({ tags: 1, status: 1 });
+
+// NEW: Indexes for analytics queries
+campaignSchema.index({ views: -1 });
+campaignSchema.index({ ctr: -1 });
+campaignSchema.index({ roi: -1 });
 
 // Text search index
 campaignSchema.index({ 
@@ -384,6 +421,39 @@ campaignSchema.virtual('fundingProgress').get(function() {
   if (this.budget === 0) return 0;
   return Math.min(100, Math.round((this.fundedAmount / this.budget) * 100));
 });
+
+/**
+ * NEW: Update CTR (Call this when tracking clicks)
+ * @param {number} clicks - Number of clicks on the campaign
+ */
+campaignSchema.methods.updateCTR = async function(clicks) {
+  if (this.views > 0) {
+    this.ctr = Math.min(100, (clicks / this.views) * 100);
+    await this.save();
+  }
+  return this;
+};
+
+/**
+ * NEW: Increment view count
+ */
+campaignSchema.methods.incrementViews = async function() {
+  this.views = (this.views || 0) + 1;
+  await this.save();
+  return this;
+};
+
+/**
+ * NEW: Calculate ROI for completed campaign
+ * @param {number} revenueGenerated - Revenue generated from campaign
+ */
+campaignSchema.methods.calculateROI = async function(revenueGenerated) {
+  if (this.budget > 0) {
+    this.roi = ((revenueGenerated - this.budget) / this.budget) * 100;
+    await this.save();
+  }
+  return this;
+};
 
 // ============================================
 // Instance Methods
