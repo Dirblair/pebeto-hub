@@ -1340,7 +1340,7 @@
   // ============================================
   // LOAD USERS - FIXED WITH REAL DATA
   // ============================================
-  async function loadUsers() {
+ async function loadUsers() {
     const loadingDiv = document.getElementById('users-loading');
     const tbody = document.querySelector('#users-table tbody');
     
@@ -1384,6 +1384,10 @@
         document.getElementById('total-creators-count').innerText = creators;
         document.getElementById('total-businesses-count').innerText = businesses;
         document.getElementById('total-admins-count').innerText = admins;
+        
+        // ALSO UPDATE DASHBOARD STATS
+        document.getElementById('total-users').innerText = allUsersData.length;
+        document.getElementById('total-businesses').innerText = businesses;
         
         if (filteredUsers.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your search<\/td><\/tr>';
