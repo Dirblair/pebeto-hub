@@ -394,6 +394,15 @@ const campaignSchema = new mongoose.Schema(
       enum: ['pending', 'reminding', 'processing', 'completed', 'cancelled'],
       default: 'pending'
     }
+      
+    driveFiles: [{
+  fileId: String,
+  fileName: String,
+  fileUrl: String,
+  embedUrl: String,
+  uploadedAt: Date,
+  size: Number
+}]
   },
   { 
     timestamps: true,
