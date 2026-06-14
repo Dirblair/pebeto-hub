@@ -1211,7 +1211,7 @@
       }
     } catch(e) { 
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '</tr><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
       console.error(e); 
     }
   }
@@ -1441,7 +1441,7 @@
     }
     
     if (filtered.length === 0) {
-      tbody.innerHTML = '</table><td colspan="7" class="empty-state">No users found matching your filters<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your filters<\/td><\/tr>';
     } else {
       tbody.innerHTML = filtered.map(user => `
         <tr>
@@ -1534,7 +1534,7 @@
         document.getElementById('total-deposits').innerHTML = formatMoney(depositsTotal);
         
         if (allTransactions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found<\/td><\/tr>';
+          tbody.innerHTML = '</tr><td colspan="7" class="empty-state">No transactions found<\/td><\/tr>';
         } else {
           tbody.innerHTML = allTransactions.map(t => `
             <tr>
@@ -1590,7 +1590,7 @@
       }
     } catch(e) { 
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '</table><td colspan="5" class="empty-state">Error loading withdrawals<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error loading withdrawals<\/td><\/tr>';
       console.error(e); 
     }
   }
@@ -1899,13 +1899,13 @@
   }
   
   // ============================================
-  // FIXED: LOAD DASHBOARD STATS
+  // LOAD DASHBOARD STATS
   // ============================================
   async function loadDashboardStats() {
     try {
       console.log('Loading dashboard stats...');
       
-      // Get user stats from allUsersData if available, or fetch fresh
+      // Get user stats from allUsersData if available
       if (allUsersData && allUsersData.length > 0) {
         const totalUsers = allUsersData.length;
         const businesses = allUsersData.filter(u => u.role === 'business').length;
@@ -1919,7 +1919,7 @@
         document.getElementById('total-businesses-count').innerText = businesses;
         document.getElementById('total-admins-count').innerText = admins;
         
-        console.log(`Dashboard stats from allUsersData: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+        console.log(`Dashboard stats: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
       } else {
         // Fetch fresh user data
         const token = localStorage.getItem('pebeto_token');
@@ -1942,7 +1942,7 @@
           document.getElementById('total-businesses-count').innerText = businesses;
           document.getElementById('total-admins-count').innerText = admins;
           
-          console.log(`Dashboard stats from API: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+          console.log(`Dashboard stats from API: ${totalUsers} users`);
         }
       }
       
@@ -1976,18 +1976,6 @@
       
     } catch(e) { 
       console.error('Error loading dashboard stats:', e);
-      // Fallback: try to count from visible table
-      const userRows = document.querySelectorAll('#users-table tbody tr');
-      let visibleUsers = 0;
-      userRows.forEach(row => {
-        if (row.cells.length > 1 && !row.innerHTML.includes('No users found')) {
-          visibleUsers++;
-        }
-      });
-      if (visibleUsers > 0) {
-        document.getElementById('total-users').innerText = visibleUsers;
-        document.getElementById('total-users-count').innerText = visibleUsers;
-      }
     }
   }
   
@@ -2052,12 +2040,73 @@
   loadTeamMembers();
   addNotification('Welcome to Pebeto Admin Dashboard');
   
-  // Emergency fix - force update after 2 seconds
-  setTimeout(() => {
-    if (allUsersData && allUsersData.length > 0) {
-      loadDashboardStats();
+  // Emergency fix - force update after delays
+  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 1000);
+  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 2000);
+  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 3000);
+</script>
+
+<!-- DIRECT FIX: Force update dashboard stats from the users table -->
+<script>
+(function fixDashboardStats() {
+  console.log('🔧 Running dashboard stats fix...');
+  
+  function updateStatsFromTable() {
+    const userRows = document.querySelectorAll('#users-table tbody tr');
+    let totalUsers = 0;
+    let creators = 0;
+    let businesses = 0;
+    let admins = 0;
+    
+    userRows.forEach(row => {
+      if (row.cells.length > 1 && !row.innerHTML.includes('No users found') && !row.innerHTML.includes('Loading users')) {
+        totalUsers++;
+        
+        const roleCell = row.cells[2];
+        if (roleCell) {
+          const roleText = roleCell.innerText.toLowerCase();
+          if (roleText.includes('creator')) creators++;
+          else if (roleText.includes('business')) businesses++;
+          else if (roleText.includes('admin')) admins++;
+        }
+      }
+    });
+    
+    if (totalUsers > 0) {
+      console.log(`✅ Updating stats from table: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      
+      const totalUsersEls = document.querySelectorAll('#total-users, #total-users-count');
+      totalUsersEls.forEach(el => { if (el) el.innerText = totalUsers; });
+      
+      const totalBusinessesEls = document.querySelectorAll('#total-businesses, #total-businesses-count');
+      totalBusinessesEls.forEach(el => { if (el) el.innerText = businesses; });
+      
+      const creatorsEl = document.getElementById('total-creators-count');
+      if (creatorsEl) creatorsEl.innerText = creators;
+      
+      const adminsEl = document.getElementById('total-admins-count');
+      if (adminsEl) adminsEl.innerText = admins;
+      
+      return true;
     }
-  }, 2000);
+    return false;
+  }
+  
+  setTimeout(() => updateStatsFromTable(), 500);
+  setTimeout(() => updateStatsFromTable(), 1000);
+  setTimeout(() => updateStatsFromTable(), 2000);
+  setTimeout(() => updateStatsFromTable(), 3000);
+  
+  const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
+  if (usersTab) {
+    usersTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 500); });
+  }
+  
+  const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  if (dashboardTab) {
+    dashboardTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 100); });
+  }
+})();
 </script>
 </body>
 </html>
