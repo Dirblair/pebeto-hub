@@ -234,8 +234,9 @@
       display: inline-block;
     }
     .status-badge.active { background: rgba(34,197,94,0.2); color: #4ade80; }
-    .status-badge.urgent { background: rgba(244,67,54,0.2); color: #f44336; }
+    .status-badge.pending { background: rgba(255,152,0,0.2); color: #ff9800; }
     .status-badge.warning { background: rgba(255,152,0,0.2); color: #ff9800; }
+    .status-badge.urgent { background: rgba(244,67,54,0.2); color: #f44336; }
     .btn-action {
       background: #ff8c42;
       border: none;
@@ -248,38 +249,6 @@
     .btn-action.danger { background: #ef4444; }
     .btn-action.danger:hover { background: #dc2626; }
     .btn-action.small { padding: 4px 10px; font-size: 11px; }
-    .campaign-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
-    /* Auto-Release Status Styles (NEW) */
-    .auto-release-status {
-      background: rgba(255,255,255,0.03);
-      border-radius: 12px;
-      padding: 8px 12px;
-      margin-top: 8px;
-      font-size: 11px;
-    }
-    .auto-release-urgent {
-      background: rgba(244, 67, 54, 0.15);
-      border-left: 3px solid #f44336;
-    }
-    .auto-release-warning {
-      background: rgba(255, 152, 0, 0.15);
-      border-left: 3px solid #ff9800;
-    }
-    .auto-release-normal {
-      background: rgba(76, 175, 80, 0.1);
-      border-left: 3px solid #4caf50;
-    }
-    .countdown-timer {
-      font-family: monospace;
-      font-size: 13px;
-      font-weight: bold;
-      color: #ff8c42;
-    }
     .approve-work-btn {
       background: #4caf50;
       border: none;
@@ -393,7 +362,27 @@
     .deposit-fields { display: none; margin-top: 15px; }
     .deposit-fields.active { display: block; }
     
-    /* Toast Notification */
+    /* Auto-Release Status Styles */
+    .auto-release-status {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+    .auto-release-urgent {
+      background: rgba(244, 67, 54, 0.15);
+      border-left: 3px solid #f44336;
+    }
+    .auto-release-warning {
+      background: rgba(255, 152, 0, 0.15);
+      border-left: 3px solid #ff9800;
+    }
+    .auto-release-normal {
+      background: rgba(76, 175, 80, 0.1);
+      border-left: 3px solid #4caf50;
+    }
+    
     .toast {
       position: fixed;
       bottom: 20px;
@@ -514,7 +503,22 @@
       color: #ff8c42;
     }
     
-    /* Video Preview Modal (NEW) */
+    /* Creator Result Card */
+    .creator-result-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .creator-result-card:hover {
+      background: rgba(255,140,66,0.1);
+    }
+    
     .video-preview-container {
       position: relative;
       padding-bottom: 56.25%;
@@ -549,6 +553,7 @@
       .campaign-stats-summary { grid-template-columns: repeat(2, 1fr); }
       .filter-bar { flex-direction: column; }
       .date-range { flex-direction: column; }
+      .creator-result-card { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
@@ -691,9 +696,7 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="applications-table" style="display: none;">
-        <thead>
-          <tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Actions</th>
-        </thead>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Actions</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -710,9 +713,7 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="active-projects-table" style="display: none;">
-        <thead>
-          <tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Auto-Release</th><th>Action</th>
-        </thead>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Auto-Release</th><th>Action</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -721,7 +722,7 @@
   <!-- Find Creators Tab -->
   <div id="tab-search" class="tab-content">
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-      <input type="text" id="creator-search" placeholder="Search by username or unique code..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white;">
+      <input type="text" id="creator-search" placeholder="Search by username, email, or unique code..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white;">
       <select id="search-niche" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white;">
         <option value="">All Niches</option>
         <option value="Music">Music</option>
@@ -730,7 +731,7 @@
         <option value="Gaming">Gaming</option>
         <option value="Tech">Tech</option>
       </select>
-      <button class="btn-action" onclick="searchCreator()">Search</button>
+      <button class="btn-action" onclick="searchCreators()">Search</button>
     </div>
     <div id="search-results"></div>
   </div>
@@ -742,11 +743,9 @@
     </div>
     <div style="overflow-x: auto;">
       <table class="data-table">
-        <thead>
-          <tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th>
-        </thead>
+        <thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead>
         <tbody id="activity-list">
-          <tr><td colspan="4">Loading activity...<\/td><\/tr>
+          <tr><td colspan="4" class="empty-state">Loading activity...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -826,12 +825,9 @@
       <h3 style="margin-bottom: 20px;">🔑 API Access</h3>
       <p>Use these keys to integrate Pebeto with your systems.</p>
       <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px; margin: 15px 0;">
-        <p><strong>API Key:</strong></p>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="api-key-display" readonly style="flex:1; font-family: monospace;">
-          <button class="btn-action" onclick="copyApiKey()">Copy</button>
-          <button class="btn-action" onclick="regenerateApiKey()">Regenerate</button>
-        </div>
+        <p><strong>API Keys</strong></p>
+        <div id="api-keys-list"></div>
+        <button class="btn-action" onclick="createApiKey()" style="margin-top: 10px;">+ Create New API Key</button>
       </div>
       <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px;">
         <p><strong>Webhooks</strong></p>
@@ -866,7 +862,7 @@
   <i class="ri-arrow-up-line"></i>
 </div>
 
-<!-- All Modals -->
+<!-- Modals -->
 <div id="deposit-modal" class="modal">
   <div class="modal-content">
     <h3>💰 Add Funds to Wallet</h3>
@@ -1075,7 +1071,6 @@
   </div>
 </div>
 
-<!-- NEW: Approve Work Modal -->
 <div id="approve-work-modal" class="modal">
   <div class="modal-content">
     <h3>✅ Approve Work & Release Payment</h3>
@@ -1086,6 +1081,17 @@
     <div class="modal-buttons">
       <button class="save-btn" onclick="confirmApproveWork()">Confirm & Release Payment</button>
       <button class="cancel-btn" onclick="closeModal('approve-work-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="api-key-modal" class="modal">
+  <div class="modal-content">
+    <h3>Create API Key</h3>
+    <input type="text" id="api-key-name" placeholder="Key Name (e.g., Production Server)">
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="createApiKeySubmit()">Create</button>
+      <button class="cancel-btn" onclick="closeModal('api-key-modal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -1118,6 +1124,7 @@
   let dailyWithdrawalTotal = 0;
   let teamMembers = [];
   let webhooks = [];
+  let apiKeys = [];
   let currentApproveCampaign = null;
 
   // ============================================
@@ -1134,6 +1141,14 @@
 
   function formatMoney(amount) { 
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0); 
+  }
+  
+  function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString();
+  }
+  
+  function formatDateTime(dateString) {
+    return new Date(dateString).toLocaleString();
   }
   
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -1153,76 +1168,6 @@
     const token = localStorage.getItem('pebeto_token');
     const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
     return res.json();
-  }
-
-  // ============================================
-  // AUTO-RELEASE STATUS HELPER (NEW)
-  // ============================================
-  
-  async function getAutoReleaseStatus(campaignId) {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/campaigns/${campaignId}/auto-release-status`);
-      if (data.success && data.data.creatorWorkCompleted && !data.data.businessWorkApproved) {
-        const days = data.data.daysRemaining;
-        const hours = data.data.hoursRemaining;
-        let statusClass = 'auto-release-normal';
-        let statusText = '';
-        let urgency = 'normal';
-        
-        if (days <= 1 && days > 0) {
-          statusClass = 'auto-release-urgent';
-          statusText = `⚠️ Auto-release in ${days} day${days !== 1 ? 's' : ''}!`;
-          urgency = 'urgent';
-        } else if (days <= 3 && days > 0) {
-          statusClass = 'auto-release-warning';
-          statusText = `⏰ Auto-release in ${days} days`;
-          urgency = 'warning';
-        } else if (days > 0) {
-          statusText = `⏳ Auto-release in ${days} days`;
-        } else if (data.data.isExpired) {
-          statusClass = 'auto-release-urgent';
-          statusText = `🔴 Auto-release pending! Review immediately.`;
-          urgency = 'urgent';
-        }
-        
-        return { statusClass, statusText, days, hours, urgency };
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  async function updateAutoReleaseStatusOnTable() {
-    const rows = document.querySelectorAll('#campaigns-table tbody tr, #active-projects-table tbody tr');
-    for (const row of rows) {
-      const campaignId = row.dataset.campaignId;
-      if (campaignId) {
-        const status = await getAutoReleaseStatus(campaignId);
-        if (status) {
-          let statusCell = row.querySelector('.auto-release-status-cell');
-          if (!statusCell) {
-            statusCell = document.createElement('td');
-            statusCell.className = 'auto-release-status-cell';
-            const actionsCell = row.querySelector('td:last-child');
-            if (actionsCell) {
-              row.insertBefore(statusCell, actionsCell);
-            } else {
-              row.appendChild(statusCell);
-            }
-          }
-          statusCell.innerHTML = `<div class="auto-release-status ${status.statusClass}">${status.statusText}</div>`;
-          
-          // Also update badge on status column if exists
-          const statusBadge = row.querySelector('.status-badge');
-          if (status.urgency === 'urgent' && statusBadge) {
-            statusBadge.classList.add('urgent');
-          } else if (status.urgency === 'warning' && statusBadge) {
-            statusBadge.classList.add('warning');
-          }
-        }
-      }
-    }
   }
 
   // ============================================
@@ -1272,11 +1217,6 @@
     notifications.unshift({ message, time: new Date(), read: false });
     updateNotificationBadge();
     updateNotificationDropdown();
-    fetch(`${API_BASE}/api/notifications`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` },
-      body: JSON.stringify({ message })
-    }).catch(e => console.log('Notification save failed'));
   }
 
   function updateNotificationBadge() {
@@ -1299,7 +1239,7 @@
     dropdown.innerHTML = notifications.slice(0, 10).map(n => `
       <div class="notification-item" onclick="markNotificationRead(this, '${n.time}')">
         <div><strong>${n.message}</strong></div>
-        <small style="color: #a08070;">${new Date(n.time).toLocaleString()}</small>
+        <small style="color: #a08070;">${formatDateTime(n.time)}</small>
       </div>
     `).join('');
   }
@@ -1612,10 +1552,10 @@
         spendingChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            labels: data.labels || [],
             datasets: [{
               label: 'Spending ($)',
-              data: data.spending || [0, 0, 0, 0],
+              data: data.spending || [],
               borderColor: '#ff8c42',
               backgroundColor: 'rgba(255,140,66,0.1)',
               fill: true,
@@ -1624,10 +1564,15 @@
           },
           options: { responsive: true, maintainAspectRatio: true }
         });
+      } else {
+        document.getElementById('spending-chart').style.display = 'none';
+        document.getElementById('chart-loading').innerHTML = 'No spending data available';
       }
     } catch(e) { 
       console.error('Error loading spending chart:', e);
       document.getElementById('chart-loading').style.display = 'none';
+      document.getElementById('spending-chart').style.display = 'none';
+      document.getElementById('chart-loading').innerHTML = 'Error loading spending data';
     }
   }
 
@@ -1643,18 +1588,18 @@
         campaignPerformanceChart = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: data.labels || ['Campaign 1', 'Campaign 2', 'Campaign 3'],
+            labels: data.labels || [],
             datasets: [
               {
                 label: 'Views',
-                data: data.views || [0, 0, 0],
+                data: data.views || [],
                 backgroundColor: '#ff8c42',
                 borderColor: '#ff8c42',
                 borderWidth: 1
               },
               {
                 label: 'Engagement',
-                data: data.engagement || [0, 0, 0],
+                data: data.engagement || [],
                 backgroundColor: '#4caf50',
                 borderColor: '#4caf50',
                 borderWidth: 1
@@ -1691,25 +1636,26 @@
           tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div><\/td><\/tr>';
         } else {
           tbody.innerHTML = await Promise.all(myCampaigns.map(async c => {
-            const autoRelease = await getAutoReleaseStatus(c._id);
-            const autoReleaseHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '<span class="status-badge">No work submitted</span>';
+            const autoRelease = c.status === 'submitted_for_review' ? await getAutoReleaseStatus(c._id) : null;
+            const autoReleaseHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : 
+              (c.status === 'submitted_for_review' ? '<div class="auto-release-status auto-release-normal">⏳ Waiting for review</div>' : '-');
             return `<tr data-campaign-id="${c._id}">
-              <td>${escapeHtml(c.title)}</td>
-              <td>${formatMoney(c.budget)}</td>
-              <td>${c.slots || 1}</td>
-              <td>${formatMoney((c.budget || 0) / (c.slots || 1))}</td>
-              <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
-              <td><span class="status-badge ${c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status === 'submitted_for_review' ? 'Awaiting Review' : c.status}</span></td>
-              <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
-              <td>${c.views || 0}</td>
-              <td class="auto-release-status-cell">${autoReleaseHtml}</td>
+              <td>${escapeHtml(c.title)}<\/td>
+              <td>${formatMoney(c.budget)}<\/td>
+              <td>${c.slots || 1}<\/td>
+              <td>${formatMoney((c.budget || 0) / (c.slots || 1))}<\/td>
+              <td>${c.deadline ? formatDate(c.deadline) : 'Not set'}<\/td>
+              <td><span class="status-badge ${c.status === 'submitted_for_review' ? 'warning' : c.status === 'paid' ? 'active' : ''}">${c.status === 'submitted_for_review' ? 'Awaiting Review' : c.status}<\/span><\/td>
+              <td>${c.bids?.filter(b => b.status === 'pending').length || 0}<\/td>
+              <td>${c.views || 0}<\/td>
+              <td class="auto-release-status-cell">${autoReleaseHtml}<\/td>
               <td><div class="campaign-actions">
                 <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button>
                 <button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button>
                 <button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button>
                 ${c.status === 'submitted_for_review' ? `<button class="approve-work-btn" onclick="openApproveWorkModal('${c._id}')">✅ Approve & Pay</button>` : ''}
                 ${c.status === 'submitted_for_review' ? `<button class="view-work-btn" onclick="viewWork('${c._id}')">👁️ View Work</button>` : ''}
-              </div></td>
+              <\/div><\/td>
             <\/tr>`;
           }));
         }
@@ -1755,22 +1701,22 @@
       tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">No campaigns match the filters</div><\/td><\/tr>';
     } else {
       tbody.innerHTML = filtered.map(c => `
-        <tr>
-          <td>${escapeHtml(c.title)}</td>
-          <td>${formatMoney(c.budget)}</td>
-          <td>${c.slots || 1}</td>
-          <td>${formatMoney((c.budget || 0) / (c.slots || 1))}</td>
-          <td>${c.deadline ? new Date(c.deadline).toLocaleDateString() : 'Not set'}</td>
-          <td><span class="status-badge">${c.status}</span></td>
-          <td>${c.bids?.filter(b => b.status === 'pending').length || 0}</td>
-          <td>${c.views || 0}</td>
-          <td>-</td>
+        <td>
+          <td>${escapeHtml(c.title)}<\/td>
+          <td>${formatMoney(c.budget)}<\/td>
+          <td>${c.slots || 1}<\/td>
+          <td>${formatMoney((c.budget || 0) / (c.slots || 1))}<\/td>
+          <td>${c.deadline ? formatDate(c.deadline) : 'Not set'}<\/td>
+          <td><span class="status-badge">${c.status}<\/span><\/td>
+          <td>${c.bids?.filter(b => b.status === 'pending').length || 0}<\/td>
+          <td>${c.views || 0}<\/td>
+          <td>-<\/td>
           <td><div class="campaign-actions">
             <button class="btn-action" onclick="fundCampaignEscrow('${c._id}')">Fund</button>
             <button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button>
             <button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button>
-          </div></td>
-        </tr>
+          <\/div><\/td>
+        <\/tr>
       `).join('');
     }
   }
@@ -1868,9 +1814,41 @@
   }
 
   // ============================================
-  // APPROVE WORK (NEW)
+  // AUTO-RELEASE FUNCTIONS
   // ============================================
-  
+  async function getAutoReleaseStatus(campaignId) {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/campaigns/${campaignId}/auto-release-status`);
+      if (data.success && data.data.creatorWorkCompleted && !data.data.businessWorkApproved) {
+        const days = data.data.daysRemaining;
+        let statusClass = 'auto-release-normal';
+        let statusText = '';
+        let urgency = 'normal';
+        
+        if (days <= 1 && days > 0) {
+          statusClass = 'auto-release-urgent';
+          statusText = `⚠️ Auto-release in ${days} day${days !== 1 ? 's' : ''}!`;
+          urgency = 'urgent';
+        } else if (days <= 3 && days > 0) {
+          statusClass = 'auto-release-warning';
+          statusText = `⏰ Auto-release in ${days} days`;
+          urgency = 'warning';
+        } else if (days > 0) {
+          statusText = `⏳ Auto-release in ${days} days`;
+        } else if (data.data.isExpired) {
+          statusClass = 'auto-release-urgent';
+          statusText = `🔴 Auto-release pending! Review immediately.`;
+          urgency = 'urgent';
+        }
+        
+        return { statusClass, statusText, days, urgency };
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async function openApproveWorkModal(campaignId) {
     const campaign = campaigns.find(c => c._id === campaignId);
     if (!campaign) return;
@@ -1944,45 +1922,51 @@
   // APPLICATIONS
   // ============================================
   function filterApplications() {
-    const filter = document.getElementById('application-status-filter').value;
-    const pendingBids = allBids.filter(b => b.status === 'pending');
-    const tbody = document.querySelector('#applications-table tbody');
-    
-    let displayBids = allBids;
-    if (filter === 'pending') {
-      displayBids = pendingBids;
-    }
-    
-    if (displayBids.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No applications found</div><\/td><\/tr>';
-    } else {
-      tbody.innerHTML = displayBids.map(b => `
-        <tr>
-          <td>${escapeHtml(b.campaignTitle)}</td>
-          <td>${escapeHtml(b.uniqueCode)}</td>
-          <td>${formatMoney(b.amount)}</td>
-          <td>${escapeHtml(b.proposal?.substring(0, 50))}...</td>
-          <td><div class="campaign-actions">
-            <button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve</button>
-            <button class="btn-action danger" onclick="rejectBid('${b.campaignId}','${b._id}')">Reject</button>
-          </div></td>
-        </tr>
-      `).join('');
-    }
+    loadApplications();
   }
 
   async function loadApplications(append = false) {
     try {
-      const data = await fetchJSON(`${API_BASE}/api/campaigns/bids?businessId=${currentUser?._id}&limit=10&offset=${applicationOffset}`);
-      if (data.success) {
-        const newBids = data.bids || [];
-        applicationHasMore = newBids.length === 10;
-        if (append) {
-          allBids = [...allBids, ...newBids];
-        } else {
-          allBids = newBids;
+      const data = await fetchJSON(`${API_BASE}/api/campaigns?limit=100`);
+      if (data.success && data.campaigns) {
+        allBids = [];
+        data.campaigns.forEach(campaign => {
+          if (campaign.bids && campaign.bids.length > 0) {
+            campaign.bids.forEach(bid => {
+              if (bid.creatorId) {
+                allBids.push({
+                  ...bid,
+                  campaignTitle: campaign.title,
+                  campaignId: campaign._id
+                });
+              }
+            });
+          }
+        });
+        
+        const filter = document.getElementById('application-status-filter').value;
+        let displayBids = allBids;
+        if (filter === 'pending') {
+          displayBids = allBids.filter(b => b.status === 'pending');
         }
-        filterApplications();
+        
+        const tbody = document.querySelector('#applications-table tbody');
+        if (displayBids.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No applications found</div><\/td><\/tr>';
+        } else {
+          tbody.innerHTML = displayBids.map(b => `
+            <tr>
+              <td>${escapeHtml(b.campaignTitle)}<\/td>
+              <td>${escapeHtml(b.uniqueCode)}<\/td>
+              <td>${formatMoney(b.amount)}<\/td>
+              <td>${escapeHtml(b.proposal?.substring(0, 50))}...<\/td>
+              <td><div class="campaign-actions">
+                <button class="btn-action" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve</button>
+                <button class="btn-action danger" onclick="rejectBid('${b.campaignId}','${b._id}')">Reject</button>
+              <\/div><\/td>
+            <\/tr>
+          `).join('');
+        }
         document.getElementById('applications-skeleton').style.display = 'none';
         document.getElementById('applications-table').style.display = 'table';
       }
@@ -2029,11 +2013,11 @@
   }
 
   // ============================================
-  // ACTIVE PROJECTS (UPDATED)
+  // ACTIVE PROJECTS
   // ============================================
   async function loadActiveProjects() {
     try {
-      const data = await fetchJSON(`${API_BASE}/api/campaigns?businessId=${currentUser?._id}&status=in_progress,submitted_for_review`);
+      const data = await fetchJSON(`${API_BASE}/api/campaigns?status=in_progress,submitted_for_review`);
       if (data.success) {
         const myCampaigns = (data.campaigns || []).filter(c => c.businessId === currentUser?._id);
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
@@ -2044,15 +2028,15 @@
           tbody.innerHTML = await Promise.all(active.map(async c => {
             const acceptedBid = c.bids?.find(b => b.status === 'accepted');
             const workUrl = acceptedBid?.submittedWorkUrl || c.driveFiles?.[0]?.fileUrl;
-            const autoRelease = await getAutoReleaseStatus(c._id);
+            const autoRelease = c.status === 'submitted_for_review' ? await getAutoReleaseStatus(c._id) : null;
             const autoReleaseHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr data-campaign-id="${c._id}">
-              <td>${escapeHtml(c.title)}</td>
-              <td>${acceptedBid?.uniqueCode || 'Assigned'}</td>
-              <td>${workUrl ? `<button class="btn-action small" onclick="window.open('${workUrl}', '_blank')">View Work</button>` : 'Not yet'}</td>
-              <td><span class="status-badge ${c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status === 'submitted_for_review' ? 'Ready for Review' : c.status}</span></td>
-              <td class="auto-release-status-cell">${autoReleaseHtml}</td>
-              <td>${c.status === 'submitted_for_review' ? `<button class="approve-work-btn" onclick="openApproveWorkModal('${c._id}')">✅ Approve & Pay</button>` : '-'}</td>
+              <td>${escapeHtml(c.title)}<\/td>
+              <td>${acceptedBid?.uniqueCode || 'Assigned'}<\/td>
+              <td>${workUrl ? `<button class="btn-action small" onclick="window.open('${workUrl}', '_blank')">View Work</button>` : 'Not yet'}<\/td>
+              <td><span class="status-badge ${c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status === 'submitted_for_review' ? 'Ready for Review' : c.status}<\/span><\/td>
+              <td class="auto-release-status-cell">${autoReleaseHtml}<\/td>
+              <td>${c.status === 'submitted_for_review' ? `<button class="approve-work-btn" onclick="openApproveWorkModal('${c._id}')">✅ Approve & Pay</button>` : '-'}<\/td>
             <\/tr>`;
           }));
         }
@@ -2116,43 +2100,42 @@
   // ============================================
   // SEARCH CREATORS
   // ============================================
-  async function searchCreator() {
+  async function searchCreators() {
     const query = document.getElementById('creator-search').value.trim();
     const niche = document.getElementById('search-niche').value;
     if (!query && !niche) { showToast('Enter search term or select niche', 'error'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      let url = `${API_BASE}/api/creators?search=${encodeURIComponent(query)}`;
-      if (niche) url += `&niche=${encodeURIComponent(niche)}`;
+      let url = `${API_BASE}/api/creators?`;
+      if (query) url += `search=${encodeURIComponent(query)}&`;
+      if (niche) url += `niche=${encodeURIComponent(niche)}&`;
+      
       const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
       const resultsDiv = document.getElementById('search-results');
       if (data.success && data.creators && data.creators.length) {
         resultsDiv.innerHTML = data.creators.map(u => `
-          <div style="background:rgba(255,255,255,0.05); border-radius:20px; padding:15px; margin-bottom:15px;">
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:15px;">
-              <div>
-                <strong>${escapeHtml(u.profile?.stageName || u.uniqueCode)}</strong><br>
-                <span style="font-size:12px;">${u.uniqueCode}</span><br>
-                <span style="font-size:11px;">${u.email}</span>
-              </div>
-              <div style="display:flex; gap:10px;">
-                <button class="btn-action" onclick="openMessageModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">💬 Message</button>
-                <button class="btn-action" onclick="openTipModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">💝 Tip</button>
-                <button class="btn-action" onclick="openHireModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">🤝 Hire</button>
-              </div>
+          <div class="creator-result-card">
+            <div>
+              <strong>${escapeHtml(u.profile?.stageName || u.uniqueCode)}</strong><br>
+              <span style="font-size:12px;">${u.uniqueCode}</span><br>
+              <span style="font-size:11px;">${u.email}</span>
+              ${u.profile?.niche ? `<br><span class="status-badge" style="margin-top:5px;">${u.profile.niche}</span>` : ''}
             </div>
-            <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
-              <span class="status-badge">👥 ${u.social?.followerCount || 0} followers</span>
-              <span class="status-badge">🎯 Niche: ${u.profile?.niche || 'Not set'}</span>
-              <span class="status-badge">⭐ Engagement: ${u.social?.engagementRate || 0}%</span>
+            <div style="display:flex; gap:10px;">
+              <button class="btn-action" onclick="openMessageModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">💬 Message</button>
+              <button class="btn-action" onclick="openTipModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">💝 Tip</button>
+              <button class="btn-action" onclick="openHireModal('${u._id}','${escapeHtml(u.profile?.stageName || u.uniqueCode)}')">🤝 Hire</button>
             </div>
           </div>
         `).join('');
       } else {
         resultsDiv.innerHTML = '<div class="empty-state">No creators found</div>';
       }
-    } catch(e) { document.getElementById('search-results').innerHTML = '<div class="empty-state">Error searching</div>'; }
+    } catch(e) { 
+      document.getElementById('search-results').innerHTML = '<div class="empty-state">Error searching</div>';
+      console.error(e);
+    }
   }
 
   // ============================================
@@ -2318,11 +2301,11 @@
         if (data.activities && data.activities.length > 0) {
           activityList.innerHTML = data.activities.map(a => `
             <tr>
-              <td>${escapeHtml(a.action)}</td>
-              <td>${a.ipAddress || '-'}</td>
-              <td>${a.device || '-'}</td>
-              <td>${new Date(a.createdAt).toLocaleString()}</td>
-            </tr>
+              <td>${escapeHtml(a.action)}<\/td>
+              <td>${a.ipAddress || '-'}<\/td>
+              <td>${a.device || '-'}<\/td>
+              <td>${formatDateTime(a.createdAt)}<\/td>
+            <\/tr>
           `).join('');
         } else {
           activityList.innerHTML = '<tr><td colspan="4"><div class="empty-state">No activity recorded</div><\/td><\/tr>';
@@ -2404,7 +2387,7 @@
         document.getElementById('active-sessions').innerHTML = data.sessions.map(s => `
           <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
             <span>${s.device || 'Unknown device'}</span>
-            <span style="float: right;">${new Date(s.lastActive).toLocaleString()}</span>
+            <span style="float: right;">${formatDateTime(s.lastActive)}</span>
           </div>
         `).join('') || '<div class="empty-state">No active sessions</div>';
       }
@@ -2486,109 +2469,97 @@
   // ============================================
   // API KEYS & WEBHOOKS
   // ============================================
-  async function loadApiKey() {
+  async function loadApiKeys() {
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/api-keys`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/user/api-keys`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
-      if (data.success && data.apiKey) {
-        document.getElementById('api-key-display').value = data.apiKey.key;
-      }
-    } catch(e) { console.error(e); }
-  }
-
-  function copyApiKey() {
-    const keyInput = document.getElementById('api-key-display');
-    keyInput.select();
-    document.execCommand('copy');
-    showToast('API Key copied!', 'success');
-  }
-
-  async function regenerateApiKey() {
-    if (!confirm('Regenerating your API key will invalidate the old one. Continue?')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/api-keys/regenerate`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('API Key regenerated!', 'success');
-        loadApiKey();
-      } else {
-        showToast('Failed to regenerate API key', 'error');
-      }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  function openAddWebhookModal() {
-    document.getElementById('add-webhook-modal').style.display = 'flex';
-  }
-
-  async function addWebhook() {
-    const url = document.getElementById('webhook-url').value;
-    const events = document.getElementById('webhook-events').value;
-    if (!url) { showToast('Enter webhook URL', 'error'); return; }
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/webhooks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ url, events: [events] })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('Webhook added!', 'success');
-        closeModal('add-webhook-modal');
-        loadWebhooks();
-        document.getElementById('webhook-url').value = '';
-      } else {
-        showToast(data.message || 'Failed to add webhook', 'error');
-      }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  async function loadWebhooks() {
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/webhooks`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.success && data.webhooks) {
-        webhooks = data.webhooks;
-        const container = document.getElementById('webhooks-list');
-        if (webhooks.length === 0) {
-          container.innerHTML = '<div class="empty-state">No webhooks configured</div>';
-        } else {
-          container.innerHTML = webhooks.map(w => `
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+      const container = document.getElementById('api-keys-list');
+      if (data.success && data.data.apiKeys && data.data.apiKeys.length > 0) {
+        apiKeys = data.data.apiKeys;
+        container.innerHTML = apiKeys.map(key => `
+          <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <strong>${escapeHtml(w.url)}</strong>
-                <div><small>Events: ${w.events?.join(', ') || 'All'}</small></div>
+                <strong>${escapeHtml(key.name)}</strong>
+                <code style="display: block; font-size: 11px; color: #a08070; margin-top: 5px;">${key.key}</code>
+                <small>Created: ${formatDate(key.createdAt)}</small>
               </div>
-              <button class="btn-action danger" onclick="deleteWebhook('${w._id}')">Delete</button>
+              <div>
+                <button class="btn-action small" onclick="copyApiKey('${key.key}')">Copy</button>
+                <button class="btn-action danger small" onclick="deleteApiKey('${key.id}')">Delete</button>
+              </div>
             </div>
-          `).join('');
-        }
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '<div class="empty-state">No API keys created yet</div>';
       }
     } catch(e) { console.error(e); }
   }
 
-  async function deleteWebhook(webhookId) {
-    if (!confirm('Delete this webhook?')) return;
+  function copyApiKey(key) { 
+    navigator.clipboard.writeText(key); 
+    showToast('API Key copied!', 'success'); 
+  }
+
+  function createApiKey() { 
+    document.getElementById('api-key-modal').style.display = 'flex'; 
+  }
+
+  async function createApiKeySubmit() {
+    const name = document.getElementById('api-key-name').value;
+    if (!name) { showToast('Enter key name', 'error'); return; }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/webhooks/${webhookId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API_BASE}/api/user/api-keys`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name })
       });
-      if (res.ok) {
-        showToast('Webhook deleted', 'success');
-        loadWebhooks();
-      } else {
-        showToast('Failed to delete webhook', 'error');
-      }
+      const data = await res.json();
+      if (data.success) {
+        showToast(`API Key created: ${data.data.key}`, 'success');
+        closeModal('api-key-modal');
+        loadApiKeys();
+        document.getElementById('api-key-name').value = '';
+      } else { showToast(data.message || 'Failed to create API key', 'error'); }
     } catch(e) { showToast('Error', 'error'); }
+  }
+
+  async function deleteApiKey(keyId) {
+    if (!confirm('Delete this API key? This cannot be undone.')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/user/api-keys/${keyId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { showToast('API key deleted', 'success'); loadApiKeys(); }
+      else { showToast('Failed to delete API key', 'error'); }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+
+  function openAddWebhookModal() { document.getElementById('add-webhook-modal').style.display = 'flex'; }
+
+  function addWebhook() { 
+    const url = document.getElementById('webhook-url').value; 
+    if (!url) return showToast('Enter URL', 'error'); 
+    webhooks.push({ url, events: [document.getElementById('webhook-events').value] }); 
+    showToast('Webhook added!', 'success'); 
+    closeModal('add-webhook-modal'); 
+    loadWebhooks(); 
+  }
+
+  function loadWebhooks() { 
+    const container = document.getElementById('webhooks-list'); 
+    if (webhooks.length === 0) { 
+      container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; 
+    } else { 
+      container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); 
+    } 
+  }
+
+  function deleteWebhook(url) { 
+    webhooks = webhooks.filter(w => w.url !== url); 
+    showToast('Webhook deleted', 'success'); 
+    loadWebhooks(); 
   }
 
   // ============================================
@@ -2630,7 +2601,7 @@
       if (btn.dataset.tab === 'active') loadActiveProjects();
       if (btn.dataset.tab === 'activity') loadActivityLog();
       if (btn.dataset.tab === 'analytics') loadCampaignPerformanceChart();
-      if (btn.dataset.tab === 'api') { loadApiKey(); loadWebhooks(); }
+      if (btn.dataset.tab === 'api') { loadApiKeys(); loadWebhooks(); }
     });
   });
 
@@ -2694,6 +2665,8 @@
   loadActiveSessions();
   loadTeamMembers();
   loadCampaignPerformanceChart();
+  loadApiKeys();
+  loadWebhooks();
   
   setTimeout(() => {
     const savedTheme = localStorage.getItem('pebeto_theme');
