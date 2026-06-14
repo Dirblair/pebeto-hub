@@ -17,6 +17,7 @@ const { authenticate, authorize } = require('../middleware/auth');
 // attachFeeService is already applied globally in server.js
 const { rateLimit } = require('express-rate-limit');
 const { body, query, param, validationResult } = require('express-validator');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -337,7 +338,6 @@ router.get('/users', [
     const [users, total] = await Promise.all([
       User.find(query)
         .select('-passwordHash -payoutProfiles.details -resetPasswordToken -emailVerificationToken')
-        .populate('userId', 'balances.available balances.escrow')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -467,8 +467,8 @@ router.put('/users/:userId/status', [
     
     await user.save();
     
-    // Log admin action (implement audit logging)
-    console.log(`[ADMIN] User ${req.user._id} changed status of ${user._id} from ${oldStatus} to ${status}`);
+    // Log admin action
+    logger.info(`[ADMIN] User ${req.user._id} changed status of ${user._id} from ${oldStatus} to ${status}`);
     
     res.json({
       success: true,
@@ -796,9 +796,232 @@ router.get('/dashboard-stats', async (_req, res, next) => {
 });
 
 // ============================================
+// NEW: Auto-Release Statistics Endpoints
 // ============================================
-// NEW: Moderation Queue Endpoints
+
+/**
+ * GET /api/admin/auto-release/stats
+ * Get auto-release statistics for admin dashboard
+ */
+router.get('/auto-release/stats', async (req, res, next) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.setHours(0, 0, 0, 0));
+    
+    // Get campaigns pending auto-release (creator completed, business not approved, deadline not passed)
+    const pendingAutoRelease = await Campaign.countDocuments({
+      creatorWorkCompleted: true,
+      businessWorkApproved: false,
+      autoReleaseDeadline: { $gt: new Date() },
+      autoReleaseStatus: { $in: ['pending', 'reminding'] }
+    });
+    
+    // Get campaigns auto-released today
+    const autoReleasedToday = await Campaign.countDocuments({
+      autoReleaseStatus: 'completed',
+      autoReleaseCompletedAt: { $gte: todayStart }
+    });
+    
+    // Get total auto-released amounts
+    const autoReleaseTransactions = await Transaction.aggregate([
+      {
+        $match: {
+          type: 'escrow_release',
+          'metadata.autoRelease': true,
+          status: 'completed'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$grossAmount' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Get reminders sent today
+    const remindersSentToday = await Campaign.countDocuments({
+      lastReminderSentAt: { $gte: todayStart }
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        pendingAutoRelease,
+        autoReleasedToday,
+        totalAutoReleasedAmount: autoReleaseTransactions[0]?.totalAmount || 0,
+        totalAutoReleasedCount: autoReleaseTransactions[0]?.count || 0,
+        remindersSentToday
+      }
+    });
+  } catch (err) {
+    logger.error('Error fetching auto-release stats:', err);
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/auto-release/campaigns
+ * Get list of campaigns pending auto-release with details
+ */
+router.get('/auto-release/campaigns', [
+  validatePagination,
+  query('status').optional().isIn(['pending', 'warning', 'urgent', 'all'])
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+    const statusFilter = req.query.status || 'all';
+    
+    const now = new Date();
+    const query = {
+      creatorWorkCompleted: true,
+      businessWorkApproved: false,
+      autoReleaseDeadline: { $gt: now },
+      autoReleaseStatus: { $in: ['pending', 'reminding'] }
+    };
+    
+    const campaigns = await Campaign.find(query)
+      .populate('businessId', 'email profile.companyName profile.displayName')
+      .populate('assignedCreatorId', 'email uniqueCode profile.stageName profile.displayName')
+      .sort({ autoReleaseDeadline: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+    
+    const enrichedCampaigns = campaigns.map(campaign => {
+      const deadline = new Date(campaign.autoReleaseDeadline);
+      const daysRemaining = Math.max(0, Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)));
+      const hoursRemaining = Math.max(0, Math.ceil((deadline - now) / (1000 * 60 * 60)));
+      
+      // Get accepted bid amount
+      const acceptedBid = campaign.bids?.find(b => b.status === 'accepted');
+      const amount = acceptedBid?.amount || campaign.escrowHeld || 0;
+      
+      let urgency = 'normal';
+      if (daysRemaining <= 1) urgency = 'urgent';
+      else if (daysRemaining <= 3) urgency = 'warning';
+      
+      return {
+        _id: campaign._id,
+        title: campaign.title,
+        businessId: campaign.businessId?._id,
+        businessEmail: campaign.businessId?.email,
+        businessName: campaign.businessId?.profile?.companyName || campaign.businessId?.profile?.displayName,
+        creatorId: campaign.assignedCreatorId?._id,
+        creatorEmail: campaign.assignedCreatorId?.email,
+        creatorName: campaign.assignedCreatorId?.profile?.stageName || campaign.assignedCreatorId?.profile?.displayName || campaign.assignedCreatorId?.uniqueCode,
+        amount,
+        autoReleaseDeadline: campaign.autoReleaseDeadline,
+        daysRemaining,
+        hoursRemaining,
+        urgency,
+        reminderCount: campaign.autoReleaseReminderSent || 0,
+        lastReminderSentAt: campaign.lastReminderSentAt
+      };
+    });
+    
+    // Apply status filter
+    let filteredCampaigns = enrichedCampaigns;
+    if (statusFilter === 'urgent') {
+      filteredCampaigns = enrichedCampaigns.filter(c => c.urgency === 'urgent');
+    } else if (statusFilter === 'warning') {
+      filteredCampaigns = enrichedCampaigns.filter(c => c.urgency === 'warning');
+    }
+    
+    const total = filteredCampaigns.length;
+    const paginatedCampaigns = filteredCampaigns.slice(0, limit);
+    
+    res.json({
+      success: true,
+      data: {
+        campaigns: paginatedCampaigns,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + paginatedCampaigns.length < total
+        },
+        summary: {
+          totalPending: enrichedCampaigns.length,
+          urgent: enrichedCampaigns.filter(c => c.urgency === 'urgent').length,
+          warning: enrichedCampaigns.filter(c => c.urgency === 'warning').length
+        }
+      }
+    });
+  } catch (err) {
+    logger.error('Error fetching auto-release campaigns:', err);
+    next(err);
+  }
+});
+
+/**
+ * POST /api/admin/auto-release/:campaignId/manual
+ * Manually trigger auto-release for a specific campaign (admin override)
+ */
+router.post('/auto-release/:campaignId/manual', [
+  param('campaignId').isMongoId().withMessage('Invalid campaign ID'),
+  body('reason').optional().isString().trim().isLength({ max: 500 })
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { campaignId } = req.params;
+    const { reason } = req.body;
+    
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: 'Campaign not found' });
+    }
+    
+    if (!campaign.creatorWorkCompleted) {
+      return res.status(400).json({ success: false, message: 'Creator has not marked work as completed' });
+    }
+    
+    if (campaign.businessWorkApproved) {
+      return res.status(400).json({ success: false, message: 'Business has already approved this work' });
+    }
+    
+    if (campaign.autoReleaseStatus === 'completed') {
+      return res.status(400).json({ success: false, message: 'Funds have already been released' });
+    }
+    
+    // Import auto-release service
+    const { executeAutoRelease } = require('../services/autoReleaseService');
+    
+    // Override deadline to now and execute
+    campaign.autoReleaseDeadline = new Date();
+    campaign.autoReleaseStatus = 'processing';
+    await campaign.save();
+    
+    const result = await executeAutoRelease(campaign);
+    
+    logger.info(`Manual auto-release triggered by admin ${req.user._id} for campaign ${campaignId}`, { reason });
+    
+    res.json({
+      success: true,
+      message: 'Manual auto-release completed',
+      data: result
+    });
+  } catch (err) {
+    logger.error('Error in manual auto-release:', err);
+    next(err);
+  }
+});
+
 // ============================================
+// Moderation Queue Endpoints
 // ============================================
 
 /**
@@ -923,24 +1146,24 @@ router.put('/reports/:reportId', [
           await User.findByIdAndUpdate(report.reportedUserId, {
             $push: { warnings: { message: resolution, issuedBy: req.user._id, issuedAt: new Date() } }
           });
-          console.log(`[ADMIN] Warning issued to user ${report.reportedUserId} by ${req.user._id}`);
+          logger.info(`[ADMIN] Warning issued to user ${report.reportedUserId} by ${req.user._id}`);
           break;
           
         case 'suspend':
           await User.findByIdAndUpdate(report.reportedUserId, { status: 'suspended', statusReason: resolution });
-          console.log(`[ADMIN] User ${report.reportedUserId} suspended by ${req.user._id}`);
+          logger.info(`[ADMIN] User ${report.reportedUserId} suspended by ${req.user._id}`);
           break;
           
         case 'ban':
           await User.findByIdAndUpdate(report.reportedUserId, { status: 'banned', statusReason: resolution });
-          console.log(`[ADMIN] User ${report.reportedUserId} banned by ${req.user._id}`);
+          logger.info(`[ADMIN] User ${report.reportedUserId} banned by ${req.user._id}`);
           break;
           
         case 'delete_post':
           if (report.reportedPostId) {
             const CommunityPost = require('../models/CommunityPost');
             await CommunityPost.findByIdAndDelete(report.reportedPostId);
-            console.log(`[ADMIN] Post ${report.reportedPostId} deleted by ${req.user._id}`);
+            logger.info(`[ADMIN] Post ${report.reportedPostId} deleted by ${req.user._id}`);
           }
           break;
           
