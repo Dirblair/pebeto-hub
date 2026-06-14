@@ -322,6 +322,77 @@ const campaignSchema = new mongoose.Schema(
     disputeResolution: {
       type: String,
       trim: true
+    },
+
+    // ============================================
+    // NEW: Escrow Auto-Release & Mutual Completion Fields
+    // ============================================
+
+    /**
+     * Creator has marked work as completed
+     */
+    creatorWorkCompleted: {
+      type: Boolean,
+      default: false
+    },
+
+    /**
+     * When creator marked work as completed
+     */
+    creatorWorkCompletedAt: {
+      type: Date
+    },
+
+    /**
+     * Business has approved the work
+     */
+    businessWorkApproved: {
+      type: Boolean,
+      default: false
+    },
+
+    /**
+     * When business approved the work
+     */
+    businessWorkApprovedAt: {
+      type: Date
+    },
+
+    /**
+     * Deadline for auto-release (7 days after creator marks completed)
+     */
+    autoReleaseDeadline: {
+      type: Date,
+      index: true
+    },
+
+    /**
+     * Number of reminders sent (0-7)
+     */
+    autoReleaseReminderSent: {
+      type: Number,
+      default: 0
+    },
+
+    /**
+     * When the last reminder was sent
+     */
+    lastReminderSentAt: {
+      type: Date
+    },
+
+    /**
+     * Status of auto-release process
+     * - pending: waiting for business approval
+     * - reminding: reminders being sent
+     * - processing: auto-release in progress
+     * - completed: auto-release done
+     * - cancelled: business approved before deadline
+     */
+    autoReleaseStatus: {
+      type: String,
+      enum: ['pending', 'reminding', 'processing', 'completed', 'cancelled'],
+      default: 'pending'
     }
   },
   { 
@@ -347,6 +418,10 @@ campaignSchema.index({ tags: 1, status: 1 });
 campaignSchema.index({ views: -1 });
 campaignSchema.index({ ctr: -1 });
 campaignSchema.index({ roi: -1 });
+
+// NEW: Index for auto-release queries
+campaignSchema.index({ autoReleaseDeadline: 1, autoReleaseStatus: 1 });
+campaignSchema.index({ creatorWorkCompleted: 1, businessWorkApproved: 1, autoReleaseDeadline: 1 });
 
 // Text search index
 campaignSchema.index({ 
@@ -423,37 +498,40 @@ campaignSchema.virtual('fundingProgress').get(function() {
 });
 
 /**
- * NEW: Update CTR (Call this when tracking clicks)
- * @param {number} clicks - Number of clicks on the campaign
+ * NEW: Check if both parties have completed the campaign
  */
-campaignSchema.methods.updateCTR = async function(clicks) {
-  if (this.views > 0) {
-    this.ctr = Math.min(100, (clicks / this.views) * 100);
-    await this.save();
-  }
-  return this;
-};
+campaignSchema.virtual('bothPartiesCompleted').get(function() {
+  return this.creatorWorkCompleted === true && this.businessWorkApproved === true;
+});
 
 /**
- * NEW: Increment view count
+ * NEW: Check if auto-release is pending
  */
-campaignSchema.methods.incrementViews = async function() {
-  this.views = (this.views || 0) + 1;
-  await this.save();
-  return this;
-};
+campaignSchema.virtual('isAutoReleasePending').get(function() {
+  return this.creatorWorkCompleted === true && 
+         this.businessWorkApproved === false && 
+         this.autoReleaseStatus === 'pending';
+});
 
 /**
- * NEW: Calculate ROI for completed campaign
- * @param {number} revenueGenerated - Revenue generated from campaign
+ * NEW: Get days remaining until auto-release
  */
-campaignSchema.methods.calculateROI = async function(revenueGenerated) {
-  if (this.budget > 0) {
-    this.roi = ((revenueGenerated - this.budget) / this.budget) * 100;
-    await this.save();
-  }
-  return this;
-};
+campaignSchema.virtual('autoReleaseDaysRemaining').get(function() {
+  if (!this.autoReleaseDeadline) return null;
+  const remaining = this.autoReleaseDeadline - new Date();
+  if (remaining <= 0) return 0;
+  return Math.ceil(remaining / (1000 * 60 * 60 * 24));
+});
+
+/**
+ * NEW: Get hours remaining until auto-release
+ */
+campaignSchema.virtual('autoReleaseHoursRemaining').get(function() {
+  if (!this.autoReleaseDeadline) return null;
+  const remaining = this.autoReleaseDeadline - new Date();
+  if (remaining <= 0) return 0;
+  return Math.ceil(remaining / (1000 * 60 * 60));
+});
 
 // ============================================
 // Instance Methods
@@ -567,7 +645,7 @@ campaignSchema.methods.acceptBid = async function(bidId) {
 };
 
 /**
- * Submit work for a campaign
+ * Submit work for a campaign (Creator submits work URL)
  * @param {string} creatorId - Creator's user ID
  * @param {string} workUrl - URL to submitted work
  * @returns {Promise<Campaign>} Updated campaign
@@ -596,6 +674,112 @@ campaignSchema.methods.submitWork = async function(creatorId, workUrl) {
   
   await this.save();
   return this;
+};
+
+/**
+ * NEW: Creator marks work as completed (starts auto-release timer)
+ * @param {string} creatorId - Creator's user ID
+ * @param {string} workUrl - Optional work URL if not already submitted
+ * @returns {Promise<Campaign>} Updated campaign
+ */
+campaignSchema.methods.markCreatorCompleted = async function(creatorId, workUrl = null) {
+  if (this.assignedCreatorId?.toString() !== creatorId.toString()) {
+    throw new Error('You are not the assigned creator for this campaign');
+  }
+  
+  if (this.status !== CAMPAIGN_STATUS.IN_PROGRESS && this.status !== CAMPAIGN_STATUS.SUBMITTED_FOR_REVIEW) {
+    throw new Error(`Cannot mark completed when campaign status is ${this.status}`);
+  }
+  
+  if (this.creatorWorkCompleted) {
+    throw new Error('You have already marked this work as completed');
+  }
+  
+  // Save work URL if provided
+  if (workUrl) {
+    const bid = this.getCreatorBid(creatorId);
+    if (bid) {
+      bid.submittedWorkUrl = workUrl;
+      bid.submittedAt = new Date();
+    }
+  }
+  
+  // Set creator completion flags
+  this.creatorWorkCompleted = true;
+  this.creatorWorkCompletedAt = new Date();
+  
+  // Set auto-release deadline (7 days from now)
+  const autoReleaseDays = parseInt(process.env.AUTO_RELEASE_DAYS) || 7;
+  this.autoReleaseDeadline = new Date();
+  this.autoReleaseDeadline.setDate(this.autoReleaseDeadline.getDate() + autoReleaseDays);
+  this.autoReleaseStatus = 'pending';
+  
+  // Update status if still in progress
+  if (this.status === CAMPAIGN_STATUS.IN_PROGRESS) {
+    this.status = CAMPAIGN_STATUS.SUBMITTED_FOR_REVIEW;
+    this.businessStage = 'Submitted for Review';
+    this.creatorStage = CREATOR_STAGES.COMPLETED;
+    this.submittedAt = new Date();
+  }
+  
+  await this.save();
+  return this;
+};
+
+/**
+ * NEW: Business approves work and releases payment
+ * @param {string} businessId - Business user ID
+ * @returns {Promise<Campaign>} Updated campaign
+ */
+campaignSchema.methods.markBusinessApproved = async function(businessId) {
+  if (this.businessId?.toString() !== businessId.toString()) {
+    throw new Error('You are not the business that owns this campaign');
+  }
+  
+  if (!this.creatorWorkCompleted) {
+    throw new Error('Creator has not marked work as completed yet');
+  }
+  
+  if (this.businessWorkApproved) {
+    throw new Error('You have already approved this work');
+  }
+  
+  this.businessWorkApproved = true;
+  this.businessWorkApprovedAt = new Date();
+  this.autoReleaseStatus = 'cancelled';
+  
+  await this.save();
+  return this;
+};
+
+/**
+ * NEW: Process auto-release (called by cron job)
+ * @returns {Promise<Object>} Result of auto-release
+ */
+campaignSchema.methods.processAutoRelease = async function() {
+  if (!this.creatorWorkCompleted || this.businessWorkApproved) {
+    return { success: false, reason: 'Not eligible for auto-release' };
+  }
+  
+  if (new Date() < this.autoReleaseDeadline) {
+    return { success: false, reason: 'Deadline not yet reached' };
+  }
+  
+  if (this.autoReleaseStatus === 'completed') {
+    return { success: false, reason: 'Already auto-released' };
+  }
+  
+  this.autoReleaseStatus = 'processing';
+  await this.save();
+  
+  // Note: Actual payment processing will be handled by the service layer
+  // This method just marks the status
+  return { 
+    success: true, 
+    campaignId: this._id, 
+    creatorId: this.assignedCreatorId,
+    amount: this.acceptedBid?.amount || this.escrowHeld
+  };
 };
 
 /**
@@ -707,6 +891,38 @@ campaignSchema.statics.getStatsByBusiness = async function(businessId) {
   ]);
 };
 
+/**
+ * NEW: Find campaigns pending auto-release (deadline passed)
+ * @returns {Query} Mongoose query
+ */
+campaignSchema.statics.findPendingAutoRelease = function() {
+  const now = new Date();
+  return this.find({
+    creatorWorkCompleted: true,
+    businessWorkApproved: false,
+    autoReleaseDeadline: { $lte: now },
+    autoReleaseStatus: { $in: ['pending', 'reminding'] }
+  }).populate('businessId assignedCreatorId');
+};
+
+/**
+ * NEW: Find campaigns needing reminders
+ * @param {number} daysThreshold - Days before deadline to check
+ * @returns {Query} Mongoose query
+ */
+campaignSchema.statics.findCampaignsNeedingReminders = function(daysThreshold) {
+  const now = new Date();
+  const futureDeadline = new Date();
+  futureDeadline.setDate(futureDeadline.getDate() + daysThreshold);
+  
+  return this.find({
+    creatorWorkCompleted: true,
+    businessWorkApproved: false,
+    autoReleaseDeadline: { $lte: futureDeadline, $gt: now },
+    autoReleaseStatus: { $in: ['pending', 'reminding'] }
+  });
+};
+
 // ============================================
 // Pre-Save Hooks
 // ============================================
@@ -753,6 +969,20 @@ campaignSchema.pre('save', function(next) {
       bid.netAmount = bid.amount - bid.feeCalculated;
     }
   });
+  next();
+});
+
+/**
+ * NEW: Auto-set auto-release deadline when creator marks completed
+ */
+campaignSchema.pre('save', function(next) {
+  // If creatorWorkCompleted just changed from false to true, set deadline
+  if (this.isModified('creatorWorkCompleted') && this.creatorWorkCompleted === true && !this.autoReleaseDeadline) {
+    const autoReleaseDays = parseInt(process.env.AUTO_RELEASE_DAYS) || 7;
+    this.autoReleaseDeadline = new Date();
+    this.autoReleaseDeadline.setDate(this.autoReleaseDeadline.getDate() + autoReleaseDays);
+    this.autoReleaseStatus = 'pending';
+  }
   next();
 });
 
