@@ -220,6 +220,102 @@
       color: white;
     }
     
+    /* Google Drive Section Styles (NEW) */
+    .drive-section {
+      background: linear-gradient(135deg, rgba(255,140,66,0.08), rgba(0,0,0,0.2));
+      border: 1px solid rgba(255,140,66,0.2);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+    .drive-section h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #ff8c42;
+    }
+    .drive-status {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+    }
+    .drive-status.connected {
+      background: rgba(76, 175, 80, 0.1);
+      border-left: 3px solid #4caf50;
+    }
+    .drive-status.disconnected {
+      background: rgba(244, 67, 54, 0.1);
+      border-left: 3px solid #f44336;
+    }
+    .drive-connect-btn {
+      background: #ff8c42;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+    }
+    .drive-connect-btn:hover {
+      background: #e0662c;
+    }
+    .drive-disconnect-btn {
+      background: rgba(244, 67, 54, 0.2);
+      border: 1px solid #f44336;
+      padding: 10px 20px;
+      border-radius: 40px;
+      color: #f44336;
+      cursor: pointer;
+    }
+    .upload-area {
+      margin-top: 20px;
+      padding: 20px;
+      border: 2px dashed rgba(255,140,66,0.3);
+      border-radius: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-area:hover {
+      border-color: #ff8c42;
+      background: rgba(255,140,66,0.05);
+    }
+    .video-preview {
+      margin-top: 15px;
+      max-width: 100%;
+      border-radius: 12px;
+    }
+    
+    /* Auto-Release Status Styles (NEW) */
+    .auto-release-status {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 10px 15px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .auto-release-urgent {
+      background: rgba(244, 67, 54, 0.15);
+      border-left: 3px solid #f44336;
+    }
+    .auto-release-warning {
+      background: rgba(255, 152, 0, 0.15);
+      border-left: 3px solid #ff9800;
+    }
+    .auto-release-normal {
+      background: rgba(76, 175, 80, 0.1);
+      border-left: 3px solid #4caf50;
+    }
+    .countdown-timer {
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: bold;
+      color: #ff8c42;
+    }
+    
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -280,6 +376,10 @@
       cursor: pointer;
       font-size: 12px;
     }
+    .btn-action.small {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
     
     .modal {
       display: none;
@@ -305,7 +405,7 @@
       overflow-y: auto;
     }
     .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
-    .modal-content input, .modal-content select {
+    .modal-content input, .modal-content select, .modal-content textarea {
       width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -412,7 +512,6 @@
     }
     canvas { max-height: 250px; width: 100%; }
     
-    /* Loading Spinner Styles */
     .spinner {
       display: inline-block;
       width: 20px;
@@ -456,7 +555,6 @@
       color: white;
     }
     
-    /* Toast Notification */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -517,7 +615,6 @@
       font-size: 13px;
     }
     
-    /* Notification Bell */
     .notification-bell {
       position: relative;
       cursor: pointer;
@@ -559,7 +656,6 @@
       background: rgba(255,140,66,0.1);
     }
     
-    /* Back to Top Button */
     .back-to-top {
       position: fixed;
       bottom: 30px;
@@ -586,13 +682,11 @@
       transform: translateY(-3px);
     }
     
-    /* Theme Toggle */
     .theme-toggle {
       cursor: pointer;
       font-size: 20px;
     }
     
-    /* Mobile Menu */
     .mobile-menu-btn {
       display: none;
       font-size: 24px;
@@ -617,7 +711,6 @@
       .social-input-group { flex-direction: column; }
     }
     
-    /* Skeleton Loader */
     .skeleton {
       background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
       background-size: 200% 100%;
@@ -692,6 +785,28 @@
     <div id="connectedBadges" style="margin-top: 10px;"></div>
   </div>
 
+  <!-- NEW: Google Drive Section -->
+  <div class="drive-section">
+    <h3><i class="ri-google-drive-line"></i> Google Drive Integration</h3>
+    <p>Connect your Google Drive to upload private video submissions for campaigns. Videos are stored in YOUR Drive, not on our servers.</p>
+    <div id="driveStatus" class="drive-status disconnected">
+      <span id="driveStatusText">Not connected</span>
+      <button id="driveConnectBtn" class="drive-connect-btn" onclick="connectGoogleDrive()">Connect Google Drive</button>
+    </div>
+    <div id="driveUploadArea" style="display: none;">
+      <div class="upload-area" onclick="document.getElementById('driveFileInput').click()">
+        <i class="ri-upload-cloud-2-line" style="font-size: 48px;"></i>
+        <p>Click to upload video to Google Drive</p>
+        <small>MP4, MOV, AVI up to 500MB</small>
+      </div>
+      <input type="file" id="driveFileInput" accept="video/mp4,video/quicktime,video/x-msvideo,video/webm" style="display: none;">
+      <div id="uploadProgress" style="display: none; margin-top: 15px;">
+        <div class="progress-bar"><div id="uploadProgressFill" class="progress-fill" style="width: 0%;"></div></div>
+        <p id="uploadProgressText">Uploading...</p>
+      </div>
+    </div>
+  </div>
+
   <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; gap: 10px;">
     <button class="deposit-btn" onclick="window.location.href='/deposit.html'">
       <i class="ri-add-line"></i> Add Funds / Deposit
@@ -743,7 +858,9 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="active-table" style="display: none;">
-        <thead><tr><th>Title</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
+        <thead>
+          <tr><th>Title</th><th>Budget</th><th>Status</th><th>Auto-Release</th><th>Action</th>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
@@ -761,7 +878,9 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="review-table" style="display: none;">
-        <thead><tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Status</th></tr></thead>
+        <thead>
+          <tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Auto-Release</th><th>Status</th>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
@@ -779,7 +898,9 @@
         <div class="skeleton skeleton-text"></div>
       </div>
       <table class="data-table" id="completed-table" style="display: none;">
-        <thead><tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th></tr></thead>
+        <thead>
+          <tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
@@ -824,9 +945,11 @@
   <div id="tab-activity" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table">
-        <thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead>
+        <thead>
+          <tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th>
+        </thead>
         <tbody id="activity-list">
-          <tr><td colspan="4">Loading activity...</td></tr>
+          <tr><td colspan="4">Loading activity...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -860,9 +983,11 @@
   <div id="tab-withdrawals" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table">
-        <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th></tr></thead>
+        <thead>
+          <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th>
+        </thead>
         <tbody id="withdrawals-list">
-          <tr><td colspan="5">Loading withdrawals...</td></tr>
+          <tr><td colspan="5">Loading withdrawals...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -980,6 +1105,7 @@
     <h3 id="project-title">Project Details</h3>
     <div id="project-details"></div>
     <div id="project-work-section"></div>
+    <div id="project-auto-release-status"></div>
     <button class="cancel-btn" onclick="closeModal('project-modal')">Close</button>
   </div>
 </div>
@@ -1011,10 +1137,28 @@
   </div>
 </div>
 
+<!-- NEW: Submit Work Modal with Google Drive -->
+<div id="submit-work-modal" class="modal">
+  <div class="modal-content">
+    <h3>📤 Submit Work</h3>
+    <p id="submit-campaign-name"></p>
+    <div style="margin: 15px 0;">
+      <label>Upload Video to Google Drive:</label>
+      <div class="upload-area" onclick="document.getElementById('submitDriveFileInput').click()" style="margin-top: 10px;">
+        <i class="ri-upload-cloud-2-line" style="font-size: 32px;"></i>
+        <p>Click to select video</p>
+      </div>
+      <input type="file" id="submitDriveFileInput" accept="video/mp4,video/quicktime,video/x-msvideo,video/webm" style="display: none;">
+      <div id="submitFileName" style="font-size: 12px; color: #a08070; margin-top: 5px;"></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="save-btn" onclick="submitWorkWithDrive()">Submit Work</button>
+      <button class="cancel-btn" onclick="closeModal('submit-work-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ============================================
-  // API BASE URL
-  // ============================================
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
   
   // ============================================
@@ -1034,6 +1178,11 @@
   let campaignHasMore = { active: true, review: true, completed: true };
   let ws = null;
   let earningsChart = null;
+  
+  // NEW: Google Drive variables
+  let isDriveConnected = false;
+  let currentDriveFile = null;
+  let currentSubmitCampaign = null;
 
   // ============================================
   // HELPER FUNCTIONS
@@ -1061,28 +1210,6 @@
     }); 
   }
 
-  function validateMpesaPhone(phone) {
-    const cleaned = phone.replace(/\D/g, '');
-    const regex = /^(07|01|2547|2541)\d{8}$/;
-    const regex2 = /^\d{9}$/;
-    return regex.test(cleaned) || regex2.test(cleaned);
-  }
-
-  function isValidUrl(url, platform) {
-    if (!url) return true;
-    try {
-      const urlObj = new URL(url);
-      if (platform === 'tiktok') {
-        return urlObj.hostname.includes('tiktok.com') && url.includes('@');
-      } else if (platform === 'youtube') {
-        return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
-      }
-      return true;
-    } catch(e) {
-      return false;
-    }
-  }
-
   function closeModal(id) { 
     document.getElementById(id).style.display = 'none'; 
   }
@@ -1097,6 +1224,222 @@
     const token = localStorage.getItem('pebeto_token');
     const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '', ...options.headers } });
     return res.json();
+  }
+
+  // ============================================
+  // GOOGLE DRIVE FUNCTIONS (NEW)
+  // ============================================
+  
+  async function checkDriveStatus() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/drive/status`);
+      if (data.success) {
+        isDriveConnected = data.data.isConnected && data.data.isValid;
+        const driveDiv = document.getElementById('driveStatus');
+        const uploadArea = document.getElementById('driveUploadArea');
+        
+        if (isDriveConnected) {
+          driveDiv.className = 'drive-status connected';
+          document.getElementById('driveStatusText').innerHTML = `✅ Connected ${data.data.quota ? `| Free: ${data.data.quota.freeGB} GB` : ''}`;
+          if (uploadArea) uploadArea.style.display = 'block';
+        } else {
+          driveDiv.className = 'drive-status disconnected';
+          document.getElementById('driveStatusText').innerHTML = 'Not connected';
+          if (uploadArea) uploadArea.style.display = 'none';
+        }
+      }
+    } catch (error) {
+      console.error('Error checking Drive status:', error);
+    }
+  }
+
+  function connectGoogleDrive() {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      showToast('Please log in first', 'error');
+      return;
+    }
+    window.location.href = `${API_BASE}/api/drive/auth`;
+  }
+
+  async function disconnectGoogleDrive() {
+    if (!confirm('Disconnect Google Drive? You will need to reconnect to upload videos.')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      await fetch(`${API_BASE}/api/drive/disconnect`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      showToast('Google Drive disconnected', 'success');
+      checkDriveStatus();
+    } catch (error) {
+      showToast('Failed to disconnect', 'error');
+    }
+  }
+
+  // File upload handlers
+  document.getElementById('driveFileInput')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    await uploadToDrive(file);
+  });
+
+  document.getElementById('submitDriveFileInput')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      currentDriveFile = file;
+      document.getElementById('submitFileName').innerHTML = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    }
+  });
+
+  async function uploadToDrive(file, campaignId) {
+    if (!isDriveConnected) {
+      showToast('Please connect Google Drive first', 'error');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('video', file);
+    if (campaignId) formData.append('campaignId', campaignId);
+    
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    
+    progressDiv.style.display = 'block';
+    progressFill.style.width = '0%';
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}/api/drive/upload`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = (e.loaded / e.total) * 100;
+          progressFill.style.width = percent + '%';
+          progressText.innerHTML = `Uploading: ${Math.round(percent)}%`;
+        }
+      };
+      
+      const result = await new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve(JSON.parse(xhr.response));
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(formData);
+      });
+      
+      progressDiv.style.display = 'none';
+      
+      if (result.success) {
+        showToast('Video uploaded to Google Drive!', 'success');
+        return result.data;
+      } else {
+        showToast(result.message || 'Upload failed', 'error');
+        return null;
+      }
+    } catch (error) {
+      progressDiv.style.display = 'none';
+      showToast('Upload failed', 'error');
+      return null;
+    }
+  }
+
+  // ============================================
+  // SUBMIT WORK WITH GOOGLE DRIVE (NEW)
+  // ============================================
+  
+  async function submitWorkWithDrive() {
+    if (!currentSubmitCampaign) {
+      showToast('No campaign selected', 'error');
+      return;
+    }
+    
+    if (!currentDriveFile) {
+      showToast('Please select a video file first', 'error');
+      return;
+    }
+    
+    showToast('Uploading video to Google Drive...', 'info');
+    
+    const uploadResult = await uploadToDrive(currentDriveFile, currentSubmitCampaign._id);
+    if (!uploadResult) return;
+    
+    // Mark work as completed with Drive file
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch(`${API_BASE}/api/campaigns/${currentSubmitCampaign._id}/creator-complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          driveFileId: uploadResult.fileId,
+          driveFileUrl: uploadResult.fileUrl,
+          fileName: uploadResult.fileName
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        showToast('Work submitted! 7-day countdown started.', 'success');
+        closeModal('submit-work-modal');
+        loadCampaigns();
+        currentDriveFile = null;
+        document.getElementById('submitFileName').innerHTML = '';
+        document.getElementById('submitDriveFileInput').value = '';
+      } else {
+        showToast(data.message || 'Submission failed', 'error');
+      }
+    } catch (error) {
+      showToast('Error submitting work', 'error');
+    }
+  }
+
+  function openSubmitWorkModal(campaign) {
+    if (!isDriveConnected) {
+      showToast('Please connect Google Drive first to upload videos', 'error');
+      connectGoogleDrive();
+      return;
+    }
+    currentSubmitCampaign = campaign;
+    document.getElementById('submit-campaign-name').innerHTML = `<strong>${escapeHtml(campaign.title)}</strong>`;
+    document.getElementById('submit-work-modal').style.display = 'flex';
+  }
+
+  // ============================================
+  // AUTO-RELEASE STATUS HELPER (NEW)
+  // ============================================
+  
+  async function getAutoReleaseStatus(campaignId) {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/campaigns/${campaignId}/auto-release-status`);
+      if (data.success && data.data.creatorWorkCompleted && !data.data.businessWorkApproved) {
+        const days = data.data.daysRemaining;
+        const hours = data.data.hoursRemaining;
+        let statusClass = 'auto-release-normal';
+        let statusText = '';
+        
+        if (days <= 1 && days > 0) {
+          statusClass = 'auto-release-urgent';
+          statusText = `⚠️ Funds will auto-release in ${days} day${days !== 1 ? 's' : ''}!`;
+        } else if (days <= 3 && days > 0) {
+          statusClass = 'auto-release-warning';
+          statusText = `⏰ Auto-release in ${days} days`;
+        } else if (days > 0) {
+          statusText = `⏳ Auto-release in ${days} days`;
+        } else if (data.data.isExpired) {
+          statusClass = 'auto-release-urgent';
+          statusText = `🔴 Auto-release pending!`;
+        }
+        
+        return { statusClass, statusText, days, hours };
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 
   // ============================================
@@ -1119,6 +1462,11 @@
           showToast(`💝 You received a tip of ${data.amount}!`, 'success');
           addNotification(`💝 You received a tip of ${data.amount}!`);
           loadTipsReceived();
+        }
+        if (data.type === 'campaign:work-approved') {
+          showToast(`✅ Work approved! Payment released for "${data.campaignTitle}"`, 'success');
+          loadCampaigns();
+          loadWallet();
         }
       };
       ws.onclose = () => setTimeout(connectWebSocket, 5000);
@@ -1229,35 +1577,15 @@
       return;
     }
     
-    if (tiktokUrl && !isValidUrl(tiktokUrl, 'tiktok')) {
-      statusDiv.style.display = 'block';
-      statusDiv.className = 'social-status error';
-      statusDiv.innerHTML = 'Please enter a valid TikTok URL (e.g., https://www.tiktok.com/@username)';
-      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-      return;
-    }
-    
-    if (youtubeUrl && !isValidUrl(youtubeUrl, 'youtube')) {
-      statusDiv.style.display = 'block';
-      statusDiv.className = 'social-status error';
-      statusDiv.innerHTML = 'Please enter a valid YouTube URL (e.g., https://www.youtube.com/@channelname)';
-      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-      return;
-    }
-    
     try {
       const token = localStorage.getItem('pebeto_token');
       const response = await fetch(`${API_BASE}/api/creator/social-links`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ tiktokUrl, youtubeUrl })
       });
       
       const data = await response.json();
-      
       if (data.success) {
         statusDiv.style.display = 'block';
         statusDiv.className = 'social-status success';
@@ -1285,7 +1613,7 @@
   }
 
   // ============================================
-  // AVATAR UPLOAD (FROM DEVICE)
+  // AVATAR UPLOAD
   // ============================================
   function previewAvatar() {
     const file = document.getElementById('avatar-file').files[0];
@@ -1334,7 +1662,7 @@
   }
 
   // ============================================
-  // SETTINGS (THAT STICK)
+  // SETTINGS
   // ============================================
   async function saveSettings() {
     const token = localStorage.getItem('pebeto_token');
@@ -1545,7 +1873,7 @@
       if (data.success && data.withdrawals) {
         const withdrawalsList = document.getElementById('withdrawals-list');
         if (data.withdrawals.length === 0) {
-          withdrawalsList.innerHTML = '<tr><td colspan="5">No withdrawals yet</td></tr>';
+          withdrawalsList.innerHTML = '<tr><td colspan="5">No withdrawals yet<\/td><\/tr>';
         } else {
           withdrawalsList.innerHTML = data.withdrawals.map(w => `
             <tr>
@@ -1634,9 +1962,46 @@
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
         
-        document.querySelector('#active-table tbody').innerHTML = active.length === 0 ? '<tr><td colspan="4">No active projects</td></tr>' : active.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td><span class="status-badge">In Progress</span></td><td><button class="btn-action" onclick="event.stopPropagation(); showSubmitWork('${p._id}')">Submit</button></td></tr>`).join('');
-        document.querySelector('#review-table tbody').innerHTML = review.length === 0 ? '<tr><td colspan="4">No projects under review</td></tr>' : review.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Under Review</span></td></tr>`).join('');
-        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works</td></tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')"><td>${escapeHtml(p.title)}</td><td>${formatMoney(p.budget)}</td><td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td><td><span class="status-badge">Paid ✅</span></td></tr>`).join('');
+        // Render Active Projects with auto-release status
+        if (active.length === 0) {
+          document.querySelector('#active-table tbody').innerHTML = '<tr><td colspan="5">No active projects<\/td><\/tr>';
+        } else {
+          document.querySelector('#active-table tbody').innerHTML = await Promise.all(active.map(async p => {
+            const autoRelease = await getAutoReleaseStatus(p._id);
+            const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
+            return `<tr onclick="showProjectDetails('${p._id}')">
+              <td>${escapeHtml(p.title)}</td>
+              <td>${formatMoney(p.budget)}</td>
+              <td><span class="status-badge">In Progress</span>${statusHtml}</td>
+              <td><button class="btn-action small" onclick="event.stopPropagation(); openSubmitWorkModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">Submit Work</button></td>
+            <\/tr>`;
+          }));
+        }
+        
+        // Render Review Projects
+        if (review.length === 0) {
+          document.querySelector('#review-table tbody').innerHTML = '<tr><td colspan="5">No projects under review<\/td><\/tr>';
+        } else {
+          document.querySelector('#review-table tbody').innerHTML = await Promise.all(review.map(async p => {
+            const autoRelease = await getAutoReleaseStatus(p._id);
+            const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
+            return `<tr onclick="showProjectDetails('${p._id}')">
+              <td>${escapeHtml(p.title)}</td>
+              <td>${formatMoney(p.budget)}</td>
+              <td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td>
+              <td><span class="status-badge">Under Review</span>${statusHtml}</td>
+              <td>Waiting for business approval</td>
+            <\/tr>`;
+          }));
+        }
+        
+        // Render Completed Projects
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works<\/td><\/tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')">
+          <td>${escapeHtml(p.title)}</td>
+          <td>${formatMoney(p.budget)}</td>
+          <td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td>
+          <td><span class="status-badge">Paid ✅</span></td>
+        <\/tr>`).join('');
         
         showTableWithSkeleton('active-table', 'active-skeleton', active.length > 0);
         showTableWithSkeleton('review-table', 'review-skeleton', review.length > 0);
@@ -1667,26 +2032,32 @@
     const project = projectsData.find(p => p._id === campaignId);
     if (!project) return;
     document.getElementById('project-title').innerText = project.title;
-    document.getElementById('project-details').innerHTML = `<p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p><p><strong>Budget:</strong> ${formatMoney(project.budget)}</p><p><strong>Status:</strong> ${project.status}</p>`;
+    
+    let autoReleaseHtml = '';
+    if (project.creatorWorkCompleted && !project.businessWorkApproved) {
+      const autoRelease = await getAutoReleaseStatus(campaignId);
+      if (autoRelease) {
+        autoReleaseHtml = `<div class="auto-release-status ${autoRelease.statusClass}" style="margin-top: 15px;">
+          <strong>⏰ Auto-Release Status:</strong> ${autoRelease.statusText}
+          ${autoRelease.days ? `<br>${autoRelease.days} days remaining` : ''}
+        </div>`;
+      }
+    }
+    
+    document.getElementById('project-details').innerHTML = `<p><strong>Description:</strong> ${escapeHtml(project.description || 'No description')}</p><p><strong>Budget:</strong> ${formatMoney(project.budget)}</p><p><strong>Status:</strong> ${project.status}</p>${autoReleaseHtml}`;
+    
     if (project.status === 'in_progress') {
-      document.getElementById('project-work-section').innerHTML = `<input type="text" id="work-url-${project._id}" placeholder="Work URL" style="width:100%; padding:10px; margin:10px 0; background:#333; border:1px solid #ff8c42; border-radius:30px; color:white;"><button class="btn-action" onclick="submitWork('${project._id}')">Submit Work</button>`;
-    } else document.getElementById('project-work-section').innerHTML = '';
+      document.getElementById('project-work-section').innerHTML = `<button class="btn-action" onclick="openSubmitWorkModal(${JSON.stringify(project).replace(/"/g, '&quot;')})">📤 Submit Work with Google Drive</button>`;
+    } else {
+      document.getElementById('project-work-section').innerHTML = '';
+    }
+    
     document.getElementById('project-modal').style.display = 'flex';
   }
 
   function showSubmitWork(campaignId) { 
-    showProjectDetails(campaignId); 
-  }
-
-  async function submitWork(campaignId) {
-    const workUrl = document.getElementById(`work-url-${campaignId}`)?.value;
-    if (!workUrl) { alert('Enter work URL'); return; }
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ workUrl }) });
-      if (res.ok) { alert('Work submitted!'); loadCampaigns(); closeModal('project-modal'); }
-      else alert('Submission failed');
-    } catch(e) { alert('Error'); }
+    const project = projectsData.find(p => p._id === campaignId);
+    if (project) openSubmitWorkModal(project);
   }
 
   // ============================================
@@ -1732,12 +2103,6 @@
       const phone = document.getElementById('mpesa-phone').value;
       if (!validateMpesaPhone(phone)) {
         showToast('Please enter a valid M-Pesa phone number (e.g., 0712345678)', 'error');
-        return;
-      }
-      const mpesaLimit = 70000; // KES
-      const usdToKes = exchangeRates.KES || 130;
-      if (usdAmount * usdToKes > mpesaLimit) {
-        showToast(`M-Pesa withdrawal limit is ${formatMoney(mpesaLimit / usdToKes)} USD per transaction`, 'error');
         return;
       }
     }
@@ -1823,6 +2188,13 @@
     }
   }
 
+  function validateMpesaPhone(phone) {
+    const cleaned = phone.replace(/\D/g, '');
+    const regex = /^(07|01|2547|2541)\d{8}$/;
+    const regex2 = /^\d{9}$/;
+    return regex.test(cleaned) || regex2.test(cleaned);
+  }
+
   // ============================================
   // DEMOGRAPHICS
   // ============================================
@@ -1863,7 +2235,7 @@
             </tr>
           `).join('');
         } else {
-          activityList.innerHTML = '<tr><td colspan="4">No activity recorded</td></tr>';
+          activityList.innerHTML = '<tr><td colspan="4">No activity recorded<\/td><\/tr>';
         }
       }
     } catch(e) { console.error(e); }
@@ -1939,7 +2311,6 @@
     }
     updateConnectedBadges();
     
-    // Check 2FA status
     if (currentUser.twoFactorEnabled) {
       document.getElementById('2fa-status').innerHTML = '<span class="connected-badge">✓ 2FA Enabled</span>';
     }
@@ -1982,7 +2353,6 @@
       btn.classList.add('active');
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
       
-      // Load data when tab is clicked
       if (btn.dataset.tab === 'withdrawals') loadWithdrawalsHistory();
       if (btn.dataset.tab === 'referrals') loadReferrals();
     });
@@ -2011,6 +2381,7 @@
   loadWithdrawalsHistory();
   loadReferrals();
   loadActiveSessions();
+  checkDriveStatus();
   
   setTimeout(() => {
     if (currentUser && !currentUser.emailVerified) {
@@ -2033,6 +2404,13 @@
         });
       }
     });
+    
+    // Check URL for Drive connection success
+    if (window.location.search.includes('drive=connected')) {
+      showToast('Google Drive connected successfully!', 'success');
+      checkDriveStatus();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, 1000);
 </script>
 </body>
