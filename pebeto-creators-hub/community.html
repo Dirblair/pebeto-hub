@@ -506,9 +506,7 @@
       to { transform: translateX(-50%) translateY(0); opacity: 1; }
     }
 
-    /* ============================================ */
-    /* DM CHAT PANEL STYLES (NEW) */
-    /* ============================================ */
+    /* DM CHAT PANEL STYLES */
     .chat-panel {
       position: fixed;
       bottom: 20px;
@@ -787,7 +785,9 @@
     </select>
   </div>
 
-  <div id="feed-content"></div>
+  <div id="feed-content">
+    <div class="loading-spinner">Loading creators...</div>
+  </div>
   <div id="infinite-scroll-trigger" class="infinite-scroll-trigger"></div>
 </div>
 
@@ -798,7 +798,7 @@
   <div class="bottom-nav-item" data-nav="profile" onclick="goToDashboard()"><i class="ri-user-line"></i><span>Profile</span></div>
 </div>
 
-<!-- DM Chat Panel (NEW) -->
+<!-- DM Chat Panel -->
 <div class="chat-toggle-btn" id="chatToggleBtn" onclick="toggleChatPanel()">
   <i class="ri-message-3-line" style="font-size: 24px;"></i>
   <span id="chatUnreadBadge" class="unread-badge" style="display: none;">0</span>
@@ -810,7 +810,6 @@
     <button class="chat-close" onclick="toggleChatPanel()">✕</button>
   </div>
   <div id="chatContent">
-    <!-- Conversations list will load here -->
     <div class="conversations-list" id="conversationsList">
       <div style="text-align: center; padding: 40px; color: #a08070;">Loading conversations...</div>
     </div>
@@ -951,9 +950,7 @@
   let currentlyPlayingVideo = null;
   let videoObserver = null;
 
-  // ============================================
-  // DM CHAT VARIABLES (NEW)
-  // ============================================
+  // DM CHAT VARIABLES
   let socket = null;
   let currentConversationId = null;
   let currentChatRecipient = null;
@@ -972,7 +969,11 @@
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.clear(); showToast('Logged out'); setTimeout(() => window.location.href = '/login.html', 500); }
   function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-  function formatNumber(num) { if (num >= 1000000) return (num/1000000).toFixed(1) + 'M'; if (num >= 1000) return (num/1000).toFixed(1) + 'K'; return num.toString(); }
+  function formatNumber(num) { 
+    if (num >= 1000000) return (num/1000000).toFixed(1) + 'M'; 
+    if (num >= 1000) return (num/1000).toFixed(1) + 'K'; 
+    return num.toString(); 
+  }
   function formatTimeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
@@ -983,6 +984,9 @@
     const days = Math.floor(hours / 24);
     if (days < 7) return `${days}d ago`;
     return new Date(date).toLocaleDateString();
+  }
+  function formatDateTime(date) {
+    return new Date(date).toLocaleString();
   }
 
   function toggleTheme() { 
@@ -997,7 +1001,7 @@
     const badge = document.getElementById('notification-badge'); 
     badge.style.display = unread > 0 ? 'flex' : 'none'; 
     badge.innerText = unread > 9 ? '9+' : unread;
-    document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,10).map(n => `<div class="notification-item" onclick="markNotificationRead(this)">${n.message}<br><small>${formatTimeAgo(n.time)}</small></div>`).join(''); 
+    document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,10).map(n => `<div class="notification-item" onclick="markNotificationRead(this)">${n.message}<br><small>${formatDateTime(n.time)}</small></div>`).join(''); 
   }
   function markNotificationRead(el) { el.style.opacity = '0.5'; }
 
@@ -1133,11 +1137,18 @@
       if (data.success && data.creators && data.creators.length > 0) { 
         allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
       }
-      else { showSampleCreators(); }
+      else { 
+        allCreators = [];
+        document.getElementById('feed-content').innerHTML = '<div class="empty-state">No creators found. Tell creators to join Pebeto!</div>';
+        return;
+      }
       await loadCreatorEngagement();
       loadSavedData();
       applyFiltersAndSort();
-    } catch (error) { console.error('Error loading creators:', error); showSampleCreators(); }
+    } catch (error) { 
+      console.error('Error loading creators:', error);
+      document.getElementById('feed-content').innerHTML = '<div class="empty-state">Error loading creators. Please refresh.</div>';
+    }
   }
 
   async function loadCreatorEngagement() {
@@ -1147,18 +1158,13 @@
       try {
         const response = await fetch(`${API_BASE}/api/community/creators/${creator._id}/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
-        if (data.success) { creator.likeCount = data.likeCount || 0; creator.isLiked = data.isLiked || false; creator.commentCount = data.commentCount || 0; }
+        if (data.success) { 
+          creator.likeCount = data.likeCount || 0; 
+          creator.isLiked = data.isLiked || false; 
+          creator.commentCount = data.commentCount || 0; 
+        }
       } catch(e) {}
     }
-  }
-
-  function showSampleCreators() {
-    allCreators = [
-      { _id: 'sample1', email: 'dj@example.com', profile: { stageName: 'DJ Nova', niche: 'Music', avatarUrl: '', bio: 'Professional DJ and music producer' }, socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }, likeCount: 1234, isLiked: false, commentCount: 89, verified: true, viewCount: 15200, createdAt: '2024-01-15', isOnline: true, isLive: false, engagementRate: 5.2, milestones: { followers: 15000, views: 50000 } },
-      { _id: 'sample2', email: 'sarah@example.com', profile: { stageName: 'Sarah Creates', niche: 'Art', avatarUrl: '', bio: 'Digital artist and illustrator' }, socialLinks: { tiktok: '', youtube: 'https://www.youtube.com/@YouTube' }, likeCount: 567, isLiked: false, commentCount: 34, verified: false, viewCount: 8900, createdAt: '2024-02-20', isOnline: false, isLive: false, engagementRate: 3.8, milestones: { followers: 8000, views: 25000 } },
-      { _id: 'sample3', email: 'mike@example.com', profile: { stageName: 'Mike Fitness', niche: 'Fitness', avatarUrl: '', bio: 'Certified personal trainer' }, socialLinks: { tiktok: 'https://www.tiktok.com/@tiktok', youtube: '' }, likeCount: 2345, isLiked: false, commentCount: 156, verified: true, viewCount: 45000, createdAt: '2024-01-05', isOnline: true, isLive: true, engagementRate: 7.2, milestones: { followers: 50000, views: 200000 } }
-    ];
-    applyFiltersAndSort();
   }
 
   function applyFiltersAndSort() {
@@ -1180,7 +1186,6 @@
     renderFeed();
   }
 
-  // Video Autoplay Observer - plays video when visible, pauses when not
   function setupVideoAutoplay() {
     if (videoObserver) videoObserver.disconnect();
     videoObserver = new IntersectionObserver((entries) => {
@@ -1190,21 +1195,17 @@
         if (!iframe) return;
         
         if (entry.isIntersecting) {
-          // Video is visible - attempt to play
           if (currentlyPlayingVideo && currentlyPlayingVideo !== videoContainer) {
             const prevIframe = currentlyPlayingVideo.querySelector('iframe');
             if (prevIframe) {
-              // Pause previous video by reloading or sending postMessage
               prevIframe.src = prevIframe.src;
             }
           }
           currentlyPlayingVideo = videoContainer;
-          // Send play message to iframe (works for YouTube)
           if (iframe.src.includes('youtube')) {
             iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
           }
         } else {
-          // Video not visible - pause it
           if (currentlyPlayingVideo === videoContainer) {
             if (iframe.src.includes('youtube')) {
               iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
@@ -1267,7 +1268,6 @@
     hasMore = filteredCreators.length > PAGE_SIZE;
     setupVirtualScroll();
     setupInfiniteScroll();
-    // Setup video autoplay after cards are rendered
     setTimeout(setupVideoAutoplay, 500);
   }
 
@@ -1277,7 +1277,6 @@
     setTimeout(setupVideoAutoplay, 100);
   }
 
-  // Unmute video button handler
   function unmuteVideo(btn, iframe) {
     if (iframe && iframe.src.includes('youtube')) {
       iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
@@ -1316,6 +1315,9 @@
     const viewCount = creator.viewCount || 0;
     const isOnline = creator.isOnline || false;
     const isLive = creator.isLive || false;
+    const likeCount = creator.likeCount || 0;
+    const isLiked = creator.isLiked || false;
+    const commentCount = creator.commentCount || 0;
     
     let embedHtml = '';
     let videoId = `video-${creator._id}`;
@@ -1366,8 +1368,8 @@
       </div>
       ${embedHtml}
       <div class="creator-actions">
-        <button class="action-btn like-btn ${creator.isLiked ? 'liked' : ''}" onclick="toggleLike(event, this, '${creator._id}')"><i class="${creator.isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i><span class="like-count">${formatNumber(creator.likeCount || 0)}</span></button>
-        <button class="action-btn comment-btn" onclick="openCommentsModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-chat-3-line"></i><span class="comment-count">${formatNumber(creator.commentCount || 0)}</span></button>
+        <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, this, '${creator._id}')"><i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i><span class="like-count">${formatNumber(likeCount)}</span></button>
+        <button class="action-btn comment-btn" onclick="openCommentsModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-chat-3-line"></i><span class="comment-count">${formatNumber(commentCount)}</span></button>
         <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-coin-line"></i> Tip</button>
         <button class="dm-btn" onclick="openChatWithUser('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-mail-line"></i> DM</button>
         <button class="profile-btn" onclick="viewCreatorProfile('${creator._id}')"><i class="ri-user-line"></i> Profile</button>
@@ -1377,7 +1379,7 @@
       <div style="padding: 0 20px 15px 20px; font-size: 11px; color: #a08070; display: flex; justify-content: space-between;">
         <span><i class="ri-user-add-line"></i> ${formatNumber(creator.milestones?.followers || 0)} followers</span>
         <span><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</span>
-        <span><i class="ri-heart-line"></i> ${formatNumber(creator.likeCount || 0)} likes</span>
+        <span><i class="ri-heart-line"></i> ${formatNumber(likeCount)} likes</span>
       </div>
     `;
     return card;
@@ -1486,7 +1488,7 @@
         repliesContainer.innerHTML = replies.map(r => `
           <div style="display:flex;gap:8px;margin-top:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.05);">
             <div style="width:24px;height:24px;border-radius:50%;background:#ff8c42;display:flex;align-items:center;justify-content:center;font-size:10px;">${(r.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
-            <div><strong>${escapeHtml(r.author?.uniqueCode || 'User')}</strong><p style="font-size:12px;">${escapeHtml(r.text)}</p><small style="font-size:10px;color:#a08070;">${formatTimeAgo(r.createdAt)}</small></div>
+            <div><strong>${escapeHtml(r.author?.uniqueCode || 'User')}</strong><p style="font-size:12px;">${escapeHtml(r.text)}</p><small style="font-size:10px;color:#a08070;">${formatDateTime(r.createdAt)}</small></div>
           </div>
         `).join('');
       }
@@ -1639,10 +1641,7 @@
     pendingTip = false;
   }
 
-  // ============================================
-  // UPDATED: DM Functions (Now uses chat panel)
-  // ============================================
-  
+  // DM Functions
   function openDMModal(creatorId, creatorName) {
     openChatWithUser(creatorId, creatorName);
   }
@@ -1714,14 +1713,13 @@
 
   async function loadConversation(userId) {
     try {
-      // Get or create conversation
       const response = await fetch(`${API_BASE}/api/messages/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}`
         },
-        body: JSON.stringify({ recipientId: userId, content: ' ' }) // Temporary to create conversation
+        body: JSON.stringify({ recipientId: userId, content: ' ' })
       });
       const data = await response.json();
       if (data.success) {
@@ -1740,7 +1738,6 @@
       const data = await fetchJSON(`${API_BASE}/api/messages/conversations/${conversationId}/messages`);
       if (data.success) {
         renderMessages(data.data.messages);
-        // Mark as read
         await fetch(`${API_BASE}/api/messages/conversations/${conversationId}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
@@ -1872,7 +1869,6 @@
     });
     
     input.value = '';
-    // Optimistically add message
     const messagesContainer = document.getElementById('chatMessages');
     if (messagesContainer) {
       const currentUserId = currentUser?._id;
@@ -1891,7 +1887,6 @@
     if (event.key === 'Enter') {
       sendChatMessage();
     } else {
-      // Send typing indicator
       if (chatSocket && currentConversationId) {
         chatSocket.emit('dm:typing', { conversationId: currentConversationId, isTyping: true });
         if (typingTimeout) clearTimeout(typingTimeout);
@@ -2071,7 +2066,6 @@
   startAutoRefresh();
   addNotification('Welcome to the Pebeto Community!');
   
-  // Initialize DM
   updateUnreadBadge();
 </script>
 </body>
