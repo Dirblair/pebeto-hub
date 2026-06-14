@@ -23,6 +23,8 @@ const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../servic
 const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
 const Transaction = require('../models/Transaction');
 const logger = require('../utils/logger');
+const Transaction = require('../models/Transaction');
+const Campaign = require('../models/Campaign');
 
 const router = express.Router();
 const publicRouter = express.Router();
