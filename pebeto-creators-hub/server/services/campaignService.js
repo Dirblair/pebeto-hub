@@ -505,6 +505,7 @@ async function submitWork(creatorUser, campaignId, { workUrl }) {
 
 /**
  * Complete campaign and release payment to creator
+ * MODIFIED: Now checks that creator has marked work as completed
  * @param {Object} businessUser - Business user object
  * @param {string} campaignId - Campaign ID
  * @returns {Promise<Object>} Updated campaign
@@ -520,6 +521,21 @@ async function completeAndPay(businessUser, campaignId) {
   if (!campaign.assignedCreatorId) {
     throw new AppError('No creator assigned to this campaign', 400);
   }
+
+  // ============================================
+  // NEW: Check that creator has marked work as completed
+  // ============================================
+  if (!campaign.creatorWorkCompleted) {
+    throw new AppError(
+      'Creator has not marked the work as completed yet. Please wait for the creator to submit and mark as complete.',
+      400
+    );
+  }
+
+  // Mark business approval
+  campaign.businessWorkApproved = true;
+  campaign.businessWorkApprovedAt = new Date();
+  campaign.autoReleaseStatus = 'cancelled';
 
   const bid = campaign.bids.find(
     (b) => String(b.creatorId) === String(campaign.assignedCreatorId) && b.status === 'accepted'
@@ -561,6 +577,8 @@ async function completeAndPay(businessUser, campaignId) {
           campaignId: campaign._id,
           campaignTitle: campaign.title,
           note: 'Campaign completed — escrow released to creator wallet',
+          creatorConfirmed: true,
+          businessApproved: true
         },
       },
       session
@@ -575,11 +593,32 @@ async function completeAndPay(businessUser, campaignId) {
 
   const updated = await Campaign.findById(campaignId);
   
+  // Send notification to creator
+  const creator = await User.findById(campaign.assignedCreatorId);
+  if (creator) {
+    const Notification = require('../models/Notification');
+    const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITIES } = require('../models/Notification');
+    
+    await Notification.createNotification({
+      userId: creator._id,
+      type: NOTIFICATION_TYPES.WORK_APPROVED,
+      title: 'Payment Released! 🎉',
+      message: `${businessUser.profile?.companyName || businessUser.email} has approved your work for "${campaign.title}". $${payoutAmount} has been added to your wallet.`,
+      priority: NOTIFICATION_PRIORITIES.HIGH,
+      actionUrl: `/wallet.html`,
+      actionType: 'transaction',
+      fromUserId: businessUser._id,
+      fromUserName: businessUser.profile?.companyName || businessUser.email
+    });
+  }
+
   logger.info('Campaign completed and paid', {
     campaignId: campaign._id,
     businessId: businessUser._id,
     creatorId: campaign.assignedCreatorId,
     amount: payoutAmount,
+    creatorConfirmed: true,
+    businessApproved: true
   });
 
   return formatCampaign(updated, 'business', businessUser._id);
