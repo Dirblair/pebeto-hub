@@ -393,7 +393,7 @@ const campaignSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'reminding', 'processing', 'completed', 'cancelled'],
       default: 'pending'
-    }
+    },
       
     driveFiles: [{
   fileId: String,
