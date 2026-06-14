@@ -145,7 +145,6 @@
     .stat-card h4 { font-size: 13px; color: #a08070; margin-bottom: 8px; }
     .stat-card .amount { font-size: 28px; font-weight: 700; color: #ff8c42; }
     
-    /* NEW: Auto-Release Stats Cards */
     .stats-grid-auto {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -216,6 +215,7 @@
       display: inline-block;
     }
     .status-badge.active { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .status-badge.suspended { background: rgba(244,67,54,0.2); color: #f44336; }
     .status-badge.urgent { background: rgba(244,67,54,0.2); color: #f44336; }
     .status-badge.warning { background: rgba(255,152,0,0.2); color: #ff9800; }
     .btn-action {
@@ -231,9 +231,9 @@
     .btn-action:hover { background: #e0662c; }
     .btn-action.danger { background: #ef4444; }
     .btn-action.danger:hover { background: #dc2626; }
-    .btn-action.small { padding: 4px 10px; font-size: 11px; }
     .btn-action.success { background: #4caf50; }
     .btn-action.success:hover { background: #45a049; }
+    .btn-action.small { padding: 4px 10px; font-size: 11px; }
     
     .modal {
       display: none;
@@ -428,7 +428,6 @@
     .deposit-fields { display: none; margin-top: 15px; }
     .deposit-fields.active { display: block; }
     
-    /* Report/Moderation Card Styles (NEW) */
     .report-card {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,140,66,0.15);
@@ -461,7 +460,6 @@
       margin-top: 15px;
     }
     
-    /* Auto-Release Campaign Card Styles (NEW) */
     .auto-release-campaign-card {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,140,66,0.15);
@@ -527,7 +525,6 @@
     <canvas id="spending-chart" style="height: 200px;"></canvas>
   </div>
 
-  <!-- NEW: Auto-Release Stats Section -->
   <div class="stats-grid-auto" id="autoReleaseStats">
     <div class="stat-card-auto">
       <h4>⏳ Pending Auto-Release</h4>
@@ -595,9 +592,7 @@
     <button class="tab-btn" data-tab="activity">🔐 Activity Log</button>
     <button class="tab-btn" data-tab="security">🛡️ Security</button>
     <button class="tab-btn" data-tab="api">🔑 API Keys</button>
-    <!-- NEW: Moderation Tab -->
     <button class="tab-btn" data-tab="moderation">🚨 Moderation</button>
-    <!-- NEW: Auto-Release Monitor Tab -->
     <button class="tab-btn" data-tab="auto-release">⏰ Auto-Release Monitor</button>
   </div>
 
@@ -635,7 +630,7 @@
           <tr><th>Title</th><th>Business</th><th>Budget</th><th>Slots</th><th>Status</th><th>Bids</th><th>Auto-Release</th><th>Actions</th>
         </thead>
         <tbody>
-          <tr><td colspan="8" class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started.<\/td><\/tr>
+          <tr><td colspan="8" class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started.</td></tr>
         </tbody>
       </table>
     </div>
@@ -647,12 +642,8 @@
     </div>
     <div style="overflow-x: auto;">
       <table class="data-table" id="applications-table">
-        <thead>
-          <tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Actions</th>
-        </thead>
-        <tbody>
-          <tr><td colspan="5" class="empty-state">No applications yet<\/td><\/tr>
-        </tbody>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Actions</th></tr></thead>
+        <tbody><tr><td colspan="5" class="empty-state">No applications yet</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -660,12 +651,8 @@
   <div id="tab-active" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table" id="active-projects-table">
-        <thead>
-          <tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Auto-Release</th><th>Action</th>
-        </thead>
-        <tbody>
-          <tr><td colspan="6" class="empty-state">No active projects<\/td><\/tr>
-        </tbody>
+        <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Auto-Release</th><th>Action</th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty-state">No active projects</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -679,21 +666,34 @@
     <div id="search-results"><div class="empty-state">Enter search criteria to find creators</div></div>
   </div>
 
+  <!-- USERS TAB - FIXED WITH REAL API -->
   <div id="tab-users" class="tab-content">
     <div class="search-box">
-      <input type="text" id="user-search" placeholder="Search by email or name...">
-      <select id="user-role-filter"><option value="all">All Roles</option><option value="creator">Creators</option><option value="business">Businesses</option></select>
+      <input type="text" id="user-search" placeholder="Search by email or name..." onkeypress="if(event.key==='Enter') loadUsers()">
+      <select id="user-role-filter" onchange="loadUsers()">
+        <option value="all">All Roles</option>
+        <option value="creator">Creators</option>
+        <option value="business">Businesses</option>
+        <option value="admin">Admins</option>
+      </select>
+      <select id="user-status-filter" onchange="loadUsers()">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="suspended">Suspended</option>
+        <option value="pending">Pending</option>
+      </select>
       <button class="btn-action" onclick="loadUsers()">Search</button>
     </div>
     <div style="overflow-x: auto;">
+      <div id="users-loading" style="display: none; text-align: center; padding: 40px;">Loading users...</div>
       <table class="data-table" id="users-table">
         <thead>
           <tr><th>Email</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th>
         </thead>
         <tbody>
-          <tr><td colspan="6" class="empty-state">No users found<\/td><\/tr>
+          <tr><td colspan="6" class="empty-state">Loading users...</td></tr>
         </tbody>
-      <table>
+      </table>
     </div>
   </div>
 
@@ -705,11 +705,8 @@
     </div>
     <div style="overflow-x: auto;">
       <table class="data-table" id="transactions-table">
-        <thead>
-          <tr><th>Type</th><th>User</th><th>Amount</th><th>Date</th>
-        </thead>
-        <tbody>
-          <tr><td colspan="4" class="empty-state">No transactions found<\/td><\/tr>
+        <thead><tr><th>Type</th><th>User</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody><tr><td colspan="4" class="empty-state">No transactions found</td></tr>
         </tbody>
       </table>
     </div>
@@ -730,11 +727,8 @@
     <h3 style="margin-top:30px;">📜 Withdrawal History</h3>
     <div style="overflow-x: auto;">
       <table class="data-table" id="admin-withdrawals-table">
-        <thead>
-          <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th>
-        </thead>
-        <tbody>
-          <tr><td colspan="4" class="empty-state">No withdrawals yet<\/td><\/tr>
+        <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+        <tbody><tr><td colspan="4" class="empty-state">No withdrawals yet</td></tr>
         </tbody>
       </table>
     </div>
@@ -744,11 +738,8 @@
     <div class="search-box"><input type="text" id="activity-search" placeholder="Filter actions..." onkeyup="filterActivityLog()"></div>
     <div style="overflow-x: auto;">
       <table class="data-table" id="activity-table">
-        <thead>
-          <tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th>
-        </thead>
-        <tbody id="activity-list">
-          <tr><td colspan="4" class="empty-state">No activity recorded<\/td><\/tr>
+        <thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead>
+        <tbody id="activity-list"><tr><td colspan="4" class="empty-state">No activity recorded</td></tr>
         </tbody>
       </table>
     </div>
@@ -767,7 +758,6 @@
     <div style="margin-top:20px;"><h3>🔗 Webhooks</h3><div id="webhooks-list"></div><button class="btn-action" onclick="openAddWebhookModal()" style="margin-top:10px;">+ Add Webhook</button></div>
   </div>
 
-  <!-- NEW: Moderation Tab -->
   <div id="tab-moderation" class="tab-content">
     <div class="search-box">
       <select id="report-status-filter" onchange="loadReports()">
@@ -779,9 +769,7 @@
       </select>
       <button class="btn-action" onclick="loadReports()">Refresh</button>
     </div>
-    <div id="reports-list">
-      <div class="empty-state">Loading reports...</div>
-    </div>
+    <div id="reports-list"><div class="empty-state">Loading reports...</div></div>
     <div class="campaign-stats-summary" style="margin-top: 20px;">
       <div class="stat-card-small"><h5>📊 Pending Reports</h5><div class="stat-number" id="pending-reports-count">0</div></div>
       <div class="stat-card-small"><h5>✅ Resolved Today</h5><div class="stat-number" id="resolved-today-count">0</div></div>
@@ -789,13 +777,10 @@
     </div>
   </div>
 
-  <!-- NEW: Auto-Release Monitor Tab -->
   <div id="tab-auto-release" class="tab-content">
     <h3>⏰ Campaigns Pending Auto-Release</h3>
     <p style="margin-bottom: 15px; color: #a08070;">Campaigns where creator has submitted work but business hasn't approved. Funds will auto-release after deadline.</p>
-    <div id="auto-release-campaigns-list">
-      <div class="empty-state">Loading campaigns...</div>
-    </div>
+    <div id="auto-release-campaigns-list"><div class="empty-state">Loading campaigns...</div></div>
   </div>
 </div>
 
@@ -816,7 +801,6 @@
 <div id="campaign-detail-modal" class="modal"><div class="modal-content"><h3>Campaign Details</h3><div id="campaign-details"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('campaign-detail-modal')">Close</button></div></div></div>
 <div id="confirm-withdraw-modal" class="modal"><div class="modal-content"><h3>Confirm Withdrawal</h3><p id="confirm-details"></p><div class="modal-buttons"><button class="save-btn" id="confirm-withdraw-btn" onclick="processWithdrawal()">Confirm</button><button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button></div></div></div>
 <div id="2fa-modal" class="modal"><div class="modal-content"><h3>2FA Setup</h3><div id="2fa-qr" style="text-align:center;"></div><input type="text" id="2fa-secret" readonly><input type="text" id="2fa-code" placeholder="Enter 6-digit code"><div class="modal-buttons"><button class="save-btn" onclick="verify2FA()">Verify</button><button class="cancel-btn" onclick="closeModal('2fa-modal')">Cancel</button></div></div></div>
-<!-- NEW: Resolve Report Modal -->
 <div id="resolve-report-modal" class="modal"><div class="modal-content"><h3>Resolve Report</h3><p id="resolve-report-info"></p><select id="report-action"><option value="none">No Action</option><option value="warn">Warn User</option><option value="suspend">Suspend User</option><option value="ban">Ban User</option><option value="delete_post">Delete Post</option></select><textarea id="report-resolution" rows="3" placeholder="Resolution notes..."></textarea><div class="modal-buttons"><button class="save-btn" onclick="resolveReport()">Submit Resolution</button><button class="cancel-btn" onclick="closeModal('resolve-report-modal')">Cancel</button></div></div></div>
 
 <script>
@@ -833,7 +817,6 @@
   let teamMembers = [], webhooks = [];
   let reports = [];
   let currentReportToResolve = null;
-  let autoReleaseCheckInterval = null;
 
   // ============================================
   // HELPER FUNCTIONS
@@ -880,7 +863,7 @@
   function updateDepositPreview() { let amt = parseFloat(document.getElementById('deposit-amount').value) || 0; let fee = amt * 0.1; document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${(amt + fee).toFixed(2)} ($${amt} + $${fee.toFixed(2)} fee)`; }
   function processDeposit() { let amt = parseFloat(document.getElementById('deposit-amount').value); if (!amt || amt <= 0) return showToast('Enter amount', 'error'); showToast(`Deposit $${amt} submitted!`, 'success'); closeModal('deposit-modal'); addNotification(`Deposited $${amt}`); }
   
-  function selectWithdrawMethod(m) { selectedWithdrawMethod = m; document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); document.getElementById(`withdraw-${m}-fields`).style.display = 'block'; updateWithdrawPreview(); }
+  function selectWithdrawMethod(m) { selectedWithdrawMethod = m; document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); document.getElementById(`withdraw-${m}-fields`).style.display = 'block'); updateWithdrawPreview(); }
   function updateWithdrawPreview() { let amt = parseFloat(document.getElementById('withdraw-amount').value) || 0; const btn = document.getElementById('withdraw-btn'); if (amt > 0) { btn.classList.add('active'); btn.disabled = false; } else { btn.classList.remove('active'); btn.disabled = true; } }
   function withdraw() { let amt = parseFloat(document.getElementById('withdraw-amount').value); if (!amt || amt <= 0) return showToast('Enter amount', 'error'); const method = selectedWithdrawMethod; if (method === 'mpesa') { const phone = document.getElementById('mpesa-phone').value; if (!phone || phone.length < 10) return showToast('Valid phone number required', 'error'); } document.getElementById('confirm-details').innerHTML = `Amount: ${formatMoney(amt)}<br>Method: ${method.toUpperCase()}<br>No fees!`; document.getElementById('confirm-withdraw-modal').style.display = 'flex'; }
   function processWithdrawal() { const amt = parseFloat(document.getElementById('withdraw-amount').value); showToast(`Withdrawal of ${formatMoney(amt)} submitted!`, 'success'); closeModal('confirm-withdraw-modal'); addNotification(`Withdrew ${formatMoney(amt)}`); document.getElementById('withdraw-amount').value = ''; updateWithdrawPreview(); }
@@ -913,7 +896,7 @@
         campaigns = data.campaigns || [];
         const tbody = document.querySelector('#campaigns-table tbody');
         if (campaigns.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started.<\/td><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started.</td></tr>';
         } else {
           tbody.innerHTML = campaigns.map(c => {
             const hasWorkSubmitted = c.status === 'submitted_for_review';
@@ -944,12 +927,12 @@
     document.getElementById('campaign-stats-completed').innerText = completed;
   }
   
-  function loadApplications() { const tbody = document.querySelector('#applications-table tbody'); if (allBids.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No applications yet<\/td><\/tr>'; } else { tbody.innerHTML = allBids.map(b => `<tr><td>${escapeHtml(b.campaignTitle)}<\/td><td>${escapeHtml(b.uniqueCode)}<\/td><td>${formatMoney(b.amount)}<\/td><td>${escapeHtml(b.proposal?.substring(0, 50))}...<\/td><td><button class="btn-action" onclick="acceptBid('${b._id}')">Approve</button> <button class="btn-action danger" onclick="rejectBid('${b._id}')">Reject</button><\/td><\/tr>`).join(''); } }
+  function loadApplications() { const tbody = document.querySelector('#applications-table tbody'); if (allBids.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No applications yet</td><\/tr>'; } else { tbody.innerHTML = allBids.map(b => `<tr><td>${escapeHtml(b.campaignTitle)}<\/td><td>${escapeHtml(b.uniqueCode)}<\/td><td>${formatMoney(b.amount)}<\/td><td>${escapeHtml(b.proposal?.substring(0, 50))}...<\/td><td><button class="btn-action" onclick="acceptBid('${b._id}')">Approve</button> <button class="btn-action danger" onclick="rejectBid('${b._id}')">Reject</button><\/td><\/tr>`).join(''); } }
   function filterApplications() { loadApplications(); }
   function acceptBid(id) { allBids = allBids.filter(b => b._id !== id); showToast('Creator approved!', 'success'); loadApplications(); addNotification('Creator application approved'); }
   function rejectBid(id) { allBids = allBids.filter(b => b._id !== id); showToast('Creator rejected', 'info'); loadApplications(); }
   
-  function loadActiveProjects() { const tbody = document.querySelector('#active-projects-table tbody'); tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No active projects<\/td><\/tr>'; }
+  function loadActiveProjects() { const tbody = document.querySelector('#active-projects-table tbody'); tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No active projects</td><\/tr>'; }
   function completeWork(id) { showToast('Work completed!', 'success'); loadActiveProjects(); }
   
   function searchCreator() { const resultsDiv = document.getElementById('search-results'); resultsDiv.innerHTML = '<div class="empty-state">Creator search will connect to the backend API. Please integrate with your creator database.</div>'; }
@@ -958,12 +941,118 @@
   function openHireModal(id, name) { currentHireCreatorId = id; currentHireCreatorName = name; document.getElementById('hire-creator-name').innerHTML = `Hiring: <strong>${escapeHtml(name)}</strong>`; document.getElementById('hire-modal').style.display = 'flex'; }
   function sendHire() { showToast('Hire offer sent!', 'success'); closeModal('hire-modal'); addNotification(`Hire offer sent to ${currentHireCreatorName}`); }
   
-  function loadUsers() { const tbody = document.querySelector('#users-table tbody'); tbody.innerHTML = '<tr><td colspan="6" class="empty-state">User data will load from your backend API<\/td><\/tr>'; }
-  function viewUser(id) { showToast('User details feature - connect to backend', 'info'); }
+  // ============================================
+  // LOAD USERS - FIXED WITH REAL API
+  // ============================================
+  async function loadUsers() {
+    const loadingDiv = document.getElementById('users-loading');
+    const tbody = document.querySelector('#users-table tbody');
+    
+    try {
+      if (loadingDiv) loadingDiv.style.display = 'block';
+      
+      const token = localStorage.getItem('pebeto_token');
+      const role = document.getElementById('user-role-filter')?.value || 'all';
+      const status = document.getElementById('user-status-filter')?.value || 'all';
+      const search = document.getElementById('user-search')?.value || '';
+      
+      let url = `${API_BASE}/api/admin/users?`;
+      if (role !== 'all') url += `role=${role}&`;
+      if (status !== 'all') url += `status=${status}&`;
+      if (search) url += `search=${encodeURIComponent(search)}&`;
+      
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      
+      if (data.success && data.data.users && data.data.users.length > 0) {
+        tbody.innerHTML = data.data.users.map(user => `
+          <tr>
+            <td>${escapeHtml(user.email)}<\/td>
+            <td><span class="status-badge">${user.role}<\/span><\/td>
+            <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}<\/span><\/td>
+            <td>${formatMoney(user.wallet?.balances?.available || 0)}<\/td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}<\/td>
+            <td>
+              <button class="btn-action" onclick="viewUserDetails('${user._id}')">View</button>
+              <button class="btn-action ${user.status === 'active' ? 'danger' : 'success'}" onclick="toggleUserStatus('${user._id}', '${user.status}')">
+                ${user.status === 'active' ? 'Suspend' : 'Activate'}
+              </button>
+             <\/td>
+           \`
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No users found<\/td><\/tr>';
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading users. Please check your connection.<\/td><\/tr>';
+      showToast('Error loading users', 'error');
+    }
+  }
+  
+  async function viewUserDetails(userId) {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success && data.data.user) {
+        const user = data.data.user;
+        document.getElementById('user-details').innerHTML = `
+          <p><strong>Email:</strong> ${escapeHtml(user.email)}</p>
+          <p><strong>Role:</strong> ${user.role}</p>
+          <p><strong>Status:</strong> ${user.status}</p>
+          <p><strong>Unique Code:</strong> ${user.uniqueCode || 'N/A'}</p>
+          <p><strong>Display Name:</strong> ${user.profile?.stageName || user.profile?.companyName || user.profile?.displayName || 'N/A'}</p>
+          <p><strong>Joined:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+          <p><strong>Last Login:</strong> ${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}</p>
+        `;
+        document.getElementById('user-modal').style.display = 'flex';
+      }
+    } catch (error) {
+      showToast('Error loading user details', 'error');
+    }
+  }
+  
+  async function toggleUserStatus(userId, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    const action = newStatus === 'suspended' ? 'suspend' : 'activate';
+    
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/admin/users/${userId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus, reason: `User ${action}d by admin` })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast(`User ${action}d successfully`, 'success');
+        loadUsers(); // Refresh the list
+      } else {
+        showToast(data.message || 'Failed to update user status', 'error');
+      }
+    } catch (error) {
+      showToast('Error updating user status', 'error');
+    }
+  }
+  
   function loadTransactions() { const tbody = document.querySelector('#transactions-table tbody'); tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Transaction history will load from your backend API<\/td><\/tr>'; }
   function loadAdminWithdrawals() { const tbody = document.querySelector('#admin-withdrawals-table tbody'); tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Withdrawal history will load from your backend API<\/td><\/tr>'; }
   
-  function loadActivityLog() { document.getElementById('activity-list').innerHTML = '<tr><td colspan="4" class="empty-state">Activity log will load from your backend API<\/td><\/tr>'; }
+  function loadActivityLog() { document.getElementById('activity-list').innerHTML = '<td><td colspan="4" class="empty-state">Activity log will load from your backend API<\/td><\/tr>'; }
   function filterActivityLog() { const term = document.getElementById('activity-search').value.toLowerCase(); const rows = document.querySelectorAll('#activity-list tr'); rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none'; }); }
   function exportActivityLog() { showToast('Activity log exported!', 'success'); }
   
@@ -983,10 +1072,7 @@
   function loadWebhooks() { const container = document.getElementById('webhooks-list'); if (webhooks.length === 0) { container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; } else { container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); } }
   function deleteWebhook(url) { webhooks = webhooks.filter(w => w.url !== url); showToast('Webhook deleted', 'success'); loadWebhooks(); }
   
-  // ============================================
-  // AUTO-RELEASE STATS FUNCTIONS (NEW)
-  // ============================================
-  
+  // Auto-release functions
   async function loadAutoReleaseStats() {
     try {
       const token = localStorage.getItem('pebeto_token');
@@ -998,7 +1084,7 @@
         document.getElementById('total-auto-released-amount').innerHTML = formatMoney(data.data.totalAutoReleasedAmount || 0);
         document.getElementById('total-auto-released-count').innerText = data.data.totalAutoReleasedCount || 0;
       }
-    } catch(e) { console.error('Error loading auto-release stats:', e); }
+    } catch(e) { console.error(e); }
   }
   
   async function loadAutoReleaseCampaigns() {
@@ -1008,52 +1094,32 @@
       const data = await res.json();
       const container = document.getElementById('auto-release-campaigns-list');
       if (data.success && data.data.campaigns && data.data.campaigns.length > 0) {
-        container.innerHTML = data.data.campaigns.map(c => {
-          const daysRemaining = c.daysRemaining;
-          let urgencyClass = '';
-          let urgencyText = '';
-          if (daysRemaining <= 1) {
-            urgencyClass = 'urgent';
-            urgencyText = '⚠️ URGENT';
-          } else if (daysRemaining <= 3) {
-            urgencyClass = 'warning';
-            urgencyText = '⚠️ Warning';
-          }
-          return `
-            <div class="auto-release-campaign-card ${urgencyClass}">
-              <div class="report-header">
-                <strong>${escapeHtml(c.title)}</strong>
-                <span class="report-reason">${urgencyText} ${daysRemaining} days remaining</span>
-              </div>
-              <div><strong>Business:</strong> ${escapeHtml(c.businessEmail)}</div>
-              <div><strong>Creator:</strong> ${escapeHtml(c.creatorName || c.creatorEmail)}</div>
-              <div><strong>Amount:</strong> ${formatMoney(c.amount)}</div>
-              <div><strong>Deadline:</strong> ${new Date(c.autoReleaseDeadline).toLocaleString()}</div>
-              <div class="report-actions">
-                <button class="btn-action success" onclick="viewCampaignDetails('${c._id}')">View Campaign</button>
-                <button class="btn-action" onclick="contactBusiness('${c.businessId}')">Contact Business</button>
-              </div>
+        container.innerHTML = data.data.campaigns.map(c => `
+          <div class="auto-release-campaign-card ${c.daysRemaining <= 1 ? 'urgent' : c.daysRemaining <= 3 ? 'warning' : ''}">
+            <div class="report-header">
+              <strong>${escapeHtml(c.title)}</strong>
+              <span class="report-reason">${c.daysRemaining <= 1 ? '⚠️ URGENT' : c.daysRemaining <= 3 ? '⚠️ Warning' : ''} ${c.daysRemaining} days remaining</span>
             </div>
-          `;
-        }).join('');
+            <div><strong>Business:</strong> ${escapeHtml(c.businessEmail)}</div>
+            <div><strong>Creator:</strong> ${escapeHtml(c.creatorName || c.creatorEmail)}</div>
+            <div><strong>Amount:</strong> ${formatMoney(c.amount)}</div>
+            <div><strong>Deadline:</strong> ${new Date(c.autoReleaseDeadline).toLocaleString()}</div>
+            <div class="report-actions">
+              <button class="btn-action success" onclick="viewCampaignDetails('${c._id}')">View Campaign</button>
+              <button class="btn-action" onclick="contactBusiness('${c.businessId}')">Contact Business</button>
+            </div>
+          </div>
+        `).join('');
       } else {
         container.innerHTML = '<div class="empty-state">No campaigns pending auto-release</div>';
       }
-    } catch(e) { console.error('Error loading auto-release campaigns:', e); }
+    } catch(e) { console.error(e); }
   }
   
-  function viewCampaignDetails(campaignId) {
-    window.open(`/campaign.html?id=${campaignId}`, '_blank');
-  }
+  function viewCampaignDetails(campaignId) { window.open(`/campaign.html?id=${campaignId}`, '_blank'); }
+  function contactBusiness(businessId) { showToast('Messaging feature - will open chat', 'info'); }
   
-  function contactBusiness(businessId) {
-    showToast('Messaging feature - will open chat', 'info');
-  }
-  
-  // ============================================
-  // MODERATION/REPORT FUNCTIONS (NEW)
-  // ============================================
-  
+  // Moderation functions
   async function loadReports() {
     const status = document.getElementById('report-status-filter')?.value || 'pending';
     try {
@@ -1066,30 +1132,25 @@
         if (reports.length === 0) {
           container.innerHTML = '<div class="empty-state">No reports found</div>';
         } else {
-          container.innerHTML = reports.map(r => {
-            const targetName = r.reportedUserId?.profile?.stageName || r.reportedUserId?.profile?.companyName || r.reportedUserId?.email || 'User';
-            const targetType = r.targetType;
-            return `
-              <div class="report-card ${r.priority >= 4 ? 'urgent' : ''}">
-                <div class="report-header">
-                  <strong>Reported: ${escapeHtml(targetName)}</strong>
-                  <span class="report-reason">${r.reasonLabel}</span>
-                </div>
-                <div><strong>Reporter:</strong> ${escapeHtml(r.reporterId?.email || 'Anonymous')}</div>
-                <div><strong>Target Type:</strong> ${targetType}</div>
-                <div class="report-description">${escapeHtml(r.description || 'No additional description')}</div>
-                <div><strong>Submitted:</strong> ${new Date(r.createdAt).toLocaleString()}</div>
-                <div class="report-actions">
-                  <button class="btn-action" onclick="openResolveReportModal('${r._id}', '${escapeHtml(targetName)}')">Resolve</button>
-                  <button class="btn-action danger" onclick="dismissReport('${r._id}')">Dismiss</button>
-                  <button class="btn-action" onclick="viewReportDetails('${r._id}')">View Details</button>
-                </div>
+          container.innerHTML = reports.map(r => `
+            <div class="report-card ${r.priority >= 4 ? 'urgent' : ''}">
+              <div class="report-header">
+                <strong>Reported: ${escapeHtml(r.reportedUserId?.profile?.stageName || r.reportedUserId?.profile?.companyName || r.reportedUserId?.email || 'User')}</strong>
+                <span class="report-reason">${r.reasonLabel}</span>
               </div>
-            `;
-          }).join('');
+              <div><strong>Reporter:</strong> ${escapeHtml(r.reporterId?.email || 'Anonymous')}</div>
+              <div><strong>Target Type:</strong> ${r.targetType}</div>
+              <div class="report-description">${escapeHtml(r.description || 'No additional description')}</div>
+              <div><strong>Submitted:</strong> ${new Date(r.createdAt).toLocaleString()}</div>
+              <div class="report-actions">
+                <button class="btn-action" onclick="openResolveReportModal('${r._id}', '${escapeHtml(r.reportedUserId?.profile?.stageName || r.reportedUserId?.profile?.companyName || r.reportedUserId?.email || 'User')}')">Resolve</button>
+                <button class="btn-action danger" onclick="dismissReport('${r._id}')">Dismiss</button>
+                <button class="btn-action" onclick="viewReportDetails('${r._id}')">View Details</button>
+              </div>
+            </div>
+          `).join('');
         }
         
-        // Load stats
         const statsRes = await fetch(`${API_BASE}/api/admin/reports/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
         const statsData = await statsRes.json();
         if (statsData.success) {
@@ -1098,7 +1159,7 @@
           document.getElementById('total-reports-count').innerText = statsData.data.totalReports || 0;
         }
       }
-    } catch(e) { console.error('Error loading reports:', e); }
+    } catch(e) { console.error(e); }
   }
   
   function openResolveReportModal(reportId, targetName) {
@@ -1157,10 +1218,7 @@
     }
   }
   
-  // ============================================
-  // CHART FUNCTIONS
-  // ============================================
-  
+  // Chart functions
   function loadSpendingChart() { const ctx = document.getElementById('spending-chart').getContext('2d'); if (spendingChart) spendingChart.destroy(); spendingChart = new Chart(ctx, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Spending ($)', data: [0, 0, 0, 0, 0, 0], borderColor: '#ff8c42', fill: true, backgroundColor: 'rgba(255,140,66,0.1)' }] }, options: { responsive: true } }); }
   function loadCampaignPerformanceChart() { const ctx = document.getElementById('campaign-performance-chart').getContext('2d'); if (campaignChart) campaignChart.destroy(); campaignChart = new Chart(ctx, { type: 'bar', data: { labels: ['Active', 'Completed'], datasets: [{ label: 'Campaigns', data: [campaigns.filter(c => c.status !== 'paid').length, campaigns.filter(c => c.status === 'paid').length], backgroundColor: '#ff8c42' }] }, options: { responsive: true } }); }
   function loadUserGrowthChart() { const ctx = document.getElementById('user-growth-chart').getContext('2d'); new Chart(ctx, { type: 'line', data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], datasets: [{ label: 'Growth', data: [0, 0, 0, 0], borderColor: '#ff8c42', fill: false }] }, options: { responsive: true } }); }
@@ -1172,7 +1230,7 @@
   
   document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); if (btn.dataset.tab === 'users') loadUsers(); if (btn.dataset.tab === 'campaigns') loadCampaigns(); if (btn.dataset.tab === 'transactions') loadTransactions(); if (btn.dataset.tab === 'withdrawals') loadAdminWithdrawals(); if (btn.dataset.tab === 'activity') loadActivityLog(); if (btn.dataset.tab === 'api') { loadApiKey(); loadWebhooks(); } if (btn.dataset.tab === 'security') { loadTeamMembers(); } if (btn.dataset.tab === 'applications') loadApplications(); if (btn.dataset.tab === 'active') loadActiveProjects(); if (btn.dataset.tab === 'creators') searchCreator(); if (btn.dataset.tab === 'dashboard') loadCampaignPerformanceChart(); if (btn.dataset.tab === 'moderation') loadReports(); if (btn.dataset.tab === 'auto-release') { loadAutoReleaseCampaigns(); loadAutoReleaseStats(); } }); });
   
-  document.getElementById('withdraw-btn').addEventListener('click', withdraw);
+  document.getElementById('withdraw-btn')?.addEventListener('click', withdraw);
   document.getElementById('campaign-budget')?.addEventListener('input', updateBudgetBreakdown);
   document.getElementById('campaign-slots')?.addEventListener('input', updateBudgetBreakdown);
   window.addEventListener('scroll', () => { const btn = document.getElementById('backToTop'); if (window.scrollY > 300) btn.classList.add('show'); else btn.classList.remove('show'); });
@@ -1191,14 +1249,6 @@
   loadTeamMembers();
   
   addNotification('Welcome to Pebeto Admin Dashboard');
-  
-  // Auto-refresh auto-release stats every 5 minutes
-  setInterval(() => {
-    if (document.getElementById('tab-auto-release').classList.contains('active')) {
-      loadAutoReleaseCampaigns();
-      loadAutoReleaseStats();
-    }
-  }, 300000);
 </script>
 </body>
 </html>
