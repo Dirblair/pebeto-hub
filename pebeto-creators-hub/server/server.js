@@ -60,6 +60,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 const { Server } = require('socket.io');
 const crypto = require('crypto');
+const cron = require('node-cron');
 
 // Config and Middleware imports
 const env = require('./config/env');
@@ -151,6 +152,16 @@ const creatorRoutes = safeRequire('./routes/creator.routes', 'creator.routes');
 // NEW: User Routes Import (for activity, sessions, 2FA, API keys)
 // ============================================
 const userRoutes = safeRequire('./routes/user.routes', 'user.routes');
+
+// ============================================
+// NEW: Google Drive Routes Import
+// ============================================
+const driveRoutes = safeRequire('./routes/drive.routes', 'drive.routes');
+
+// ============================================
+// NEW: Messages Routes Import
+// ============================================
+const messagesRoutes = safeRequire('./routes/messages.routes', 'messages.routes');
 
 // ============================================
 // Request ID Middleware
@@ -379,6 +390,26 @@ async function bootstrap() {
       console.log('⚠️ Creator routes skipped - file not found');
     }
     
+    // ============================================
+    // NEW: Google Drive Routes
+    // ============================================
+    if (driveRoutes) {
+      app.use('/api/drive', driveRoutes);
+      console.log('✅ Mounted Google Drive routes (/api/drive/*)');
+    } else {
+      console.log('⚠️ Google Drive routes skipped - file not found');
+    }
+    
+    // ============================================
+    // NEW: Messages Routes
+    // ============================================
+    if (messagesRoutes) {
+      app.use('/api/messages', messagesRoutes);
+      console.log('✅ Mounted messages routes (/api/messages/*)');
+    } else {
+      console.log('⚠️ Messages routes skipped - file not found');
+    }
+    
     // Community routes (optional)
     if (communityRoutes) {
       app.use('/api/community', communityRoutes);
@@ -487,6 +518,42 @@ async function bootstrap() {
         env.logConfigSummary();
       }
     });
+    
+    // ============================================
+    // NEW: Setup Auto-Release Cron Job
+    // Runs every hour to check for campaigns pending auto-release
+    // ============================================
+    const { processAutoReleaseQueue, getAutoReleaseStats } = require('./services/autoReleaseService');
+    
+    // Run every hour at minute 0 (e.g., 1:00, 2:00, 3:00...)
+    const cronSchedule = process.env.AUTO_RELEASE_CRON_SCHEDULE || '0 * * * *';
+    
+    cron.schedule(cronSchedule, async () => {
+      logger.info('⏰ Running auto-release cron job...');
+      try {
+        const results = await processAutoReleaseQueue();
+        if (results.autoReleased > 0 || results.remindersSent > 0) {
+          logger.info(`Auto-release cron completed: ${results.autoReleased} released, ${results.remindersSent} reminders sent`);
+        }
+      } catch (error) {
+        logger.error('Auto-release cron job failed:', error);
+      }
+    });
+    
+    logger.info(`✅ Auto-release cron job scheduled: ${cronSchedule}`);
+    
+    // Also run once on startup to catch any missed campaigns
+    setTimeout(async () => {
+      logger.info('🔄 Running initial auto-release check on startup...');
+      try {
+        const results = await processAutoReleaseQueue();
+        if (results.autoReleased > 0 || results.remindersSent > 0) {
+          logger.info(`Initial auto-release check: ${results.autoReleased} released, ${results.remindersSent} reminders sent`);
+        }
+      } catch (error) {
+        logger.error('Initial auto-release check failed:', error);
+      }
+    }, 30000); // Wait 30 seconds after server starts
     
     // 16. Graceful Shutdown
     setupGracefulShutdown(server);
