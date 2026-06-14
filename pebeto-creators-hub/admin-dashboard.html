@@ -2108,5 +2108,93 @@
   }
 })();
 </script>
+            <script>
+// DIRECT FIX: Force update dashboard stats from the visible users table
+(function() {
+  console.log('🔧 Dashboard stats fix loaded');
+  
+  function updateDashboardStats() {
+    // Get all rows from the users table
+    const userRows = document.querySelectorAll('#users-table tbody tr');
+    let totalUsers = 0;
+    let creators = 0;
+    let businesses = 0;
+    let admins = 0;
+    
+    userRows.forEach(row => {
+      // Skip if it's a loading/empty message
+      if (row.cells.length > 1 && 
+          !row.innerHTML.includes('No users found') && 
+          !row.innerHTML.includes('Loading users') &&
+          row.cells[0] && row.cells[0].innerText !== '') {
+        totalUsers++;
+        
+        // Role is in the 3rd column (index 2)
+        const roleCell = row.cells[2];
+        if (roleCell) {
+          const roleText = roleCell.innerText.toLowerCase();
+          if (roleText.includes('creator')) creators++;
+          else if (roleText.includes('business')) businesses++;
+          else if (roleText.includes('admin')) admins++;
+        }
+      }
+    });
+    
+    if (totalUsers > 0) {
+      console.log(`✅ Updating stats: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      
+      // Update Dashboard tab stats
+      const totalUsersEl = document.getElementById('total-users');
+      const totalBusinessesEl = document.getElementById('total-businesses');
+      if (totalUsersEl) totalUsersEl.innerText = totalUsers;
+      if (totalBusinessesEl) totalBusinessesEl.innerText = businesses;
+      
+      // Update Users tab stats
+      const totalUsersCountEl = document.getElementById('total-users-count');
+      const totalCreatorsCountEl = document.getElementById('total-creators-count');
+      const totalBusinessesCountEl = document.getElementById('total-businesses-count');
+      const totalAdminsCountEl = document.getElementById('total-admins-count');
+      
+      if (totalUsersCountEl) totalUsersCountEl.innerText = totalUsers;
+      if (totalCreatorsCountEl) totalCreatorsCountEl.innerText = creators;
+      if (totalBusinessesCountEl) totalBusinessesCountEl.innerText = businesses;
+      if (totalAdminsCountEl) totalAdminsCountEl.innerText = admins;
+    }
+    return totalUsers;
+  }
+  
+  // Run when page loads and when users tab is clicked
+  setTimeout(updateDashboardStats, 1000);
+  setTimeout(updateDashboardStats, 2000);
+  setTimeout(updateDashboardStats, 3000);
+  
+  // Watch for when the Dashboard tab is clicked
+  const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  if (dashboardTab) {
+    dashboardTab.addEventListener('click', function() {
+      setTimeout(updateDashboardStats, 100);
+      setTimeout(updateDashboardStats, 500);
+    });
+  }
+  
+  // Watch for when the Users tab is clicked (so data gets loaded)
+  const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
+  if (usersTab) {
+    usersTab.addEventListener('click', function() {
+      setTimeout(updateDashboardStats, 1000);
+      setTimeout(updateDashboardStats, 2000);
+    });
+  }
+  
+  // Also override the loadDashboardStats function
+  const originalLoadDashboardStats = window.loadDashboardStats;
+  window.loadDashboardStats = function() {
+    console.log('🎯 Override: loadDashboardStats called');
+    if (updateDashboardStats() === 0 && originalLoadDashboardStats) {
+      originalLoadDashboardStats();
+    }
+  };
+})();
+</script>
 </body>
 </html>
