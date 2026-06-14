@@ -4,7 +4,7 @@
  * Handles real-time features including:
  * - Authentication middleware
  * - User presence (online/offline)
- * - Direct messaging
+ * - Direct messaging (NEW - fully implemented)
  * - Campaign notifications
  * - Platform activity broadcasts
  * - Live feed updates
@@ -17,6 +17,8 @@ const env = require('../config/env');
 const User = require('../models/User');
 const Campaign = require('../models/Campaign');
 const Transaction = require('../models/Transaction');
+const Message = require('../models/Message');
+const Conversation = require('../models/Conversation');
 const logger = require('../utils/logger');
 
 // ============================================
@@ -174,14 +176,14 @@ function handleStatusSubscribe(socket) {
  * @param {Object} payload - Typing event payload
  */
 function handleDirectMessageTyping(socket, io, payload) {
-  const { conversationId, recipientId } = payload || {};
+  const { conversationId, recipientId, isTyping = true } = payload || {};
   
   if (conversationId) {
-    socket.to(`dm:${conversationId}`).emit('dm:typing', {
+    socket.to(`conversation:${conversationId}`).emit('dm:typing', {
       userId: socket.userId,
       uniqueCode: socket.user.uniqueCode,
       displayName: socket.user.profile?.stageName || socket.user.profile?.companyName,
-      isTyping: true,
+      isTyping,
       timestamp: new Date().toISOString(),
     });
   } else if (recipientId) {
@@ -189,7 +191,7 @@ function handleDirectMessageTyping(socket, io, payload) {
       userId: socket.userId,
       uniqueCode: socket.user.uniqueCode,
       displayName: socket.user.profile?.stageName || socket.user.profile?.companyName,
-      isTyping: true,
+      isTyping,
       timestamp: new Date().toISOString(),
     });
   }
@@ -205,7 +207,7 @@ function handleDirectMessageStopTyping(socket, io, payload) {
   const { conversationId, recipientId } = payload || {};
   
   if (conversationId) {
-    socket.to(`dm:${conversationId}`).emit('dm:typing', {
+    socket.to(`conversation:${conversationId}`).emit('dm:typing', {
       userId: socket.userId,
       uniqueCode: socket.user.uniqueCode,
       isTyping: false,
@@ -218,6 +220,248 @@ function handleDirectMessageStopTyping(socket, io, payload) {
       isTyping: false,
       timestamp: new Date().toISOString(),
     });
+  }
+}
+
+/**
+ * Handle join conversation room
+ * @param {Object} socket - Socket.IO socket
+ * @param {Object} payload - Conversation data
+ */
+function handleJoinConversation(socket, payload) {
+  const { conversationId } = payload;
+  if (conversationId) {
+    // Leave previous conversation rooms if any
+    if (socket.currentConversation) {
+      socket.leave(`conversation:${socket.currentConversation}`);
+    }
+    socket.join(`conversation:${conversationId}`);
+    socket.currentConversation = conversationId;
+    socket.emit('conversation:joined', { conversationId, success: true });
+    logger.debug(`User ${socket.userId} joined conversation ${conversationId}`);
+  }
+}
+
+/**
+ * Handle leave conversation room
+ * @param {Object} socket - Socket.IO socket
+ * @param {Object} payload - Conversation data
+ */
+function handleLeaveConversation(socket, payload) {
+  const { conversationId } = payload;
+  if (conversationId) {
+    socket.leave(`conversation:${conversationId}`);
+    if (socket.currentConversation === conversationId) {
+      socket.currentConversation = null;
+    }
+    socket.emit('conversation:left', { conversationId, success: true });
+    logger.debug(`User ${socket.userId} left conversation ${conversationId}`);
+  }
+}
+
+/**
+ * Handle send direct message
+ * @param {Object} socket - Socket.IO socket
+ * @param {Object} io - Socket.IO server
+ * @param {Object} payload - Message payload
+ */
+async function handleSendDirectMessage(socket, io, payload) {
+  const { recipientId, message, messageType = 'text', clientMessageId } = payload;
+  
+  if (!message || !message.trim()) {
+    socket.emit('dm:error', { error: 'Message cannot be empty' });
+    return;
+  }
+  
+  if (!recipientId) {
+    socket.emit('dm:error', { error: 'Recipient ID required' });
+    return;
+  }
+  
+  try {
+    // Check for duplicate message
+    if (clientMessageId) {
+      const existing = await Message.findByClientMessageId(clientMessageId);
+      if (existing) {
+        socket.emit('dm:message-sent', {
+          messageId: existing._id,
+          clientMessageId,
+          isDuplicate: true
+        });
+        return;
+      }
+    }
+    
+    // Get or create conversation
+    const { conversation, isNew } = await Conversation.getOrCreateDirectConversation(
+      socket.userId,
+      recipientId
+    );
+    
+    // Get sender info for display
+    const senderName = socket.user.profile?.stageName || 
+                       socket.user.profile?.companyName || 
+                       socket.user.uniqueCode || 
+                       socket.user.email.split('@')[0];
+    
+    // Create message in database
+    const newMessage = await Message.createMessage({
+      conversationId: conversation._id,
+      senderId: socket.userId,
+      recipientId,
+      content: message.trim(),
+      type: messageType,
+      clientMessageId,
+      ipAddress: socket.handshake.address,
+      userAgent: socket.handshake.headers['user-agent']
+    });
+    
+    // Update conversation last message
+    await conversation.updateLastMessage({
+      content: message.trim().substring(0, 200),
+      senderId: socket.userId,
+      senderName,
+      type: messageType
+    });
+    
+    // Increment unread count for recipient
+    await conversation.incrementUnreadCount(socket.userId);
+    
+    // Get updated unread count for recipient
+    const recipientUnreadCount = await Conversation.getTotalUnreadCount(recipientId);
+    
+    // Prepare message data for emission
+    const messageData = {
+      id: newMessage._id,
+      conversationId: conversation._id,
+      content: newMessage.content,
+      senderId: socket.userId,
+      senderName,
+      type: newMessage.type,
+      status: newMessage.status,
+      createdAt: newMessage.createdAt,
+      clientMessageId
+    };
+    
+    // Emit to recipient's personal room
+    io.to(`user:${recipientId}`).emit('dm:new-message', messageData);
+    
+    // Emit to conversation room
+    io.to(`conversation:${conversation._id}`).emit('dm:message', messageData);
+    
+    // Acknowledge to sender
+    socket.emit('dm:message-sent', {
+      messageId: newMessage._id,
+      conversationId: conversation._id,
+      clientMessageId,
+      status: 'sent'
+    });
+    
+    // Send unread count update to recipient
+    io.to(`user:${recipientId}`).emit('dm:unread-update', { 
+      count: recipientUnreadCount,
+      conversationId: conversation._id
+    });
+    
+    logger.debug(`DM sent from ${socket.userId} to ${recipientId}`);
+    
+  } catch (error) {
+    logger.error('Error sending direct message:', error);
+    socket.emit('dm:error', { error: error.message || 'Failed to send message' });
+  }
+}
+
+/**
+ * Handle mark messages as read
+ * @param {Object} socket - Socket.IO socket
+ * @param {Object} io - Socket.IO server
+ * @param {Object} payload - Read receipt payload
+ */
+async function handleMarkRead(socket, io, payload) {
+  const { conversationId } = payload;
+  
+  if (!conversationId) {
+    socket.emit('dm:error', { error: 'Conversation ID required' });
+    return;
+  }
+  
+  try {
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || !conversation.isParticipant(socket.userId)) {
+      socket.emit('dm:error', { error: 'Conversation not found' });
+      return;
+    }
+    
+    // Mark all messages in conversation as read
+    await Message.markConversationRead(conversationId, socket.userId);
+    await conversation.markRead(socket.userId);
+    
+    // Get other participant
+    const otherParticipantId = conversation.participantIds.find(
+      id => id.toString() !== socket.userId
+    );
+    
+    // Notify the other participant that messages were read
+    if (otherParticipantId) {
+      io.to(`user:${otherParticipantId}`).emit('dm:read-receipt', {
+        conversationId,
+        readBy: socket.userId,
+        readAt: new Date()
+      });
+    }
+    
+    // Get updated unread count for user
+    const unreadCount = await Conversation.getTotalUnreadCount(socket.userId);
+    socket.emit('dm:unread-update', { count: unreadCount });
+    
+  } catch (error) {
+    logger.error('Error marking messages as read:', error);
+    socket.emit('dm:error', { error: 'Failed to mark as read' });
+  }
+}
+
+/**
+ * Handle message recall
+ * @param {Object} socket - Socket.IO socket
+ * @param {Object} io - Socket.IO server
+ * @param {Object} payload - Recall payload
+ */
+async function handleRecallMessage(socket, io, payload) {
+  const { messageId, reason } = payload;
+  
+  if (!messageId) {
+    socket.emit('dm:error', { error: 'Message ID required' });
+    return;
+  }
+  
+  try {
+    const message = await Message.findById(messageId);
+    if (!message) {
+      socket.emit('dm:error', { error: 'Message not found' });
+      return;
+    }
+    
+    // Only sender can recall
+    if (message.senderId.toString() !== socket.userId) {
+      socket.emit('dm:error', { error: 'You can only recall your own messages' });
+      return;
+    }
+    
+    await message.recall(reason);
+    
+    // Notify both participants
+    io.to(`conversation:${message.conversationId}`).emit('dm:message-recalled', {
+      messageId,
+      conversationId: message.conversationId,
+      recalledAt: message.recalledAt,
+      reason
+    });
+    
+    socket.emit('dm:recall-success', { messageId });
+    
+  } catch (error) {
+    logger.error('Error recalling message:', error);
+    socket.emit('dm:error', { error: error.message || 'Failed to recall message' });
   }
 }
 
@@ -354,68 +598,6 @@ function handlePlatformActivity(socket, io, payload) {
   }
 }
 
-/**
- * Handle join conversation room
- * @param {Object} socket - Socket.IO socket
- * @param {Object} payload - Conversation data
- */
-function handleJoinConversation(socket, payload) {
-  const { conversationId } = payload;
-  if (conversationId) {
-    socket.join(`dm:${conversationId}`);
-    socket.emit('conversation:joined', { conversationId, success: true });
-    logger.debug(`User ${socket.userId} joined conversation ${conversationId}`);
-  }
-}
-
-/**
- * Handle leave conversation room
- * @param {Object} socket - Socket.IO socket
- * @param {Object} payload - Conversation data
- */
-function handleLeaveConversation(socket, payload) {
-  const { conversationId } = payload;
-  if (conversationId) {
-    socket.leave(`dm:${conversationId}`);
-    socket.emit('conversation:left', { conversationId, success: true });
-    logger.debug(`User ${socket.userId} left conversation ${conversationId}`);
-  }
-}
-
-/**
- * Handle send direct message
- * @param {Object} socket - Socket.IO socket
- * @param {Object} io - Socket.IO server
- * @param {Object} payload - Message payload
- */
-async function handleSendDirectMessage(socket, io, payload) {
-  const { conversationId, recipientId, message, messageType = 'text' } = payload;
-  
-  if (!message || !message.trim()) {
-    socket.emit('dm:error', { error: 'Message cannot be empty' });
-    return;
-  }
-  
-  const messageData = {
-    id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-    from: {
-      id: socket.userId,
-      uniqueCode: socket.user.uniqueCode,
-      displayName: socket.user.profile?.stageName || socket.user.profile?.companyName,
-    },
-    message: message.trim(),
-    type: messageType,
-    timestamp: new Date().toISOString(),
-  };
-  
-  if (conversationId) {
-    io.to(`dm:${conversationId}`).emit('dm:message', messageData);
-  } else if (recipientId) {
-    io.to(`user:${recipientId}`).emit('dm:message', messageData);
-    socket.emit('dm:message', messageData);
-  }
-}
-
 // ============================================
 // Main Socket.IO Initialization
 // ============================================
@@ -440,6 +622,16 @@ function initSockets(io) {
     // Broadcast presence online
     handlePresenceOnline(socket, io);
     
+    // Send initial unread count
+    (async () => {
+      try {
+        const unreadCount = await Conversation.getTotalUnreadCount(userId);
+        socket.emit('dm:unread-update', { count: unreadCount });
+      } catch (error) {
+        logger.error('Error sending initial unread count:', error);
+      }
+    })();
+    
     // ========================================
     // Event Handlers
     // ========================================
@@ -447,10 +639,12 @@ function initSockets(io) {
     // Status subscription
     socket.on('status:subscribe', () => handleStatusSubscribe(socket));
     
-    // Direct messaging
+    // Direct messaging (UPDATED)
     socket.on('dm:typing', (payload) => handleDirectMessageTyping(socket, io, payload));
     socket.on('dm:stop-typing', (payload) => handleDirectMessageStopTyping(socket, io, payload));
     socket.on('dm:send', (payload) => handleSendDirectMessage(socket, io, payload));
+    socket.on('dm:mark-read', (payload) => handleMarkRead(socket, io, payload));
+    socket.on('dm:recall', (payload) => handleRecallMessage(socket, io, payload));
     socket.on('conversation:join', (payload) => handleJoinConversation(socket, payload));
     socket.on('conversation:leave', (payload) => handleLeaveConversation(socket, payload));
     
