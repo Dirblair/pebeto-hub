@@ -214,6 +214,7 @@
       cursor: pointer;
       font-size: 11px;
       margin-left: 10px;
+      transition: all 0.2s;
     }
     .remove-link-btn:hover {
       background: #f44336;
@@ -1364,30 +1365,50 @@
   }
 
   // ============================================
-  // SOCIAL LINKS
+  // SOCIAL LINKS WITH DELETE FUNCTIONALITY
   // ============================================
   function updateConnectedBadges() {
     const tiktokUrl = document.getElementById('tiktokUrl').value;
     const youtubeUrl = document.getElementById('youtubeUrl').value;
     const badgesDiv = document.getElementById('connectedBadges');
     let html = '';
-    if (tiktokUrl) html += `<span class="connected-badge">✓ TikTok Connected <button class="remove-link-btn" onclick="removeSocialLink('tiktok')">Remove</button></span> `;
-    if (youtubeUrl) html += `<span class="connected-badge">✓ YouTube Connected <button class="remove-link-btn" onclick="removeSocialLink('youtube')">Remove</button></span> `;
+    if (tiktokUrl) {
+      html += `<div style="display: inline-block; margin-right: 15px; margin-bottom: 10px;">
+        <span class="connected-badge">✓ TikTok Connected</span>
+        <button class="remove-link-btn" onclick="removeSocialLink('tiktok')">✗ Remove</button>
+      </div>`;
+    }
+    if (youtubeUrl) {
+      html += `<div style="display: inline-block; margin-right: 15px; margin-bottom: 10px;">
+        <span class="connected-badge">✓ YouTube Connected</span>
+        <button class="remove-link-btn" onclick="removeSocialLink('youtube')">✗ Remove</button>
+      </div>`;
+    }
     badgesDiv.innerHTML = html;
   }
 
   async function removeSocialLink(platform) {
-    if (platform === 'tiktok') document.getElementById('tiktokUrl').value = '';
-    else document.getElementById('youtubeUrl').value = '';
-    await saveSocialLinks();
+    if (platform === 'tiktok') {
+      document.getElementById('tiktokUrl').value = '';
+    } else {
+      document.getElementById('youtubeUrl').value = '';
+    }
+    
+    // Show saving indicator
+    const statusDiv = document.getElementById('socialStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'social-status info';
+    statusDiv.innerHTML = 'Removing link...';
+    
+    await saveSocialLinks(true);
   }
 
-  async function saveSocialLinks() {
+  async function saveSocialLinks(isRemoval = false) {
     let tiktokUrl = document.getElementById('tiktokUrl').value.trim();
     let youtubeUrl = document.getElementById('youtubeUrl').value.trim();
     const statusDiv = document.getElementById('socialStatus');
     
-    if (!tiktokUrl && !youtubeUrl) {
+    if (!tiktokUrl && !youtubeUrl && !isRemoval) {
       statusDiv.style.display = 'block';
       statusDiv.className = 'social-status error';
       statusDiv.innerHTML = 'Please enter at least one social media link';
@@ -1427,10 +1448,10 @@
       if (data.success) {
         statusDiv.style.display = 'block';
         statusDiv.className = 'social-status success';
-        statusDiv.innerHTML = '✓ Social links saved successfully!';
-        setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+        statusDiv.innerHTML = isRemoval ? '✓ Link removed successfully!' : '✓ Social links saved successfully!';
+        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
         updateConnectedBadges();
-        showToast('Social links saved!', 'success');
+        showToast(isRemoval ? 'Link removed!' : 'Social links saved!', 'success');
         if (currentUser) {
           currentUser.socialLinks = { tiktok: tiktokUrl, youtube: youtubeUrl };
           localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
@@ -2401,6 +2422,10 @@
       if (data.success) showToast('Verification email sent!', 'success');
       else showToast('Failed to send verification email', 'error');
     });
+  }
+
+  function openDepositModal() {
+    window.location.href = '/deposit.html';
   }
 
   // ============================================
