@@ -26,8 +26,7 @@
     body.light-theme .tabs,
     body.light-theme .modal-content,
     body.light-theme .toast,
-    body.light-theme .report-card,
-    body.light-theme .auto-release-campaign-card {
+    body.light-theme .report-card {
       background: #ffffff;
       border-color: #e0e0e0;
     }
@@ -322,7 +321,7 @@
     }
     .withdraw-btn.active { background: linear-gradient(135deg, #ff8c42, #e0662c); cursor: pointer; }
     
-    .search-box { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-box { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
     .search-box input, .search-box select {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,140,66,0.3);
@@ -507,6 +506,8 @@
         border-radius: 16px;
         border: 1px solid rgba(255,140,66,0.3);
       }
+      .search-box { flex-direction: column; }
+      .search-box input, .search-box select, .search-box button { width: 100%; }
     }
   </style>
 </head>
@@ -618,7 +619,7 @@
   <!-- DASHBOARD TAB -->
   <div id="tab-dashboard" class="tab-content active">
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-      <div class="stat-card"><h4>👥 Total Users</h4><div class="amount" id="total-users">0</div></div>
+      <div class="stat-card" onclick="loadDashboardStats()"><h4>👥 Total Users</h4><div class="amount" id="total-users">0</div></div>
       <div class="stat-card"><h4>🏢 Total Businesses</h4><div class="amount" id="total-businesses">0</div></div>
       <div class="stat-card"><h4>📢 Active Campaigns</h4><div class="amount" id="active-campaigns">0</div></div>
       <div class="stat-card"><h4>✅ Completed Campaigns</h4><div class="amount" id="completed-campaigns">0</div></div>
@@ -658,7 +659,7 @@
     </div>
   </div>
 
-  <!-- APPLICATIONS TAB - REAL DATA -->
+  <!-- APPLICATIONS TAB -->
   <div id="tab-applications" class="tab-content">
     <div class="search-box">
       <select id="application-status-filter" onchange="loadApplications()">
@@ -682,7 +683,7 @@
     </div>
   </div>
 
-  <!-- ACTIVE PROJECTS TAB - REAL DATA -->
+  <!-- ACTIVE PROJECTS TAB -->
   <div id="tab-active" class="tab-content">
     <div style="overflow-x: auto;">
       <div id="active-loading" style="display: none; text-align: center; padding: 40px;">Loading active projects...</div>
@@ -697,7 +698,7 @@
     </div>
   </div>
 
-  <!-- CREATORS TAB - REAL DATA -->
+  <!-- CREATORS TAB -->
   <div id="tab-creators" class="tab-content">
     <div class="search-box">
       <input type="text" id="creator-search" placeholder="Search by name, email, or unique code...">
@@ -719,42 +720,64 @@
     </div>
   </div>
 
-  <!-- USERS TAB -->
+  <!-- USERS TAB - FIXED -->
   <div id="tab-users" class="tab-content">
     <div class="search-box">
-      <input type="text" id="user-search" placeholder="Search by email or name..." onkeypress="if(event.key==='Enter') loadUsers()">
-      <select id="user-role-filter" onchange="loadUsers()">
+      <input type="text" id="user-search" placeholder="Search by email, name, or unique code..." onkeyup="filterUsers()">
+      <select id="user-role-filter" onchange="filterUsers()">
         <option value="all">All Roles</option>
         <option value="creator">Creators</option>
         <option value="business">Businesses</option>
         <option value="admin">Admins</option>
       </select>
-      <select id="user-status-filter" onchange="loadUsers()">
+      <select id="user-status-filter" onchange="filterUsers()">
         <option value="all">All Status</option>
         <option value="active">Active</option>
         <option value="suspended">Suspended</option>
         <option value="pending">Pending</option>
+        <option value="banned">Banned</option>
       </select>
       <button class="btn-action" onclick="loadUsers()">Search</button>
     </div>
+    
+    <!-- User Stats Summary -->
+    <div class="campaign-stats-summary" style="margin-bottom: 20px;">
+      <div class="stat-card-small">
+        <h5>👥 Total Users</h5>
+        <div class="stat-number" id="total-users-count">0</div>
+      </div>
+      <div class="stat-card-small">
+        <h5>🎨 Creators</h5>
+        <div class="stat-number" id="total-creators-count">0</div>
+      </div>
+      <div class="stat-card-small">
+        <h5>🏢 Businesses</h5>
+        <div class="stat-number" id="total-businesses-count">0</div>
+      </div>
+      <div class="stat-card-small">
+        <h5>👑 Admins</h5>
+        <div class="stat-number" id="total-admins-count">0</div>
+      </div>
+    </div>
+    
     <div style="overflow-x: auto;">
       <div id="users-loading" style="display: none; text-align: center; padding: 40px;">Loading users...</div>
       <table class="data-table" id="users-table">
         <thead>
-          <tr><th>Email</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th>
+          <tr><th>Email</th><th>Unique Code</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th>
         </thead>
         <tbody>
-          <tr><td colspan="6" class="empty-state">Loading users...<\/td><\/tr>
+          <tr><td colspan="7" class="empty-state">Loading users...<\/td><\/tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- TRANSACTIONS TAB - REAL DATA -->
+  <!-- TRANSACTIONS TAB -->
   <div id="tab-transactions" class="tab-content">
     <div class="search-box">
-      <input type="text" id="txn-search" placeholder="Search by user email or transaction ID..." onkeypress="if(event.key==='Enter') loadTransactions()">
-      <select id="txn-type-filter" onchange="loadTransactions()">
+      <input type="text" id="txn-search" placeholder="Search by user email or transaction ID..." onkeyup="filterTransactions()">
+      <select id="txn-type-filter" onchange="filterTransactions()">
         <option value="all">All Types</option>
         <option value="deposit">Deposits</option>
         <option value="withdrawal">Withdrawals</option>
@@ -762,7 +785,7 @@
         <option value="platform_fee">Platform Fees</option>
         <option value="escrow_release">Escrow Releases</option>
       </select>
-      <select id="txn-status-filter" onchange="loadTransactions()">
+      <select id="txn-status-filter" onchange="filterTransactions()">
         <option value="all">All Status</option>
         <option value="completed">Completed</option>
         <option value="pending">Pending</option>
@@ -777,14 +800,14 @@
           <tr><th>Type</th><th>From/To</th><th>Amount</th><th>Fee</th><th>Net</th><th>Status</th><th>Date</th>
         </thead>
         <tbody>
-          <tr><td colspan="7" class="empty-state">Loading transactions...<\/td><\/tr>
+          <td><td colspan="7" class="empty-state">Loading transactions...<\/td><\/tr>
         </tbody>
       </table>
     </div>
     <button class="load-more-btn" onclick="loadMoreTransactions()">Load More</button>
   </div>
 
-  <!-- WITHDRAWALS TAB - REAL DATA -->
+  <!-- WITHDRAWALS TAB -->
   <div id="tab-withdrawals" class="tab-content">
     <h3>💸 Admin Withdrawal (No fees | No daily limits)</h3>
     <div style="background: rgba(255,255,255,0.03); border-radius: 24px; padding: 24px;">
@@ -805,13 +828,13 @@
           <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th>
         </thead>
         <tbody>
-          <tr><td colspan="5" class="empty-state">Loading withdrawals...<\/td><\/tr>
+          <td><td colspan="5" class="empty-state">Loading withdrawals...<\/td><\/tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ACTIVITY LOG TAB - REAL DATA -->
+  <!-- ACTIVITY LOG TAB -->
   <div id="tab-activity" class="tab-content">
     <div class="search-box">
       <input type="text" id="activity-search" placeholder="Filter actions..." onkeyup="filterActivityLog()">
@@ -830,7 +853,7 @@
           <tr><th>Action</th><th>User</th><th>IP Address</th><th>Device</th><th>Date</th>
         </thead>
         <tbody id="activity-list">
-          <td><td colspan="5" class="empty-state">Loading activity...<\/td><\/tr>
+          <tr><td colspan="5" class="empty-state">Loading activity...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -906,7 +929,7 @@
   // VARIABLES
   // ============================================
   let selectedWithdrawMethod = 'mpesa', selectedDepositMethod = 'mpesa';
-  let notifications = [], campaigns = [], allBids = [], allTransactions = [], activeProjects = [];
+  let notifications = [], campaigns = [], allBids = [], allTransactions = [], activeProjects = [], allUsers = [];
   let currentTipCreatorId = null, currentTipCreatorName = '';
   let currentHireCreatorId = null, currentHireCreatorName = '';
   let spendingChart = null, userGrowthChart = null, revenueChart = null, campaignChart = null, feeChart = null;
@@ -928,8 +951,8 @@
   }
 
   function formatMoney(amt) { return `$${(amt || 0).toFixed(2)}`; }
-  function formatDate(date) { return new Date(date).toLocaleString(); }
-  function formatDateShort(date) { return new Date(date).toLocaleDateString(); }
+  function formatDate(dateString) { return new Date(dateString).toLocaleDateString(); }
+  function formatDateTime(dateString) { return new Date(dateString).toLocaleString(); }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.clear(); showToast('Logged out', 'success'); setTimeout(() => window.location.href = '/login.html', 500); }
   function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
@@ -950,7 +973,7 @@
   function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
   
   function toggleNotifications() { document.getElementById('notification-dropdown').classList.toggle('show'); }
-  function addNotification(msg) { notifications.unshift({ message: msg, time: new Date() }); updateNotificationBadge(); document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,5).map(n => `<div class="notification-item">${n.message}<br><small>${new Date(n.time).toLocaleString()}</small></div>`).join(''); }
+  function addNotification(msg) { notifications.unshift({ message: msg, time: new Date() }); updateNotificationBadge(); document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,5).map(n => `<div class="notification-item">${n.message}<br><small>${formatDateTime(n.time)}</small></div>`).join(''); }
   function updateNotificationBadge() { const badge = document.getElementById('notification-badge'); if (notifications.length > 0) { badge.style.display = 'flex'; badge.innerText = notifications.length > 9 ? '9+' : notifications.length; } else { badge.style.display = 'none'; } }
   
   function showActiveEscrow() { showToast(`Escrow: ${document.getElementById('total-escrow').innerText}`, 'info'); }
@@ -1075,7 +1098,7 @@
   function exportCampaigns() {
     if (campaigns.length === 0) { showToast('No campaigns to export', 'error'); return; }
     let csv = 'Title,Budget,Slots,Status,Created\n';
-    campaigns.forEach(c => { csv += `"${c.title}",${c.budget},${c.slots || 1},${c.status},${new Date(c.createdAt).toLocaleDateString()}\n`; });
+    campaigns.forEach(c => { csv += `"${c.title}",${c.budget},${c.slots || 1},${c.status},${formatDate(c.createdAt)}\n`; });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `campaigns_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
@@ -1083,7 +1106,7 @@
   }
   
   // ============================================
-  // LOAD CAMPAIGNS - REAL DATA
+  // LOAD CAMPAIGNS
   // ============================================
   async function loadCampaigns() {
     const loadingDiv = document.getElementById('campaigns-loading');
@@ -1136,7 +1159,7 @@
   }
   
   // ============================================
-  // LOAD APPLICATIONS (BIDS) - REAL DATA
+  // LOAD APPLICATIONS (BIDS)
   // ============================================
   async function loadApplications() {
     const loadingDiv = document.getElementById('applications-loading');
@@ -1176,7 +1199,7 @@
               <td>${formatMoney(b.amount)}<\/td>
               <td>${escapeHtml(b.proposal?.substring(0, 80))}${b.proposal?.length > 80 ? '...' : ''}<\/td>
               <td><span class="status-badge ${b.status === 'accepted' ? 'completed' : b.status === 'rejected' ? 'suspended' : 'pending'}">${b.status}<\/span><\/td>
-              <td>${formatDateShort(b.createdAt)}<\/td>
+              <td>${formatDate(b.createdAt)}<\/td>
               <td>
                 ${b.status === 'pending' ? `<button class="btn-action success" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve</button>
                 <button class="btn-action danger" onclick="rejectBid('${b.campaignId}','${b._id}')">Reject</button>` : '-'}
@@ -1187,7 +1210,7 @@
       }
     } catch(e) { 
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '<td><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
       console.error(e); 
     }
   }
@@ -1223,7 +1246,7 @@
   }
   
   // ============================================
-  // LOAD ACTIVE PROJECTS - REAL DATA
+  // LOAD ACTIVE PROJECTS
   // ============================================
   async function loadActiveProjects() {
     const loadingDiv = document.getElementById('active-loading');
@@ -1249,7 +1272,7 @@
               <td>${acceptedBid?.uniqueCode || 'Not assigned'}<\/td>
               <td>${workUrl !== '-' ? `<a href="${workUrl}" target="_blank" class="btn-action small">View Work</a>` : '-'}<\/td>
               <td><span class="status-badge ${c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status}<\/span><\/td>
-              <td>${c.submittedAt ? formatDateShort(c.submittedAt) : '-'}<\/td>
+              <td>${c.submittedAt ? formatDate(c.submittedAt) : '-'}<\/td>
               <td>${autoReleaseHtml}<\/td>
             <\/tr>`;
           }).join('');
@@ -1257,13 +1280,13 @@
       }
     } catch(e) { 
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '<td><td colspan="6" class="empty-state">Error loading active projects<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading active projects<\/td><\/tr>';
       console.error(e); 
     }
   }
   
   // ============================================
-  // SEARCH CREATORS - REAL DATA
+  // SEARCH CREATORS
   // ============================================
   async function searchCreators() {
     const search = document.getElementById('creator-search').value.trim();
@@ -1292,6 +1315,7 @@
               <span style="font-size: 12px;">${c.uniqueCode || ''}</span><br>
               <span style="font-size: 11px; color: #a08070;">${c.email}</span>
               ${c.profile?.niche ? `<br><span class="status-badge" style="margin-top: 5px;">${c.profile.niche}</span>` : ''}
+              ${c.socialLinks?.tiktok || c.socialLinks?.youtube ? `<br><span class="status-badge" style="margin-top: 5px;">📱 Social Connected</span>` : ''}
             </div>
             <div style="display: flex; gap: 10px;">
               <button class="btn-action" onclick="viewCreatorProfile('${c._id}')">View Profile</button>
@@ -1313,8 +1337,10 @@
   }
   
   // ============================================
-  // LOAD USERS - REAL DATA
+  // LOAD USERS - FIXED WITH REAL DATA
   // ============================================
+  let allUsersData = [];
+  
   async function loadUsers() {
     const loadingDiv = document.getElementById('users-loading');
     const tbody = document.querySelector('#users-table tbody');
@@ -1326,38 +1352,114 @@
       const status = document.getElementById('user-status-filter')?.value || 'all';
       const search = document.getElementById('user-search')?.value || '';
       
-      let url = `${API_BASE}/api/admin/users?`;
-      if (role !== 'all') url += `role=${role}&`;
-      if (status !== 'all') url += `status=${status}&`;
-      if (search) url += `search=${encodeURIComponent(search)}&`;
+      let url = `${API_BASE}/api/admin/users?limit=100`;
+      if (role !== 'all') url += `&role=${role}`;
+      if (status !== 'all') url += `&status=${status}`;
       
       const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
+      
       if (loadingDiv) loadingDiv.style.display = 'none';
       
-      if (data.success && data.data.users && data.data.users.length > 0) {
-        tbody.innerHTML = data.data.users.map(user => `
-          <tr>
-            <td>${escapeHtml(user.email)}<\/td>
-            <td><span class="status-badge">${user.role}<\/span><\/td>
-            <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}<\/span><\/td>
-            <td>${formatMoney(user.wallet?.balances?.available || 0)}<\/td>
-            <td>${formatDateShort(user.createdAt)}<\/td>
-            <td>
-              <button class="btn-action" onclick="viewUserDetails('${user._id}')">View</button>
-              <button class="btn-action ${user.status === 'active' ? 'danger' : 'success'}" onclick="toggleUserStatus('${user._id}', '${user.status}')">
-                ${user.status === 'active' ? 'Suspend' : 'Activate'}
-              </button>
-             <\/td>
+      if (data.success && data.data.users) {
+        allUsersData = data.data.users;
+        
+        // Filter by search term
+        let filteredUsers = allUsersData;
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filteredUsers = allUsersData.filter(user => 
+            user.email?.toLowerCase().includes(searchLower) ||
+            user.uniqueCode?.toLowerCase().includes(searchLower) ||
+            user.profile?.stageName?.toLowerCase().includes(searchLower) ||
+            user.profile?.companyName?.toLowerCase().includes(searchLower) ||
+            user.profile?.displayName?.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        // Update stats
+        const creators = allUsersData.filter(u => u.role === 'creator').length;
+        const businesses = allUsersData.filter(u => u.role === 'business').length;
+        const admins = allUsersData.filter(u => u.role === 'admin').length;
+        document.getElementById('total-users-count').innerText = allUsersData.length;
+        document.getElementById('total-creators-count').innerText = creators;
+        document.getElementById('total-businesses-count').innerText = businesses;
+        document.getElementById('total-admins-count').innerText = admins;
+        
+        if (filteredUsers.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your search<\/td><\/tr>';
+        } else {
+          tbody.innerHTML = filteredUsers.map(user => `
+            <tr>
+              <td>${escapeHtml(user.email)}<\/td>
+              <td>${escapeHtml(user.uniqueCode || '-')}<\/td>
+              <td><span class="status-badge">${user.role}<\/span><\/td>
+              <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}<\/span><\/td>
+              <td>${formatMoney(user.wallet?.balances?.available || 0)}<\/td>
+              <td>${formatDate(user.createdAt)}<\/td>
+              <td>
+                <button class="btn-action" onclick="viewUserDetails('${user._id}')">View</button>
+                <button class="btn-action ${user.status === 'active' ? 'danger' : 'success'}" onclick="toggleUserStatus('${user._id}', '${user.status}')">
+                  ${user.status === 'active' ? 'Suspend' : 'Activate'}
+                </button>
+               <\/td>
            \`
-        `).join('');
+          `).join('');
+        }
       } else {
-        tbody.innerHTML = '<table><td colspan="6" class="empty-state">No users found<\/td><\/tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found<\/td><\/tr>';
       }
     } catch(e) {
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading users<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading users<\/td><\/tr>';
       console.error(e);
+    }
+  }
+  
+  function filterUsers() {
+    const searchTerm = document.getElementById('user-search').value.toLowerCase();
+    const tbody = document.querySelector('#users-table tbody');
+    const role = document.getElementById('user-role-filter')?.value || 'all';
+    const status = document.getElementById('user-status-filter')?.value || 'all';
+    
+    let filtered = [...allUsersData];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.email?.toLowerCase().includes(searchTerm) ||
+        user.uniqueCode?.toLowerCase().includes(searchTerm) ||
+        user.profile?.stageName?.toLowerCase().includes(searchTerm) ||
+        user.profile?.companyName?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    if (role !== 'all') {
+      filtered = filtered.filter(user => user.role === role);
+    }
+    
+    if (status !== 'all') {
+      filtered = filtered.filter(user => user.status === status);
+    }
+    
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your filters<\/td><\/tr>';
+    } else {
+      tbody.innerHTML = filtered.map(user => `
+        <tr>
+          <td>${escapeHtml(user.email)}<\/td>
+          <td>${escapeHtml(user.uniqueCode || '-')}<\/td>
+          <td><span class="status-badge">${user.role}<\/span><\/td>
+          <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}<\/span><\/td>
+          <td>${formatMoney(user.wallet?.balances?.available || 0)}<\/td>
+          <td>${formatDate(user.createdAt)}<\/td>
+          <td>
+            <button class="btn-action" onclick="viewUserDetails('${user._id}')">View</button>
+            <button class="btn-action ${user.status === 'active' ? 'danger' : 'success'}" onclick="toggleUserStatus('${user._id}', '${user.status}')">
+              ${user.status === 'active' ? 'Suspend' : 'Activate'}
+            </button>
+           <\/td>
+       \`
+      `).join('');
     }
   }
   
@@ -1374,8 +1476,8 @@
           <p><strong>Status:</strong> ${user.status}</p>
           <p><strong>Unique Code:</strong> ${user.uniqueCode || 'N/A'}</p>
           <p><strong>Display Name:</strong> ${user.profile?.stageName || user.profile?.companyName || user.profile?.displayName || 'N/A'}</p>
-          <p><strong>Joined:</strong> ${formatDate(user.createdAt)}</p>
-          <p><strong>Last Login:</strong> ${user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}</p>
+          <p><strong>Joined:</strong> ${formatDateTime(user.createdAt)}</p>
+          <p><strong>Last Login:</strong> ${user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'}</p>
         `;
         document.getElementById('user-modal').style.display = 'flex';
       }
@@ -1399,7 +1501,7 @@
   }
   
   // ============================================
-  // LOAD TRANSACTIONS - REAL DATA
+  // LOAD TRANSACTIONS
   // ============================================
   async function loadTransactions(reset = true) {
     if (reset) { transactionPage = 1; transactionHasMore = true; }
@@ -1443,7 +1545,7 @@
               <td>${formatMoney(t.feeAmount)}<\/td>
               <td>${formatMoney(t.netAmount)}<\/td>
               <td><span class="status-badge ${t.status === 'completed' ? 'active' : t.status === 'failed' ? 'suspended' : 'pending'}">${t.status}<\/span><\/td>
-              <td>${formatDate(t.createdAt)}<\/td>
+              <td>${formatDateTime(t.createdAt)}<\/td>
             <\/tr>
           `).join('');
         }
@@ -1455,10 +1557,11 @@
     }
   }
   
+  function filterTransactions() { loadTransactions(true); }
   function loadMoreTransactions() { transactionPage++; loadTransactions(false); }
   
   // ============================================
-  // LOAD ADMIN WITHDRAWALS - REAL DATA
+  // LOAD ADMIN WITHDRAWALS
   // ============================================
   async function loadAdminWithdrawals() {
     const loadingDiv = document.getElementById('withdrawals-loading');
@@ -1477,7 +1580,7 @@
         } else {
           tbody.innerHTML = data.data.history.map(w => `
             <tr>
-              <td>${formatDate(w.createdAt)}<\/td>
+              <td>${formatDateTime(w.createdAt)}<\/td>
               <td>${formatMoney(w.grossAmount)}<\/td>
               <td>${w.metadata?.payoutMethod || '-'}<\/td>
               <td><span class="status-badge ${w.status === 'completed' ? 'active' : ''}">${w.status}<\/span><\/td>
@@ -1488,13 +1591,13 @@
       }
     } catch(e) { 
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error loading withdrawals<\/td><\/tr>';
+      tbody.innerHTML = '</table><td colspan="5" class="empty-state">Error loading withdrawals<\/td><\/tr>';
       console.error(e); 
     }
   }
   
   // ============================================
-  // LOAD ACTIVITY LOG - REAL DATA
+  // LOAD ACTIVITY LOG
   // ============================================
   async function loadActivityLog() {
     const loadingDiv = document.getElementById('activity-loading');
@@ -1519,7 +1622,7 @@
               <td>${a.fromUserId?.email || a.toUserId?.email || 'System'}<\/td>
               <td>${a.metadata?.ipAddress || '-'}<\/td>
               <td>${a.metadata?.userAgent || '-'}<\/td>
-              <td>${formatDate(a.createdAt)}<\/td>
+              <td>${formatDateTime(a.createdAt)}<\/td>
             <\/tr>
           `).join('');
         }
@@ -1560,7 +1663,7 @@
   function removeTeamMember(email) { teamMembers = teamMembers.filter(m => m.email !== email); showToast('Member removed', 'success'); loadTeamMembers(); }
   
   // ============================================
-  // API KEYS - REAL DATA
+  // API KEYS
   // ============================================
   async function loadApiKeys() {
     try {
@@ -1576,7 +1679,7 @@
               <div>
                 <strong>${escapeHtml(key.name)}</strong>
                 <code style="display: block; font-size: 11px; color: #a08070; margin-top: 5px;">${key.key}</code>
-                <small>Created: ${formatDateShort(key.createdAt)}</small>
+                <small>Created: ${formatDate(key.createdAt)}</small>
               </div>
               <div>
                 <button class="btn-action small" onclick="copyApiKey('${key.key}')">Copy</button>
@@ -1660,7 +1763,7 @@
             <div><strong>Business:</strong> ${escapeHtml(c.businessEmail)}</div>
             <div><strong>Creator:</strong> ${escapeHtml(c.creatorName || c.creatorEmail)}</div>
             <div><strong>Amount:</strong> ${formatMoney(c.amount)}</div>
-            <div><strong>Deadline:</strong> ${formatDate(c.autoReleaseDeadline)}</div>
+            <div><strong>Deadline:</strong> ${formatDateTime(c.autoReleaseDeadline)}</div>
             <div class="report-actions"><button class="btn-action success" onclick="viewCampaignDetails('${c._id}')">View Campaign</button><button class="btn-action" onclick="contactBusiness('${c.businessId}')">Contact Business</button></div>
           </div>
         `).join('');
@@ -1691,7 +1794,7 @@
               <div><strong>Reporter:</strong> ${escapeHtml(r.reporterId?.email || 'Anonymous')}</div>
               <div><strong>Target Type:</strong> ${r.targetType}</div>
               <div class="report-description">${escapeHtml(r.description || 'No additional description')}</div>
-              <div><strong>Submitted:</strong> ${formatDate(r.createdAt)}</div>
+              <div><strong>Submitted:</strong> ${formatDateTime(r.createdAt)}</div>
               <div class="report-actions"><button class="btn-action" onclick="openResolveReportModal('${r._id}', '${escapeHtml(r.reportedUserId?.profile?.stageName || r.reportedUserId?.profile?.companyName || r.reportedUserId?.email || 'User')}')">Resolve</button><button class="btn-action danger" onclick="dismissReport('${r._id}')">Dismiss</button><button class="btn-action" onclick="viewReportDetails('${r._id}')">View Details</button></div>
             </div>
           `).join('');
@@ -1736,10 +1839,10 @@
       else { showToast(data.message || 'Failed to dismiss report', 'error'); }
     } catch(e) { showToast('Error dismissing report', 'error'); }
   }
-  function viewReportDetails(reportId) { const report = reports.find(r => r._id === reportId); if (report) { alert(`Report Details:\n\nReason: ${report.reasonLabel}\nDescription: ${report.description || 'N/A'}\nStatus: ${report.status}\nSubmitted: ${formatDate(report.createdAt)}`); } }
+  function viewReportDetails(reportId) { const report = reports.find(r => r._id === reportId); if (report) { alert(`Report Details:\n\nReason: ${report.reasonLabel}\nDescription: ${report.description || 'N/A'}\nStatus: ${report.status}\nSubmitted: ${formatDateTime(report.createdAt)}`); } }
   
   // ============================================
-  // CHART FUNCTIONS - REAL DATA
+  // CHART FUNCTIONS
   // ============================================
   async function loadSpendingChart() {
     try {
