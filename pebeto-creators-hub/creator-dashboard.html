@@ -220,7 +220,7 @@
       color: white;
     }
     
-    /* Google Drive Section Styles (NEW) */
+    /* Google Drive Section Styles */
     .drive-section {
       background: linear-gradient(135deg, rgba(255,140,66,0.08), rgba(0,0,0,0.2));
       border: 1px solid rgba(255,140,66,0.2);
@@ -289,7 +289,7 @@
       border-radius: 12px;
     }
     
-    /* Auto-Release Status Styles (NEW) */
+    /* Auto-Release Status Styles */
     .auto-release-status {
       background: rgba(255,255,255,0.03);
       border-radius: 12px;
@@ -367,6 +367,8 @@
       font-size: 12px;
       display: inline-block;
     }
+    .status-badge.active { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .status-badge.warning { background: rgba(255,152,0,0.2); color: #ff9800; }
     .btn-action {
       background: #ff8c42;
       border: none;
@@ -785,7 +787,7 @@
     <div id="connectedBadges" style="margin-top: 10px;"></div>
   </div>
 
-  <!-- NEW: Google Drive Section -->
+  <!-- Google Drive Section -->
   <div class="drive-section">
     <h3><i class="ri-google-drive-line"></i> Google Drive Integration</h3>
     <p>Connect your Google Drive to upload private video submissions for campaigns. Videos are stored in YOUR Drive, not on our servers.</p>
@@ -820,6 +822,7 @@
   <div class="earnings-chart-container">
     <h4>📈 Earnings Overview (Last 30 Days)</h4>
     <canvas id="earnings-chart" style="height: 200px;"></canvas>
+    <div id="earnings-chart-loading" class="spinner" style="display: none;"></div>
   </div>
 
   <div class="stats-row">
@@ -923,7 +926,7 @@
       <div style="margin-top: 20px;">
         <h4>📋 Recent Tips Received</h4>
         <div id="tips-list" style="max-height: 300px; overflow-y: auto;">
-          <div class="loading-spinner">Loading tips...</div>
+          <div class="empty-state">Loading tips...</div>
         </div>
       </div>
     </div>
@@ -944,12 +947,11 @@
   <!-- Activity Log Tab -->
   <div id="tab-activity" class="tab-content">
     <div style="overflow-x: auto;">
+      <div id="activity-loading" class="spinner" style="display: none;"></div>
       <table class="data-table">
-        <thead>
-          <tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th>
-        </thead>
+        <thead><tr><th>Action</th><th>IP Address</th><th>Device</th><th>Date</th></tr></thead>
         <tbody id="activity-list">
-          <tr><td colspan="4">Loading activity...<\/td><\/tr>
+          <tr><td colspan="4" class="empty-state">Loading activity...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -983,9 +985,7 @@
   <div id="tab-withdrawals" class="tab-content">
     <div style="overflow-x: auto;">
       <table class="data-table">
-        <thead>
-          <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th>
-        </thead>
+        <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th></tr></thead>
         <tbody id="withdrawals-list">
           <tr><td colspan="5">Loading withdrawals...<\/td><\/tr>
         </tbody>
@@ -1015,7 +1015,7 @@
       <div style="margin-top: 20px;">
         <h4>📋 Your Referrals</h4>
         <div id="referrals-list" style="max-height: 200px; overflow-y: auto;">
-          <div class="loading-spinner">Loading referrals...</div>
+          <div class="empty-state">Loading referrals...</div>
         </div>
       </div>
     </div>
@@ -1137,7 +1137,6 @@
   </div>
 </div>
 
-<!-- NEW: Submit Work Modal with Google Drive -->
 <div id="submit-work-modal" class="modal">
   <div class="modal-content">
     <h3>📤 Submit Work</h3>
@@ -1179,7 +1178,7 @@
   let ws = null;
   let earningsChart = null;
   
-  // NEW: Google Drive variables
+  // Google Drive variables
   let isDriveConnected = false;
   let currentDriveFile = null;
   let currentSubmitCampaign = null;
@@ -1199,6 +1198,14 @@
   function formatMoney(amount, currency = 'USD') { 
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount || 0); 
   }
+  
+  function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString();
+  }
+  
+  function formatDateTime(dateString) {
+    return new Date(dateString).toLocaleString();
+  }
 
   function escapeHtml(str) { 
     if (!str) return ''; 
@@ -1208,6 +1215,28 @@
       if (m === '>') return '&gt;'; 
       return m; 
     }); 
+  }
+
+  function validateMpesaPhone(phone) {
+    const cleaned = phone.replace(/\D/g, '');
+    const regex = /^(07|01|2547|2541)\d{8}$/;
+    const regex2 = /^\d{9}$/;
+    return regex.test(cleaned) || regex2.test(cleaned);
+  }
+
+  function isValidUrl(url, platform) {
+    if (!url) return true;
+    try {
+      const urlObj = new URL(url);
+      if (platform === 'tiktok') {
+        return urlObj.hostname.includes('tiktok.com') && url.includes('@');
+      } else if (platform === 'youtube') {
+        return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
+      }
+      return true;
+    } catch(e) {
+      return false;
+    }
   }
 
   function closeModal(id) { 
@@ -1224,222 +1253,6 @@
     const token = localStorage.getItem('pebeto_token');
     const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '', ...options.headers } });
     return res.json();
-  }
-
-  // ============================================
-  // GOOGLE DRIVE FUNCTIONS (NEW)
-  // ============================================
-  
-  async function checkDriveStatus() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/drive/status`);
-      if (data.success) {
-        isDriveConnected = data.data.isConnected && data.data.isValid;
-        const driveDiv = document.getElementById('driveStatus');
-        const uploadArea = document.getElementById('driveUploadArea');
-        
-        if (isDriveConnected) {
-          driveDiv.className = 'drive-status connected';
-          document.getElementById('driveStatusText').innerHTML = `✅ Connected ${data.data.quota ? `| Free: ${data.data.quota.freeGB} GB` : ''}`;
-          if (uploadArea) uploadArea.style.display = 'block';
-        } else {
-          driveDiv.className = 'drive-status disconnected';
-          document.getElementById('driveStatusText').innerHTML = 'Not connected';
-          if (uploadArea) uploadArea.style.display = 'none';
-        }
-      }
-    } catch (error) {
-      console.error('Error checking Drive status:', error);
-    }
-  }
-
-  function connectGoogleDrive() {
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      showToast('Please log in first', 'error');
-      return;
-    }
-    window.location.href = `${API_BASE}/api/drive/auth`;
-  }
-
-  async function disconnectGoogleDrive() {
-    if (!confirm('Disconnect Google Drive? You will need to reconnect to upload videos.')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      await fetch(`${API_BASE}/api/drive/disconnect`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-      showToast('Google Drive disconnected', 'success');
-      checkDriveStatus();
-    } catch (error) {
-      showToast('Failed to disconnect', 'error');
-    }
-  }
-
-  // File upload handlers
-  document.getElementById('driveFileInput')?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    await uploadToDrive(file);
-  });
-
-  document.getElementById('submitDriveFileInput')?.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      currentDriveFile = file;
-      document.getElementById('submitFileName').innerHTML = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-    }
-  });
-
-  async function uploadToDrive(file, campaignId) {
-    if (!isDriveConnected) {
-      showToast('Please connect Google Drive first', 'error');
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('video', file);
-    if (campaignId) formData.append('campaignId', campaignId);
-    
-    const progressDiv = document.getElementById('uploadProgress');
-    const progressFill = document.getElementById('uploadProgressFill');
-    const progressText = document.getElementById('uploadProgressText');
-    
-    progressDiv.style.display = 'block';
-    progressFill.style.width = '0%';
-    
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${API_BASE}/api/drive/upload`);
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percent = (e.loaded / e.total) * 100;
-          progressFill.style.width = percent + '%';
-          progressText.innerHTML = `Uploading: ${Math.round(percent)}%`;
-        }
-      };
-      
-      const result = await new Promise((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            resolve(JSON.parse(xhr.response));
-          } else {
-            reject(new Error('Upload failed'));
-          }
-        };
-        xhr.onerror = () => reject(new Error('Network error'));
-        xhr.send(formData);
-      });
-      
-      progressDiv.style.display = 'none';
-      
-      if (result.success) {
-        showToast('Video uploaded to Google Drive!', 'success');
-        return result.data;
-      } else {
-        showToast(result.message || 'Upload failed', 'error');
-        return null;
-      }
-    } catch (error) {
-      progressDiv.style.display = 'none';
-      showToast('Upload failed', 'error');
-      return null;
-    }
-  }
-
-  // ============================================
-  // SUBMIT WORK WITH GOOGLE DRIVE (NEW)
-  // ============================================
-  
-  async function submitWorkWithDrive() {
-    if (!currentSubmitCampaign) {
-      showToast('No campaign selected', 'error');
-      return;
-    }
-    
-    if (!currentDriveFile) {
-      showToast('Please select a video file first', 'error');
-      return;
-    }
-    
-    showToast('Uploading video to Google Drive...', 'info');
-    
-    const uploadResult = await uploadToDrive(currentDriveFile, currentSubmitCampaign._id);
-    if (!uploadResult) return;
-    
-    // Mark work as completed with Drive file
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const response = await fetch(`${API_BASE}/api/campaigns/${currentSubmitCampaign._id}/creator-complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          driveFileId: uploadResult.fileId,
-          driveFileUrl: uploadResult.fileUrl,
-          fileName: uploadResult.fileName
-        })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        showToast('Work submitted! 7-day countdown started.', 'success');
-        closeModal('submit-work-modal');
-        loadCampaigns();
-        currentDriveFile = null;
-        document.getElementById('submitFileName').innerHTML = '';
-        document.getElementById('submitDriveFileInput').value = '';
-      } else {
-        showToast(data.message || 'Submission failed', 'error');
-      }
-    } catch (error) {
-      showToast('Error submitting work', 'error');
-    }
-  }
-
-  function openSubmitWorkModal(campaign) {
-    if (!isDriveConnected) {
-      showToast('Please connect Google Drive first to upload videos', 'error');
-      connectGoogleDrive();
-      return;
-    }
-    currentSubmitCampaign = campaign;
-    document.getElementById('submit-campaign-name').innerHTML = `<strong>${escapeHtml(campaign.title)}</strong>`;
-    document.getElementById('submit-work-modal').style.display = 'flex';
-  }
-
-  // ============================================
-  // AUTO-RELEASE STATUS HELPER (NEW)
-  // ============================================
-  
-  async function getAutoReleaseStatus(campaignId) {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/campaigns/${campaignId}/auto-release-status`);
-      if (data.success && data.data.creatorWorkCompleted && !data.data.businessWorkApproved) {
-        const days = data.data.daysRemaining;
-        const hours = data.data.hoursRemaining;
-        let statusClass = 'auto-release-normal';
-        let statusText = '';
-        
-        if (days <= 1 && days > 0) {
-          statusClass = 'auto-release-urgent';
-          statusText = `⚠️ Funds will auto-release in ${days} day${days !== 1 ? 's' : ''}!`;
-        } else if (days <= 3 && days > 0) {
-          statusClass = 'auto-release-warning';
-          statusText = `⏰ Auto-release in ${days} days`;
-        } else if (days > 0) {
-          statusText = `⏳ Auto-release in ${days} days`;
-        } else if (data.data.isExpired) {
-          statusClass = 'auto-release-urgent';
-          statusText = `🔴 Auto-release pending!`;
-        }
-        
-        return { statusClass, statusText, days, hours };
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
   }
 
   // ============================================
@@ -1467,6 +1280,11 @@
           showToast(`✅ Work approved! Payment released for "${data.campaignTitle}"`, 'success');
           loadCampaigns();
           loadWallet();
+        }
+        if (data.type === 'campaign:auto-release-warning') {
+          showToast(`⚠️ URGENT: "${data.campaignTitle}" will auto-release in ${data.daysRemaining} days!`, 'warning');
+          addNotification(`⚠️ AUTO-RELEASE WARNING: "${data.campaignTitle}" - ${data.daysRemaining} days remaining`);
+          loadCampaigns();
         }
       };
       ws.onclose = () => setTimeout(connectWebSocket, 5000);
@@ -1502,7 +1320,7 @@
     dropdown.innerHTML = notifications.slice(0, 10).map(n => `
       <div class="notification-item" onclick="markNotificationRead(this)">
         <div><strong>${n.message}</strong></div>
-        <small style="color: #a08070;">${new Date(n.time).toLocaleString()}</small>
+        <small style="color: #a08070;">${formatDateTime(n.time)}</small>
       </div>
     `).join('');
   }
@@ -1577,15 +1395,35 @@
       return;
     }
     
+    if (tiktokUrl && !isValidUrl(tiktokUrl, 'tiktok')) {
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'social-status error';
+      statusDiv.innerHTML = 'Please enter a valid TikTok URL (e.g., https://www.tiktok.com/@username)';
+      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+      return;
+    }
+    
+    if (youtubeUrl && !isValidUrl(youtubeUrl, 'youtube')) {
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'social-status error';
+      statusDiv.innerHTML = 'Please enter a valid YouTube URL (e.g., https://www.youtube.com/@channelname)';
+      setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('pebeto_token');
       const response = await fetch(`${API_BASE}/api/creator/social-links`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ tiktokUrl, youtubeUrl })
       });
       
       const data = await response.json();
+      
       if (data.success) {
         statusDiv.style.display = 'block';
         statusDiv.className = 'social-status success';
@@ -1777,7 +1615,7 @@
       if (data.success && data.data?.transactions) {
         allTransactions = data.data.transactions;
         document.getElementById('txn-count').innerText = allTransactions.length;
-        document.getElementById('txn-list').innerHTML = allTransactions.map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span>${new Date(t.createdAt).toLocaleDateString()}</span></div>`).join('');
+        document.getElementById('txn-list').innerHTML = allTransactions.map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${t.type}</span><span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span><span>${formatDate(t.createdAt)}</span></div>`).join('');
       } else {
         document.getElementById('txn-list').innerHTML = 'No transactions found';
       }
@@ -1798,7 +1636,7 @@
     }
     let csv = 'Type,Amount,Date,Status,Payment Method\n';
     allTransactions.forEach(t => {
-      csv += `${t.type},${t.grossAmount},${new Date(t.createdAt).toLocaleString()},${t.status},${t.paymentMethod || '-'}\n`;
+      csv += `${t.type},${t.grossAmount},${formatDate(t.createdAt)},${t.status},${t.paymentMethod || '-'}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -1815,17 +1653,19 @@
   // ============================================
   async function loadEarningsChart() {
     try {
+      document.getElementById('earnings-chart-loading').style.display = 'inline-block';
       const data = await fetchJSON(`${API_BASE}/api/wallet/earnings?days=30`);
+      document.getElementById('earnings-chart-loading').style.display = 'none';
       if (data.success && data.earnings) {
         const ctx = document.getElementById('earnings-chart').getContext('2d');
         if (earningsChart) earningsChart.destroy();
         earningsChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            labels: data.labels || [],
             datasets: [{
               label: 'Earnings ($)',
-              data: data.earnings || [0, 0, 0, 0],
+              data: data.earnings || [],
               borderColor: '#ff8c42',
               backgroundColor: 'rgba(255,140,66,0.1)',
               fill: true,
@@ -1834,8 +1674,14 @@
           },
           options: { responsive: true, maintainAspectRatio: true }
         });
+      } else {
+        document.getElementById('earnings-chart').style.display = 'none';
+        document.getElementById('earnings-chart-loading').innerHTML = 'No earnings data available';
       }
-    } catch(e) { console.error('Error loading earnings chart:', e); }
+    } catch(e) { 
+      console.error('Error loading earnings chart:', e);
+      document.getElementById('earnings-chart-loading').style.display = 'none';
+    }
   }
 
   // ============================================
@@ -1844,17 +1690,18 @@
   async function loadTipsReceived() {
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/creator/tips`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/wallet/transactions?type=tip&limit=50`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
-      if (data.success && data.tips) {
+      if (data.success && data.data?.transactions) {
+        const tips = data.data.transactions.filter(t => t.type === 'tip' && t.toUserId === currentUser?._id);
         const tipsList = document.getElementById('tips-list');
-        if (data.tips.length === 0) {
+        if (tips.length === 0) {
           tipsList.innerHTML = '<div class="empty-state">No tips received yet</div>';
         } else {
-          tipsList.innerHTML = data.tips.map(t => `
+          tipsList.innerHTML = tips.map(t => `
             <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
-              <span><strong>${formatMoney(t.amount)}</strong> from ${escapeHtml(t.fromUser?.email || 'Anonymous')}</span>
-              <span style="font-size:12px;">${new Date(t.createdAt).toLocaleString()}</span>
+              <span><strong>${formatMoney(t.netAmount)}</strong> from ${escapeHtml(t.fromUserId?.email || 'Anonymous')}</span>
+              <span style="font-size:12px;">${formatDateTime(t.createdAt)}</span>
             </div>
           `).join('');
         }
@@ -1877,12 +1724,12 @@
         } else {
           withdrawalsList.innerHTML = data.withdrawals.map(w => `
             <tr>
-              <td>${new Date(w.createdAt).toLocaleDateString()}</td>
-              <td style="color:#ff8c42;">${formatMoney(w.grossAmount)}</td>
-              <td><span class="status-badge">${w.payoutMethod}</span></td>
-              <td><span class="status-badge ${w.status === 'completed' ? 'active' : ''}">${w.status}</span></td>
-              <td>${w.reference || '-'}</td>
-            </tr>
+              <td>${formatDate(w.createdAt)}<\/td>
+              <td style="color:#ff8c42;">${formatMoney(w.grossAmount)}<\/td>
+              <td><span class="status-badge">${w.payoutMethod}</span><\/td>
+              <td><span class="status-badge ${w.status === 'completed' ? 'active' : ''}">${w.status}</span><\/td>
+              <td>${w.reference || '-'}<\/td>
+            <\/tr>
           `).join('');
         }
       }
@@ -1907,7 +1754,7 @@
           referralsList.innerHTML = data.referrals.map(r => `
             <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
               <span>${escapeHtml(r.email)}</span>
-              <span style="font-size:12px;">Joined: ${new Date(r.createdAt).toLocaleDateString()}</span>
+              <span style="font-size:12px;">Joined: ${formatDate(r.createdAt)}</span>
             </div>
           `).join('');
         } else {
@@ -1936,7 +1783,7 @@
         document.getElementById('active-sessions').innerHTML = data.sessions.map(s => `
           <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
             <span>${s.device || 'Unknown device'}</span>
-            <span style="float: right;">${new Date(s.lastActive).toLocaleString()}</span>
+            <span style="float: right;">${formatDateTime(s.lastActive)}</span>
           </div>
         `).join('') || '<div>No active sessions</div>';
       }
@@ -1970,10 +1817,10 @@
             const autoRelease = await getAutoReleaseStatus(p._id);
             const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr onclick="showProjectDetails('${p._id}')">
-              <td>${escapeHtml(p.title)}</td>
-              <td>${formatMoney(p.budget)}</td>
-              <td><span class="status-badge">In Progress</span>${statusHtml}</td>
-              <td><button class="btn-action small" onclick="event.stopPropagation(); openSubmitWorkModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">Submit Work</button></td>
+              <td>${escapeHtml(p.title)}<\/td>
+              <td>${formatMoney(p.budget)}<\/td>
+              <td><span class="status-badge">In Progress</span>${statusHtml}<\/td>
+              <td><button class="btn-action small" onclick="event.stopPropagation(); openSubmitWorkModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">Submit Work</button><\/td>
             <\/tr>`;
           }));
         }
@@ -1986,21 +1833,21 @@
             const autoRelease = await getAutoReleaseStatus(p._id);
             const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr onclick="showProjectDetails('${p._id}')">
-              <td>${escapeHtml(p.title)}</td>
-              <td>${formatMoney(p.budget)}</td>
-              <td>${new Date(p.submittedAt || p.updatedAt).toLocaleDateString()}</td>
-              <td><span class="status-badge">Under Review</span>${statusHtml}</td>
-              <td>Waiting for business approval</td>
+              <td>${escapeHtml(p.title)}<\/td>
+              <td>${formatMoney(p.budget)}<\/td>
+              <td>${p.submittedAt ? formatDate(p.submittedAt) : '-'}<\/td>
+              <td><span class="status-badge warning">Under Review</span>${statusHtml}<\/td>
+              <td>Waiting for business approval<\/td>
             <\/tr>`;
           }));
         }
         
         // Render Completed Projects
         document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works<\/td><\/tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')">
-          <td>${escapeHtml(p.title)}</td>
-          <td>${formatMoney(p.budget)}</td>
-          <td>${new Date(p.paidAt || p.updatedAt).toLocaleDateString()}</td>
-          <td><span class="status-badge">Paid ✅</span></td>
+          <td>${escapeHtml(p.title)}<\/td>
+          <td>${formatMoney(p.budget)}<\/td>
+          <td>${p.paidAt ? formatDate(p.paidAt) : formatDate(p.updatedAt)}<\/td>
+          <td><span class="status-badge active">Paid ✅<\/span><\/td>
         <\/tr>`).join('');
         
         showTableWithSkeleton('active-table', 'active-skeleton', active.length > 0);
@@ -2061,6 +1908,220 @@
   }
 
   // ============================================
+  // AUTO-RELEASE STATUS HELPER
+  // ============================================
+  async function getAutoReleaseStatus(campaignId) {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/campaigns/${campaignId}/auto-release-status`);
+      if (data.success && data.data.creatorWorkCompleted && !data.data.businessWorkApproved) {
+        const days = data.data.daysRemaining;
+        const hours = data.data.hoursRemaining;
+        let statusClass = 'auto-release-normal';
+        let statusText = '';
+        
+        if (days <= 1 && days > 0) {
+          statusClass = 'auto-release-urgent';
+          statusText = `⚠️ Funds will auto-release in ${days} day${days !== 1 ? 's' : ''}!`;
+        } else if (days <= 3 && days > 0) {
+          statusClass = 'auto-release-warning';
+          statusText = `⏰ Auto-release in ${days} days`;
+        } else if (days > 0) {
+          statusText = `⏳ Auto-release in ${days} days`;
+        } else if (data.data.isExpired) {
+          statusClass = 'auto-release-urgent';
+          statusText = `🔴 Auto-release pending!`;
+        }
+        
+        return { statusClass, statusText, days, hours };
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // ============================================
+  // GOOGLE DRIVE FUNCTIONS
+  // ============================================
+  
+  async function checkDriveStatus() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/drive/status`);
+      if (data.success) {
+        isDriveConnected = data.data.isConnected && data.data.isValid;
+        const driveDiv = document.getElementById('driveStatus');
+        const uploadArea = document.getElementById('driveUploadArea');
+        
+        if (isDriveConnected) {
+          driveDiv.className = 'drive-status connected';
+          document.getElementById('driveStatusText').innerHTML = `✅ Connected ${data.data.quota ? `| Free: ${data.data.quota.freeGB} GB` : ''}`;
+          if (uploadArea) uploadArea.style.display = 'block';
+        } else {
+          driveDiv.className = 'drive-status disconnected';
+          document.getElementById('driveStatusText').innerHTML = 'Not connected';
+          if (uploadArea) uploadArea.style.display = 'none';
+        }
+      }
+    } catch (error) {
+      console.error('Error checking Drive status:', error);
+    }
+  }
+
+  function connectGoogleDrive() {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      showToast('Please log in first', 'error');
+      return;
+    }
+    window.location.href = `${API_BASE}/api/drive/auth`;
+  }
+
+  async function disconnectGoogleDrive() {
+    if (!confirm('Disconnect Google Drive? You will need to reconnect to upload videos.')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      await fetch(`${API_BASE}/api/drive/disconnect`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      showToast('Google Drive disconnected', 'success');
+      checkDriveStatus();
+    } catch (error) {
+      showToast('Failed to disconnect', 'error');
+    }
+  }
+
+  // File upload handlers
+  document.getElementById('driveFileInput')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    await uploadToDrive(file);
+  });
+
+  document.getElementById('submitDriveFileInput')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      currentDriveFile = file;
+      document.getElementById('submitFileName').innerHTML = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    }
+  });
+
+  async function uploadToDrive(file, campaignId) {
+    if (!isDriveConnected) {
+      showToast('Please connect Google Drive first', 'error');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('video', file);
+    if (campaignId) formData.append('campaignId', campaignId);
+    
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    
+    progressDiv.style.display = 'block';
+    progressFill.style.width = '0%';
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}/api/drive/upload`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = (e.loaded / e.total) * 100;
+          progressFill.style.width = percent + '%';
+          progressText.innerHTML = `Uploading: ${Math.round(percent)}%`;
+        }
+      };
+      
+      const result = await new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve(JSON.parse(xhr.response));
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(formData);
+      });
+      
+      progressDiv.style.display = 'none';
+      
+      if (result.success) {
+        showToast('Video uploaded to Google Drive!', 'success');
+        return result.data;
+      } else {
+        showToast(result.message || 'Upload failed', 'error');
+        return null;
+      }
+    } catch (error) {
+      progressDiv.style.display = 'none';
+      showToast('Upload failed', 'error');
+      return null;
+    }
+  }
+
+  // ============================================
+  // SUBMIT WORK WITH GOOGLE DRIVE
+  // ============================================
+  
+  async function submitWorkWithDrive() {
+    if (!currentSubmitCampaign) {
+      showToast('No campaign selected', 'error');
+      return;
+    }
+    
+    if (!currentDriveFile) {
+      showToast('Please select a video file first', 'error');
+      return;
+    }
+    
+    showToast('Uploading video to Google Drive...', 'info');
+    
+    const uploadResult = await uploadToDrive(currentDriveFile, currentSubmitCampaign._id);
+    if (!uploadResult) return;
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch(`${API_BASE}/api/campaigns/${currentSubmitCampaign._id}/creator-complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          driveFileId: uploadResult.fileId,
+          driveFileUrl: uploadResult.fileUrl,
+          fileName: uploadResult.fileName
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        showToast('Work submitted! 7-day countdown started.', 'success');
+        closeModal('submit-work-modal');
+        loadCampaigns();
+        currentDriveFile = null;
+        document.getElementById('submitFileName').innerHTML = '';
+        document.getElementById('submitDriveFileInput').value = '';
+      } else {
+        showToast(data.message || 'Submission failed', 'error');
+      }
+    } catch (error) {
+      showToast('Error submitting work', 'error');
+    }
+  }
+
+  function openSubmitWorkModal(campaign) {
+    if (!isDriveConnected) {
+      showToast('Please connect Google Drive first to upload videos', 'error');
+      connectGoogleDrive();
+      return;
+    }
+    currentSubmitCampaign = campaign;
+    document.getElementById('submit-campaign-name').innerHTML = `<strong>${escapeHtml(campaign.title)}</strong>`;
+    document.getElementById('submit-work-modal').style.display = 'flex';
+  }
+
+  // ============================================
   // WITHDRAWAL
   // ============================================
   function selectMethod(method, event) {
@@ -2103,6 +2164,12 @@
       const phone = document.getElementById('mpesa-phone').value;
       if (!validateMpesaPhone(phone)) {
         showToast('Please enter a valid M-Pesa phone number (e.g., 0712345678)', 'error');
+        return;
+      }
+      const mpesaLimit = 70000;
+      const usdToKes = exchangeRates.KES || 130;
+      if (usdAmount * usdToKes > mpesaLimit) {
+        showToast(`M-Pesa withdrawal limit is ${formatMoney(mpesaLimit / usdToKes)} USD per transaction`, 'error');
         return;
       }
     }
@@ -2188,13 +2255,6 @@
     }
   }
 
-  function validateMpesaPhone(phone) {
-    const cleaned = phone.replace(/\D/g, '');
-    const regex = /^(07|01|2547|2541)\d{8}$/;
-    const regex2 = /^\d{9}$/;
-    return regex.test(cleaned) || regex2.test(cleaned);
-  }
-
   // ============================================
   // DEMOGRAPHICS
   // ============================================
@@ -2206,8 +2266,8 @@
         document.getElementById('dem-followers').innerText = data.followers || 0;
         document.getElementById('dem-likes').innerText = data.likes || 0;
         document.getElementById('dem-comments').innerText = data.comments || 0;
-        document.getElementById('dem-country').innerText = data.topCountry || 'Kenya';
-        document.getElementById('dem-engagement').innerText = (data.engagementRate || 4.5) + '%';
+        document.getElementById('dem-country').innerText = data.topCountry || 'N/A';
+        document.getElementById('dem-engagement').innerText = (data.engagementRate || 0) + '%';
         document.getElementById('dem-campaigns').innerText = data.campaignsCompleted || 0;
       } else {
         document.getElementById('demographics-grid').innerHTML = '<div class="empty-state">No demographic data available yet.<br>Start engaging with your audience to see stats!</div>';
@@ -2228,14 +2288,14 @@
         if (data.activities && data.activities.length > 0) {
           activityList.innerHTML = data.activities.map(a => `
             <tr>
-              <td>${escapeHtml(a.action)}</td>
-              <td>${a.ipAddress || '-'}</td>
-              <td>${a.device || '-'}</td>
-              <td>${new Date(a.createdAt).toLocaleString()}</td>
-            </tr>
+              <td>${escapeHtml(a.action)}<\/td>
+              <td>${a.ipAddress || '-'}<\/td>
+              <td>${a.device || '-'}<\/td>
+              <td>${formatDateTime(a.createdAt)}<\/td>
+            <\/tr>
           `).join('');
         } else {
-          activityList.innerHTML = '<tr><td colspan="4">No activity recorded<\/td><\/tr>';
+          activityList.innerHTML = '<tr><td colspan="4"><div class="empty-state">No activity recorded<\/div><\/td><\/tr>';
         }
       }
     } catch(e) { console.error(e); }
