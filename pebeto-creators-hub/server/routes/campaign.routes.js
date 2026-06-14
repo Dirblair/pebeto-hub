@@ -601,4 +601,216 @@ router.get('/performance', catchAsync(async (req, res) => {
   });
 }));
 
+// ============================================
+// NEW: POST /api/campaigns/:id/creator-complete
+// Creator marks work as completed (starts 7-day auto-release timer)
+// ============================================
+router.post(
+  '/:id/creator-complete',
+  authorize('creator'),
+  [
+    param('id').isMongoId().withMessage('Invalid campaign ID'),
+    body('workUrl')
+      .optional()
+      .isURL({ protocols: ['http', 'https'], require_protocol: true })
+      .withMessage('Valid work URL required if not already submitted'),
+    body('driveFileId')
+      .optional()
+      .isString()
+      .withMessage('Invalid drive file ID'),
+    body('driveFileUrl')
+      .optional()
+      .isURL()
+      .withMessage('Invalid drive file URL')
+  ],
+  catchAsync(async (req, res, next) => {
+    assertWritable(req);
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new AppError(errors.array()[0].msg, 400);
+    }
+
+    const campaign = await require('../models/Campaign').Campaign.findOne({
+      _id: req.params.id,
+      assignedCreatorId: req.user._id
+    });
+
+    if (!campaign) {
+      throw new AppError('Campaign not found or you are not the assigned creator', 404);
+    }
+
+    if (campaign.status !== 'in_progress' && campaign.status !== 'submitted_for_review') {
+      throw new AppError(`Cannot mark work completed for campaign with status: ${campaign.status}`, 400);
+    }
+
+    if (campaign.creatorWorkCompleted) {
+      throw new AppError('You have already marked this work as completed', 400);
+    }
+
+    // Save work URL if provided
+    if (req.body.workUrl) {
+      const bid = campaign.bids.find(
+        b => String(b.creatorId) === String(req.user._id) && b.status === 'accepted'
+      );
+      if (bid) {
+        bid.submittedWorkUrl = req.body.workUrl;
+        bid.submittedAt = new Date();
+      }
+    }
+
+    // Save Google Drive file info if provided
+    if (req.body.driveFileId && req.body.driveFileUrl) {
+      if (!campaign.driveFiles) {
+        campaign.driveFiles = [];
+      }
+      campaign.driveFiles.push({
+        fileId: req.body.driveFileId,
+        fileUrl: req.body.driveFileUrl,
+        embedUrl: req.body.driveFileUrl?.replace('/view', '/preview'),
+        uploadedAt: new Date(),
+        fileName: req.body.fileName || 'Video submission'
+      });
+    }
+
+    // Mark creator completion (this also sets auto-release deadline via pre-save hook)
+    campaign.creatorWorkCompleted = true;
+    campaign.creatorWorkCompletedAt = new Date();
+
+    // Set auto-release deadline (7 days from now) if not already set by pre-save hook
+    if (!campaign.autoReleaseDeadline) {
+      const autoReleaseDays = parseInt(process.env.AUTO_RELEASE_DAYS) || 7;
+      campaign.autoReleaseDeadline = new Date();
+      campaign.autoReleaseDeadline.setDate(campaign.autoReleaseDeadline.getDate() + autoReleaseDays);
+    }
+    campaign.autoReleaseStatus = 'pending';
+
+    // Update campaign status
+    if (campaign.status === 'in_progress') {
+      campaign.status = 'submitted_for_review';
+      campaign.businessStage = 'Submitted for Review';
+      campaign.creatorStage = 'Completed';
+      campaign.submittedAt = new Date();
+    }
+
+    await campaign.save();
+
+    // Send notification to business
+    const User = require('../models/User');
+    const Notification = require('../models/Notification');
+    const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITIES } = require('../models/Notification');
+
+    const business = await User.findById(campaign.businessId);
+    const creator = await User.findById(req.user._id);
+
+    if (business) {
+      await Notification.createNotification({
+        userId: business._id,
+        type: NOTIFICATION_TYPES.WORK_SUBMITTED,
+        title: 'Work Completed - Ready for Review',
+        message: `${creator?.profile?.stageName || creator?.uniqueCode || 'Creator'} has completed work for "${campaign.title}". Please review within 7 days.`,
+        priority: NOTIFICATION_PRIORITIES.HIGH,
+        actionUrl: `/campaign.html?id=${campaign._id}`,
+        actionType: 'campaign',
+        fromUserId: req.user._id,
+        fromUserName: creator?.profile?.stageName || creator?.uniqueCode
+      });
+    }
+
+    // Send real-time notification via Socket.IO
+    const io = req.app.get('io');
+    if (io && business) {
+      io.to(`user:${campaign.businessId}`).emit('campaign:work-completed', {
+        campaignId: campaign._id,
+        campaignTitle: campaign.title,
+        creatorName: creator?.profile?.stageName || creator?.uniqueCode,
+        deadline: campaign.autoReleaseDeadline,
+        daysRemaining: 7
+      });
+    }
+
+    logger.info('Creator marked work completed', {
+      campaignId: campaign._id,
+      creatorId: req.user._id,
+      businessId: campaign.businessId,
+      autoReleaseDeadline: campaign.autoReleaseDeadline
+    });
+
+    res.json({
+      success: true,
+      message: 'Work marked as completed. Business has 7 days to review. Funds will auto-release if no response.',
+      data: {
+        campaign: {
+          _id: campaign._id,
+          title: campaign.title,
+          status: campaign.status,
+          creatorWorkCompleted: campaign.creatorWorkCompleted,
+          businessWorkApproved: campaign.businessWorkApproved,
+          autoReleaseDeadline: campaign.autoReleaseDeadline,
+          daysRemaining: Math.ceil((campaign.autoReleaseDeadline - new Date()) / (1000 * 60 * 60 * 24))
+        }
+      }
+    });
+  })
+);
+
+// ============================================
+// NEW: GET /api/campaigns/:id/auto-release-status
+// Get auto-release status for a campaign
+// ============================================
+router.get(
+  '/:id/auto-release-status',
+  [
+    param('id').isMongoId().withMessage('Invalid campaign ID')
+  ],
+  catchAsync(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new AppError(errors.array()[0].msg, 400);
+    }
+
+    const campaign = await require('../models/Campaign').Campaign.findById(req.params.id)
+      .select('creatorWorkCompleted businessWorkApproved autoReleaseDeadline autoReleaseStatus autoReleaseReminderSent lastReminderSentAt');
+
+    if (!campaign) {
+      throw new AppError('Campaign not found', 404);
+    }
+
+    // Check authorization
+    const isBusiness = campaign.businessId && campaign.businessId.toString() === req.user._id.toString();
+    const isCreator = campaign.assignedCreatorId && campaign.assignedCreatorId.toString() === req.user._id.toString();
+    
+    if (req.user.role !== 'admin' && !isBusiness && !isCreator) {
+      throw new AppError('Access denied', 403);
+    }
+
+    let daysRemaining = null;
+    let hoursRemaining = null;
+    let isExpired = false;
+
+    if (campaign.autoReleaseDeadline) {
+      const now = new Date();
+      daysRemaining = Math.max(0, Math.ceil((campaign.autoReleaseDeadline - now) / (1000 * 60 * 60 * 24)));
+      hoursRemaining = Math.max(0, Math.ceil((campaign.autoReleaseDeadline - now) / (1000 * 60 * 60)));
+      isExpired = now >= campaign.autoReleaseDeadline;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        creatorWorkCompleted: campaign.creatorWorkCompleted,
+        businessWorkApproved: campaign.businessWorkApproved,
+        autoReleaseDeadline: campaign.autoReleaseDeadline,
+        autoReleaseStatus: campaign.autoReleaseStatus,
+        autoReleaseReminderSent: campaign.autoReleaseReminderSent,
+        lastReminderSentAt: campaign.lastReminderSentAt,
+        daysRemaining,
+        hoursRemaining,
+        isExpired,
+        willAutoRelease: campaign.creatorWorkCompleted === true && campaign.businessWorkApproved === false && !isExpired
+      }
+    });
+  })
+);
+
 module.exports = router;
