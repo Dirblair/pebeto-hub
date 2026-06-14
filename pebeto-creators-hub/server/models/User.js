@@ -437,6 +437,51 @@ const userSchema = new mongoose.Schema(
       deviceInfo: { type: String },
       referrerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       referralCode: { type: String, index: true, sparse: true }
+    },
+
+    // ============================================
+    // NEW: Google Drive OAuth Tokens (for private video uploads)
+    // ============================================
+    
+    /**
+     * Google OAuth access token for Drive API
+     * Used to upload videos to creator's own Google Drive
+     */
+    googleDriveAccessToken: {
+      type: String,
+      select: false  // Don't return by default for security
+    },
+    
+    /**
+     * Google OAuth refresh token for Drive API
+     * Used to get new access tokens when expired
+     */
+    googleDriveRefreshToken: {
+      type: String,
+      select: false  // Don't return by default for security
+    },
+    
+    /**
+     * When the access token expires
+     */
+    googleDriveTokenExpiresAt: {
+      type: Date,
+      select: false
+    },
+    
+    /**
+     * Whether the user has connected their Google Drive
+     */
+    googleDriveConnected: {
+      type: Boolean,
+      default: false
+    },
+    
+    /**
+     * When Google Drive was last connected
+     */
+    googleDriveConnectedAt: {
+      type: Date
     }
   },
   { 
@@ -477,6 +522,9 @@ userSchema.index({ likedBy: 1 });
 // Lockout and cleanup
 userSchema.index({ lockedUntil: 1 }, { expireAfterSeconds: 0, partialFilterExpression: { lockedUntil: { $exists: true } } });
 userSchema.index({ status: 1, deactivatedAt: 1 });
+
+// NEW: Google Drive token expiration index for cleanup
+userSchema.index({ googleDriveTokenExpiresAt: 1 });
 
 // ============================================
 // Virtual Fields
@@ -552,6 +600,15 @@ userSchema.virtual('defaultPayoutProfile').get(function() {
  */
 userSchema.virtual('publicIdentifier').get(function() {
   return this.uniqueCode || this.displayName || this.email;
+});
+
+/**
+ * NEW: Check if Google Drive is connected and token is valid
+ */
+userSchema.virtual('isGoogleDriveConnected').get(function() {
+  return this.googleDriveConnected === true && 
+         this.googleDriveAccessToken && 
+         (!this.googleDriveTokenExpiresAt || this.googleDriveTokenExpiresAt > new Date());
 });
 
 // ============================================
@@ -793,6 +850,73 @@ userSchema.methods.updateLastSeen = async function(ipAddress) {
   await this.save();
 };
 
+/**
+ * NEW: Set Google Drive tokens after OAuth flow
+ * @param {Object} tokens - Google OAuth tokens
+ * @param {string} tokens.accessToken - Access token
+ * @param {string} tokens.refreshToken - Refresh token
+ * @param {number} tokens.expiresIn - Expiry in seconds
+ * @returns {Promise<void>}
+ */
+userSchema.methods.setGoogleDriveTokens = async function(tokens) {
+  this.googleDriveAccessToken = tokens.accessToken;
+  if (tokens.refreshToken) {
+    this.googleDriveRefreshToken = tokens.refreshToken;
+  }
+  if (tokens.expiresIn) {
+    this.googleDriveTokenExpiresAt = new Date(Date.now() + (tokens.expiresIn * 1000));
+  }
+  this.googleDriveConnected = true;
+  this.googleDriveConnectedAt = new Date();
+  await this.save();
+};
+
+/**
+ * NEW: Clear Google Drive tokens (disconnect)
+ * @returns {Promise<void>}
+ */
+userSchema.methods.clearGoogleDriveTokens = async function() {
+  this.googleDriveAccessToken = null;
+  this.googleDriveRefreshToken = null;
+  this.googleDriveTokenExpiresAt = null;
+  this.googleDriveConnected = false;
+  await this.save();
+};
+
+/**
+ * NEW: Check if Google Drive token needs refresh
+ * @returns {boolean}
+ */
+userSchema.methods.needsGoogleDriveRefresh = function() {
+  if (!this.googleDriveConnected) return false;
+  if (!this.googleDriveTokenExpiresAt) return true;
+  // Refresh if less than 5 minutes remaining
+  const fiveMinutes = 5 * 60 * 1000;
+  return this.googleDriveTokenExpiresAt.getTime() - Date.now() < fiveMinutes;
+};
+
+/**
+ * NEW: Get valid Google Drive access token (refreshes if needed)
+ * @param {Function} refreshFunction - Function to refresh token
+ * @returns {Promise<string|null>} Access token or null
+ */
+userSchema.methods.getValidGoogleDriveToken = async function(refreshFunction) {
+  if (!this.googleDriveConnected) return null;
+  
+  if (this.needsGoogleDriveRefresh() && refreshFunction) {
+    try {
+      const newTokens = await refreshFunction(this.googleDriveRefreshToken);
+      await this.setGoogleDriveTokens(newTokens);
+      return newTokens.accessToken;
+    } catch (error) {
+      console.error('Failed to refresh Google Drive token:', error.message);
+      return null;
+    }
+  }
+  
+  return this.googleDriveAccessToken;
+};
+
 // ============================================
 // Static Methods
 // ============================================
@@ -866,6 +990,17 @@ userSchema.statics.findActiveByRole = function(role, limit = 100) {
   return this.find({ role, status: USER_STATUS.ACTIVE, emailVerified: true })
     .sort({ createdAt: -1 })
     .limit(limit);
+};
+
+/**
+ * NEW: Find users with expired Google Drive tokens
+ * @returns {Query} Mongoose query
+ */
+userSchema.statics.findWithExpiredDriveTokens = function() {
+  return this.find({
+    googleDriveConnected: true,
+    googleDriveTokenExpiresAt: { $lt: new Date() }
+  }).select('_id email googleDriveRefreshToken');
 };
 
 // ============================================
