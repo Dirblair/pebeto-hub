@@ -250,7 +250,7 @@ const corsOptions = {
 };
 
 // ============================================
-// Security Headers Configuration
+// Security Headers Configuration (UPDATED FOR SERVICE WORKERS)
 // ============================================
 
 const helmetConfig = {
@@ -258,20 +258,29 @@ const helmetConfig = {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.tailwindcss.com', 'https://cdn.jsdelivr.net'],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'unsafe-hashes'", 'https://cdn.tailwindcss.com', 'https://cdn.jsdelivr.net', 'https://cdn.socket.io', 'https://fonts.googleapis.com', 'https://www.tiktok.com', 'https://www.youtube.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'unsafe-hashes'", 'https://cdn.tailwindcss.com', 'https://cdn.jsdelivr.net', 'https://cdn.socket.io', 'https://fonts.googleapis.com', 'https://www.tiktok.com', 'https://www.youtube.com', 'https://unpkg.com', 'https://cdn.socket.io', 'blob:'],
       scriptSrcAttr: ["'unsafe-inline'"],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-      imgSrc: ["'self'", 'data:', 'https://ui-avatars.com', 'https://*.cloudinary.com', 'https://*.tiktok.com', 'https://*.ytimg.com'],
-      connectSrc: ["'self'", 'https://*.safaricom.co.ke', 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com', 'https://*.tiktok.com', 'https://*.youtube.com'],
-      frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.tiktok.com'],
+      imgSrc: ["'self'", 'data:', 'https://ui-avatars.com', 'https://*.cloudinary.com', 'https://*.tiktok.com', 'https://*.ytimg.com', 'https://*.googleusercontent.com', 'blob:'],
+      connectSrc: ["'self'", 'https://*.safaricom.co.ke', 'https://api-m.paypal.com', 'https://api-m.sandbox.paypal.com', 'https://*.tiktok.com', 'https://*.youtube.com', 'https://pebeto-creators-hub.onrender.com', 'ws://localhost:3000', 'wss://pebeto-creators-hub.onrender.com'],
+      frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.tiktok.com', 'https://drive.google.com'],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
       upgradeInsecureRequests: env.isProduction ? [] : null,
+      
+      // ============================================
+      // FIX: Add these directives for Service Workers
+      // ============================================
+      workerSrc: ["'self'", 'blob:'],
+      childSrc: ["'self'", 'blob:'],
+      manifestSrc: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
+  // Disable crossOriginOpenerPolicy to allow service worker registration
+  crossOriginOpenerPolicy: false,
 };
 
 // ============================================
