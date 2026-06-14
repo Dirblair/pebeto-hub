@@ -720,7 +720,7 @@
     </div>
   </div>
 
-  <!-- USERS TAB - FIXED -->
+  <!-- USERS TAB -->
   <div id="tab-users" class="tab-content">
     <div class="search-box">
       <input type="text" id="user-search" placeholder="Search by email, name, or unique code..." onkeyup="filterUsers()">
@@ -800,7 +800,7 @@
           <tr><th>Type</th><th>From/To</th><th>Amount</th><th>Fee</th><th>Net</th><th>Status</th><th>Date</th>
         </thead>
         <tbody>
-          <td><td colspan="7" class="empty-state">Loading transactions...<\/td><\/tr>
+          <tr><td colspan="7" class="empty-state">Loading transactions...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -828,7 +828,7 @@
           <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th>
         </thead>
         <tbody>
-          <td><td colspan="5" class="empty-state">Loading withdrawals...<\/td><\/tr>
+          <tr><td colspan="5" class="empty-state">Loading withdrawals...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -937,6 +937,7 @@
   let reports = [], currentReportToResolve = null;
   let transactionPage = 1, transactionHasMore = true;
   let currentUser = null;
+  let allUsersData = [];
 
   // ============================================
   // HELPER FUNCTIONS
@@ -1210,7 +1211,7 @@
       }
     } catch(e) { 
       if (loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
+      tbody.innerHTML = '</tr><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
       console.error(e); 
     }
   }
@@ -1339,8 +1340,6 @@
   // ============================================
   // LOAD USERS - FIXED WITH REAL DATA
   // ============================================
-  let allUsersData = [];
-  
   async function loadUsers() {
     const loadingDiv = document.getElementById('users-loading');
     const tbody = document.querySelector('#users-table tbody');
@@ -1403,7 +1402,7 @@
                   ${user.status === 'active' ? 'Suspend' : 'Activate'}
                 </button>
                <\/td>
-           \`
+            <\/tr>
           `).join('');
         }
       } else {
@@ -1442,7 +1441,7 @@
     }
     
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your filters<\/td><\/tr>';
+      tbody.innerHTML = '</table><td colspan="7" class="empty-state">No users found matching your filters<\/td><\/tr>';
     } else {
       tbody.innerHTML = filtered.map(user => `
         <tr>
@@ -1458,7 +1457,7 @@
               ${user.status === 'active' ? 'Suspend' : 'Activate'}
             </button>
            <\/td>
-       \`
+        <\/tr>
       `).join('');
     }
   }
@@ -1552,7 +1551,7 @@
       }
     } catch(e) { 
       if (reset && loadingDiv) loadingDiv.style.display = 'none';
-      tbody.innerHTML = '<td><td colspan="7" class="empty-state">Error loading transactions<\/td><\/tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading transactions<\/td><\/tr>';
       console.error(e); 
     }
   }
@@ -1899,20 +1898,97 @@
     } catch(e) { console.error(e); }
   }
   
+  // ============================================
+  // FIXED: LOAD DASHBOARD STATS
+  // ============================================
   async function loadDashboardStats() {
     try {
-      const data = await fetchJSON(`${API_BASE}/api/admin/dashboard-stats`);
-      if (data.success) {
-        document.getElementById('total-users').innerText = data.data.users?.total || 0;
-        document.getElementById('total-businesses').innerText = data.data.users?.businesses || 0;
-        document.getElementById('active-campaigns').innerText = data.data.campaigns?.active || 0;
-        document.getElementById('completed-campaigns').innerText = data.data.campaigns?.completed || 0;
+      console.log('Loading dashboard stats...');
+      
+      // Get user stats from allUsersData if available, or fetch fresh
+      if (allUsersData && allUsersData.length > 0) {
+        const totalUsers = allUsersData.length;
+        const businesses = allUsersData.filter(u => u.role === 'business').length;
+        const creators = allUsersData.filter(u => u.role === 'creator').length;
+        const admins = allUsersData.filter(u => u.role === 'admin').length;
+        
+        document.getElementById('total-users').innerText = totalUsers;
+        document.getElementById('total-businesses').innerText = businesses;
+        document.getElementById('total-users-count').innerText = totalUsers;
+        document.getElementById('total-creators-count').innerText = creators;
+        document.getElementById('total-businesses-count').innerText = businesses;
+        document.getElementById('total-admins-count').innerText = admins;
+        
+        console.log(`Dashboard stats from allUsersData: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      } else {
+        // Fetch fresh user data
+        const token = localStorage.getItem('pebeto_token');
+        const usersRes = await fetch(`${API_BASE}/api/admin/users?limit=200`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const usersData = await usersRes.json();
+        
+        if (usersData.success && usersData.data.users) {
+          const fetchedUsers = usersData.data.users;
+          const totalUsers = fetchedUsers.length;
+          const businesses = fetchedUsers.filter(u => u.role === 'business').length;
+          const creators = fetchedUsers.filter(u => u.role === 'creator').length;
+          const admins = fetchedUsers.filter(u => u.role === 'admin').length;
+          
+          document.getElementById('total-users').innerText = totalUsers;
+          document.getElementById('total-businesses').innerText = businesses;
+          document.getElementById('total-users-count').innerText = totalUsers;
+          document.getElementById('total-creators-count').innerText = creators;
+          document.getElementById('total-businesses-count').innerText = businesses;
+          document.getElementById('total-admins-count').innerText = admins;
+          
+          console.log(`Dashboard stats from API: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+        }
       }
+      
+      // Get campaign stats
+      const campaignsData = await fetchJSON(`${API_BASE}/api/campaigns?limit=200`);
+      if (campaignsData.success && campaignsData.data.campaigns) {
+        const activeCampaigns = campaignsData.data.campaigns.filter(c => c.status === 'open' || c.status === 'in_progress').length;
+        const completedCampaigns = campaignsData.data.campaigns.filter(c => c.status === 'paid').length;
+        document.getElementById('active-campaigns').innerText = activeCampaigns;
+        document.getElementById('completed-campaigns').innerText = completedCampaigns;
+      }
+      
+      // Get wallet balance
       const adminWallet = await fetchJSON(`${API_BASE}/api/wallet/balance`);
-      if (adminWallet.success) { document.getElementById('admin-wallet').innerHTML = formatMoney(adminWallet.data?.balances?.available || 0); }
+      if (adminWallet.success) {
+        document.getElementById('admin-wallet').innerHTML = formatMoney(adminWallet.data?.balances?.available || 0);
+      }
+      
+      // Get escrow stats
       const escrowData = await fetchJSON(`${API_BASE}/api/admin/metrics`);
-      if (escrowData.success) { document.getElementById('total-escrow').innerHTML = formatMoney(escrowData.data?.totalEscrow || 0); }
-    } catch(e) { console.error(e); }
+      if (escrowData.success) {
+        document.getElementById('total-escrow').innerHTML = formatMoney(escrowData.data?.totalEscrow || 0);
+        const totalDeposits = escrowData.data?.platformStats?.totalDeposits || 0;
+        if (document.getElementById('total-deposits')) {
+          document.getElementById('total-deposits').innerHTML = formatMoney(totalDeposits);
+        }
+        if (document.getElementById('audit-count')) {
+          document.getElementById('audit-count').innerText = escrowData.data?.platformStats?.totalWithdrawals || 0;
+        }
+      }
+      
+    } catch(e) { 
+      console.error('Error loading dashboard stats:', e);
+      // Fallback: try to count from visible table
+      const userRows = document.querySelectorAll('#users-table tbody tr');
+      let visibleUsers = 0;
+      userRows.forEach(row => {
+        if (row.cells.length > 1 && !row.innerHTML.includes('No users found')) {
+          visibleUsers++;
+        }
+      });
+      if (visibleUsers > 0) {
+        document.getElementById('total-users').innerText = visibleUsers;
+        document.getElementById('total-users-count').innerText = visibleUsers;
+      }
+    }
   }
   
   // ============================================
@@ -1920,7 +1996,10 @@
   // ============================================
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
-    if (userStr) { currentUser = JSON.parse(userStr); document.getElementById('admin-email').innerText = currentUser.email; }
+    if (userStr) { 
+      currentUser = JSON.parse(userStr); 
+      document.getElementById('admin-email').innerText = currentUser.email; 
+    }
   }
   
   document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => {
@@ -1940,7 +2019,10 @@
     if (btn.dataset.tab === 'security') loadTeamMembers();
     if (btn.dataset.tab === 'moderation') loadReports();
     if (btn.dataset.tab === 'auto-release') { loadAutoReleaseCampaigns(); loadAutoReleaseStats(); }
-    if (btn.dataset.tab === 'dashboard') { loadDashboardStats(); loadCampaignPerformanceChart(); }
+    if (btn.dataset.tab === 'dashboard') { 
+      loadDashboardStats(); 
+      if (typeof loadCampaignPerformanceChart === 'function') loadCampaignPerformanceChart(); 
+    }
     if (btn.dataset.tab === 'creators') document.getElementById('creators-results').innerHTML = '<div class="empty-state">Enter search criteria to find creators</div>';
   }); });
   
@@ -1951,19 +2033,31 @@
   document.getElementById('emailNotificationsToggle')?.addEventListener('change', (e) => localStorage.setItem('pebeto_email_notifications', e.target.checked));
   document.getElementById('smsNotificationsToggle')?.addEventListener('change', (e) => localStorage.setItem('pebeto_sms_notifications', e.target.checked));
   
-  // Initial load
+  // Initial page load
   loadUserData();
   loadSpendingChart();
   loadUserGrowthChart();
   loadRevenueChart();
   loadCampaignPerformanceChart();
   loadFeeChart();
-  loadDashboardStats();
+  
+  // Load users first, then dashboard stats
+  loadUsers().then(() => {
+    loadDashboardStats();
+  });
+  
   loadCampaigns();
   loadApiKeys();
   loadWebhooks();
   loadTeamMembers();
   addNotification('Welcome to Pebeto Admin Dashboard');
+  
+  // Emergency fix - force update after 2 seconds
+  setTimeout(() => {
+    if (allUsersData && allUsersData.length > 0) {
+      loadDashboardStats();
+    }
+  }, 2000);
 </script>
 </body>
 </html>
