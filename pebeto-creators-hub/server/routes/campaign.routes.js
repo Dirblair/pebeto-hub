@@ -529,7 +529,7 @@ router.get('/performance', catchAsync(async (req, res) => {
   }
   // Admin sees all campaigns
   
-  const Campaign = require('../models/Campaign');
+  const { Campaign } = require('../models/Campaign');
   const campaigns = await Campaign.find(campaignQuery)
     .select('title status budget views bids createdAt completedAt ctr roi')
     .sort({ createdAt: -1 })
