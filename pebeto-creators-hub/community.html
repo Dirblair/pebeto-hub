@@ -23,7 +23,8 @@
     body.light-theme .creator-card,
     body.light-theme .modal-content,
     body.light-theme .notification-dropdown,
-    body.light-theme .filter-sort-bar {
+    body.light-theme .filter-sort-bar,
+    body.light-theme .chat-panel {
       background: #ffffff;
       border-color: #e0e0e0;
     }
@@ -504,6 +505,217 @@
       from { transform: translateX(-50%) translateY(100%); opacity: 0; }
       to { transform: translateX(-50%) translateY(0); opacity: 1; }
     }
+
+    /* ============================================ */
+    /* DM CHAT PANEL STYLES (NEW) */
+    /* ============================================ */
+    .chat-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 380px;
+      height: 500px;
+      background: #1a1510;
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .chat-panel.open {
+      transform: translateX(0);
+    }
+    .chat-header {
+      padding: 15px;
+      background: rgba(255,140,66,0.1);
+      border-bottom: 1px solid rgba(255,140,66,0.2);
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-header h4 {
+      font-size: 16px;
+      color: #ff8c42;
+    }
+    .chat-close {
+      background: none;
+      border: none;
+      color: #a08070;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    .chat-close:hover { color: #ff8c42; }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+    .chat-message.sent {
+      background: #ff8c42;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-message.received {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-message .message-time {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-top: 4px;
+      display: block;
+    }
+    .chat-typing {
+      padding: 8px 15px;
+      font-size: 12px;
+      color: #a08070;
+      font-style: italic;
+    }
+    .chat-input-container {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .chat-input {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,140,66,0.3);
+      padding: 10px 15px;
+      border-radius: 30px;
+      color: white;
+      outline: none;
+    }
+    .chat-send-btn {
+      background: #ff8c42;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ff8c42;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .chat-toggle-btn:hover {
+      transform: scale(1.05);
+    }
+    .chat-toggle-btn .unread-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #f44336;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .conversations-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .conversation-item {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .conversation-item:hover {
+      background: rgba(255,140,66,0.1);
+    }
+    .conversation-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,140,66,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .conversation-info {
+      flex: 1;
+    }
+    .conversation-name {
+      font-weight: 500;
+    }
+    .conversation-last-message {
+      font-size: 12px;
+      color: #a08070;
+    }
+    .conversation-unread {
+      background: #ff8c42;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-back-btn {
+      background: none;
+      border: none;
+      color: #ff8c42;
+      cursor: pointer;
+      font-size: 20px;
+      margin-right: 10px;
+    }
+    .conversation-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .conversation-header {
+      padding: 15px;
+      background: rgba(255,140,66,0.1);
+      border-bottom: 1px solid rgba(255,140,66,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
     @media (max-width: 768px) {
       .search-bar { display: none; }
       .feed-container { padding: 15px; padding-bottom: 80px; }
@@ -512,6 +724,8 @@
       .filter-group { justify-content: center; }
       .filter-chip { font-size: 11px; padding: 4px 12px; }
       .toast { white-space: normal; max-width: 90%; text-align: center; }
+      .chat-panel { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; }
+      .chat-toggle-btn { bottom: 70px; right: 15px; }
     }
     @media (prefers-contrast: high) {
       .creator-card { border: 2px solid #ff8c42; }
@@ -535,7 +749,7 @@
     <div id="search-history-dropdown" class="search-history-dropdown"></div>
   </div>
   <div class="nav-icons">
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><i class="ri-sun-line"></i></button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><i class="ri-sun-line" id="theme-icon"></i></button>
     <div class="notification-bell" onclick="toggleNotifications()" aria-label="Notifications">
       <i class="ri-notification-3-line"></i>
       <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
@@ -582,6 +796,25 @@
   <div class="bottom-nav-item" data-nav="trending" onclick="switchFeedTab('trending')"><i class="ri-fire-line"></i><span>Trending</span></div>
   <div class="bottom-nav-item" data-nav="notifications" onclick="toggleNotifications()"><i class="ri-notification-3-line"></i><span>Alerts</span></div>
   <div class="bottom-nav-item" data-nav="profile" onclick="goToDashboard()"><i class="ri-user-line"></i><span>Profile</span></div>
+</div>
+
+<!-- DM Chat Panel (NEW) -->
+<div class="chat-toggle-btn" id="chatToggleBtn" onclick="toggleChatPanel()">
+  <i class="ri-message-3-line" style="font-size: 24px;"></i>
+  <span id="chatUnreadBadge" class="unread-badge" style="display: none;">0</span>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <h4><i class="ri-message-3-line"></i> Messages</h4>
+    <button class="chat-close" onclick="toggleChatPanel()">✕</button>
+  </div>
+  <div id="chatContent">
+    <!-- Conversations list will load here -->
+    <div class="conversations-list" id="conversationsList">
+      <div style="text-align: center; padding: 40px; color: #a08070;">Loading conversations...</div>
+    </div>
+  </div>
 </div>
 
 <!-- Tip Modal -->
@@ -717,6 +950,16 @@
   // Video autoplay tracking
   let currentlyPlayingVideo = null;
   let videoObserver = null;
+
+  // ============================================
+  // DM CHAT VARIABLES (NEW)
+  // ============================================
+  let socket = null;
+  let currentConversationId = null;
+  let currentChatRecipient = null;
+  let conversations = [];
+  let typingTimeout = null;
+  let chatPanelOpen = false;
 
   function showToast(msg) { 
     const t = document.createElement('div'); 
@@ -1126,7 +1369,7 @@
         <button class="action-btn like-btn ${creator.isLiked ? 'liked' : ''}" onclick="toggleLike(event, this, '${creator._id}')"><i class="${creator.isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i><span class="like-count">${formatNumber(creator.likeCount || 0)}</span></button>
         <button class="action-btn comment-btn" onclick="openCommentsModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-chat-3-line"></i><span class="comment-count">${formatNumber(creator.commentCount || 0)}</span></button>
         <button class="tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-coin-line"></i> Tip</button>
-        <button class="dm-btn" onclick="openDMModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-mail-line"></i> DM</button>
+        <button class="dm-btn" onclick="openChatWithUser('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-mail-line"></i> DM</button>
         <button class="profile-btn" onclick="viewCreatorProfile('${creator._id}')"><i class="ri-user-line"></i> Profile</button>
         <button class="share-btn" onclick="openShareModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-share-line"></i> Share</button>
         <button class="report-btn" onclick="openReportModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-flag-line"></i> Report</button>
@@ -1396,30 +1639,307 @@
     pendingTip = false;
   }
 
+  // ============================================
+  // UPDATED: DM Functions (Now uses chat panel)
+  // ============================================
+  
   function openDMModal(creatorId, creatorName) {
-    currentDMRecipientId = creatorId;
-    currentDMRecipientName = creatorName;
-    document.getElementById('dm-creator-name').innerText = creatorName;
-    document.getElementById('dm-message').value = '';
-    document.getElementById('dm-modal').style.display = 'flex';
+    openChatWithUser(creatorId, creatorName);
   }
-  async function sendDM() {
-    const message = document.getElementById('dm-message').value.trim();
-    if (!message) { alert('Enter a message'); return; }
+
+  function openChatWithUser(userId, userName) {
     const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please login'); return; }
+    if (!token) {
+      alert('Please log in to send messages');
+      window.location.href = '/login.html';
+      return;
+    }
+    
+    currentChatRecipient = { id: userId, name: userName };
+    loadConversation(userId);
+    openChatPanel();
+  }
+
+  async function loadConversations() {
     try {
+      const data = await fetchJSON(`${API_BASE}/api/messages/conversations`);
+      if (data.success && data.data.conversations) {
+        conversations = data.data.conversations;
+        renderConversationsList();
+        const unreadCount = data.data.totalUnread || 0;
+        updateUnreadBadge(unreadCount);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  }
+
+  function renderConversationsList() {
+    const listContainer = document.getElementById('conversationsList');
+    if (!listContainer) return;
+    
+    if (conversations.length === 0) {
+      listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #a08070;">No messages yet. Start a conversation!</div>';
+      return;
+    }
+    
+    listContainer.innerHTML = conversations.map(conv => {
+      const otherParticipant = conv.participantDetails?.[0] || {};
+      const name = otherParticipant.profile?.stageName || otherParticipant.profile?.companyName || otherParticipant.uniqueCode || otherParticipant.email?.split('@')[0] || 'User';
+      const avatar = (name.charAt(0) || 'U').toUpperCase();
+      const lastMessage = conv.lastMessage?.content || 'No messages yet';
+      const timeAgo = conv.lastMessage?.sentAt ? formatTimeAgo(conv.lastMessage.sentAt) : '';
+      const unread = conv.unreadCount || 0;
+      
+      return `
+        <div class="conversation-item" onclick="openConversation('${conv._id}', '${escapeHtml(name)}', '${otherParticipant._id}')">
+          <div class="conversation-avatar">${avatar}</div>
+          <div class="conversation-info">
+            <div class="conversation-name">${escapeHtml(name)}</div>
+            <div class="conversation-last-message">${escapeHtml(lastMessage.substring(0, 50))}${lastMessage.length > 50 ? '...' : ''}</div>
+          </div>
+          ${unread > 0 ? `<div class="conversation-unread">${unread > 9 ? '9+' : unread}</div>` : ''}
+          <div style="font-size: 11px; color: #a08070;">${timeAgo}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function openConversation(conversationId, userName, otherUserId) {
+    currentConversationId = conversationId;
+    currentChatRecipient = { id: otherUserId, name: userName };
+    await loadMessages(conversationId);
+    showConversationView();
+  }
+
+  async function loadConversation(userId) {
+    try {
+      // Get or create conversation
       const response = await fetch(`${API_BASE}/api/messages/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ recipientId: currentDMRecipientId, message })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}`
+        },
+        body: JSON.stringify({ recipientId: userId, content: ' ' }) // Temporary to create conversation
       });
-      if (response.ok) {
-        showToast(`Message sent to ${currentDMRecipientName}`);
-        closeModal('dm-modal');
-        addNotification(`You sent a message to ${currentDMRecipientName}`);
-      } else alert('Failed to send message');
-    } catch(e) { alert('Network error'); }
+      const data = await response.json();
+      if (data.success) {
+        currentConversationId = data.data.conversationId;
+        await loadMessages(currentConversationId);
+        showConversationView();
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      showToast('Failed to start conversation', 'error');
+    }
+  }
+
+  async function loadMessages(conversationId) {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/messages/conversations/${conversationId}/messages`);
+      if (data.success) {
+        renderMessages(data.data.messages);
+        // Mark as read
+        await fetch(`${API_BASE}/api/messages/conversations/${conversationId}/read`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  }
+
+  function renderMessages(messages) {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (!messagesContainer) return;
+    
+    if (!messages || messages.length === 0) {
+      messagesContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #a08070;">No messages yet. Send a message!</div>';
+      return;
+    }
+    
+    const currentUserId = currentUser?._id;
+    messagesContainer.innerHTML = messages.map(msg => {
+      const isSent = msg.senderId === currentUserId;
+      const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="chat-message ${isSent ? 'sent' : 'received'}">
+          ${escapeHtml(msg.content)}
+          <span class="message-time">${time}</span>
+        </div>
+      `;
+    }).join('');
+    
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function showConversationView() {
+    const chatContent = document.getElementById('chatContent');
+    if (!chatContent) return;
+    
+    chatContent.innerHTML = `
+      <div class="conversation-view">
+        <div class="conversation-header">
+          <button class="chat-back-btn" onclick="showConversationsList()"><i class="ri-arrow-left-line"></i></button>
+          <strong>${escapeHtml(currentChatRecipient?.name || 'Chat')}</strong>
+        </div>
+        <div class="chat-messages" id="chatMessages" style="flex: 1; overflow-y: auto; padding: 15px;">
+          <div style="text-align: center; padding: 40px; color: #a08070;">Loading messages...</div>
+        </div>
+        <div class="chat-typing" id="chatTyping" style="display: none;">Typing...</div>
+        <div class="chat-input-container">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
+          <button class="chat-send-btn" onclick="sendChatMessage()"><i class="ri-send-plane-fill"></i></button>
+        </div>
+      </div>
+    `;
+    
+    loadMessages(currentConversationId);
+    setupChatSocket();
+  }
+
+  function showConversationsList() {
+    const chatContent = document.getElementById('chatContent');
+    if (!chatContent) return;
+    
+    chatContent.innerHTML = `
+      <div class="conversations-list" id="conversationsList">
+        <div style="text-align: center; padding: 40px; color: #a08070;">Loading conversations...</div>
+      </div>
+    `;
+    
+    loadConversations();
+  }
+
+  let chatSocket = null;
+
+  function setupChatSocket() {
+    if (chatSocket) {
+      chatSocket.disconnect();
+    }
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) return;
+    
+    chatSocket = io(API_BASE, {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+    
+    chatSocket.on('connect', () => {
+      console.log('Chat socket connected');
+      if (currentConversationId) {
+        chatSocket.emit('conversation:join', { conversationId: currentConversationId });
+      }
+    });
+    
+    chatSocket.on('dm:new-message', (data) => {
+      if (data.conversationId === currentConversationId) {
+        loadMessages(currentConversationId);
+      } else {
+        loadConversations();
+        updateUnreadBadge();
+      }
+    });
+    
+    chatSocket.on('dm:typing', (data) => {
+      const typingDiv = document.getElementById('chatTyping');
+      if (typingDiv && data.isTyping) {
+        typingDiv.style.display = 'block';
+        setTimeout(() => { typingDiv.style.display = 'none'; }, 1500);
+      } else if (typingDiv) {
+        typingDiv.style.display = 'none';
+      }
+    });
+    
+    chatSocket.on('dm:unread-update', (data) => {
+      updateUnreadBadge(data.count);
+    });
+  }
+
+  function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input?.value.trim();
+    
+    if (!message || !currentChatRecipient?.id) return;
+    
+    chatSocket.emit('dm:send', {
+      recipientId: currentChatRecipient.id,
+      message: message,
+      clientMessageId: Date.now().toString()
+    });
+    
+    input.value = '';
+    // Optimistically add message
+    const messagesContainer = document.getElementById('chatMessages');
+    if (messagesContainer) {
+      const currentUserId = currentUser?._id;
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      messagesContainer.innerHTML += `
+        <div class="chat-message sent">
+          ${escapeHtml(message)}
+          <span class="message-time">${time}</span>
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
+
+  function handleChatKeyPress(event) {
+    if (event.key === 'Enter') {
+      sendChatMessage();
+    } else {
+      // Send typing indicator
+      if (chatSocket && currentConversationId) {
+        chatSocket.emit('dm:typing', { conversationId: currentConversationId, isTyping: true });
+        if (typingTimeout) clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          chatSocket.emit('dm:typing', { conversationId: currentConversationId, isTyping: false });
+        }, 1000);
+      }
+    }
+  }
+
+  function toggleChatPanel() {
+    chatPanelOpen = !chatPanelOpen;
+    const panel = document.getElementById('chatPanel');
+    if (panel) {
+      panel.classList.toggle('open', chatPanelOpen);
+    }
+    if (chatPanelOpen) {
+      loadConversations();
+      setupChatSocket();
+    }
+  }
+
+  function openChatPanel() {
+    if (!chatPanelOpen) {
+      toggleChatPanel();
+    }
+  }
+
+  function updateUnreadBadge(count = null) {
+    const badge = document.getElementById('chatUnreadBadge');
+    if (!badge) return;
+    
+    const update = async () => {
+      let unreadCount = count;
+      if (unreadCount === null) {
+        try {
+          const data = await fetchJSON(`${API_BASE}/api/messages/unread/count`);
+          unreadCount = data.data?.count || 0;
+        } catch(e) { unreadCount = 0; }
+      }
+      if (unreadCount > 0) {
+        badge.style.display = 'flex';
+        badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+      } else {
+        badge.style.display = 'none';
+      }
+    };
+    update();
   }
 
   function openShareModal(creatorId, creatorName) { 
@@ -1519,6 +2039,7 @@
     autoRefreshInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         loadCreators();
+        loadConversations();
       }
     }, 30000);
   }
@@ -1549,6 +2070,9 @@
   loadUserBalance();
   startAutoRefresh();
   addNotification('Welcome to the Pebeto Community!');
+  
+  // Initialize DM
+  updateUnreadBadge();
 </script>
 </body>
 </html>
