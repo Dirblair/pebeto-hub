@@ -2,9 +2,9 @@
  * Fee Calculation Service for Pebeto Creator's Hub
  * 
  * Handles all financial calculations including:
- * - Deposit fees (10% platform fee) - WAIVED FOR ADMIN
+ * - Deposit fees (10% platform fee)
  * - Tip fees (5% platform fee, 95% to creator)
- * - Withdrawal fees (3% platform fee) - WAIVED FOR ADMIN
+ * - Withdrawal fees (3% platform fee)
  * - Currency conversion
  * - Amount validation (positive numbers only)
  * 
@@ -64,17 +64,14 @@ function formatCurrency(amount, currency = BASE_CURRENCY) {
 }
 
 // ============================================
-// Deposit Calculations (FIXED - Admin fee waiver)
+// Deposit Calculations
 // ============================================
 
 function calculateDeposit(intentUsd, options = {}) {
   validateAmount(intentUsd, 'Deposit');
   
   const intent = roundUsd(intentUsd);
-  const isAdmin = options.isAdmin || false;
-  
-  // Admin gets NO fee
-  const feeUsd = isAdmin ? 0 : roundUsd(intent * FEE_RATES.DEPOSIT);
+  const feeUsd = roundUsd(intent * FEE_RATES.DEPOSIT);
   const totalChargeUsd = roundUsd(intent + feeUsd);
   
   const result = {
@@ -82,10 +79,9 @@ function calculateDeposit(intentUsd, options = {}) {
     feeUsd,
     totalChargeUsd,
     escrowCreditUsd: intent,
-    feeRate: isAdmin ? 0 : FEE_RATES.DEPOSIT,
-    feePercentage: isAdmin ? '0% (Admin - No Fee)' : (FEE_RATES.DEPOSIT * 100) + '%',
+    feeRate: FEE_RATES.DEPOSIT,
+    feePercentage: (FEE_RATES.DEPOSIT * 100) + '%',
     feeSource: 'deposit',
-    feeWaived: isAdmin,
     timestamp: new Date().toISOString()
   };
   
@@ -96,19 +92,17 @@ function calculateDeposit(intentUsd, options = {}) {
   return result;
 }
 
-function previewDeposit(intentUsd, isAdmin = false) {
-  const calculation = calculateDeposit(intentUsd, { isAdmin });
+function previewDeposit(intentUsd) {
+  const calculation = calculateDeposit(intentUsd);
   return {
     ...calculation,
     breakdown: {
       escrowAmount: calculation.intentUsd,
       feeAmount: calculation.feeUsd,
-      feeDescription: isAdmin ? '✅ No fee (admin benefit)' : `${calculation.feePercentage} platform fee`,
+      feeDescription: `${calculation.feePercentage} platform fee`,
       totalPayment: calculation.totalChargeUsd
     },
-    message: isAdmin 
-      ? `You will pay ${formatCurrency(calculation.totalChargeUsd)} with NO fee (admin benefit).`
-      : `You will pay ${formatCurrency(calculation.totalChargeUsd)} to fund ${formatCurrency(calculation.intentUsd)} in escrow.`
+    message: `You will pay ${formatCurrency(calculation.totalChargeUsd)} to fund ${formatCurrency(calculation.intentUsd)} in escrow.`
   };
 }
 
