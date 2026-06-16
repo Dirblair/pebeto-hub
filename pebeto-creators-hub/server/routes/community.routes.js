@@ -6,6 +6,7 @@ const { authenticate, optionalAuthenticate } = require('../middleware/auth');
 const CommunityPost = require('../models/CommunityPost');
 const CommunityComment = require('../models/CommunityComment');
 const User = require('../models/User');
+const Campaign = require('../models/Campaign');
 const { AppError } = require('../utils/errors');
 const { body, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
@@ -390,6 +391,39 @@ router.post('/report', authenticate, [
       success: true,
       message: 'Report submitted. Our team will review it.',
       data: { reportId: report._id }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// BID CAMPAIGNS (For Bid Tab)
+// ============================================
+
+/**
+ * GET /api/community/bids
+ * Get campaigns that are open for bidding (unbidded by current user)
+ */
+router.get('/bids', authenticate, async (req, res, next) => {
+  try {
+    const campaigns = await Campaign.find({ 
+      status: 'open',
+      assignedCreatorId: { $exists: false }
+    })
+    .populate('businessId', 'email profile.companyName')
+    .sort({ createdAt: -1 });
+    
+    // Filter out campaigns where user has already bid
+    const userId = req.user._id;
+    const unbiddedCampaigns = campaigns.filter(c => {
+      const userBid = c.bids?.find(b => b.creatorId && b.creatorId.toString() === userId.toString());
+      return !userBid;
+    });
+    
+    res.json({
+      success: true,
+      data: unbiddedCampaigns
     });
   } catch (err) {
     next(err);
