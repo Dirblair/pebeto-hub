@@ -10,7 +10,6 @@
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { attachFeeService } = require('../middleware/feeService');
 const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
 const { getWalletBalance, getTransactionHistory } = require('../services/walletService');
@@ -118,6 +117,21 @@ const transactionsValidation = [
     .isIn(['deposit', 'withdrawal', 'tip', 'platform_fee', 'escrow_release'])
     .withMessage('Invalid transaction type'),
 ];
+
+// ============================================
+// Helper function to attach fee service
+// ============================================
+
+function attachFeeService(req, res, next) {
+  try {
+    const feeService = require('../services/feeService');
+    req.feeService = feeService;
+    next();
+  } catch (err) {
+    logger.error('Failed to load fee service:', err.message);
+    next();
+  }
+}
 
 // ============================================
 // Protected Routes (Require Authentication)
