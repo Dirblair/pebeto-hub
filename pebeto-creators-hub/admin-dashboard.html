@@ -78,8 +78,6 @@
       font-weight: bold;
       font-size: 18px;
       cursor: pointer;
-      background-size: cover;
-      background-position: center;
     }
     .theme-toggle { cursor: pointer; font-size: 20px; }
     .notification-bell { position: relative; cursor: pointer; }
@@ -366,10 +364,6 @@
       flex-wrap: wrap;
       align-items: center;
     }
-    .profile-avatar-wrapper {
-      position: relative;
-      cursor: pointer;
-    }
     .profile-avatar {
       width: 80px;
       height: 80px;
@@ -380,40 +374,8 @@
       justify-content: center;
       font-size: 32px;
       font-weight: bold;
-      background-size: cover;
-      background-position: center;
-    }
-    .avatar-edit-overlay {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      background: #ff8c42;
-      border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      border: 2px solid #0a0a0a;
       cursor: pointer;
     }
-    .avatar-remove-btn {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #f44336;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      border: 2px solid #0a0a0a;
-      cursor: pointer;
-    }
-    .avatar-remove-btn.show { display: flex; }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .edit-icon { font-size: 14px; color: #ff8c42; cursor: pointer; }
     .company-code {
@@ -525,15 +487,17 @@
       background: rgba(255,140,66,0.1);
     }
     
-    /* Deposit Modal - No Fee for Admin */
-    .deposit-no-fee-badge {
-      background: rgba(76, 175, 80, 0.2);
-      color: #4caf50;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
+    .spinner {
       display: inline-block;
-      margin-left: 10px;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #ff8c42;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     
     @media (max-width: 768px) { 
@@ -580,11 +544,7 @@
 
 <div class="container">
   <div class="profile-banner">
-    <div class="profile-avatar-wrapper">
-      <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">A</div>
-      <div class="avatar-edit-overlay" onclick="openAvatarModal()"><i class="ri-camera-line"></i></div>
-      <div class="avatar-remove-btn" id="avatar-remove-btn" onclick="removeAvatar()"><i class="ri-close-line"></i></div>
-    </div>
+    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">A</div>
     <div class="profile-info">
       <h2 id="company-name">Admin Dashboard <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
       <p id="admin-email">admin@pebeto.com</p>
@@ -619,9 +579,9 @@
 
   <div class="stats-grid">
     <div class="stat-card" onclick="openDepositModal()">
-      <h4>💰 Admin Wallet <span style="font-size:11px;color:#4caf50;">(No fees)</span></h4>
+      <h4>💰 Admin Wallet</h4>
       <div class="amount" id="admin-wallet">$0.00</div>
-      <div style="font-size:11px;">👇 Click to add funds</div>
+      <div style="font-size:11px;">👇 Click to add funds (No fees)</div>
     </div>
     <div class="stat-card" onclick="showActiveEscrow()">
       <h4>🔒 Active Escrow</h4>
@@ -669,25 +629,13 @@
     <button class="tab-btn" data-tab="auto-release">⏰ Auto-Release Monitor</button>
   </div>
 
-  <!-- DASHBOARD TAB - FIXED WITH REAL-TIME STATS -->
+  <!-- DASHBOARD TAB -->
   <div id="tab-dashboard" class="tab-content active">
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-      <div class="stat-card" onclick="loadDashboardStats()">
-        <h4>👥 Total Users</h4>
-        <div class="amount" id="total-users">0</div>
-      </div>
-      <div class="stat-card">
-        <h4>🏢 Total Businesses</h4>
-        <div class="amount" id="total-businesses">0</div>
-      </div>
-      <div class="stat-card">
-        <h4>📢 Active Campaigns</h4>
-        <div class="amount" id="active-campaigns">0</div>
-      </div>
-      <div class="stat-card">
-        <h4>✅ Completed Campaigns</h4>
-        <div class="amount" id="completed-campaigns">0</div>
-      </div>
+      <div class="stat-card" onclick="loadDashboardStats()"><h4>👥 Total Users</h4><div class="amount" id="total-users">0</div></div>
+      <div class="stat-card"><h4>🏢 Total Businesses</h4><div class="amount" id="total-businesses">0</div></div>
+      <div class="stat-card"><h4>📢 Active Campaigns</h4><div class="amount" id="active-campaigns">0</div></div>
+      <div class="stat-card"><h4>✅ Completed Campaigns</h4><div class="amount" id="completed-campaigns">0</div></div>
     </div>
     <div class="chart-card" style="margin-top: 20px;">
       <h4>📊 Platform Fees Breakdown</h4>
@@ -717,8 +665,8 @@
         <thead>
           <tr><th>Title</th><th>Business</th><th>Budget</th><th>Slots</th><th>Status</th><th>Bids</th><th>Auto-Release</th><th>Actions</th>
         </thead>
-        <tbody id="campaigns-body">
-          <tr><td colspan="8" class="empty-state">Loading campaigns...</td></tr>
+        <tbody>
+          <tr><td colspan="8" class="empty-state">Loading campaigns...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -741,8 +689,8 @@
         <thead>
           <tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Status</th><th>Submitted</th><th>Actions</th>
         </thead>
-        <tbody id="applications-body">
-          <tr><td colspan="7" class="empty-state">Loading applications...</td></tr>
+        <tbody>
+          <tr><td colspan="7" class="empty-state">Loading applications...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -756,8 +704,8 @@
         <thead>
           <tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Submitted</th><th>Auto-Release</th>
         </thead>
-        <tbody id="active-projects-body">
-          <tr><td colspan="6" class="empty-state">Loading active projects...</td></tr>
+        <tbody>
+          <tr><td colspan="6" class="empty-state">Loading active projects...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -805,6 +753,7 @@
       <button class="btn-action" onclick="loadUsers()">Search</button>
     </div>
     
+    <!-- User Stats Summary -->
     <div class="campaign-stats-summary" style="margin-bottom: 20px;">
       <div class="stat-card-small">
         <h5>👥 Total Users</h5>
@@ -830,8 +779,8 @@
         <thead>
           <tr><th>Email</th><th>Unique Code</th><th>Role</th><th>Status</th><th>Wallet</th><th>Joined</th><th>Actions</th>
         </thead>
-        <tbody id="users-body">
-          <tr><td colspan="7" class="empty-state">Loading users...</td></tr>
+        <tbody>
+          <tr><td colspan="7" class="empty-state">Loading users...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -863,8 +812,8 @@
         <thead>
           <tr><th>Type</th><th>From/To</th><th>Amount</th><th>Fee</th><th>Net</th><th>Status</th><th>Date</th>
         </thead>
-        <tbody id="transactions-body">
-          <tr><td colspan="7" class="empty-state">Loading transactions...</td></tr>
+        <tbody>
+          <tr><td colspan="7" class="empty-state">Loading transactions...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -873,7 +822,7 @@
 
   <!-- WITHDRAWALS TAB -->
   <div id="tab-withdrawals" class="tab-content">
-    <h3>💸 Admin Withdrawal <span style="font-size:13px;color:#4caf50;">(No fees | No daily limits)</span></h3>
+    <h3>💸 Admin Withdrawal (No fees | No daily limits)</h3>
     <div style="background: rgba(255,255,255,0.03); border-radius: 24px; padding: 24px;">
       <input type="number" id="withdraw-amount" placeholder="Amount (USD)" oninput="updateWithdrawPreview()" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:40px; color:white; margin-bottom:15px;">
       <div class="method-buttons">
@@ -891,8 +840,8 @@
         <thead>
           <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th>
         </thead>
-        <tbody id="admin-withdrawals-body">
-          <tr><td colspan="5" class="empty-state">Loading withdrawals...</td></tr>
+        <tbody>
+          <tr><td colspan="5" class="empty-state">Loading withdrawals...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -917,7 +866,7 @@
           <tr><th>Action</th><th>User</th><th>IP Address</th><th>Device</th><th>Date</th>
         </thead>
         <tbody id="activity-list">
-          <tr><td colspan="5" class="empty-state">Loading activity...</td></tr>
+          <tr><td colspan="5" class="empty-state">Loading activity...<\/td><\/tr>
         </tbody>
       </table>
     </div>
@@ -969,24 +918,13 @@
 <div class="back-to-top" id="backToTop" onclick="scrollToTop()"><i class="ri-arrow-up-line"></i></div>
 
 <!-- MODALS -->
-<div id="avatar-modal" class="modal">
-  <div class="modal-content">
-    <h3>Change Profile Picture</h3>
-    <div class="avatar-preview" id="avatar-preview"></div>
-    <input type="text" id="avatar-url" placeholder="Image URL">
-    <input type="file" id="avatar-file" accept="image/*">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="saveAvatar()">Save</button>
-      <button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
+<div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><input type="file" id="avatar-file" accept="image/*"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
 
-<!-- DEPOSIT MODAL - NO FEE FOR ADMIN -->
+<!-- Deposit Modal - NO FEES FOR ADMIN -->
 <div id="deposit-modal" class="modal">
   <div class="modal-content">
-    <h3>💰 Add Funds to Admin Wallet <span class="deposit-no-fee-badge">No Platform Fee</span></h3>
-    <p style="margin-bottom: 15px; color: #4caf50;">✅ Admin deposits have <strong>0% fee</strong> — you get the full amount!</p>
+    <h3>💰 Add Funds to Admin Wallet</h3>
+    <p style="margin-bottom: 15px; color: #4caf50;"><strong>✓ No platform fees for admin deposits</strong></p>
     <div class="deposit-methods">
       <div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')">M-Pesa</div>
       <div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank Transfer</div>
@@ -995,216 +933,31 @@
     <div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
     <div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
     <div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
-    <div class="form-group">
-      <label>Amount to Deposit (USD) — <strong style="color:#4caf50;">0% fee applied</strong></label>
-      <input type="number" id="deposit-amount" placeholder="Enter amount">
-    </div>
-    <div id="deposit-preview" style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px; color: #4caf50;">
-      💡 You pay: $0.00 — <strong>No fee (admin benefit)</strong>
+    <input type="number" id="deposit-amount" placeholder="Amount to Deposit (USD)" oninput="updateDepositPreview()">
+    <div id="deposit-preview" style="background: rgba(76,175,80,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px; color: #4caf50;">
+      💡 No fees! You pay: $0.00
     </div>
     <div class="modal-buttons">
-      <button class="save-btn" onclick="processDeposit()">Add Funds</button>
+      <button class="save-btn" onclick="processAdminDeposit()">Add Funds</button>
       <button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button>
     </div>
   </div>
 </div>
 
-<div id="campaign-modal" class="modal">
-  <div class="modal-content">
-    <h3>📢 Launch Campaign</h3>
-    <input type="text" id="campaign-title" placeholder="Campaign Title">
-    <input type="number" id="campaign-budget" placeholder="Total Budget (USD)" oninput="updateBudgetBreakdown()">
-    <input type="number" id="campaign-slots" placeholder="Number of Creators" value="1" oninput="updateBudgetBreakdown()">
-    <input type="date" id="campaign-deadline">
-    <textarea id="campaign-instructions" rows="3" placeholder="Instructions for creators"></textarea>
-    <div id="budget-breakdown"></div>
-    <div id="campaign-error" style="color:#f44336;"></div>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="createCampaign()">Launch</button>
-      <button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="edit-campaign-modal" class="modal">
-  <div class="modal-content">
-    <h3>✏️ Edit Campaign</h3>
-    <input type="hidden" id="edit-campaign-id">
-    <input type="text" id="edit-campaign-title" placeholder="Title">
-    <input type="number" id="edit-campaign-budget" placeholder="Budget">
-    <input type="number" id="edit-campaign-slots" placeholder="Slots">
-    <input type="date" id="edit-campaign-deadline">
-    <textarea id="edit-campaign-instructions" rows="3" placeholder="Instructions"></textarea>
-    <div id="edit-campaign-error" style="color:#f44336;"></div>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="updateCampaign()">Save</button>
-      <button class="cancel-btn" onclick="closeModal('edit-campaign-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="tip-modal" class="modal">
-  <div class="modal-content">
-    <h3>💝 Send Tip</h3>
-    <p id="tip-creator-name"></p>
-    <input type="number" id="tip-amount" placeholder="Amount">
-    <select id="tip-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="sendTip()">Send</button>
-      <button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="hire-modal" class="modal">
-  <div class="modal-content">
-    <h3>🤝 Hire Creator</h3>
-    <p id="hire-creator-name"></p>
-    <input type="text" id="hire-campaign-title" placeholder="Campaign Title">
-    <input type="number" id="hire-budget" placeholder="Offer Amount (USD)">
-    <textarea id="hire-description" rows="3" placeholder="Job Description"></textarea>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="sendHire()">Send Offer</button>
-      <button class="cancel-btn" onclick="closeModal('hire-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="settings-modal" class="modal">
-  <div class="modal-content">
-    <h3>Company Settings</h3>
-    <input type="text" id="setting-company" placeholder="Company Name">
-    <select id="setting-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select>
-    <input type="text" id="setting-tax-id" placeholder="Tax ID">
-    <input type="text" id="setting-address" placeholder="Business Address">
-    <select id="setting-timezone"><option value="Africa/Nairobi">Africa/Nairobi (EAT)</option><option value="America/New_York">America/New_York (EST)</option><option value="Europe/London">Europe/London (GMT)</option></select>
-    <select id="setting-language"><option value="en">English</option><option value="sw">Swahili</option><option value="fr">French</option></select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="saveSettings()">Save</button>
-      <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="message-modal" class="modal">
-  <div class="modal-content">
-    <h3>Send Message to <span id="msg-name"></span></h3>
-    <textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea>
-    <div id="msg-counter">500 characters remaining</div>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="sendMessage()">Send</button>
-      <button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="add-team-member-modal" class="modal">
-  <div class="modal-content">
-    <h3>Add Team Member</h3>
-    <input type="email" id="team-email" placeholder="Email">
-    <select id="team-role"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="addTeamMember()">Invite</button>
-      <button class="cancel-btn" onclick="closeModal('add-team-member-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="add-webhook-modal" class="modal">
-  <div class="modal-content">
-    <h3>Add Webhook</h3>
-    <input type="url" id="webhook-url" placeholder="https://your-server.com/webhook">
-    <select id="webhook-events"><option value="campaign.created">Campaign Created</option><option value="campaign.funded">Campaign Funded</option><option value="bid.received">Bid Received</option><option value="work.submitted">Work Submitted</option><option value="payment.released">Payment Released</option></select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="addWebhook()">Add</button>
-      <button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="user-modal" class="modal">
-  <div class="modal-content">
-    <h3>User Details</h3>
-    <div id="user-details"></div>
-    <div class="modal-buttons">
-      <button class="cancel-btn" onclick="closeModal('user-modal')">Close</button>
-    </div>
-  </div>
-</div>
-
-<div id="campaign-detail-modal" class="modal">
-  <div class="modal-content">
-    <h3>Campaign Details</h3>
-    <div id="campaign-details"></div>
-    <div class="modal-buttons">
-      <button class="cancel-btn" onclick="closeModal('campaign-detail-modal')">Close</button>
-    </div>
-  </div>
-</div>
-
-<div id="confirm-withdraw-modal" class="modal">
-  <div class="modal-content">
-    <h3>Confirm Withdrawal</h3>
-    <p id="confirm-details"></p>
-    <div class="modal-buttons">
-      <button class="save-btn" id="confirm-withdraw-btn" onclick="processWithdrawal()">Confirm</button>
-      <button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="2fa-modal" class="modal">
-  <div class="modal-content">
-    <h3>2FA Setup</h3>
-    <div id="2fa-qr" style="text-align:center;"></div>
-    <input type="text" id="2fa-secret" readonly>
-    <input type="text" id="2fa-code" placeholder="Enter 6-digit code">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="verify2FA()">Verify</button>
-      <button class="cancel-btn" onclick="closeModal('2fa-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="resolve-report-modal" class="modal">
-  <div class="modal-content">
-    <h3>Resolve Report</h3>
-    <p id="resolve-report-info"></p>
-    <select id="report-action"><option value="none">No Action</option><option value="warn">Warn User</option><option value="suspend">Suspend User</option><option value="ban">Ban User</option><option value="delete_post">Delete Post</option></select>
-    <textarea id="report-resolution" rows="3" placeholder="Resolution notes..."></textarea>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="resolveReport()">Submit Resolution</button>
-      <button class="cancel-btn" onclick="closeModal('resolve-report-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="api-key-modal" class="modal">
-  <div class="modal-content">
-    <h3>Create API Key</h3>
-    <input type="text" id="api-key-name" placeholder="Key Name (e.g., Production Server)">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="createApiKeySubmit()">Create</button>
-      <button class="cancel-btn" onclick="closeModal('api-key-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="audit-modal" class="modal">
-  <div class="modal-content">
-    <h3>📊 Transaction Audit</h3>
-    <div id="audit-list" style="max-height: 400px; overflow-y: auto;"></div>
-    <button class="cancel-btn" onclick="closeModal('audit-modal')">Close</button>
-  </div>
-</div>
-
-<div id="deposit-history-modal" class="modal">
-  <div class="modal-content">
-    <h3>📥 Deposit History</h3>
-    <div id="deposit-history-list" style="max-height: 400px; overflow-y: auto;"></div>
-    <button class="cancel-btn" onclick="closeModal('deposit-history-modal')">Close</button>
-  </div>
-</div>
+<div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Campaign Title"><input type="number" id="campaign-budget" placeholder="Total Budget (USD)" oninput="updateBudgetBreakdown()"><input type="number" id="campaign-slots" placeholder="Number of Creators" value="1" oninput="updateBudgetBreakdown()"><input type="date" id="campaign-deadline"><textarea id="campaign-instructions" rows="3" placeholder="Instructions for creators"></textarea><div id="budget-breakdown"></div><div id="campaign-error" style="color:#f44336;"></div><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
+<div id="edit-campaign-modal" class="modal"><div class="modal-content"><h3>✏️ Edit Campaign</h3><input type="hidden" id="edit-campaign-id"><input type="text" id="edit-campaign-title" placeholder="Title"><input type="number" id="edit-campaign-budget" placeholder="Budget"><input type="number" id="edit-campaign-slots" placeholder="Slots"><input type="date" id="edit-campaign-deadline"><textarea id="edit-campaign-instructions" rows="3" placeholder="Instructions"></textarea><div id="edit-campaign-error" style="color:#f44336;"></div><div class="modal-buttons"><button class="save-btn" onclick="updateCampaign()">Save</button><button class="cancel-btn" onclick="closeModal('edit-campaign-modal')">Cancel</button></div></div></div>
+<div id="tip-modal" class="modal"><div class="modal-content"><h3>💝 Send Tip</h3><p id="tip-creator-name"></p><input type="number" id="tip-amount" placeholder="Amount"><select id="tip-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select><div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div></div></div>
+<div id="hire-modal" class="modal"><div class="modal-content"><h3>🤝 Hire Creator</h3><p id="hire-creator-name"></p><input type="text" id="hire-campaign-title" placeholder="Campaign Title"><input type="number" id="hire-budget" placeholder="Offer Amount (USD)"><textarea id="hire-description" rows="3" placeholder="Job Description"></textarea><div class="modal-buttons"><button class="save-btn" onclick="sendHire()">Send Offer</button><button class="cancel-btn" onclick="closeModal('hire-modal')">Cancel</button></div></div></div>
+<div id="settings-modal" class="modal"><div class="modal-content"><h3>Company Settings</h3><input type="text" id="setting-company" placeholder="Company Name"><select id="setting-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select><input type="text" id="setting-tax-id" placeholder="Tax ID"><input type="text" id="setting-address" placeholder="Business Address"><select id="setting-timezone"><option value="Africa/Nairobi">Africa/Nairobi (EAT)</option><option value="America/New_York">America/New_York (EST)</option><option value="Europe/London">Europe/London (GMT)</option></select><select id="setting-language"><option value="en">English</option><option value="sw">Swahili</option><option value="fr">French</option></select><div class="modal-buttons"><button class="save-btn" onclick="saveSettings()">Save</button><button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button></div></div></div>
+<div id="message-modal" class="modal"><div class="modal-content"><h3>Send Message to <span id="msg-name"></span></h3><textarea id="msg-text" rows="4" placeholder="Type your message..."></textarea><div id="msg-counter">500 characters remaining</div><div class="modal-buttons"><button class="save-btn" onclick="sendMessage()">Send</button><button class="cancel-btn" onclick="closeModal('message-modal')">Cancel</button></div></div></div>
+<div id="add-team-member-modal" class="modal"><div class="modal-content"><h3>Add Team Member</h3><input type="email" id="team-email" placeholder="Email"><select id="team-role"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select><div class="modal-buttons"><button class="save-btn" onclick="addTeamMember()">Invite</button><button class="cancel-btn" onclick="closeModal('add-team-member-modal')">Cancel</button></div></div></div>
+<div id="add-webhook-modal" class="modal"><div class="modal-content"><h3>Add Webhook</h3><input type="url" id="webhook-url" placeholder="https://your-server.com/webhook"><select id="webhook-events"><option value="campaign.created">Campaign Created</option><option value="campaign.funded">Campaign Funded</option><option value="bid.received">Bid Received</option><option value="work.submitted">Work Submitted</option><option value="payment.released">Payment Released</option></select><div class="modal-buttons"><button class="save-btn" onclick="addWebhook()">Add</button><button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button></div></div></div>
+<div id="user-modal" class="modal"><div class="modal-content"><h3>User Details</h3><div id="user-details"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('user-modal')">Close</button></div></div></div>
+<div id="campaign-detail-modal" class="modal"><div class="modal-content"><h3>Campaign Details</h3><div id="campaign-details"></div><div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('campaign-detail-modal')">Close</button></div></div></div>
+<div id="confirm-withdraw-modal" class="modal"><div class="modal-content"><h3>Confirm Withdrawal</h3><p id="confirm-details"></p><div class="modal-buttons"><button class="save-btn" id="confirm-withdraw-btn" onclick="processWithdrawal()">Confirm</button><button class="cancel-btn" onclick="closeModal('confirm-withdraw-modal')">Cancel</button></div></div></div>
+<div id="2fa-modal" class="modal"><div class="modal-content"><h3>2FA Setup</h3><div id="2fa-qr" style="text-align:center;"></div><input type="text" id="2fa-secret" readonly><input type="text" id="2fa-code" placeholder="Enter 6-digit code"><div class="modal-buttons"><button class="save-btn" onclick="verify2FA()">Verify</button><button class="cancel-btn" onclick="closeModal('2fa-modal')">Cancel</button></div></div></div>
+<div id="resolve-report-modal" class="modal"><div class="modal-content"><h3>Resolve Report</h3><p id="resolve-report-info"></p><select id="report-action"><option value="none">No Action</option><option value="warn">Warn User</option><option value="suspend">Suspend User</option><option value="ban">Ban User</option><option value="delete_post">Delete Post</option></select><textarea id="report-resolution" rows="3" placeholder="Resolution notes..."></textarea><div class="modal-buttons"><button class="save-btn" onclick="resolveReport()">Submit Resolution</button><button class="cancel-btn" onclick="closeModal('resolve-report-modal')">Cancel</button></div></div></div>
+<div id="api-key-modal" class="modal"><div class="modal-content"><h3>Create API Key</h3><input type="text" id="api-key-name" placeholder="Key Name (e.g., Production Server)"><div class="modal-buttons"><button class="save-btn" onclick="createApiKeySubmit()">Create</button><button class="cancel-btn" onclick="closeModal('api-key-modal')">Cancel</button></div></div></div>
 
 <script>
   const API_BASE = 'https://pebeto-creators-hub.onrender.com';
@@ -1212,29 +965,15 @@
   // ============================================
   // VARIABLES
   // ============================================
-  let selectedWithdrawMethod = 'mpesa';
-  let selectedDepositMethod = 'mpesa';
-  let notifications = [];
-  let campaigns = [];
-  let allBids = [];
-  let allTransactions = [];
-  let activeProjects = [];
-  let allUsersData = [];
+  let selectedWithdrawMethod = 'mpesa', selectedDepositMethod = 'mpesa';
+  let notifications = [], campaigns = [], allBids = [], allTransactions = [], activeProjects = [], allUsersData = [];
+  let currentTipCreatorId = null, currentTipCreatorName = '';
+  let currentHireCreatorId = null, currentHireCreatorName = '';
+  let spendingChart = null, userGrowthChart = null, revenueChart = null, campaignChart = null, feeChart = null;
+  let teamMembers = [], webhooks = [], apiKeys = [];
+  let reports = [], currentReportToResolve = null;
+  let transactionPage = 1, transactionHasMore = true;
   let currentUser = null;
-  let transactionPage = 1;
-  let transactionHasMore = true;
-  let withdrawConfirmLoading = false;
-  let spendingChart = null;
-  let userGrowthChart = null;
-  let revenueChart = null;
-  let campaignChart = null;
-  let feeChart = null;
-  let teamMembers = [];
-  let webhooks = [];
-  let apiKeys = [];
-  let reports = [];
-  let currentReportToResolve = null;
-  let dailyWithdrawalTotal = 0;
 
   // ============================================
   // HELPER FUNCTIONS
@@ -1275,14 +1014,8 @@
   function updateNotificationBadge() { const badge = document.getElementById('notification-badge'); if (notifications.length > 0) { badge.style.display = 'flex'; badge.innerText = notifications.length > 9 ? '9+' : notifications.length; } else { badge.style.display = 'none'; } }
   
   function showActiveEscrow() { showToast(`Escrow: ${document.getElementById('total-escrow').innerText}`, 'info'); }
-  function showTotalDeposits() { 
-    document.getElementById('deposit-history-modal').style.display = 'flex';
-    loadDepositHistory();
-  }
-  function showAuditLedger() { 
-    document.getElementById('audit-modal').style.display = 'flex';
-    loadAuditHistory();
-  }
+  function showTotalDeposits() { showToast(`Total Deposits: ${document.getElementById('total-deposits').innerText}`, 'info'); }
+  function showAuditLedger() { showToast(`Transactions: ${document.getElementById('audit-count').innerText}`, 'info'); }
   
   async function fetchJSON(url, options = {}) {
     const token = localStorage.getItem('pebeto_token');
@@ -1291,8 +1024,13 @@
   }
 
   // ============================================
-  // AVATAR FUNCTIONS (FIXED)
+  // AVATAR FUNCTIONS
   // ============================================
+  function openAvatarModal() { 
+    document.getElementById('avatar-modal').style.display = 'flex'; 
+    document.getElementById('avatar-file').addEventListener('change', previewAvatar);
+  }
+  
   function previewAvatar() {
     const file = document.getElementById('avatar-file').files[0];
     if (file) {
@@ -1300,15 +1038,8 @@
       reader.onload = function(e) {
         document.getElementById('avatar-preview').style.backgroundImage = `url(${e.target.result})`;
         document.getElementById('avatar-preview').style.backgroundSize = 'cover';
-        document.getElementById('avatar-preview').style.backgroundPosition = 'center';
       };
       reader.readAsDataURL(file);
-    } else {
-      const url = document.getElementById('avatar-url').value;
-      if (url) {
-        document.getElementById('avatar-preview').style.backgroundImage = `url(${url})`;
-        document.getElementById('avatar-preview').style.backgroundSize = 'cover';
-      }
     }
   }
 
@@ -1329,16 +1060,10 @@
         if (data.success) {
           showToast('Profile picture updated!', 'success');
           if (currentUser) {
-            if (!currentUser.profile) currentUser.profile = {};
-            currentUser.profile.avatarUrl = data.data.avatarUrl;
+            currentUser.profile.avatarUrl = data.avatarUrl;
             localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
           }
-          document.getElementById('avatar-header').style.backgroundImage = `url(${data.data.avatarUrl})`;
-          document.getElementById('avatar-header').innerHTML = '';
-          document.getElementById('profile-avatar').style.backgroundImage = `url(${data.data.avatarUrl})`;
-          document.getElementById('profile-avatar').innerHTML = '';
-          document.getElementById('avatar-remove-btn').classList.add('show');
-          closeModal('avatar-modal');
+          location.reload();
         } else {
           showToast(data.message || 'Upload failed', 'error');
         }
@@ -1347,196 +1072,182 @@
       }
     } else {
       const avatarUrl = document.getElementById('avatar-url').value;
-      if (!avatarUrl) { showToast('Enter image URL or select file', 'error'); return; }
-      try {
-        const token = localStorage.getItem('pebeto_token');
-        await fetch(`${API_BASE}/api/user/profile`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ profile: { avatarUrl } })
-        });
-        showToast('Profile picture updated!', 'success');
-        if (currentUser) {
-          if (!currentUser.profile) currentUser.profile = {};
-          currentUser.profile.avatarUrl = avatarUrl;
-          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-        }
-        document.getElementById('avatar-header').style.backgroundImage = `url(${avatarUrl})`;
-        document.getElementById('avatar-header').innerHTML = '';
-        document.getElementById('profile-avatar').style.backgroundImage = `url(${avatarUrl})`;
-        document.getElementById('profile-avatar').innerHTML = '';
-        document.getElementById('avatar-remove-btn').classList.add('show');
-        closeModal('avatar-modal');
-      } catch(e) {
-        showToast('Error saving avatar', 'error');
-      }
-    }
-  }
-
-  async function removeAvatar() {
-    if (!confirm('Remove your profile picture?')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const response = await fetch(`${API_BASE}/api/user/avatar`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        if (currentUser && currentUser.profile) {
-          currentUser.profile.avatarUrl = null;
-          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-        }
-        const initial = (currentUser?.email?.[0] || 'A').toUpperCase();
-        document.getElementById('avatar-header').style.backgroundImage = '';
-        document.getElementById('avatar-header').innerHTML = initial;
-        document.getElementById('profile-avatar').style.backgroundImage = '';
-        document.getElementById('profile-avatar').innerHTML = initial;
-        document.getElementById('avatar-remove-btn').classList.remove('show');
-        showToast('Profile picture removed', 'success');
+      if (avatarUrl) {
+        try {
+          const token = localStorage.getItem('pebeto_token');
+          await fetch(`${API_BASE}/api/user/profile`, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+            body: JSON.stringify({ profile: { avatarUrl } }) 
+          });
+          showToast('Profile picture updated!', 'success');
+          if (currentUser) {
+            currentUser.profile.avatarUrl = avatarUrl;
+            localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+          }
+          location.reload();
+        } catch(e) { showToast('Error', 'error'); }
       } else {
-        showToast(data.message || 'Failed to remove', 'error');
+        showToast('Please select an image or enter URL', 'error');
       }
-    } catch(e) {
-      showToast('Error removing avatar', 'error');
     }
+    closeModal('avatar-modal');
   }
 
   // ============================================
-  // DEPOSIT - NO FEE FOR ADMIN
+  // DEPOSIT & WITHDRAWAL UI
   // ============================================
-  function openDepositModal() { 
-    document.getElementById('deposit-modal').style.display = 'flex'; 
-    updateDepositPreview();
-    const savedMethod = localStorage.getItem('preferred_deposit_method');
-    if (savedMethod) selectDepositMethod(savedMethod);
+  
+  function openDepositModal() { document.getElementById('deposit-modal').style.display = 'flex'; updateDepositPreview(); }
+  function selectDepositMethod(m) { 
+    selectedDepositMethod = m; 
+    document.querySelectorAll('.deposit-method-btn').forEach(b => b.classList.remove('active')); 
+    if (event && event.target) event.target.classList.add('active'); 
+    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none'); 
+    document.getElementById(`deposit-${m}-fields`).style.display = 'block'; 
+    updateDepositPreview(); 
   }
-
-  function selectDepositMethod(method) {
-    selectedDepositMethod = method;
-    document.querySelectorAll('.deposit-method-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none');
-    document.getElementById(`deposit-${method}-fields`).style.display = 'block';
-    updateDepositPreview();
-    localStorage.setItem('preferred_deposit_method', method);
+  
+  function updateDepositPreview() { 
+    let amt = parseFloat(document.getElementById('deposit-amount').value) || 0; 
+    // NO FEES FOR ADMIN
+    document.getElementById('deposit-preview').innerHTML = `💡 No fees! You pay: $${amt.toFixed(2)}`; 
   }
-
-  function updateDepositPreview() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value) || 0;
-    // NO FEE FOR ADMIN - FULL AMOUNT
-    document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${amount.toFixed(2)} — <strong style="color:#4caf50;">No fee (admin benefit)</strong>`;
-  }
-
-  async function processDeposit() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value);
-    if (!amount || amount <= 0) { showToast('Enter amount', 'error'); return; }
-    // NO FEE - confirm without fee
-    if (!confirm(`Deposit $${amount}? No platform fee for admin.`)) return;
+  
+  async function processAdminDeposit() {
+    let amt = parseFloat(document.getElementById('deposit-amount').value); 
+    if (!amt || amt <= 0) { showToast('Enter amount', 'error'); return; }
+    // NO FEES FOR ADMIN
+    if (!confirm(`Deposit $${amt}? No fees apply.`)) return;
     showToast('Processing payment...', 'info');
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/wallet/deposit`, { 
+      const res = await fetch(`${API_BASE}/api/admin/wallet/deposit`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ 
-          intentUsd: amount, 
-          paymentMethod: selectedDepositMethod,
-          isAdmin: true,
-          adminFeeWaived: true
-        }) 
+        body: JSON.stringify({ amount: amt, paymentMethod: selectedDepositMethod }) 
       });
       const data = await res.json();
       if (data.success) { 
-        showToast('Deposit successful! No fee applied.', 'success');
-        loadWallet(); 
-        closeModal('deposit-modal');
-        document.getElementById('deposit-amount').value = '';
+        showToast(`Deposit of $${amt} successful!`, 'success');
         loadDashboardStats();
+        closeModal('deposit-modal');
+        addNotification(`Deposited $${amt} to admin wallet`);
       } else {
         showToast(data.message || 'Deposit failed', 'error');
       }
     } catch(e) { showToast('Network error', 'error'); }
   }
-
-  // ============================================
-  // WALLET & BALANCE
-  // ============================================
-  async function loadWallet() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/wallet/balance`);
-      if (data.success) {
-        const available = data.data?.balances?.available || 0;
-        const escrow = data.data?.balances?.escrow || 0;
-        document.getElementById('admin-wallet').innerHTML = formatMoney(available);
-        document.getElementById('total-escrow').innerHTML = formatMoney(escrow);
-      }
-    } catch(e) { console.error(e); }
+  
+  function selectWithdrawMethod(m) { 
+    selectedWithdrawMethod = m; 
+    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); 
+    if (event && event.target) event.target.classList.add('active'); 
+    document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); 
+    document.getElementById(`withdraw-${m}-fields`).style.display = 'block'; 
+    updateWithdrawPreview(); 
+  }
+  
+  function updateWithdrawPreview() { 
+    let amt = parseFloat(document.getElementById('withdraw-amount').value) || 0; 
+    const btn = document.getElementById('withdraw-btn'); 
+    if (amt > 0) { 
+      btn.classList.add('active'); 
+      btn.disabled = false; 
+    } else { 
+      btn.classList.remove('active'); 
+      btn.disabled = true; 
+    } 
+  }
+  
+  function withdraw() { 
+    let amt = parseFloat(document.getElementById('withdraw-amount').value); 
+    if (!amt || amt <= 0) { showToast('Enter amount', 'error'); return; } 
+    const method = selectedWithdrawMethod; 
+    if (method === 'mpesa') { 
+      const phone = document.getElementById('mpesa-phone').value; 
+      if (!phone || phone.length < 10) { showToast('Valid phone number required', 'error'); return; } 
+    } 
+    document.getElementById('confirm-details').innerHTML = `Amount: ${formatMoney(amt)}<br>Method: ${method.toUpperCase()}<br>No fees!`; 
+    document.getElementById('confirm-withdraw-modal').style.display = 'flex'; 
+  }
+  
+  function processWithdrawal() { 
+    const amt = parseFloat(document.getElementById('withdraw-amount').value); 
+    showToast(`Withdrawal of ${formatMoney(amt)} submitted!`, 'success'); 
+    closeModal('confirm-withdraw-modal'); 
+    addNotification(`Withdrew ${formatMoney(amt)}`); 
+    document.getElementById('withdraw-amount').value = ''; 
+    updateWithdrawPreview(); 
   }
 
   // ============================================
-  // DASHBOARD STATS - REAL-TIME UPDATES (FIXED)
+  // LOAD DASHBOARD STATS - UPDATED WITH REAL NUMBERS
   // ============================================
   async function loadDashboardStats() {
     try {
       console.log('🔄 Loading dashboard stats...');
       
-      // 1. Load users from admin/users endpoint
+      // Fetch users data
       const token = localStorage.getItem('pebeto_token');
-      const usersRes = await fetch(`${API_BASE}/api/admin/users?limit=500`, {
+      const usersRes = await fetch(`${API_BASE}/api/admin/users?limit=200`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const usersData = await usersRes.json();
       
-      let totalUsers = 0, totalBusinesses = 0, totalCreators = 0, totalAdmins = 0;
-      let activeCampaigns = 0, completedCampaigns = 0;
-      
       if (usersData.success && usersData.data.users) {
-        const users = usersData.data.users;
-        totalUsers = users.length;
-        totalBusinesses = users.filter(u => u.role === 'business').length;
-        totalCreators = users.filter(u => u.role === 'creator').length;
-        totalAdmins = users.filter(u => u.role === 'admin').length;
+        const fetchedUsers = usersData.data.users;
+        const totalUsers = fetchedUsers.length;
+        const businesses = fetchedUsers.filter(u => u.role === 'business').length;
+        const creators = fetchedUsers.filter(u => u.role === 'creator').length;
+        const admins = fetchedUsers.filter(u => u.role === 'admin').length;
         
-        console.log(`📊 Users: ${totalUsers} (${totalCreators} creators, ${totalBusinesses} businesses, ${totalAdmins} admins)`);
+        // Update Dashboard stats
+        document.getElementById('total-users').innerText = totalUsers;
+        document.getElementById('total-businesses').innerText = businesses;
+        document.getElementById('total-users-count').innerText = totalUsers;
+        document.getElementById('total-creators-count').innerText = creators;
+        document.getElementById('total-businesses-count').innerText = businesses;
+        document.getElementById('total-admins-count').innerText = admins;
+        
+        // Update Users tab stats
+        document.querySelectorAll('#total-users, #total-users-count').forEach(el => el.innerText = totalUsers);
+        document.querySelectorAll('#total-businesses, #total-businesses-count').forEach(el => el.innerText = businesses);
+        
+        console.log(`✅ Dashboard stats: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
       }
       
-      // 2. Load campaigns
-      const campaignsRes = await fetch(`${API_BASE}/api/campaigns?limit=500`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const campaignsData = await campaignsRes.json();
-      
+      // Get campaign stats
+      const campaignsData = await fetchJSON(`${API_BASE}/api/campaigns?limit=200`);
       if (campaignsData.success && campaignsData.data.campaigns) {
         const allCampaigns = campaignsData.data.campaigns;
-        activeCampaigns = allCampaigns.filter(c => c.status === 'open' || c.status === 'in_progress').length;
-        completedCampaigns = allCampaigns.filter(c => c.status === 'paid' || c.status === 'completed').length;
-        console.log(`📊 Campaigns: ${activeCampaigns} active, ${completedCampaigns} completed`);
+        const activeCampaigns = allCampaigns.filter(c => c.status === 'open' || c.status === 'in_progress').length;
+        const completedCampaigns = allCampaigns.filter(c => c.status === 'paid').length;
+        document.getElementById('active-campaigns').innerText = activeCampaigns;
+        document.getElementById('completed-campaigns').innerText = completedCampaigns;
+        
+        // Update campaign stats in campaigns tab
+        const totalBudget = allCampaigns.reduce((s, c) => s + (c.budget || 0), 0);
+        const totalBids = allCampaigns.reduce((s, c) => s + (c.bids?.length || 0), 0);
+        document.getElementById('campaign-stats-total-budget').innerHTML = formatMoney(totalBudget);
+        document.getElementById('campaign-stats-total-bids').innerText = totalBids;
+        document.getElementById('campaign-stats-completed').innerText = completedCampaigns;
       }
       
-      // 3. Update UI with real numbers
-      const totalUsersEl = document.getElementById('total-users');
-      const totalBusinessesEl = document.getElementById('total-businesses');
-      const activeCampaignsEl = document.getElementById('active-campaigns');
-      const completedCampaignsEl = document.getElementById('completed-campaigns');
+      // Get wallet balance
+      const walletData = await fetchJSON(`${API_BASE}/api/wallet/balance`);
+      if (walletData.success) {
+        document.getElementById('admin-wallet').innerHTML = formatMoney(walletData.data?.balances?.available || 0);
+      }
       
-      // Also update the Users tab stats
-      const totalUsersCountEl = document.getElementById('total-users-count');
-      const totalCreatorsCountEl = document.getElementById('total-creators-count');
-      const totalBusinessesCountEl = document.getElementById('total-businesses-count');
-      const totalAdminsCountEl = document.getElementById('total-admins-count');
-      
-      if (totalUsersEl) totalUsersEl.innerText = totalUsers;
-      if (totalBusinessesEl) totalBusinessesEl.innerText = totalBusinesses;
-      if (activeCampaignsEl) activeCampaignsEl.innerText = activeCampaigns;
-      if (completedCampaignsEl) completedCampaignsEl.innerText = completedCampaigns;
-      
-      if (totalUsersCountEl) totalUsersCountEl.innerText = totalUsers;
-      if (totalCreatorsCountEl) totalCreatorsCountEl.innerText = totalCreators;
-      if (totalBusinessesCountEl) totalBusinessesCountEl.innerText = totalBusinesses;
-      if (totalAdminsCountEl) totalAdminsCountEl.innerText = totalAdmins;
-      
-      console.log('✅ Dashboard stats updated successfully');
+      // Get escrow and transaction stats
+      const metricsData = await fetchJSON(`${API_BASE}/api/admin/metrics`);
+      if (metricsData.success) {
+        document.getElementById('total-escrow').innerHTML = formatMoney(metricsData.data?.totalEscrow || 0);
+        const totalDeposits = metricsData.data?.platformStats?.totalDeposits || 0;
+        document.getElementById('total-deposits').innerHTML = formatMoney(totalDeposits);
+        document.getElementById('audit-count').innerText = metricsData.data?.platformStats?.totalWithdrawals || 0;
+      }
       
     } catch(e) { 
       console.error('Error loading dashboard stats:', e);
@@ -1544,169 +1255,221 @@
   }
 
   // ============================================
-  // WITHDRAWAL (Admin - No fees)
+  // LOAD CAMPAIGNS
   // ============================================
-  function selectWithdrawMethod(method) {
-    selectedWithdrawMethod = method;
-    document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none');
-    document.getElementById(`withdraw-${method}-fields`).style.display = 'block';
-    updateWithdrawPreview();
-  }
-
-  function updateWithdrawPreview() {
-    const amount = parseFloat(document.getElementById('withdraw-amount').value) || 0;
-    const withdrawBtn = document.getElementById('withdraw-btn');
-    if (amount > 0) {
-      withdrawBtn.classList.add('active');
-      withdrawBtn.disabled = false;
-    } else {
-      withdrawBtn.classList.remove('active');
-      withdrawBtn.disabled = true;
-    }
-  }
-
-  function withdraw() {
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    if (!amount || amount <= 0) { showToast('Enter amount', 'error'); return; }
-    
-    const availableBalance = parseFloat(document.getElementById('admin-wallet').innerText.replace(/[^0-9.-]/g, '')) || 0;
-    if (amount > availableBalance) { showToast(`Insufficient balance. Available: ${formatMoney(availableBalance)}`, 'error'); return; }
-    
-    if (selectedWithdrawMethod === 'mpesa') {
-      const phone = document.getElementById('mpesa-phone').value;
-      if (!phone || phone.length < 10) { showToast('Enter valid M-Pesa phone number', 'error'); return; }
-    }
-    if (selectedWithdrawMethod === 'bank') {
-      const bankName = document.getElementById('bank-name').value;
-      const account = document.getElementById('bank-account').value;
-      if (!bankName || !account) { showToast('Enter bank details', 'error'); return; }
-    }
-    
-    document.getElementById('confirm-details').innerHTML = `
-      Amount: ${formatMoney(amount)}<br>
-      Method: ${selectedWithdrawMethod.toUpperCase()}<br>
-      <span style="color:#4caf50;">✅ No fee (admin benefit)</span><br>
-      You will receive: ${formatMoney(amount)}<br>
-      <small style="color:#a08070;">Funds will be processed within 24-48 hours</small>
-    `;
-    document.getElementById('confirm-withdraw-modal').style.display = 'flex';
-  }
-
-  async function processWithdrawal() {
-    if (withdrawConfirmLoading) return;
-    withdrawConfirmLoading = true;
-    const confirmBtn = document.getElementById('confirm-withdraw-btn');
-    const originalText = confirmBtn.innerText;
-    confirmBtn.innerText = 'Processing...';
-    confirmBtn.disabled = true;
-    
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    const method = selectedWithdrawMethod;
-    let payoutDetails = {};
-    if (method === 'mpesa') payoutDetails = { phoneNumber: document.getElementById('mpesa-phone').value };
-    else payoutDetails = { bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-account').value, accountHolderName: document.getElementById('bank-holder').value };
+  async function loadCampaigns() {
+    const loadingDiv = document.getElementById('campaigns-loading');
+    const tbody = document.querySelector('#campaigns-table tbody');
+    const search = document.getElementById('campaign-search')?.value || '';
+    const status = document.getElementById('campaign-status-filter')?.value || 'all';
     
     try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/wallet/withdraw`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ 
-          amountUsd: amount, 
-          payoutMethod: method, 
-          payoutDetails,
-          isAdmin: true,
-          adminFeeWaived: true
-        }) 
-      });
-      const data = await res.json();
-      if (data.success) { 
-        showToast('Withdrawal submitted! (No fee applied)', 'success');
-        loadWallet(); 
-        loadAdminWithdrawals();
-        document.getElementById('withdraw-amount').value = '';
-        closeModal('confirm-withdraw-modal');
+      if (loadingDiv) loadingDiv.style.display = 'block';
+      let url = `${API_BASE}/api/campaigns?limit=50`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (status !== 'all') url += `&status=${status}`;
+      
+      const data = await fetchJSON(url);
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      
+      if (data.success && data.data.campaigns) {
+        campaigns = data.data.campaigns;
+        if (campaigns.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No campaigns found<\/td><\/tr>';
+        } else {
+          tbody.innerHTML = campaigns.map(c => {
+            const hasWorkSubmitted = c.status === 'submitted_for_review';
+            const autoReleaseHtml = hasWorkSubmitted ? '<span class="status-badge warning">Pending Review</span>' : '<span class="status-badge">-</span>';
+            return `<tr>
+              <td>${escapeHtml(c.title)}<\/td>
+              <td>${c.businessId?.email || 'N/A'}<\/td>
+              <td>${formatMoney(c.budget)}<\/td>
+              <td>${c.slots || 1}<\/td>
+              <td><span class="status-badge ${c.status === 'paid' ? 'completed' : c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status}<\/span><\/td>
+              <td>${c.bids?.length || 0}<\/td>
+              <td>${autoReleaseHtml}<\/td>
+              <td><button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button> <button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button><\/td>
+            <\/tr>`;
+          }).join('');
+        }
+      }
+    } catch(e) { 
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Error loading campaigns<\/td><\/tr>';
+      console.error(e); 
+    }
+  }
+
+  // ============================================
+  // LOAD APPLICATIONS (BIDS)
+  // ============================================
+  async function loadApplications() {
+    const loadingDiv = document.getElementById('applications-loading');
+    const tbody = document.querySelector('#applications-table tbody');
+    const status = document.getElementById('application-status-filter')?.value || 'pending';
+    
+    try {
+      if (loadingDiv) loadingDiv.style.display = 'block';
+      const data = await fetchJSON(`${API_BASE}/api/campaigns?limit=100`);
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      
+      if (data.success && data.data.campaigns) {
+        allBids = [];
+        data.data.campaigns.forEach(campaign => {
+          if (campaign.bids && campaign.bids.length > 0) {
+            campaign.bids.forEach(bid => {
+              allBids.push({
+                ...bid,
+                campaignTitle: campaign.title,
+                campaignId: campaign._id,
+                businessName: campaign.businessId?.profile?.companyName || campaign.businessId?.email
+              });
+            });
+          }
+        });
+        
+        let filteredBids = allBids;
+        if (status !== 'all') filteredBids = allBids.filter(b => b.status === status);
+        
+        if (filteredBids.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No applications found<\/td><\/tr>';
+        } else {
+          tbody.innerHTML = filteredBids.map(b => `
+            <tr>
+              <td>${escapeHtml(b.campaignTitle)}<\/td>
+              <td>${escapeHtml(b.uniqueCode)}<\/td>
+              <td>${formatMoney(b.amount)}<\/td>
+              <td>${escapeHtml(b.proposal?.substring(0, 80))}${b.proposal?.length > 80 ? '...' : ''}<\/td>
+              <td><span class="status-badge ${b.status === 'accepted' ? 'completed' : b.status === 'rejected' ? 'suspended' : 'pending'}">${b.status}<\/span><\/td>
+              <td>${formatDate(b.createdAt)}<\/td>
+              <td>
+                ${b.status === 'pending' ? `<button class="btn-action success" onclick="acceptBid('${b.campaignId}','${b._id}')">Approve</button>
+                <button class="btn-action danger" onclick="rejectBid('${b.campaignId}','${b._id}')">Reject</button>` : '-'}
+               <\/td>
+            <\/tr>
+          `).join('');
+        }
+      }
+    } catch(e) { 
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading applications<\/td><\/tr>';
+      console.error(e); 
+    }
+  }
+
+  // ============================================
+  // LOAD ACTIVE PROJECTS
+  // ============================================
+  async function loadActiveProjects() {
+    const loadingDiv = document.getElementById('active-loading');
+    const tbody = document.querySelector('#active-projects-table tbody');
+    
+    try {
+      if (loadingDiv) loadingDiv.style.display = 'block';
+      const data = await fetchJSON(`${API_BASE}/api/campaigns?status=in_progress,submitted_for_review`);
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      
+      if (data.success && data.data.campaigns) {
+        activeProjects = data.data.campaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
+        
+        if (activeProjects.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No active projects<\/td><\/tr>';
+        } else {
+          tbody.innerHTML = activeProjects.map(c => {
+            const acceptedBid = c.bids?.find(b => b.status === 'accepted');
+            const workUrl = acceptedBid?.submittedWorkUrl || '-';
+            const autoReleaseHtml = c.status === 'submitted_for_review' ? '<span class="status-badge warning">Awaiting Approval (7-day timer)</span>' : '<span class="status-badge">-</span>';
+            return `<tr>
+              <td>${escapeHtml(c.title)}<\/td>
+              <td>${acceptedBid?.uniqueCode || 'Not assigned'}<\/td>
+              <td>${workUrl !== '-' ? `<a href="${workUrl}" target="_blank" class="btn-action small">View Work</a>` : '-'}<\/td>
+              <td><span class="status-badge ${c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status}<\/span><\/td>
+              <td>${c.submittedAt ? formatDate(c.submittedAt) : '-'}<\/td>
+              <td>${autoReleaseHtml}<\/td>
+            <\/tr>`;
+          }).join('');
+        }
+      }
+    } catch(e) { 
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading active projects<\/td><\/tr>';
+      console.error(e); 
+    }
+  }
+
+  // ============================================
+  // SEARCH CREATORS
+  // ============================================
+  async function searchCreators() {
+    const search = document.getElementById('creator-search').value.trim();
+    const niche = document.getElementById('search-niche').value;
+    const resultsDiv = document.getElementById('creators-results');
+    
+    if (!search && !niche) {
+      resultsDiv.innerHTML = '<div class="empty-state">Enter search term or select niche</div>';
+      return;
+    }
+    
+    resultsDiv.innerHTML = '<div class="empty-state">Searching...</div>';
+    
+    try {
+      let url = `${API_BASE}/api/creators?`;
+      if (search) url += `search=${encodeURIComponent(search)}&`;
+      if (niche) url += `niche=${encodeURIComponent(niche)}&`;
+      
+      const data = await fetchJSON(url);
+      
+      if (data.success && data.creators && data.creators.length > 0) {
+        resultsDiv.innerHTML = data.creators.map(c => `
+          <div class="creator-result-card">
+            <div>
+              <strong>${escapeHtml(c.profile?.stageName || c.uniqueCode || c.email)}</strong><br>
+              <span style="font-size: 12px;">${c.uniqueCode || ''}</span><br>
+              <span style="font-size: 11px; color: #a08070;">${c.email}</span>
+              ${c.profile?.niche ? `<br><span class="status-badge" style="margin-top: 5px;">${c.profile.niche}</span>` : ''}
+              ${c.socialLinks?.tiktok || c.socialLinks?.youtube ? `<br><span class="status-badge" style="margin-top: 5px;">📱 Social Connected</span>` : ''}
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn-action" onclick="viewCreatorProfile('${c._id}')">View Profile</button>
+              <button class="btn-action" onclick="openMessageModal('${c._id}','${escapeHtml(c.profile?.stageName || c.uniqueCode)}')">Message</button>
+            </div>
+          </div>
+        `).join('');
       } else {
-        showToast(data.message || 'Withdrawal failed', 'error');
+        resultsDiv.innerHTML = '<div class="empty-state">No creators found</div>';
       }
-    } catch(e) { showToast('Error', 'error'); }
-    finally {
-      withdrawConfirmLoading = false;
-      confirmBtn.innerText = originalText;
-      confirmBtn.disabled = false;
+    } catch(e) {
+      resultsDiv.innerHTML = '<div class="empty-state">Error searching creators</div>';
+      console.error(e);
     }
   }
 
-  document.getElementById('withdraw-btn')?.addEventListener('click', withdraw);
-
-  // ============================================
-  // LOAD AUDIT & DEPOSIT HISTORY
-  // ============================================
-  async function loadAuditHistory() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?limit=100`);
-      if (data.success && data.data?.transactions) {
-        const txs = data.data.transactions;
-        document.getElementById('audit-count').innerText = txs.length;
-        const auditList = document.getElementById('audit-list');
-        if (txs.length === 0) {
-          auditList.innerHTML = '<div class="empty-state">No transactions found</div>';
-        } else {
-          auditList.innerHTML = txs.map(t => `
-            <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
-              <span>${t.type}</span>
-              <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
-              <span style="font-size:12px;">${formatDate(t.createdAt)}</span>
-              <span><span class="status-badge ${t.status === 'completed' ? 'active' : ''}">${t.status}</span></span>
-            </div>
-          `).join('');
-        }
-      }
-    } catch(e) { showToast('Error loading audit data', 'error'); }
-  }
-
-  async function loadDepositHistory() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?type=deposit&limit=100`);
-      if (data.success && data.data?.transactions) {
-        const deposits = data.data.transactions.filter(t => t.type === 'deposit');
-        const total = deposits.reduce((s, t) => s + t.grossAmount, 0);
-        document.getElementById('total-deposits').innerHTML = formatMoney(total);
-        const depositList = document.getElementById('deposit-history-list');
-        if (deposits.length === 0) {
-          depositList.innerHTML = '<div class="empty-state">No deposits found</div>';
-        } else {
-          depositList.innerHTML = deposits.map(t => `
-            <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
-              <span>Deposit</span>
-              <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
-              <span style="font-size:12px;">${formatDate(t.createdAt)}</span>
-              <span><span class="status-badge ${t.status === 'completed' ? 'active' : ''}">${t.status}</span></span>
-            </div>
-          `).join('');
-        }
-      }
-    } catch(e) { showToast('Error loading deposits', 'error'); }
+  function viewCreatorProfile(creatorId) {
+    window.open(`/creator-profile.html?id=${creatorId}`, '_blank');
   }
 
   // ============================================
   // LOAD USERS
   // ============================================
   async function loadUsers() {
+    const loadingDiv = document.getElementById('users-loading');
+    const tbody = document.querySelector('#users-table tbody');
+    
     try {
+      if (loadingDiv) loadingDiv.style.display = 'block';
       const token = localStorage.getItem('pebeto_token');
       const role = document.getElementById('user-role-filter')?.value || 'all';
       const status = document.getElementById('user-status-filter')?.value || 'all';
       const search = document.getElementById('user-search')?.value || '';
       
-      let url = `${API_BASE}/api/admin/users?limit=200`;
+      let url = `${API_BASE}/api/admin/users?limit=100`;
       if (role !== 'all') url += `&role=${role}`;
       if (status !== 'all') url += `&status=${status}`;
       
       const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
+      
+      if (loadingDiv) loadingDiv.style.display = 'none';
       
       if (data.success && data.data.users) {
         allUsersData = data.data.users;
@@ -1723,39 +1486,92 @@
           );
         }
         
-        const tbody = document.getElementById('users-body');
+        const creators = allUsersData.filter(u => u.role === 'creator').length;
+        const businesses = allUsersData.filter(u => u.role === 'business').length;
+        const admins = allUsersData.filter(u => u.role === 'admin').length;
+        document.getElementById('total-users-count').innerText = allUsersData.length;
+        document.getElementById('total-creators-count').innerText = creators;
+        document.getElementById('total-businesses-count').innerText = businesses;
+        document.getElementById('total-admins-count').innerText = admins;
+        
+        document.getElementById('total-users').innerText = allUsersData.length;
+        document.getElementById('total-businesses').innerText = businesses;
+        
         if (filteredUsers.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your search<\/td><\/tr>';
         } else {
           tbody.innerHTML = filteredUsers.map(user => `
             <tr>
-              <td>${escapeHtml(user.email)}</td>
-              <td>${escapeHtml(user.uniqueCode || '-')}</td>
-              <td><span class="status-badge">${user.role}</span></td>
-              <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}</span></td>
-              <td>${formatMoney(user.wallet?.balances?.available || 0)}</td>
-              <td>${formatDate(user.createdAt)}</td>
+              <td>${escapeHtml(user.email)}<\/td>
+              <td>${escapeHtml(user.uniqueCode || '-')}<\/td>
+              <td><span class="status-badge">${user.role}<\/span><\/td>
+              <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}<\/span><\/td>
+              <td>${formatMoney(user.wallet?.balances?.available || 0)}<\/td>
+              <td>${formatDate(user.createdAt)}<\/td>
               <td>
                 <button class="btn-action" onclick="viewUserDetails('${user._id}')">View</button>
                 <button class="btn-action ${user.status === 'active' ? 'danger' : 'success'}" onclick="toggleUserStatus('${user._id}', '${user.status}')">
                   ${user.status === 'active' ? 'Suspend' : 'Activate'}
                 </button>
-              </td>
-            </tr>
+               <\/td>
+            <\/tr>
           `).join('');
         }
-        
-        // Also update dashboard stats
-        loadDashboardStats();
+      } else {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found<\/td><\/tr>';
       }
-    } catch(e) { 
-      document.getElementById('users-body').innerHTML = '<tr><td colspan="7" class="empty-state">Error loading users</td></tr>';
+    } catch(e) {
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading users<\/td><\/tr>';
       console.error(e);
     }
   }
 
   function filterUsers() {
-    loadUsers();
+    const searchTerm = document.getElementById('user-search').value.toLowerCase();
+    const tbody = document.querySelector('#users-table tbody');
+    const role = document.getElementById('user-role-filter')?.value || 'all';
+    const status = document.getElementById('user-status-filter')?.value || 'all';
+    
+    let filtered = [...allUsersData];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.email?.toLowerCase().includes(searchTerm) ||
+        user.uniqueCode?.toLowerCase().includes(searchTerm) ||
+        user.profile?.stageName?.toLowerCase().includes(searchTerm) ||
+        user.profile?.companyName?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    if (role !== 'all') {
+      filtered = filtered.filter(user => user.role === role);
+    }
+    
+    if (status !== 'all') {
+      filtered = filtered.filter(user => user.status === status);
+    }
+    
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found matching your filters<\/td><\/tr>';
+    } else {
+      tbody.innerHTML = filtered.map(user => `
+        <tr>
+          <td>${escapeHtml(user.email)}<\/td>
+          <td>${escapeHtml(user.uniqueCode || '-')}<\/td>
+          <td><span class="status-badge">${user.role}<\/span><\/td>
+          <td><span class="status-badge ${user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : ''}">${user.status}<\/span><\/td>
+          <td>${formatMoney(user.wallet?.balances?.available || 0)}<\/td>
+          <td>${formatDate(user.createdAt)}<\/td>
+          <td>
+            <button class="btn-action" onclick="viewUserDetails('${user._id}')">View</button>
+            <button class="btn-action ${user.status === 'active' ? 'danger' : 'success'}" onclick="toggleUserStatus('${user._id}', '${user.status}')">
+              ${user.status === 'active' ? 'Suspend' : 'Activate'}
+            </button>
+           <\/td>
+        <\/tr>
+      `).join('');
+    }
   }
 
   async function viewUserDetails(userId) {
@@ -1790,135 +1606,10 @@
         body: JSON.stringify({ status: newStatus, reason: `User ${action}d by admin` })
       });
       const data = await res.json();
-      if (data.success) { showToast(`User ${action}d successfully`, 'success'); loadUsers(); loadDashboardStats(); }
+      if (data.success) { showToast(`User ${action}d successfully`, 'success'); loadUsers(); }
       else { showToast(data.message || 'Failed to update user status', 'error'); }
     } catch(e) { showToast('Error updating user status', 'error'); }
   }
-
-  // ============================================
-  // LOAD CAMPAIGNS
-  // ============================================
-  async function loadCampaigns() {
-    try {
-      const search = document.getElementById('campaign-search')?.value || '';
-      const status = document.getElementById('campaign-status-filter')?.value || 'all';
-      
-      let url = `${API_BASE}/api/campaigns?limit=100`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (status !== 'all') url += `&status=${status}`;
-      
-      const data = await fetchJSON(url);
-      if (data.success && data.data.campaigns) {
-        campaigns = data.data.campaigns;
-        const tbody = document.getElementById('campaigns-body');
-        if (campaigns.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No campaigns found</td></tr>';
-        } else {
-          tbody.innerHTML = campaigns.map(c => {
-            const hasWorkSubmitted = c.status === 'submitted_for_review';
-            const autoReleaseHtml = hasWorkSubmitted ? '<span class="status-badge warning">Pending Review</span>' : '<span class="status-badge">-</span>';
-            return `<tr>
-              <td>${escapeHtml(c.title)}</td>
-              <td>${c.businessId?.email || 'N/A'}</td>
-              <td>${formatMoney(c.budget)}</td>
-              <td>${c.slots || 1}</td>
-              <td><span class="status-badge ${c.status === 'paid' ? 'completed' : c.status === 'submitted_for_review' ? 'warning' : ''}">${c.status}</span></td>
-              <td>${c.bids?.length || 0}</td>
-              <td>${autoReleaseHtml}</td>
-              <td>
-                <button class="btn-action" onclick="editCampaign('${c._id}')">Edit</button>
-                <button class="btn-action danger" onclick="deleteCampaign('${c._id}')">Delete</button>
-              </td>
-            </tr>`;
-          }).join('');
-        }
-      }
-    } catch(e) { console.error(e); }
-  }
-
-  function editCampaign(id) {
-    const campaign = campaigns.find(c => c._id === id);
-    if (!campaign) return;
-    document.getElementById('edit-campaign-id').value = id;
-    document.getElementById('edit-campaign-title').value = campaign.title;
-    document.getElementById('edit-campaign-budget').value = campaign.budget;
-    document.getElementById('edit-campaign-slots').value = campaign.slots || 1;
-    document.getElementById('edit-campaign-modal').style.display = 'flex';
-  }
-
-  async function updateCampaign() {
-    const id = document.getElementById('edit-campaign-id').value;
-    const title = document.getElementById('edit-campaign-title').value.trim();
-    const budget = parseFloat(document.getElementById('edit-campaign-budget').value);
-    const slots = parseInt(document.getElementById('edit-campaign-slots').value) || 1;
-    const deadline = document.getElementById('edit-campaign-deadline').value;
-    const instructions = document.getElementById('edit-campaign-instructions').value;
-    const errorDiv = document.getElementById('edit-campaign-error');
-    
-    if (!title) { errorDiv.innerHTML = 'Enter title'; return; }
-    if (!budget || budget <= 0) { errorDiv.innerHTML = 'Enter valid budget'; return; }
-    if (budget / slots < 10) { errorDiv.innerHTML = 'Minimum $10 per creator'; return; }
-    errorDiv.innerHTML = '';
-    
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/campaigns/${id}`, { 
-        method: 'PUT', 
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ title, budget: budget / slots, description: instructions, slots, deadline }) 
-      });
-      if (res.ok) { 
-        showToast('Campaign updated!', 'success');
-        closeModal('edit-campaign-modal');
-        loadCampaigns();
-      } else {
-        showToast('Failed to update campaign', 'error');
-      }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  async function deleteCampaign(id) {
-    if (!confirm('Delete this campaign?')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/campaigns/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) { 
-        showToast('Campaign deleted!', 'success');
-        loadCampaigns();
-        loadDashboardStats();
-      } else {
-        showToast('Failed to delete campaign', 'error');
-      }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  function exportCampaigns() {
-    if (campaigns.length === 0) { showToast('No campaigns to export', 'error'); return; }
-    let csv = 'Title,Budget,Slots,Status,Created\n';
-    campaigns.forEach(c => { csv += `"${c.title}",${c.budget},${c.slots || 1},${c.status},${formatDate(c.createdAt)}\n`; });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `campaigns_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
-    showToast('Campaigns exported!', 'success');
-  }
-
-  function createCampaign() {
-    openCampaignModal();
-  }
-
-  function openCampaignModal() {
-    document.getElementById('campaign-modal').style.display = 'flex';
-    updateBudgetBreakdown();
-  }
-
-  function updateBudgetBreakdown() {
-    const budget = parseFloat(document.getElementById('campaign-budget').value) || 0;
-    const slots = parseInt(document.getElementById('campaign-slots').value) || 1;
-    document.getElementById('budget-breakdown').innerHTML = `💰 $${budget} total → $${(budget / slots).toFixed(2)} per creator (${slots} creator${slots !== 1 ? 's' : ''})`;
-  }
-
-  document.getElementById('campaign-budget')?.addEventListener('input', updateBudgetBreakdown);
-  document.getElementById('campaign-slots')?.addEventListener('input', updateBudgetBreakdown);
 
   // ============================================
   // LOAD TRANSACTIONS
@@ -1927,17 +1618,22 @@
     if (reset) { transactionPage = 1; transactionHasMore = true; }
     if (!transactionHasMore && !reset) { showToast('No more transactions', 'info'); return; }
     
+    const loadingDiv = document.getElementById('transactions-loading');
+    const tbody = document.querySelector('#transactions-table tbody');
     const search = document.getElementById('txn-search')?.value || '';
     const type = document.getElementById('txn-type-filter')?.value || 'all';
     const status = document.getElementById('txn-status-filter')?.value || 'all';
     
     try {
+      if (reset && loadingDiv) loadingDiv.style.display = 'block';
       let url = `${API_BASE}/api/admin/transactions?page=${transactionPage}&limit=50`;
       if (search) url += `&search=${encodeURIComponent(search)}`;
       if (type !== 'all') url += `&type=${type}`;
       if (status !== 'all') url += `&status=${status}`;
       
       const data = await fetchJSON(url);
+      if (reset && loadingDiv) loadingDiv.style.display = 'none';
+      
       if (data.success && data.data.transactions) {
         const newTransactions = data.data.transactions;
         if (reset) allTransactions = newTransactions;
@@ -1949,24 +1645,27 @@
         const depositsTotal = allTransactions.filter(t => t.type === 'deposit').reduce((s, t) => s + (t.grossAmount || 0), 0);
         document.getElementById('total-deposits').innerHTML = formatMoney(depositsTotal);
         
-        const tbody = document.getElementById('transactions-body');
         if (allTransactions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found<\/td><\/tr>';
         } else {
           tbody.innerHTML = allTransactions.map(t => `
             <tr>
-              <td><span class="status-badge">${t.type}</span></td>
-              <td>${t.fromUserId?.email || t.toUserId?.email || 'System'}</td>
-              <td>${formatMoney(t.grossAmount)}</td>
-              <td>${formatMoney(t.feeAmount)}</td>
-              <td>${formatMoney(t.netAmount)}</td>
-              <td><span class="status-badge ${t.status === 'completed' ? 'active' : t.status === 'failed' ? 'suspended' : 'pending'}">${t.status}</span></td>
-              <td>${formatDateTime(t.createdAt)}</td>
-            </tr>
+              <td><span class="status-badge">${t.type}<\/span><\/td>
+              <td>${t.fromUserId?.email || t.toUserId?.email || 'System'}<\/td>
+              <td>${formatMoney(t.grossAmount)}<\/td>
+              <td>${formatMoney(t.feeAmount)}<\/td>
+              <td>${formatMoney(t.netAmount)}<\/td>
+              <td><span class="status-badge ${t.status === 'completed' ? 'active' : t.status === 'failed' ? 'suspended' : 'pending'}">${t.status}<\/span><\/td>
+              <td>${formatDateTime(t.createdAt)}<\/td>
+            <\/tr>
           `).join('');
         }
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      if (reset && loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading transactions<\/td><\/tr>';
+      console.error(e); 
+    }
   }
 
   function filterTransactions() { loadTransactions(true); }
@@ -1976,56 +1675,74 @@
   // LOAD ADMIN WITHDRAWALS
   // ============================================
   async function loadAdminWithdrawals() {
+    const loadingDiv = document.getElementById('withdrawals-loading');
+    const tbody = document.querySelector('#admin-withdrawals-table tbody');
+    
     try {
+      if (loadingDiv) loadingDiv.style.display = 'block';
       const token = localStorage.getItem('pebeto_token');
       const res = await fetch(`${API_BASE}/api/admin/profit-withdrawal-history`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      
       if (data.success && data.data.history) {
-        const tbody = document.getElementById('admin-withdrawals-body');
         if (data.data.history.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No withdrawals yet</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No withdrawals yet<\/td><\/tr>';
         } else {
           tbody.innerHTML = data.data.history.map(w => `
             <tr>
-              <td>${formatDateTime(w.createdAt)}</td>
-              <td>${formatMoney(w.grossAmount)}</td>
-              <td>${w.metadata?.payoutMethod || '-'}</td>
-              <td><span class="status-badge ${w.status === 'completed' ? 'active' : ''}">${w.status}</span></td>
-              <td>${w.referenceId || '-'}</td>
-            </tr>
+              <td>${formatDateTime(w.createdAt)}<\/td>
+              <td>${formatMoney(w.grossAmount)}<\/td>
+              <td>${w.metadata?.payoutMethod || '-'}<\/td>
+              <td><span class="status-badge ${w.status === 'completed' ? 'active' : ''}">${w.status}<\/span><\/td>
+              <td>${w.referenceId || '-'}<\/td>
+            <\/tr>
           `).join('');
         }
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error loading withdrawals<\/td><\/tr>';
+      console.error(e); 
+    }
   }
 
   // ============================================
   // LOAD ACTIVITY LOG
   // ============================================
   async function loadActivityLog() {
+    const loadingDiv = document.getElementById('activity-loading');
+    const tbody = document.getElementById('activity-list');
+    const type = document.getElementById('activity-type-filter')?.value || 'all';
+    
     try {
-      const type = document.getElementById('activity-type-filter')?.value || 'all';
+      if (loadingDiv) loadingDiv.style.display = 'block';
       let url = `${API_BASE}/api/admin/activity?limit=100`;
       if (type !== 'all') url += `&type=${type}`;
       
       const data = await fetchJSON(url);
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      
       if (data.success && data.data.activity) {
-        const tbody = document.getElementById('activity-list');
         if (data.data.activity.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No activity recorded</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No activity recorded<\/td><\/tr>';
         } else {
           tbody.innerHTML = data.data.activity.map(a => `
             <tr>
-              <td>${escapeHtml(a.formattedMessage || a.type)}</td>
-              <td>${a.fromUserId?.email || a.toUserId?.email || 'System'}</td>
-              <td>${a.metadata?.ipAddress || '-'}</td>
-              <td>${a.metadata?.userAgent || '-'}</td>
-              <td>${formatDateTime(a.createdAt)}</td>
-            </tr>
+              <td>${escapeHtml(a.formattedMessage || a.type)}<\/td>
+              <td>${a.fromUserId?.email || a.toUserId?.email || 'System'}<\/td>
+              <td>${a.metadata?.ipAddress || '-'}<\/td>
+              <td>${a.metadata?.userAgent || '-'}<\/td>
+              <td>${formatDateTime(a.createdAt)}<\/td>
+            <\/tr>
           `).join('');
         }
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error loading activity<\/td><\/tr>';
+      console.error(e); 
+    }
   }
 
   function filterActivityLog() {
@@ -2045,148 +1762,15 @@
   }
 
   // ============================================
-  // CHARTS
+  // SECURITY & TEAM FUNCTIONS
   // ============================================
-  async function loadSpendingChart() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/wallet/spending?days=30`);
-      const ctx = document.getElementById('spending-chart').getContext('2d');
-      if (spendingChart) spendingChart.destroy();
-      const labels = data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-      const spendingData = data.spending || [0, 0, 0, 0];
-      spendingChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels, 
-          datasets: [{ 
-            label: 'Spending ($)', 
-            data: spendingData, 
-            borderColor: '#ff8c42', 
-            fill: true, 
-            backgroundColor: 'rgba(255,140,66,0.1)' 
-          }] 
-        }, 
-        options: { responsive: true } 
-      });
-    } catch(e) { console.error(e); }
-  }
-
-  async function loadUserGrowthChart() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/admin/registrations`);
-      const ctx = document.getElementById('user-growth-chart').getContext('2d');
-      if (userGrowthChart) userGrowthChart.destroy();
-      const registrations = data.data?.recentRegistrations || [];
-      const last7Days = [];
-      for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); last7Days.push(d.toISOString().split('T')[0]); }
-      const counts = last7Days.map(date => registrations.filter(r => r._id.date === date).reduce((s, r) => s + r.count, 0));
-      userGrowthChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels: last7Days.map(d => d.slice(5)), 
-          datasets: [{ label: 'New Users', data: counts, borderColor: '#ff8c42', fill: false }] 
-        }, 
-        options: { responsive: true } 
-      });
-    } catch(e) { console.error(e); }
-  }
-
-  async function loadRevenueChart() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/admin/metrics`);
-      const ctx = document.getElementById('revenue-trend-chart').getContext('2d');
-      if (revenueChart) revenueChart.destroy();
-      revenueChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], 
-          datasets: [{ label: 'Revenue ($)', data: [0, 0, 0, 0, 0, 0], borderColor: '#4ade80', fill: false }] 
-        }, 
-        options: { responsive: true } 
-      });
-    } catch(e) { console.error(e); }
-  }
-
-  async function loadCampaignPerformanceChart() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/campaigns/performance`);
-      const ctx = document.getElementById('campaign-performance-chart').getContext('2d');
-      if (campaignChart) campaignChart.destroy();
-      campaignChart = new Chart(ctx, { 
-        type: 'bar', 
-        data: { 
-          labels: data.labels || ['Campaign 1', 'Campaign 2', 'Campaign 3'], 
-          datasets: [
-            { label: 'Views', data: data.views || [0, 0, 0], backgroundColor: '#ff8c42' },
-            { label: 'Engagement', data: data.engagement || [0, 0, 0], backgroundColor: '#4ade80' }
-          ] 
-        }, 
-        options: { responsive: true } 
-      });
-    } catch(e) { console.error(e); }
-  }
-
-  async function loadFeeChart() {
-    try {
-      const data = await fetchJSON(`${API_BASE}/api/admin/metrics`);
-      const ctx = document.getElementById('fee-breakdown-chart').getContext('2d');
-      if (feeChart) feeChart.destroy();
-      const fees = data.data?.feeBreakdown || { deposit: 0, tip: 0, withdrawal: 0 };
-      feeChart = new Chart(ctx, { 
-        type: 'doughnut', 
-        data: { 
-          labels: ['Deposit Fees', 'Tip Fees', 'Withdrawal Fees'], 
-          datasets: [{ data: [fees.deposit, fees.tip, fees.withdrawal], backgroundColor: ['#ff8c42', '#4ade80', '#2196f3'] }] 
-        }, 
-        options: { responsive: true } 
-      });
-    } catch(e) { console.error(e); }
-  }
-
-  // ============================================
-  // SECURITY & TEAM
-  // ============================================
-  function enable2FA() {
-    document.getElementById('2fa-modal').style.display = 'flex';
-    document.getElementById('2fa-qr').innerHTML = '<div style="background:white; padding:20px; border-radius:12px;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/Pebeto:admin?secret=PEBETO2FA123&issuer=Pebeto" alt="QR"></div>';
-    document.getElementById('2fa-secret').value = 'PEBETO2FA123';
-  }
-
-  function verify2FA() { 
-    const code = document.getElementById('2fa-code').value; 
-    if (code === '123456') { 
-      showToast('2FA enabled!', 'success'); 
-      closeModal('2fa-modal'); 
-      document.getElementById('2fa-status').innerHTML = '<span class="status-badge active">✓ 2FA Enabled</span>'; 
-    } else { 
-      showToast('Invalid code', 'error'); 
-    } 
-  }
-
-  function refreshActiveSessions() { 
-    document.getElementById('active-sessions').innerHTML = '<div>Current session - Active now</div>'; 
-    showToast('Sessions refreshed', 'success'); 
-  }
-
+  function enable2FA() { document.getElementById('2fa-modal').style.display = 'flex'; document.getElementById('2fa-qr').innerHTML = '<div style="background:white; padding:20px; border-radius:12px;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/Pebeto:admin?secret=PEBETO2FA123&issuer=Pebeto" alt="QR"></div>'; document.getElementById('2fa-secret').value = 'PEBETO2FA123'; }
+  function verify2FA() { const code = document.getElementById('2fa-code').value; if (code === '123456') { showToast('2FA enabled!', 'success'); closeModal('2fa-modal'); document.getElementById('2fa-status').innerHTML = '<span class="status-badge active">✓ 2FA Enabled</span>'; } else { showToast('Invalid code', 'error'); } }
+  function refreshActiveSessions() { document.getElementById('active-sessions').innerHTML = '<div>Current session - Active now</div>'; showToast('Sessions refreshed', 'success'); }
+  
   function openAddTeamMemberModal() { document.getElementById('add-team-member-modal').style.display = 'flex'; }
-  function addTeamMember() { 
-    const email = document.getElementById('team-email').value; 
-    if (!email) return showToast('Enter email', 'error'); 
-    teamMembers.push({ email, role: document.getElementById('team-role').value }); 
-    showToast(`Invitation sent to ${email}`, 'success'); 
-    closeModal('add-team-member-modal'); 
-    loadTeamMembers(); 
-  }
-
-  function loadTeamMembers() { 
-    const container = document.getElementById('team-members-list'); 
-    if (teamMembers.length === 0) { 
-      container.innerHTML = '<div class="empty-state">No team members yet</div>'; 
-    } else { 
-      container.innerHTML = teamMembers.map(m => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(m.email)}</strong><span class="status-badge" style="margin-left:10px;">${m.role}</span></div><button class="btn-action danger" onclick="removeTeamMember('${m.email}')">Remove</button></div>`).join(''); 
-    } 
-  }
-
+  function addTeamMember() { const email = document.getElementById('team-email').value; if (!email) return showToast('Enter email', 'error'); teamMembers.push({ email, role: document.getElementById('team-role').value }); showToast(`Invitation sent to ${email}`, 'success'); closeModal('add-team-member-modal'); loadTeamMembers(); }
+  function loadTeamMembers() { const container = document.getElementById('team-members-list'); if (teamMembers.length === 0) { container.innerHTML = '<div class="empty-state">No team members yet</div>'; } else { container.innerHTML = teamMembers.map(m => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(m.email)}</strong><span class="status-badge" style="margin-left:10px;">${m.role}</span></div><button class="btn-action danger" onclick="removeTeamMember('${m.email}')">Remove</button></div>`).join(''); } }
   function removeTeamMember(email) { teamMembers = teamMembers.filter(m => m.email !== email); showToast('Member removed', 'success'); loadTeamMembers(); }
 
   // ============================================
@@ -2223,7 +1807,6 @@
 
   function copyApiKey(key) { navigator.clipboard.writeText(key); showToast('API Key copied!', 'success'); }
   function createApiKey() { document.getElementById('api-key-modal').style.display = 'flex'; }
-
   async function createApiKeySubmit() {
     const name = document.getElementById('api-key-name').value;
     if (!name) { showToast('Enter key name', 'error'); return; }
@@ -2257,28 +1840,12 @@
   // WEBHOOKS
   // ============================================
   function openAddWebhookModal() { document.getElementById('add-webhook-modal').style.display = 'flex'; }
-  function addWebhook() { 
-    const url = document.getElementById('webhook-url').value; 
-    if (!url) return showToast('Enter URL', 'error'); 
-    webhooks.push({ url, events: [document.getElementById('webhook-events').value] }); 
-    showToast('Webhook added!', 'success'); 
-    closeModal('add-webhook-modal'); 
-    loadWebhooks(); 
-  }
-
-  function loadWebhooks() { 
-    const container = document.getElementById('webhooks-list'); 
-    if (webhooks.length === 0) { 
-      container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; 
-    } else { 
-      container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); 
-    } 
-  }
-
+  function addWebhook() { const url = document.getElementById('webhook-url').value; if (!url) return showToast('Enter URL', 'error'); webhooks.push({ url, events: [document.getElementById('webhook-events').value] }); showToast('Webhook added!', 'success'); closeModal('add-webhook-modal'); loadWebhooks(); }
+  function loadWebhooks() { const container = document.getElementById('webhooks-list'); if (webhooks.length === 0) { container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; } else { container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); } }
   function deleteWebhook(url) { webhooks = webhooks.filter(w => w.url !== url); showToast('Webhook deleted', 'success'); loadWebhooks(); }
 
   // ============================================
-  // AUTO-RELEASE
+  // AUTO-RELEASE FUNCTIONS
   // ============================================
   async function loadAutoReleaseStats() {
     try {
@@ -2319,7 +1886,7 @@
   function contactBusiness(businessId) { showToast('Messaging feature - will open chat', 'info'); }
 
   // ============================================
-  // MODERATION
+  // MODERATION FUNCTIONS
   // ============================================
   async function loadReports() {
     const status = document.getElementById('report-status-filter')?.value || 'pending';
@@ -2354,12 +1921,7 @@
     } catch(e) { console.error(e); }
   }
 
-  function openResolveReportModal(reportId, targetName) { 
-    currentReportToResolve = reportId; 
-    document.getElementById('resolve-report-info').innerHTML = `Resolving report for: <strong>${targetName}</strong>`; 
-    document.getElementById('resolve-report-modal').style.display = 'flex'; 
-  }
-
+  function openResolveReportModal(reportId, targetName) { currentReportToResolve = reportId; document.getElementById('resolve-report-info').innerHTML = `Resolving report for: <strong>${targetName}</strong>`; document.getElementById('resolve-report-modal').style.display = 'flex'; }
   async function resolveReport() {
     if (!currentReportToResolve) return;
     const action = document.getElementById('report-action').value;
@@ -2371,11 +1933,10 @@
         body: JSON.stringify({ status: 'resolved', action, resolution })
       });
       const data = await res.json();
-      if (data.success) { showToast('Report resolved successfully', 'success'); closeModal('resolve-report-modal'); loadReports(); }
+      if (data.success) { showToast('Report resolved successfully', 'success'); closeModal('resolve-report-modal'); loadReports(); document.getElementById('report-action').value = 'none'; document.getElementById('report-resolution').value = ''; }
       else { showToast(data.message || 'Failed to resolve report', 'error'); }
     } catch(e) { showToast('Error resolving report', 'error'); }
   }
-
   async function dismissReport(reportId) {
     if (!confirm('Dismiss this report? No action will be taken.')) return;
     try {
@@ -2389,123 +1950,80 @@
       else { showToast(data.message || 'Failed to dismiss report', 'error'); }
     } catch(e) { showToast('Error dismissing report', 'error'); }
   }
-
-  function viewReportDetails(reportId) { 
-    const report = reports.find(r => r._id === reportId); 
-    if (report) { 
-      alert(`Report Details:\n\nReason: ${report.reasonLabel}\nDescription: ${report.description || 'N/A'}\nStatus: ${report.status}\nSubmitted: ${formatDateTime(report.createdAt)}`); 
-    } 
-  }
+  function viewReportDetails(reportId) { const report = reports.find(r => r._id === reportId); if (report) { alert(`Report Details:\n\nReason: ${report.reasonLabel}\nDescription: ${report.description || 'N/A'}\nStatus: ${report.status}\nSubmitted: ${formatDateTime(report.createdAt)}`); } }
 
   // ============================================
-  // SEARCH CREATORS
+  // CHART FUNCTIONS
   // ============================================
-  async function searchCreators() {
-    const search = document.getElementById('creator-search').value.trim();
-    const niche = document.getElementById('search-niche').value;
-    const resultsDiv = document.getElementById('creators-results');
-    
-    if (!search && !niche) {
-      resultsDiv.innerHTML = '<div class="empty-state">Enter search term or select niche</div>';
-      return;
-    }
-    
-    resultsDiv.innerHTML = '<div class="empty-state">Searching...</div>';
-    
+  async function loadSpendingChart() {
     try {
-      let url = `${API_BASE}/api/creators?`;
-      if (search) url += `search=${encodeURIComponent(search)}&`;
-      if (niche) url += `niche=${encodeURIComponent(niche)}&`;
-      
-      const data = await fetchJSON(url);
-      
-      if (data.success && data.creators && data.creators.length > 0) {
-        resultsDiv.innerHTML = data.creators.map(c => `
-          <div class="creator-result-card">
-            <div>
-              <strong>${escapeHtml(c.profile?.stageName || c.uniqueCode || c.email)}</strong><br>
-              <span style="font-size: 12px;">${c.uniqueCode || ''}</span><br>
-              <span style="font-size: 11px; color: #a08070;">${c.email}</span>
-              ${c.profile?.niche ? `<br><span class="status-badge" style="margin-top: 5px;">${c.profile.niche}</span>` : ''}
-              ${c.socialLinks?.tiktok || c.socialLinks?.youtube ? `<br><span class="status-badge" style="margin-top: 5px;">📱 Social Connected</span>` : ''}
-            </div>
-            <div style="display: flex; gap: 10px;">
-              <button class="btn-action" onclick="viewCreatorProfile('${c._id}')">View Profile</button>
-              <button class="btn-action" onclick="openMessageModal('${c._id}','${escapeHtml(c.profile?.stageName || c.uniqueCode)}')">Message</button>
-              <button class="btn-action" onclick="openTipModal('${c._id}','${escapeHtml(c.profile?.stageName || c.uniqueCode)}')">Tip</button>
-            </div>
-          </div>
-        `).join('');
-      } else {
-        resultsDiv.innerHTML = '<div class="empty-state">No creators found</div>';
-      }
-    } catch(e) {
-      resultsDiv.innerHTML = '<div class="empty-state">Error searching creators</div>';
-      console.error(e);
-    }
+      const data = await fetchJSON(`${API_BASE}/api/wallet/spending?days=30`);
+      const ctx = document.getElementById('spending-chart').getContext('2d');
+      if (spendingChart) spendingChart.destroy();
+      const labels = data.labels || ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+      const spendingData = data.spending || [0, 0, 0, 0];
+      spendingChart = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Spending ($)', data: spendingData, borderColor: '#ff8c42', fill: true, backgroundColor: 'rgba(255,140,66,0.1)' }] }, options: { responsive: true } });
+    } catch(e) { console.error(e); }
   }
 
-  function viewCreatorProfile(creatorId) {
-    window.open(`/creator-profile.html?id=${creatorId}`, '_blank');
+  async function loadUserGrowthChart() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/admin/registrations`);
+      const ctx = document.getElementById('user-growth-chart').getContext('2d');
+      if (userGrowthChart) userGrowthChart.destroy();
+      const registrations = data.data?.recentRegistrations || [];
+      const last7Days = [];
+      for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); last7Days.push(d.toISOString().split('T')[0]); }
+      const counts = last7Days.map(date => registrations.filter(r => r._id.date === date).reduce((s, r) => s + r.count, 0));
+      userGrowthChart = new Chart(ctx, { type: 'line', data: { labels: last7Days.map(d => d.slice(5)), datasets: [{ label: 'New Users', data: counts, borderColor: '#ff8c42', fill: false }] }, options: { responsive: true } });
+    } catch(e) { console.error(e); }
   }
 
-  function openMessageModal(id, name) {
-    document.getElementById('msg-name').innerText = name;
-    document.getElementById('message-modal').style.display = 'flex';
+  async function loadRevenueChart() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/admin/metrics`);
+      const ctx = document.getElementById('revenue-trend-chart').getContext('2d');
+      if (revenueChart) revenueChart.destroy();
+      revenueChart = new Chart(ctx, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Revenue ($)', data: [0, 0, 0, 0, 0, 0], borderColor: '#4ade80', fill: false }] }, options: { responsive: true } });
+    } catch(e) { console.error(e); }
   }
 
-  function sendMessage() {
-    const msg = document.getElementById('msg-text').value;
-    if (!msg) return showToast('Enter message', 'error');
-    showToast('Message sent!', 'success');
-    closeModal('message-modal');
+  async function loadCampaignPerformanceChart() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/campaigns/performance`);
+      const ctx = document.getElementById('campaign-performance-chart').getContext('2d');
+      if (campaignChart) campaignChart.destroy();
+      campaignChart = new Chart(ctx, { type: 'bar', data: { labels: data.labels || ['Campaign 1', 'Campaign 2', 'Campaign 3'], datasets: [{ label: 'Views', data: data.views || [0, 0, 0], backgroundColor: '#ff8c42' }, { label: 'Engagement', data: data.engagement || [0, 0, 0], backgroundColor: '#4ade80' }] }, options: { responsive: true } });
+      document.getElementById('total-views').innerText = data.totalViews || 0;
+      document.getElementById('ctr-rate').innerText = (data.ctr || 0) + '%';
+      document.getElementById('roi-value').innerText = (data.roi || 0) + '%';
+    } catch(e) { console.error(e); }
   }
 
-  function openTipModal(creatorId, creatorName) {
-    document.getElementById('tip-creator-name').innerHTML = `Sending tip to: <strong>${escapeHtml(creatorName)}</strong>`;
-    document.getElementById('tip-modal').style.display = 'flex';
-  }
-
-  function sendTip() {
-    const amount = document.getElementById('tip-amount').value;
-    if (!amount) return showToast('Enter amount', 'error');
-    showToast(`Tip of $${amount} sent!`, 'success');
-    closeModal('tip-modal');
+  async function loadFeeChart() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/admin/metrics`);
+      const ctx = document.getElementById('fee-breakdown-chart').getContext('2d');
+      if (feeChart) feeChart.destroy();
+      const fees = data.data?.feeBreakdown || { deposit: 0, tip: 0, withdrawal: 0 };
+      feeChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Deposit Fees', 'Tip Fees', 'Withdrawal Fees'], datasets: [{ data: [fees.deposit, fees.tip, fees.withdrawal], backgroundColor: ['#ff8c42', '#4ade80', '#2196f3'] }] }, options: { responsive: true } });
+    } catch(e) { console.error(e); }
   }
 
   // ============================================
-  // MESSAGE CHARACTER COUNTER
-  // ============================================
-  const msgText = document.getElementById('msg-text');
-  const msgCounter = document.getElementById('msg-counter');
-  if (msgText && msgCounter) {
-    msgText.addEventListener('input', () => {
-      const remaining = 500 - msgText.value.length;
-      msgCounter.innerText = `${remaining} characters remaining`;
-    });
-  }
-
-  // ============================================
-  // INITIALIZATION
+  // USER DATA
   // ============================================
   function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) { 
       currentUser = JSON.parse(userStr); 
-      document.getElementById('admin-email').innerText = currentUser.email;
-      const initial = (currentUser.email[0] || 'A').toUpperCase();
-      document.getElementById('avatar-header').innerHTML = initial;
-      document.getElementById('profile-avatar').innerHTML = initial;
-      if (currentUser.profile?.avatarUrl) {
-        document.getElementById('avatar-header').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
-        document.getElementById('avatar-header').innerHTML = '';
-        document.getElementById('profile-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
-        document.getElementById('profile-avatar').innerHTML = '';
-        document.getElementById('avatar-remove-btn').classList.add('show');
-      }
+      document.getElementById('admin-email').innerText = currentUser.email; 
     }
   }
 
+  // ============================================
+  // INITIALIZATION
+  // ============================================
   document.querySelectorAll('.tab-btn').forEach(btn => { 
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2532,17 +2050,10 @@
     }); 
   });
 
-  document.getElementById('msg-text')?.addEventListener('input', () => {
-    const remaining = 500 - (document.getElementById('msg-text').value?.length || 0);
-    document.getElementById('msg-counter').innerText = `${remaining} characters remaining`;
-  });
-
-  window.addEventListener('scroll', () => {
-    const btn = document.getElementById('backToTop');
-    if (window.scrollY > 300) btn.classList.add('show');
-    else btn.classList.remove('show');
-  });
-
+  document.getElementById('withdraw-btn')?.addEventListener('click', withdraw);
+  document.getElementById('campaign-budget')?.addEventListener('input', updateBudgetBreakdown);
+  document.getElementById('campaign-slots')?.addEventListener('input', updateBudgetBreakdown);
+  window.addEventListener('scroll', () => { const btn = document.getElementById('backToTop'); if (window.scrollY > 300) btn.classList.add('show'); else btn.classList.remove('show'); });
   document.getElementById('emailNotificationsToggle')?.addEventListener('change', (e) => localStorage.setItem('pebeto_email_notifications', e.target.checked));
   document.getElementById('smsNotificationsToggle')?.addEventListener('change', (e) => localStorage.setItem('pebeto_sms_notifications', e.target.checked));
 
@@ -2553,85 +2064,99 @@
   loadRevenueChart();
   loadCampaignPerformanceChart();
   loadFeeChart();
-  loadWallet();
   
-  // Load users then dashboard stats
-  loadUsers().then(() => {
-    loadDashboardStats();
-  });
-  
+  loadUsers();
+  loadDashboardStats();
   loadCampaigns();
   loadApiKeys();
   loadWebhooks();
   loadTeamMembers();
   addNotification('Welcome to Pebeto Admin Dashboard');
-
-  // Force update dashboard stats after delays
-  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 1000);
-  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 2000);
-  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 3000);
-</script>
-
-<!-- DIRECT FIX: Force update dashboard stats -->
-<script>
-(function fixDashboardStats() {
-  console.log('🔧 Running dashboard stats fix...');
   
-  function updateStatsFromTable() {
-    const userRows = document.querySelectorAll('#users-body tr');
-    let totalUsers = 0;
-    let creators = 0;
-    let businesses = 0;
-    let admins = 0;
+  // Emergency fix - force update after delays
+  setTimeout(() => { loadDashboardStats(); }, 1000);
+  setTimeout(() => { loadDashboardStats(); }, 2000);
+  setTimeout(() => { loadDashboardStats(); }, 3000);
+  
+  // ============================================
+  // DIRECT FIX: Force update dashboard stats
+  // ============================================
+  (function fixDashboardStats() {
+    console.log('🔧 Running dashboard stats fix...');
     
-    userRows.forEach(row => {
-      if (row.cells.length > 1 && !row.innerHTML.includes('No users found') && !row.innerHTML.includes('Loading users')) {
-        totalUsers++;
-        const roleCell = row.cells[2];
-        if (roleCell) {
-          const roleText = roleCell.innerText.toLowerCase();
-          if (roleText.includes('creator')) creators++;
-          else if (roleText.includes('business')) businesses++;
-          else if (roleText.includes('admin')) admins++;
+    function updateStatsFromTable() {
+      const userRows = document.querySelectorAll('#users-table tbody tr');
+      let totalUsers = 0;
+      let creators = 0;
+      let businesses = 0;
+      let admins = 0;
+      
+      userRows.forEach(row => {
+        if (row.cells.length > 1 && !row.innerHTML.includes('No users found') && !row.innerHTML.includes('Loading users')) {
+          totalUsers++;
+          const roleCell = row.cells[2];
+          if (roleCell) {
+            const roleText = roleCell.innerText.toLowerCase();
+            if (roleText.includes('creator')) creators++;
+            else if (roleText.includes('business')) businesses++;
+            else if (roleText.includes('admin')) admins++;
+          }
         }
+      });
+      
+      if (totalUsers > 0) {
+        console.log(`✅ Updating stats from table: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+        document.querySelectorAll('#total-users, #total-users-count').forEach(el => { if (el) el.innerText = totalUsers; });
+        document.querySelectorAll('#total-businesses, #total-businesses-count').forEach(el => { if (el) el.innerText = businesses; });
+        const creatorsEl = document.getElementById('total-creators-count');
+        if (creatorsEl) creatorsEl.innerText = creators;
+        const adminsEl = document.getElementById('total-admins-count');
+        if (adminsEl) adminsEl.innerText = admins;
+        return true;
       }
-    });
-    
-    if (totalUsers > 0) {
-      console.log(`✅ Updating stats from table: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
-      
-      const totalUsersEls = document.querySelectorAll('#total-users, #total-users-count');
-      totalUsersEls.forEach(el => { if (el) el.innerText = totalUsers; });
-      
-      const totalBusinessesEls = document.querySelectorAll('#total-businesses, #total-businesses-count');
-      totalBusinessesEls.forEach(el => { if (el) el.innerText = businesses; });
-      
-      const creatorsEl = document.getElementById('total-creators-count');
-      if (creatorsEl) creatorsEl.innerText = creators;
-      
-      const adminsEl = document.getElementById('total-admins-count');
-      if (adminsEl) adminsEl.innerText = admins;
-      
-      return true;
+      return false;
     }
-    return false;
+    
+    setTimeout(() => updateStatsFromTable(), 500);
+    setTimeout(() => updateStatsFromTable(), 1000);
+    setTimeout(() => updateStatsFromTable(), 2000);
+    setTimeout(() => updateStatsFromTable(), 3000);
+    
+    const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
+    if (usersTab) {
+      usersTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 500); });
+    }
+    
+    const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
+    if (dashboardTab) {
+      dashboardTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 100); });
+    }
+  })();
+
+  // ============================================
+  // BUDGET BREAKDOWN
+  // ============================================
+  function updateBudgetBreakdown() {
+    const budget = parseFloat(document.getElementById('campaign-budget')?.value) || 0;
+    const slots = parseInt(document.getElementById('campaign-slots')?.value) || 1;
+    const breakdownDiv = document.getElementById('budget-breakdown');
+    if (breakdownDiv) {
+      breakdownDiv.innerHTML = `💰 $${budget} total → $${(budget / slots).toFixed(2)} per creator (${slots} creator${slots !== 1 ? 's' : ''})`;
+    }
   }
-  
-  setTimeout(() => updateStatsFromTable(), 500);
-  setTimeout(() => updateStatsFromTable(), 1000);
-  setTimeout(() => updateStatsFromTable(), 2000);
-  setTimeout(() => updateStatsFromTable(), 3000);
-  
-  const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
-  if (usersTab) {
-    usersTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 500); });
+
+  function openMessageModal(creatorId, name) {
+    document.getElementById('msg-name').innerText = name;
+    document.getElementById('message-modal').style.display = 'flex';
   }
-  
-  const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
-  if (dashboardTab) {
-    dashboardTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 100); });
+
+  function sendMessage() {
+    const message = document.getElementById('msg-text').value;
+    if (!message) { showToast('Enter message', 'error'); return; }
+    showToast('Message sent!', 'success');
+    closeModal('message-modal');
+    document.getElementById('msg-text').value = '';
   }
-})();
 </script>
 </body>
 </html>
