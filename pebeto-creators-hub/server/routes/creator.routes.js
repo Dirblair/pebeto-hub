@@ -10,6 +10,7 @@ router.get('/creators', async (req, res) => {
     
     let query = { role: 'creator', status: 'active' };
     
+    // Apply search filter if provided
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       query.$or = [
@@ -20,15 +21,17 @@ router.get('/creators', async (req, res) => {
       ];
     }
     
+    // Apply niche filter if provided
     if (niche && niche !== '') {
       query['profile.niche'] = niche;
     }
     
     const creators = await User.find(query)
-      .select('_id email uniqueCode profile socialLinks social createdAt status likeCount likedBy')
+      .select('_id email uniqueCode profile socialLinks social createdAt status')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
     
+    // Get engagement stats for each creator
     const CommunityComment = require('../models/CommunityComment');
     
     const creatorsWithStats = await Promise.all(creators.map(async (creator) => {
@@ -40,12 +43,11 @@ router.get('/creators', async (req, res) => {
         email: creator.email,
         uniqueCode: creator.uniqueCode,
         profile: creator.profile,
-        socialLinks: creator.socialLinks || { tiktok: '', youtube: '', instagram: '', twitter: '' },
-        social: creator.social || { followerCount: 0 },
+        socialLinks: creator.socialLinks,
+        social: creator.social,
         status: creator.status,
         likeCount,
         commentCount,
-        isLiked: creator.likedBy ? creator.likedBy.includes(req.user?._id) : false,
         createdAt: creator.createdAt,
         hasSocialMedia: !!(creator.socialLinks?.tiktok || creator.socialLinks?.youtube)
       };
@@ -71,7 +73,7 @@ router.get('/creators', async (req, res) => {
 router.get('/creators/:id', async (req, res) => {
   try {
     const creator = await User.findOne({ _id: req.params.id, role: 'creator' })
-      .select('_id email uniqueCode profile socialLinks social createdAt status likeCount likedBy');
+      .select('_id email uniqueCode profile socialLinks social createdAt status');
     
     if (!creator) {
       return res.status(404).json({ success: false, message: 'Creator not found' });
@@ -86,8 +88,7 @@ router.get('/creators/:id', async (req, res) => {
       creator: {
         ...creator.toObject(),
         likeCount,
-        commentCount,
-        isLiked: creator.likedBy ? creator.likedBy.includes(req.user?._id) : false
+        commentCount
       }
     });
   } catch (error) {
@@ -96,7 +97,7 @@ router.get('/creators/:id', async (req, res) => {
   }
 });
 
-// POST /api/creator/social-links - Save or update creator's social links
+// POST /api/creator/social-links - Save or update creator's social links (FIXED - allows removal)
 router.post('/creator/social-links', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
@@ -116,7 +117,7 @@ router.post('/creator/social-links', authenticate, async (req, res) => {
       user.socialLinks = {};
     }
     
-    // Update only the fields provided
+    // Update only the fields provided (allow empty string to remove)
     if (tiktokUrl !== undefined) user.socialLinks.tiktok = tiktokUrl || '';
     if (youtubeUrl !== undefined) user.socialLinks.youtube = youtubeUrl || '';
     
