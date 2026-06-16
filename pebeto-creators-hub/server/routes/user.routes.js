@@ -48,7 +48,7 @@ const upload = multer({
 
 /**
  * GET /api/user/activity
- * Get user's activity log (login attempts, actions)
+ * Get user's activity log
  */
 router.get('/activity', catchAsync(async (req, res) => {
   const { limit = 50, page = 1 } = req.query;
@@ -64,7 +64,6 @@ router.get('/activity', catchAsync(async (req, res) => {
   const activities = (user.loginAttempts || []).reverse();
   const paginatedActivities = activities.slice(skip, skip + effectiveLimit);
   
-  // Also get campaign-related activities from transactions
   const campaignActivities = await Transaction.find({
     $or: [{ fromUserId: req.user._id }, { toUserId: req.user._id }],
     type: { $in: ['deposit', 'withdrawal', 'tip', 'escrow_release'] }
@@ -73,7 +72,6 @@ router.get('/activity', catchAsync(async (req, res) => {
     .limit(parseInt(limit))
     .lean();
   
-  // Format activities
   const formattedActivities = [
     ...paginatedActivities.map(a => ({
       action: a.success ? `Login successful from ${a.ipAddress || 'unknown IP'}` : `Failed login attempt from ${a.ipAddress || 'unknown IP'}`,
@@ -91,7 +89,6 @@ router.get('/activity', catchAsync(async (req, res) => {
     }))
   ];
   
-  // Sort by date (newest first)
   formattedActivities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   
   res.json({
@@ -109,7 +106,7 @@ router.get('/activity', catchAsync(async (req, res) => {
 }));
 
 // ============================================
-// Avatar Upload (FIXED)
+// Avatar Upload
 // ============================================
 
 /**
@@ -123,13 +120,11 @@ router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
   
   const file = req.file;
   
-  // Check if file is an image
   if (!file.mimetype.startsWith('image/')) {
     throw new AppError('File must be an image', 400);
   }
   
   try {
-    // Upload to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -144,7 +139,6 @@ router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
       streamifier.createReadStream(file.buffer).pipe(uploadStream);
     });
     
-    // Update user profile
     const user = await User.findById(req.user._id);
     if (!user) {
       throw new AppError('User not found', 404);
@@ -165,7 +159,6 @@ router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
   } catch (cloudinaryError) {
     logger.error('Cloudinary upload error:', cloudinaryError);
     
-    // For development, use a fallback URL if Cloudinary fails
     if (process.env.NODE_ENV === 'development') {
       const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.email)}&background=ff8c42&color=fff&size=500`;
       const user = await User.findById(req.user._id);
@@ -208,7 +201,7 @@ router.delete('/avatar', catchAsync(async (req, res) => {
 }));
 
 // ============================================
-// User Profile (FIXED - allows updating username and niche)
+// User Profile
 // ============================================
 
 /**
@@ -233,7 +226,6 @@ router.put('/profile', [
     throw new AppError('User not found', 404);
   }
   
-  // Update profile fields
   if (req.body.profile) {
     if (!user.profile) user.profile = {};
     
@@ -245,7 +237,6 @@ router.put('/profile', [
     }
   }
   
-  // Update currency
   if (req.body.preferredCurrency) {
     user.preferredCurrency = req.body.preferredCurrency;
   }
@@ -306,7 +297,7 @@ router.get('/sessions', catchAsync(async (req, res) => {
 
 /**
  * POST /api/user/sessions/revoke
- * Revoke all other sessions (logout from other devices)
+ * Revoke all other sessions
  */
 router.post('/sessions/revoke', catchAsync(async (req, res) => {
   const user = await User.findById(req.user._id);
@@ -456,7 +447,7 @@ router.post('/2fa/disable', [
 
 /**
  * POST /api/user/2fa/verify-login
- * Verify 2FA code during login (separate endpoint for login flow)
+ * Verify 2FA code during login
  */
 router.post('/2fa/verify-login', [
   body('userId').isMongoId().withMessage('Invalid user ID'),
