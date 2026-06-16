@@ -127,12 +127,7 @@ function safeRequire(modulePath, moduleName) {
 let authRoutes, walletRoutes, adminRoutes, campaignRoutes;
 
 try {
-  const authModule = require('./routes/auth.routes');
-  authRoutes = authModule.router || authModule;
-  if (typeof authRoutes !== 'function') {
-    console.error('❌ auth.routes did not export a valid router');
-    process.exit(1);
-  }
+  authRoutes = require('./routes/auth.routes');
   console.log('✅ Loaded auth.routes');
 } catch (error) {
   console.error('❌ Failed to load auth.routes:', error.message);
@@ -140,12 +135,7 @@ try {
 }
 
 try {
-  const walletModule = require('./routes/wallet.routes');
-  walletRoutes = walletModule.router || walletModule;
-  if (typeof walletRoutes !== 'function') {
-    console.error('❌ wallet.routes did not export a valid router');
-    process.exit(1);
-  }
+  walletRoutes = require('./routes/wallet.routes');
   console.log('✅ Loaded wallet.routes');
 } catch (error) {
   console.error('❌ Failed to load wallet.routes:', error.message);
@@ -153,12 +143,7 @@ try {
 }
 
 try {
-  const adminModule = require('./routes/admin.routes');
-  adminRoutes = adminModule.router || adminModule;
-  if (typeof adminRoutes !== 'function') {
-    console.error('❌ admin.routes did not export a valid router');
-    process.exit(1);
-  }
+  adminRoutes = require('./routes/admin.routes');
   console.log('✅ Loaded admin.routes');
 } catch (error) {
   console.error('❌ Failed to load admin.routes:', error.message);
@@ -166,17 +151,32 @@ try {
 }
 
 try {
-  const campaignModule = require('./routes/campaign.routes');
-  campaignRoutes = campaignModule.router || campaignModule;
-  if (typeof campaignRoutes !== 'function') {
-    console.error('❌ campaign.routes did not export a valid router');
-    process.exit(1);
-  }
+  campaignRoutes = require('./routes/campaign.routes');
   console.log('✅ Loaded campaign.routes');
 } catch (error) {
   console.error('❌ Failed to load campaign.routes:', error.message);
   process.exit(1);
 }
+
+// Validate all critical routes are functions
+if (typeof authRoutes !== 'function') {
+  console.error('❌ auth.routes did not export a valid router (got:', typeof authRoutes, ')');
+  process.exit(1);
+}
+if (typeof walletRoutes !== 'function') {
+  console.error('❌ wallet.routes did not export a valid router (got:', typeof walletRoutes, ')');
+  process.exit(1);
+}
+if (typeof adminRoutes !== 'function') {
+  console.error('❌ admin.routes did not export a valid router (got:', typeof adminRoutes, ')');
+  process.exit(1);
+}
+if (typeof campaignRoutes !== 'function') {
+  console.error('❌ campaign.routes did not export a valid router (got:', typeof campaignRoutes, ')');
+  process.exit(1);
+}
+
+console.log('✅ All critical routes validated successfully');
 
 // Optional routes (may not exist yet)
 const communityRoutes = safeRequire('./routes/community.routes', 'community.routes');
