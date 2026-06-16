@@ -1,345 +1,835 @@
 /**
- * Fee Calculation Service for Pebeto Creator's Hub
+ * Deposit Service for Pebeto Creator's Hub
  * 
- * Handles all financial calculations including:
- * - Deposit fees (10% platform fee)
- * - Tip fees (5% platform fee, 95% to creator)
- * - Withdrawal fees (3% platform fee)
- * - Currency conversion
- * - Amount validation (positive numbers only)
+ * Handles deposit operations including:
+ * - M-PESA STK push (Kenya)
+ * - PayPal payments (Global)
+ * - Wire/Bank transfers (International)
+ * - Internal wallet transfers
+ * - Deposit preview and fee calculation
+ * - ADMIN FEE WAIVER
  * 
- * @module services/feeService
+ * @module services/depositService
  */
 
-const { FEE_RATES, MIN_WITHDRAWAL_USD, BASE_CURRENCY } = require('../config/constants');
+const axios = require('axios');
+const moment = require('moment');
+const crypto = require('crypto');
+const env = require('../config/env');
+const { calculateDeposit, previewDeposit: previewDepositFee } = require('../services/feeService');
+const {
+  getOrCreateWallet,
+  getAdminProfitWallet,
+  recordTransaction,
+  debitWallet,
+  creditWallet,
+  runInTransaction,
+} = require('./walletService');
 const { AppError } = require('../utils/errors');
 const logger = require('../utils/logger');
+const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 
 // ============================================
-// Currency Precision Mapping
+// Constants
 // ============================================
 
-const CURRENCY_PRECISION = {
-  USD: 2,
-  EUR: 2,
-  GBP: 2,
-  KES: 2,
-  TZS: 2,
-  UGX: 0,
-  JPY: 0,
-  INR: 2,
-  NGN: 2,
-  ZAR: 2,
-  GHS: 2,
+const MPESA_MAX_AMOUNT = 150000; // KES max per transaction (approx $1150)
+const MPESA_MIN_AMOUNT = 10; // KES minimum per transaction
+const USD_TO_KES_RATE = 130; // Approximate rate for validation
+
+const PAYPAL_MAX_AMOUNT = 10000; // $10,000 USD max per transaction
+const PAYPAL_MIN_AMOUNT = 1; // $1 USD minimum per transaction
+
+const WIRE_MIN_AMOUNT = 100; // $100 USD minimum for wire transfers
+const WIRE_MAX_AMOUNT = 50000; // $50,000 USD max per wire transfer
+
+// ============================================
+// M-PESA Helper Functions
+// ============================================
+
+/**
+ * Get current timestamp in M-PESA format (YYYYMMDDHHmmss)
+ */
+const getTimestamp = () => moment().format('YYYYMMDDHHmmss');
+
+/**
+ * Generate password for M-PESA API
+ */
+const getPassword = (timestamp) => {
+  const buffer = Buffer.from(`${env.mpesaShortCode}${env.mpesaPasskey}${timestamp}`);
+  return buffer.toString('base64');
 };
 
-// ============================================
-// Core Rounding Functions
-// ============================================
+/**
+ * Get M-PESA access token
+ */
+const getAccessToken = async () => {
+  try {
+    const auth = Buffer.from(`${env.mpesaConsumerKey}:${env.mpesaConsumerSecret}`).toString('base64');
+    const response = await axios.get(`${env.mpesaApiUrl}/oauth/v1/generate?grant_type=client_credentials`, {
+      headers: { Authorization: `Basic ${auth}` },
+      timeout: 30000,
+    });
+    return response.data.access_token;
+  } catch (error) {
+    logger.error('Failed to get M-PESA access token', {
+      error: error.message,
+      status: error.response?.status,
+    });
+    throw new AppError('Payment service unavailable. Please try again later.', 503);
+  }
+};
 
-function roundAmount(amount, currency = BASE_CURRENCY) {
-  const precision = CURRENCY_PRECISION[currency.toUpperCase()] ?? 2;
-  const multiplier = Math.pow(10, precision);
-  return Math.round(amount * multiplier) / multiplier;
+/**
+ * Validate Kenyan phone number
+ */
+function validateMpesaPhoneNumber(phoneNumber) {
+  const phoneRegex = /^(254|\+254|0)[7-9][0-9]{8}$/;
+  return phoneRegex.test(phoneNumber);
 }
 
-function roundUsd(amount) {
-  return roundAmount(amount, 'USD');
+/**
+ * Format phone number to M-PESA standard (254XXXXXXXXX)
+ */
+function formatMpesaPhoneNumber(phoneNumber) {
+  let cleaned = phoneNumber.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) {
+    cleaned = '254' + cleaned.substring(1);
+  } else if (cleaned.startsWith('+254')) {
+    cleaned = cleaned.substring(1);
+  }
+  return cleaned;
 }
 
-function validateAmount(amount, type) {
-  const numAmount = typeof amount === 'number' ? amount : parseFloat(amount);
-  
-  if (isNaN(numAmount) || numAmount <= 0) {
-    throw new AppError(`${type} amount must be a positive number`, 400);
+/**
+ * Validate M-PESA amount against limits
+ */
+function validateMpesaAmount(amountUsd) {
+  const amountKes = amountUsd * USD_TO_KES_RATE;
+  if (amountKes < MPESA_MIN_AMOUNT) {
+    throw new AppError(`Minimum M-PESA deposit is ${MPESA_MIN_AMOUNT} KES (approx $${(MPESA_MIN_AMOUNT / USD_TO_KES_RATE).toFixed(2)})`, 400);
+  }
+  if (amountKes > MPESA_MAX_AMOUNT) {
+    throw new AppError(`Maximum M-PESA deposit is ${MPESA_MAX_AMOUNT} KES (approx $${(MPESA_MAX_AMOUNT / USD_TO_KES_RATE).toFixed(2)})`, 400);
+  }
+  return true;
+}
+
+// ============================================
+// PayPal Helper Functions
+// ============================================
+
+/**
+ * Get PayPal access token
+ */
+async function getPayPalAccessToken() {
+  try {
+    const auth = Buffer.from(`${env.paypalClientId}:${env.paypalClientSecret}`).toString('base64');
+    const response = await axios.post(
+      `${env.paypalApiUrl}/v1/oauth2/token`,
+      'grant_type=client_credentials',
+      {
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        timeout: 30000,
+      }
+    );
+    return response.data.access_token;
+  } catch (error) {
+    logger.error('Failed to get PayPal access token', {
+      error: error.message,
+      status: error.response?.status,
+    });
+    throw new AppError('PayPal service unavailable. Please try again later.', 503);
   }
 }
 
-function formatCurrency(amount, currency = BASE_CURRENCY) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: CURRENCY_PRECISION[currency.toUpperCase()] ?? 2
-  }).format(amount);
+/**
+ * Validate PayPal email
+ */
+function validatePayPalEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
-// ============================================
-// Deposit Calculations
-// ============================================
-
-function calculateDeposit(intentUsd, options = {}) {
-  validateAmount(intentUsd, 'Deposit');
-  
-  const intent = roundUsd(intentUsd);
-  const feeUsd = roundUsd(intent * FEE_RATES.DEPOSIT);
-  const totalChargeUsd = roundUsd(intent + feeUsd);
-  
-  const result = {
-    intentUsd: intent,
-    feeUsd,
-    totalChargeUsd,
-    escrowCreditUsd: intent,
-    feeRate: FEE_RATES.DEPOSIT,
-    feePercentage: (FEE_RATES.DEPOSIT * 100) + '%',
-    feeSource: 'deposit',
-    timestamp: new Date().toISOString()
-  };
-  
-  if (options.userId) result.userId = options.userId;
-  if (options.campaignId) result.campaignId = options.campaignId;
-  
-  logger.debug('Deposit calculation', result);
-  return result;
+/**
+ * Validate PayPal amount against limits
+ */
+function validatePayPalAmount(amountUsd) {
+  if (amountUsd < PAYPAL_MIN_AMOUNT) {
+    throw new AppError(`Minimum PayPal deposit is $${PAYPAL_MIN_AMOUNT} USD`, 400);
+  }
+  if (amountUsd > PAYPAL_MAX_AMOUNT) {
+    throw new AppError(`Maximum PayPal deposit is $${PAYPAL_MAX_AMOUNT} USD per transaction`, 400);
+  }
+  return true;
 }
 
-function previewDeposit(intentUsd) {
-  const calculation = calculateDeposit(intentUsd);
-  return {
-    ...calculation,
-    breakdown: {
-      escrowAmount: calculation.intentUsd,
-      feeAmount: calculation.feeUsd,
-      feeDescription: `${calculation.feePercentage} platform fee`,
-      totalPayment: calculation.totalChargeUsd
+/**
+ * Create PayPal order
+ */
+async function createPayPalOrder(amountUsd, returnUrl, cancelUrl, metadata = {}) {
+  const token = await getPayPalAccessToken();
+  
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        amount: {
+          currency_code: 'USD',
+          value: amountUsd.toFixed(2),
+          breakdown: {
+            item_total: {
+              currency_code: 'USD',
+              value: amountUsd.toFixed(2),
+            },
+          },
+        },
+        description: metadata.campaignId 
+          ? `Pebeto Campaign Deposit - ${metadata.campaignId}`
+          : 'Pebeto Wallet Deposit',
+        custom_id: JSON.stringify(metadata),
+        invoice_id: `INV-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      },
+    ],
+    application_context: {
+      brand_name: 'Pebeto Creator Hub',
+      landing_page: 'BILLING',
+      user_action: 'PAY_NOW',
+      return_url: returnUrl,
+      cancel_url: cancelUrl,
     },
-    message: `You will pay ${formatCurrency(calculation.totalChargeUsd)} to fund ${formatCurrency(calculation.intentUsd)} in escrow.`
-  };
-}
-
-// ============================================
-// Tip Calculations
-// ============================================
-
-function calculateTip(grossUsd, options = {}) {
-  validateAmount(grossUsd, 'Tip');
-  
-  const gross = roundUsd(grossUsd);
-  const feeUsd = roundUsd(gross * FEE_RATES.TIP);
-  const netToCreatorUsd = roundUsd(gross - feeUsd);
-  
-  const result = {
-    grossUsd: gross,
-    feeUsd,
-    netToCreatorUsd,
-    feeRate: FEE_RATES.TIP,
-    feePercentage: (FEE_RATES.TIP * 100) + '%',
-    feeSource: 'tip',
-    creatorReceivesPercentage: ((1 - FEE_RATES.TIP) * 100) + '%',
-    timestamp: new Date().toISOString()
   };
   
-  if (options.senderId) result.senderId = options.senderId;
-  if (options.recipientId) result.recipientId = options.recipientId;
+  const response = await axios.post(
+    `${env.paypalApiUrl}/v2/checkout/orders`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    }
+  );
   
-  logger.debug('Tip calculation', result);
-  return result;
-}
-
-function previewTip(grossUsd) {
-  const calculation = calculateTip(grossUsd);
+  const approvalUrl = response.data.links.find(link => link.rel === 'approve')?.href;
+  
   return {
-    ...calculation,
-    breakdown: {
-      yourPayment: calculation.grossUsd,
-      creatorReceives: calculation.netToCreatorUsd,
-      platformFee: calculation.feeUsd,
-      feeDescription: `${calculation.feePercentage} platform fee`
-    },
-    message: `${formatCurrency(calculation.netToCreatorUsd)} will be sent to the creator after ${calculation.feePercentage} fee.`
+    orderId: response.data.id,
+    approvalUrl,
+    status: response.data.status,
+  };
+}
+
+/**
+ * Capture PayPal payment after approval
+ */
+async function capturePayPalOrder(orderId) {
+  const token = await getPayPalAccessToken();
+  
+  const response = await axios.post(
+    `${env.paypalApiUrl}/v2/checkout/orders/${orderId}/capture`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    }
+  );
+  
+  const capture = response.data.purchase_units[0]?.payments?.captures[0];
+  
+  return {
+    captureId: capture.id,
+    status: capture.status,
+    amount: parseFloat(capture.amount.value),
+    currency: capture.amount.currency_code,
+    payerEmail: response.data.payer?.email_address,
+    payerName: `${response.data.payer?.name?.given_name || ''} ${response.data.payer?.name?.surname || ''}`.trim(),
+  };
+}
+
+/**
+ * Get PayPal order details
+ */
+async function getPayPalOrderDetails(orderId) {
+  const token = await getPayPalAccessToken();
+  
+  const response = await axios.get(
+    `${env.paypalApiUrl}/v2/checkout/orders/${orderId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    }
+  );
+  
+  return response.data;
+}
+
+// ============================================
+// Wire Transfer Helper Functions
+// ============================================
+
+/**
+ * Validate wire transfer amount against limits
+ */
+function validateWireAmount(amountUsd) {
+  if (amountUsd < WIRE_MIN_AMOUNT) {
+    throw new AppError(`Minimum wire transfer deposit is $${WIRE_MIN_AMOUNT} USD`, 400);
+  }
+  if (amountUsd > WIRE_MAX_AMOUNT) {
+    throw new AppError(`Maximum wire transfer deposit is $${WIRE_MAX_AMOUNT} USD per transaction`, 400);
+  }
+  return true;
+}
+
+/**
+ * Generate wire transfer instructions
+ */
+function generateWireInstructions(amountUsd, transactionId, userEmail) {
+  return {
+    bankName: env.wireBankName || 'Pebeto Partner Bank',
+    bankAddress: env.wireBankAddress || '123 Financial District, New York, NY 10005, USA',
+    accountName: env.wireAccountName || 'Pebeto Global Holdings Ltd',
+    accountNumber: env.wireAccountNumber || '9876543210',
+    routingNumber: env.wireRoutingNumber || '021000021',
+    swiftCode: env.wireSwiftCode || 'CHASUS33',
+    iban: env.wireIban || 'US12345678901234567890',
+    reference: `PEBETO-${transactionId.slice(-8)}`,
+    amount: amountUsd.toFixed(2),
+    currency: 'USD',
+    instructions: [
+      'Please include the reference number in your transfer description',
+      'Funds typically arrive within 2-5 business days',
+      'A confirmation email will be sent once funds are received',
+      `Reference ID: PEBETO-${transactionId.slice(-8)}`,
+    ],
+    contactForSupport: 'finance@pebeto.com',
   };
 }
 
 // ============================================
-// Withdrawal Calculations
+// Preview Functions
 // ============================================
 
-function calculateWithdrawal(grossUsd, role = 'creator', options = {}) {
-  validateAmount(grossUsd, 'Withdrawal');
+/**
+ * Preview deposit fees (without processing)
+ * @param {number} intentUsd - Intended deposit amount in USD
+ * @param {boolean} isAdmin - Whether user is admin (fee waived)
+ * @returns {Object} Deposit preview
+ */
+async function previewDeposit(intentUsd, isAdmin = false) {
+  if (!intentUsd || intentUsd <= 0) {
+    throw new AppError('Valid deposit amount required', 400);
+  }
   
-  const gross = roundUsd(grossUsd);
+  const breakdown = calculateDeposit(intentUsd, { isAdmin });
+  return {
+    intentUsd: breakdown.intentUsd,
+    feeUsd: breakdown.feeUsd,
+    totalChargeUsd: breakdown.totalChargeUsd,
+    escrowCreditUsd: breakdown.escrowCreditUsd,
+    feeRate: breakdown.feeRate,
+    feePercentage: breakdown.feePercentage,
+    feeWaived: breakdown.feeWaived,
+    message: isAdmin 
+      ? `Admin: You pay $${breakdown.totalChargeUsd} with NO fee to credit $${breakdown.escrowCreditUsd} to escrow.`
+      : `You will pay $${breakdown.totalChargeUsd} to credit $${breakdown.escrowCreditUsd} to escrow.`,
+  };
+}
+
+// ============================================
+// M-PESA Deposit
+// ============================================
+
+/**
+ * Initiate M-PESA STK Push for deposit
+ */
+async function initiateMpesaDeposit({ businessUser, amount, phoneNumber, campaignId, idempotencyKey }) {
+  // Validate inputs
+  if (!businessUser) throw new AppError('User information required', 400);
+  if (!amount || amount <= 0) throw new AppError('Valid deposit amount required', 400);
+  if (!phoneNumber) throw new AppError('Phone number is required for M-PESA payment', 400);
   
-  if (role === 'admin') {
-    const result = {
-      grossUsd: gross,
-      feeUsd: 0,
-      netToUserUsd: gross,
-      feeRate: 0,
-      feePercentage: '0%',
-      feeSource: null,
-      adminExempt: true,
-      timestamp: new Date().toISOString()
+  // Validate phone number format
+  if (!validateMpesaPhoneNumber(phoneNumber)) {
+    throw new AppError('Invalid Kenyan phone number format. Use 07XX XXX XXX or 2547XX XXX XXX', 400);
+  }
+  
+  // Validate amount limits
+  validateMpesaAmount(amount);
+  
+  // Calculate deposit breakdown (check if admin)
+  const isAdmin = businessUser.role === 'admin';
+  const breakdown = calculateDeposit(amount, { isAdmin });
+  const formattedPhone = formatMpesaPhoneNumber(phoneNumber);
+  const timestamp = getTimestamp();
+  const password = getPassword(timestamp);
+  
+  try {
+    const token = await getAccessToken();
+    
+    const payload = {
+      BusinessShortCode: env.mpesaShortCode,
+      Password: password,
+      Timestamp: timestamp,
+      TransactionType: "CustomerPayBillOnline",
+      Amount: Math.round(breakdown.totalChargeUsd * USD_TO_KES_RATE),
+      PartyA: formattedPhone,
+      PartyB: env.mpesaShortCode,
+      PhoneNumber: formattedPhone,
+      CallBackURL: env.mpesaCallbackUrl || `${env.clientOrigin}/api/wallet/mpesa-callback`,
+      AccountReference: `Pebeto${campaignId ? campaignId.slice(-6) : Date.now()}`,
+      TransactionDesc: campaignId ? `Escrow for campaign: ${campaignId}` : 'Wallet deposit',
     };
     
-    if (options.payoutMethod) result.payoutMethod = options.payoutMethod;
-    return result;
+    const response = await axios.post(
+      `${env.mpesaApiUrl}/mpesa/stkpush/v1/processrequest`,
+      payload,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 30000,
+      }
+    );
+    
+    // Create pending transaction record
+    const transaction = await recordTransaction({
+      type: 'deposit',
+      status: 'pending',
+      fromUserId: businessUser._id,
+      toUserId: businessUser._id,
+      grossAmount: breakdown.intentUsd,
+      feeAmount: breakdown.feeUsd,
+      netAmount: breakdown.escrowCreditUsd,
+      metadata: {
+        campaignId,
+        idempotencyKey,
+        paymentMethod: 'mpesa',
+        phoneNumber: formattedPhone,
+        checkoutRequestId: response.data.CheckoutRequestID,
+        amountRequested: amount,
+        totalCharge: breakdown.totalChargeUsd,
+        feeWaived: isAdmin,
+        isAdmin: isAdmin
+      },
+    });
+    
+    return {
+      checkoutRequestId: response.data.CheckoutRequestID,
+      responseCode: response.data.ResponseCode,
+      responseDescription: response.data.ResponseDescription,
+      transactionId: transaction._id,
+    };
+    
+  } catch (error) {
+    logger.error('M-PESA STK push failed', {
+      userId: businessUser._id,
+      error: error.message,
+      response: error.response?.data,
+    });
+    
+    if (error.response?.data) {
+      throw new AppError(`M-PESA error: ${error.response.data.errorMessage || 'Payment initiation failed'}`, 400);
+    }
+    throw new AppError('Failed to initiate M-PESA payment. Please try again.', 500);
+  }
+}
+
+// ============================================
+// PayPal Deposit
+// ============================================
+
+/**
+ * Initiate PayPal deposit (creates order for approval)
+ */
+async function initiatePayPalDeposit({ businessUser, amount, campaignId, returnUrl, cancelUrl, idempotencyKey }) {
+  // Validate inputs
+  if (!businessUser) throw new AppError('User information required', 400);
+  if (!amount || amount <= 0) throw new AppError('Valid deposit amount required', 400);
+  
+  // Validate amount limits
+  validatePayPalAmount(amount);
+  
+  // Calculate deposit breakdown (check if admin)
+  const isAdmin = businessUser.role === 'admin';
+  const breakdown = calculateDeposit(amount, { isAdmin });
+  
+  try {
+    const metadata = {
+      userId: businessUser._id.toString(),
+      email: businessUser.email,
+      campaignId,
+      intentUsd: amount,
+      feeUsd: breakdown.feeUsd,
+      escrowCreditUsd: breakdown.escrowCreditUsd,
+      isAdmin: isAdmin,
+      feeWaived: isAdmin
+    };
+    
+    const order = await createPayPalOrder(breakdown.totalChargeUsd, returnUrl, cancelUrl, metadata);
+    
+    // Create pending transaction record
+    const transaction = await recordTransaction({
+      type: 'deposit',
+      status: 'pending',
+      fromUserId: businessUser._id,
+      toUserId: businessUser._id,
+      grossAmount: breakdown.intentUsd,
+      feeAmount: breakdown.feeUsd,
+      netAmount: breakdown.escrowCreditUsd,
+      metadata: {
+        campaignId,
+        idempotencyKey,
+        paymentMethod: 'paypal',
+        paypalOrderId: order.orderId,
+        amountRequested: amount,
+        totalCharge: breakdown.totalChargeUsd,
+        feeWaived: isAdmin,
+        isAdmin: isAdmin
+      },
+    });
+    
+    return {
+      orderId: order.orderId,
+      approvalUrl: order.approvalUrl,
+      transactionId: transaction._id,
+    };
+    
+  } catch (error) {
+    logger.error('PayPal order creation failed', {
+      userId: businessUser._id,
+      error: error.message,
+      response: error.response?.data,
+    });
+    
+    if (error.response?.data) {
+      throw new AppError(`PayPal error: ${error.response.data.message || 'Payment initiation failed'}`, 400);
+    }
+    throw new AppError('Failed to initiate PayPal payment. Please try again.', 500);
+  }
+}
+
+/**
+ * Complete PayPal deposit after approval
+ */
+async function completePayPalDeposit({ orderId, payerId, transactionId }) {
+  // Find pending transaction
+  const transaction = await Transaction.findOne({ 
+    'metadata.paypalOrderId': orderId,
+    status: 'pending',
+  });
+  
+  if (!transaction) {
+    logger.warn('PayPal completion: Transaction not found', { orderId });
+    throw new AppError('Transaction not found', 404);
   }
   
-  const feeUsd = roundUsd(gross * FEE_RATES.WITHDRAWAL);
-  const netToUserUsd = roundUsd(gross - feeUsd);
-  
-  const result = {
-    grossUsd: gross,
-    feeUsd,
-    netToUserUsd,
-    feeRate: FEE_RATES.WITHDRAWAL,
-    feePercentage: (FEE_RATES.WITHDRAWAL * 100) + '%',
-    feeSource: 'withdrawal',
-    adminExempt: false,
-    timestamp: new Date().toISOString()
-  };
-  
-  if (options.payoutMethod) result.payoutMethod = options.payoutMethod;
-  
-  logger.debug('Withdrawal calculation', result);
-  return result;
+  try {
+    // Capture the PayPal payment
+    const capture = await capturePayPalOrder(orderId);
+    
+    if (capture.status !== 'COMPLETED') {
+      transaction.status = 'failed';
+      transaction.errorMessage = `PayPal capture failed: ${capture.status}`;
+      await transaction.save();
+      throw new AppError('Payment capture failed', 400);
+    }
+    
+    // Update transaction
+    transaction.status = 'completed';
+    transaction.completedAt = new Date();
+    transaction.referenceId = capture.captureId;
+    transaction.metadata.paypalPayerId = payerId;
+    transaction.metadata.paypalPayerEmail = capture.payerEmail;
+    transaction.metadata.paypalCaptureId = capture.captureId;
+    await transaction.save();
+    
+    // Process the deposit to wallet
+    await completeDeposit(transaction);
+    
+    logger.info('PayPal deposit completed', {
+      transactionId: transaction._id,
+      orderId,
+      captureId: capture.captureId,
+    });
+    
+    return {
+      success: true,
+      transactionId: transaction._id,
+      amount: transaction.grossAmount,
+    };
+    
+  } catch (error) {
+    logger.error('PayPal capture failed', {
+      orderId,
+      transactionId,
+      error: error.message,
+    });
+    
+    transaction.status = 'failed';
+    transaction.errorMessage = error.message;
+    await transaction.save();
+    
+    throw new AppError('Failed to complete PayPal payment', 500);
+  }
 }
 
-function previewWithdrawal(grossUsd, role = 'creator') {
-  const calculation = calculateWithdrawal(grossUsd, role);
-  return {
-    ...calculation,
-    breakdown: {
-      requestedAmount: calculation.grossUsd,
-      youReceive: calculation.netToUserUsd,
-      platformFee: calculation.feeUsd,
-      feeDescription: calculation.adminExempt 
-        ? 'Admin fee waived' 
-        : `${calculation.feePercentage} withdrawal fee`
+// ============================================
+// Wire Transfer Deposit
+// ============================================
+
+/**
+ * Initiate wire transfer deposit (generates instructions)
+ */
+async function initiateWireDeposit({ businessUser, amount, campaignId, idempotencyKey }) {
+  // Validate inputs
+  if (!businessUser) throw new AppError('User information required', 400);
+  if (!amount || amount <= 0) throw new AppError('Valid deposit amount required', 400);
+  
+  // Validate amount limits
+  validateWireAmount(amount);
+  
+  // Calculate deposit breakdown (check if admin)
+  const isAdmin = businessUser.role === 'admin';
+  const breakdown = calculateDeposit(amount, { isAdmin });
+  
+  // Check for duplicate idempotency key
+  if (idempotencyKey) {
+    const existing = await Transaction.findOne({ 
+      'metadata.idempotencyKey': idempotencyKey,
+      status: { $in: ['pending', 'completed'] },
+    });
+    if (existing) {
+      logger.warn('Duplicate wire deposit request', { idempotencyKey, userId: businessUser._id });
+      throw new AppError('Duplicate transaction detected', 409);
+    }
+  }
+  
+  // Create pending transaction record
+  const transaction = await recordTransaction({
+    type: 'deposit',
+    status: 'pending',
+    fromUserId: businessUser._id,
+    toUserId: businessUser._id,
+    grossAmount: breakdown.intentUsd,
+    feeAmount: breakdown.feeUsd,
+    netAmount: breakdown.escrowCreditUsd,
+    metadata: {
+      campaignId,
+      idempotencyKey,
+      paymentMethod: 'wire',
+      amountRequested: amount,
+      totalCharge: breakdown.totalChargeUsd,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days expiry
+      feeWaived: isAdmin,
+      isAdmin: isAdmin
     },
-    message: calculation.adminExempt
-      ? `You will receive the full ${formatCurrency(calculation.netToUserUsd)} (admin fee waived).`
-      : `You will receive ${formatCurrency(calculation.netToUserUsd)} after ${calculation.feePercentage} fee.`
+  });
+  
+  // Generate wire transfer instructions
+  const instructions = generateWireInstructions(breakdown.totalChargeUsd, transaction._id, businessUser.email);
+  
+  logger.info('Wire deposit initiated', {
+    transactionId: transaction._id,
+    userId: businessUser._id,
+    amount: breakdown.totalChargeUsd,
+    isAdmin: isAdmin
+  });
+  
+  return {
+    transactionId: transaction._id,
+    instructions,
+    expiresAt: transaction.metadata.expiresAt,
+    amount: breakdown.totalChargeUsd,
+    fee: breakdown.feeUsd,
+    escrowCredit: breakdown.escrowCreditUsd,
+    feeWaived: isAdmin
   };
 }
 
-function validateMinimumWithdrawal(grossUsd, role = 'creator') {
-  if (role === 'admin') return;
+/**
+ * Confirm wire transfer deposit (admin or webhook)
+ */
+async function confirmWireDeposit({ transactionId, referenceNumber, confirmedBy }) {
+  const transaction = await Transaction.findById(transactionId);
   
-  const gross = roundUsd(grossUsd);
-  if (gross < MIN_WITHDRAWAL_USD) {
+  if (!transaction) {
+    throw new AppError('Transaction not found', 404);
+  }
+  
+  if (transaction.status !== 'pending') {
+    throw new AppError(`Transaction already ${transaction.status}`, 400);
+  }
+  
+  // Update transaction
+  transaction.status = 'completed';
+  transaction.completedAt = new Date();
+  transaction.referenceId = referenceNumber;
+  transaction.metadata.confirmedBy = confirmedBy;
+  transaction.metadata.confirmedAt = new Date();
+  await transaction.save();
+  
+  // Process the deposit to wallet
+  await completeDeposit(transaction);
+  
+  logger.info('Wire deposit confirmed', {
+    transactionId: transaction._id,
+    referenceNumber,
+    confirmedBy,
+  });
+  
+  return {
+    success: true,
+    transactionId: transaction._id,
+    amount: transaction.grossAmount,
+  };
+}
+
+// ============================================
+// Internal Wallet Deposit
+// ============================================
+
+/**
+ * Complete deposit after payment confirmation (used by all methods)
+ */
+async function completeDeposit(transaction) {
+  const breakdown = calculateDeposit(transaction.grossAmount);
+  const businessUser = await User.findById(transaction.fromUserId);
+  const businessWallet = await getOrCreateWallet(businessUser._id);
+  const { admin, wallet: profitWallet } = await getAdminProfitWallet();
+  
+  const isAdmin = transaction.metadata?.isAdmin || false;
+  const feeWaived = transaction.metadata?.feeWaived || false;
+  
+  await runInTransaction(async (session) => {
+    // Credit escrow amount to business escrow balance
+    await creditWallet(businessWallet._id, 'escrow', breakdown.escrowCreditUsd, session);
+    
+    // Credit platform fee to admin profit wallet (only if not waived)
+    if (breakdown.feeUsd > 0 && profitWallet && !feeWaived) {
+      await creditWallet(profitWallet._id, 'available', breakdown.feeUsd, session);
+    }
+    
+    // Update transaction with additional metadata
+    transaction.metadata.completedAt = new Date();
+    transaction.metadata.escrowCredited = breakdown.escrowCreditUsd;
+    transaction.metadata.feeCredited = feeWaived ? 0 : breakdown.feeUsd;
+    transaction.metadata.feeWaived = feeWaived;
+    await transaction.save({ session });
+  });
+  
+  logger.info('Deposit completed', {
+    transactionId: transaction._id,
+    userId: businessUser._id,
+    amount: breakdown.escrowCreditUsd,
+    method: transaction.metadata.paymentMethod,
+    feeWaived: feeWaived,
+    isAdmin: isAdmin
+  });
+}
+
+/**
+ * Process deposit from business wallet balance (internal)
+ */
+async function processDeposit({ businessUser, intentUsd, campaignId, idempotencyKey, paymentMethod = 'wallet', isAdmin = false, adminFeeWaived = false }) {
+  // Validate inputs
+  if (!businessUser) throw new AppError('User information required', 400);
+  if (!intentUsd || intentUsd <= 0) {
+    throw new AppError('Valid deposit amount required', 400);
+  }
+  
+  // Calculate deposit breakdown (with admin fee waiver)
+  const breakdown = calculateDeposit(intentUsd, { isAdmin: isAdmin || adminFeeWaived });
+  
+  // Get user wallet
+  const businessWallet = await getOrCreateWallet(businessUser._id);
+  
+  // Check sufficient funds
+  if (businessWallet.balances.available < breakdown.totalChargeUsd) {
     throw new AppError(
-      `Minimum withdrawal is ${formatCurrency(MIN_WITHDRAWAL_USD)}. You requested ${formatCurrency(gross)}.`,
-      400,
-      'MIN_WITHDRAWAL_NOT_MET'
+      `Insufficient funds. Need $${breakdown.totalChargeUsd}. Available: $${businessWallet.balances.available}`,
+      400
     );
   }
-}
-
-// ============================================
-// Currency Conversion
-// ============================================
-
-function convertLocalToUsd(localAmount, currency, rates = {}) {
-  const local = typeof localAmount === 'number' ? localAmount : parseFloat(localAmount);
   
-  if (isNaN(local) || local <= 0) {
-    throw new AppError('Local amount must be a positive number', 400);
+  // Check for duplicate idempotency key
+  if (idempotencyKey) {
+    const existing = await Transaction.findOne({ 
+      'metadata.idempotencyKey': idempotencyKey,
+      status: 'completed',
+    });
+    if (existing) {
+      logger.warn('Duplicate deposit request', { idempotencyKey, userId: businessUser._id });
+      throw new AppError('Duplicate transaction detected', 409);
+    }
   }
   
-  if (!currency || currency.toUpperCase() === BASE_CURRENCY) {
-    return roundUsd(local);
-  }
+  // Get admin profit wallet
+  const { admin, wallet: profitWallet } = await getAdminProfitWallet();
   
-  const rate = rates[currency.toUpperCase()];
-  if (!rate || rate <= 0) {
-    throw new AppError(`Exchange rate unavailable for ${currency}. Please try again later.`, 400);
-  }
+  let depositTx;
   
-  return roundUsd(local / rate);
-}
-
-function convertUsdToLocal(usdAmount, currency, rates = {}) {
-  const usd = typeof usdAmount === 'number' ? usdAmount : parseFloat(usdAmount);
+  await runInTransaction(async (session) => {
+    // Debit total amount from business available balance
+    await debitWallet(businessWallet._id, 'available', breakdown.totalChargeUsd, session);
+    
+    // Credit escrow amount to business escrow balance
+    await creditWallet(businessWallet._id, 'escrow', breakdown.escrowCreditUsd, session);
+    
+    // Credit platform fee to admin profit wallet (only if not waived)
+    if (breakdown.feeUsd > 0 && profitWallet && !adminFeeWaived && !isAdmin) {
+      await creditWallet(profitWallet._id, 'available', breakdown.feeUsd, session);
+    }
+    
+    // Record deposit transaction
+    depositTx = await recordTransaction(
+      {
+        type: 'deposit',
+        status: 'completed',
+        fromUserId: businessUser._id,
+        toUserId: businessUser._id,
+        fromWalletId: businessWallet._id,
+        toWalletId: businessWallet._id,
+        grossAmount: breakdown.intentUsd,
+        feeAmount: breakdown.feeUsd,
+        netAmount: breakdown.escrowCreditUsd,
+        feeRate: breakdown.feeRate,
+        feeSource: 'deposit',
+        metadata: {
+          campaignId,
+          idempotencyKey,
+          paymentMethod,
+          depositBreakdown: breakdown,
+          isAdmin: isAdmin || adminFeeWaived,
+          feeWaived: isAdmin || adminFeeWaived
+        },
+      },
+      session
+    );
+  });
   
-  if (isNaN(usd) || usd <= 0) {
-    throw new AppError('USD amount must be a positive number', 400);
-  }
-  
-  if (!currency || currency.toUpperCase() === BASE_CURRENCY) {
-    return roundAmount(usd, currency);
-  }
-  
-  const rate = rates[currency.toUpperCase()];
-  if (!rate || rate <= 0) {
-    throw new AppError(`Exchange rate unavailable for ${currency}`, 400);
-  }
-  
-  return roundAmount(usd * rate, currency);
-}
-
-function resolveWithdrawalAmountUsd({ amountUsd, amountLocal, currency }, rates = {}) {
-  if (amountUsd != null && amountUsd !== '') {
-    const usdAmount = roundUsd(Number(amountUsd));
-    validateAmount(usdAmount, 'Withdrawal');
-    return usdAmount;
-  }
-  
-  if (amountLocal != null && amountLocal !== '' && currency) {
-    return convertLocalToUsd(amountLocal, currency, rates);
-  }
-  
-  throw new AppError('Provide amountUsd or amountLocal with currency', 400);
-}
-
-function getExchangeRate(currency, rates = {}) {
-  if (!currency || currency.toUpperCase() === BASE_CURRENCY) return 1;
-  const rate = rates[currency.toUpperCase()];
-  if (!rate) {
-    throw new AppError(`Exchange rate unavailable for ${currency}`, 400);
-  }
-  return rate;
-}
-
-// ============================================
-// Withdrawal Request Validation
-// ============================================
-
-function validateWithdrawalRequest({ amountUsd, amountLocal, currency, role }, rates = {}) {
-  const grossUsd = resolveWithdrawalAmountUsd({ amountUsd, amountLocal, currency }, rates);
-  validateMinimumWithdrawal(grossUsd, role);
-  const feeBreakdown = calculateWithdrawal(grossUsd, role);
-  
-  const exchangeRateUsed = currency && rates[currency.toUpperCase()] 
-    ? rates[currency.toUpperCase()] 
-    : 1;
+  logger.info('Internal deposit processed successfully', {
+    userId: businessUser._id,
+    amount: breakdown.intentUsd,
+    fee: breakdown.feeUsd,
+    campaignId,
+    transactionId: depositTx._id,
+    feeWaived: isAdmin || adminFeeWaived
+  });
   
   return {
-    grossUsd,
-    ...feeBreakdown,
-    displayCurrency: currency || BASE_CURRENCY,
-    displayAmount: amountLocal != null ? Number(amountLocal) : grossUsd,
-    exchangeRateUsed,
-    exchangeRateSource: rates._source || 'cache',
-    isValid: true
+    transactionId: depositTx._id,
+    breakdown,
   };
-}
-
-// ============================================
-// Express Middleware
-// ============================================
-
-function attachFeeService(req, res, next) {
-  req.feeService = {
-    calculateDeposit,
-    previewDeposit,
-    calculateTip,
-    previewTip,
-    calculateWithdrawal,
-    previewWithdrawal,
-    validateMinimumWithdrawal,
-    validateWithdrawalRequest,
-    convertLocalToUsd,
-    convertUsdToLocal,
-    resolveWithdrawalAmountUsd,
-    getExchangeRate,
-    roundUsd,
-    roundAmount,
-    validateAmount,
-    formatCurrency,
-    MIN_WITHDRAWAL_USD,
-    FEE_RATES
-  };
-  next();
 }
 
 // ============================================
@@ -347,24 +837,25 @@ function attachFeeService(req, res, next) {
 // ============================================
 
 module.exports = {
-  calculateDeposit,
-  previewDeposit,
-  calculateTip,
-  previewTip,
-  calculateWithdrawal,
-  previewWithdrawal,
-  validateMinimumWithdrawal,
-  validateWithdrawalRequest,
-  convertLocalToUsd,
-  convertUsdToLocal,
-  resolveWithdrawalAmountUsd,
-  getExchangeRate,
-  roundUsd,
-  roundAmount,
-  validateAmount,
-  formatCurrency,
-  MIN_WITHDRAWAL_USD,
-  FEE_RATES,
-  attachFeeService,
-  CURRENCY_PRECISION
+  // Main functions
+  processDeposit,
+  initiateMpesaDeposit,
+  initiatePayPalDeposit,
+  completePayPalDeposit,
+  initiateWireDeposit,
+  confirmWireDeposit,
+  previewDeposit,        // ✓ FIXED - Now supports admin fee waiver
+  
+  // Helper functions (for testing)
+  validateMpesaPhoneNumber,
+  formatMpesaPhoneNumber,
+  validateMpesaAmount,
+  validatePayPalEmail,
+  validatePayPalAmount,
+  validateWireAmount,
+  generateWireInstructions,
+  getPayPalAccessToken,
+  createPayPalOrder,
+  capturePayPalOrder,
+  getPayPalOrderDetails,
 };
