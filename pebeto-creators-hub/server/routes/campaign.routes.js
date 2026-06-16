@@ -14,16 +14,48 @@ const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
+// Create router
 const router = express.Router();
 
 // ============================================
 // Lazy load services to avoid circular dependencies
 // ============================================
 
-const getCampaignService = () => require('../services/campaignService');
-const getCampaignModel = () => require('../models/Campaign');
-const getUserModel = () => require('../models/User');
-const getNotificationModel = () => require('../models/Notification');
+const getCampaignService = () => {
+  try {
+    return require('../services/campaignService');
+  } catch (err) {
+    console.error('❌ Failed to load campaignService:', err.message);
+    throw err;
+  }
+};
+
+const getCampaignModel = () => {
+  try {
+    return require('../models/Campaign');
+  } catch (err) {
+    console.error('❌ Failed to load Campaign model:', err.message);
+    throw err;
+  }
+};
+
+const getUserModel = () => {
+  try {
+    return require('../models/User');
+  } catch (err) {
+    console.error('❌ Failed to load User model:', err.message);
+    throw err;
+  }
+};
+
+const getNotificationModel = () => {
+  try {
+    return require('../models/Notification');
+  } catch (err) {
+    console.error('❌ Failed to load Notification model:', err.message);
+    throw err;
+  }
+};
 
 // ============================================
 // Middleware
@@ -171,7 +203,7 @@ const listCampaignsValidation = [
  * GET /api/campaigns
  * List campaigns accessible to the authenticated user
  */
-router.get('/', listCampaignsValidation, catchAsync(async (req, res, next) => {
+router.get('/', authenticate, listCampaignsValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new AppError(errors.array()[0].msg, 400);
@@ -208,9 +240,9 @@ router.get('/', listCampaignsValidation, catchAsync(async (req, res, next) => {
  * GET /api/campaigns/:id
  * Get a specific campaign by ID
  */
-router.get('/:id', [
+router.get('/:id', authenticate, [
   param('id').isMongoId().withMessage('Invalid campaign ID'),
-], catchAsync(async (req, res, next) => {
+], catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new AppError(errors.array()[0].msg, 400);
@@ -243,7 +275,7 @@ router.post(
   authenticate,
   authorize('business'),
   createCampaignValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -284,7 +316,7 @@ router.post(
   authenticate,
   authorize('business'),
   fundCampaignValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -330,7 +362,7 @@ router.post(
   authenticate,
   authorize('creator'),
   placeBidValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -373,7 +405,7 @@ router.post(
   authenticate,
   authorize('business'),
   acceptBidValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -412,7 +444,7 @@ router.post(
   authenticate,
   authorize('creator'),
   submitWorkValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -453,7 +485,7 @@ router.post(
   authenticate,
   authorize('business'),
   completeCampaignValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -492,7 +524,7 @@ router.post(
   authenticate,
   authorize('business'),
   cancelCampaignValidation,
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -630,7 +662,7 @@ router.post(
       .isURL()
       .withMessage('Invalid drive file URL')
   ],
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -824,7 +856,7 @@ router.get(
 );
 
 // ============================================
-// Export
+// Export - CRITICAL: This must be here
 // ============================================
 
 module.exports = router;
