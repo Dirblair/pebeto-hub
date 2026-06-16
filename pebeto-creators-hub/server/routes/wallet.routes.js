@@ -799,7 +799,7 @@ router.get('/payment-methods', catchAsync(async (req, res) => {
 }));
 
 // ============================================
-// Exports
+// Exports - SINGLE ROUTER EXPORT (FIXED)
 // ============================================
 
 module.exports = router;
