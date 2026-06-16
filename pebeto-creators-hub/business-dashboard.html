@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Business Dashboard - Pebeto</title>
+  <title>Brand Dashboard - Pebeto</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -147,6 +147,10 @@
       flex-wrap: wrap;
       align-items: center;
     }
+    .profile-avatar-wrapper {
+      position: relative;
+      cursor: pointer;
+    }
     .profile-avatar {
       width: 80px;
       height: 80px;
@@ -159,8 +163,38 @@
       font-weight: bold;
       background-size: cover;
       background-position: center;
+    }
+    .avatar-edit-overlay {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #ff8c42;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid #0a0a0a;
       cursor: pointer;
     }
+    .avatar-remove-btn {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #f44336;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      border: 2px solid #0a0a0a;
+      cursor: pointer;
+    }
+    .avatar-remove-btn.show { display: flex; }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
     .company-code {
@@ -362,7 +396,6 @@
     .deposit-fields { display: none; margin-top: 15px; }
     .deposit-fields.active { display: block; }
     
-    /* Auto-Release Status Styles */
     .auto-release-status {
       background: rgba(255,255,255,0.03);
       border-radius: 12px;
@@ -503,7 +536,6 @@
       color: #ff8c42;
     }
     
-    /* Creator Result Card */
     .creator-result-card {
       background: rgba(255,255,255,0.05);
       border-radius: 20px;
@@ -581,7 +613,11 @@
 
 <div class="container">
   <div class="profile-banner">
-    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">B</div>
+    <div class="profile-avatar-wrapper">
+      <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">B</div>
+      <div class="avatar-edit-overlay" onclick="openAvatarModal()"><i class="ri-camera-line"></i></div>
+      <div class="avatar-remove-btn" id="avatar-remove-btn" onclick="removeAvatar()"><i class="ri-close-line"></i></div>
+    </div>
     <div class="profile-info">
       <h2 id="company-name">Loading... <i class="ri-edit-line edit-icon" onclick="openSettings()"></i></h2>
       <p id="business-email">Loading...</p>
@@ -589,7 +625,7 @@
     </div>
   </div>
 
-  <!-- Earnings Chart -->
+  <!-- Spending Chart -->
   <div class="earnings-chart-container">
     <h4>📈 Spending Overview (Last 30 Days)</h4>
     <canvas id="spending-chart" style="height: 200px;"></canvas>
@@ -624,7 +660,6 @@
     <button class="tab-btn" data-tab="activity">🔐 Activity Log</button>
     <button class="tab-btn" data-tab="security">🛡️ Security</button>
     <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
-    <button class="tab-btn" data-tab="api">🔑 API Keys</button>
   </div>
 
   <!-- My Campaigns Tab -->
@@ -674,7 +709,7 @@
         <thead>
           <tr><th>Title</th><th>Budget</th><th>Slots</th><th>Per Creator</th><th>Deadline</th><th>Status</th><th>Bids</th><th>Views</th><th>Auto-Release</th><th>Actions</th>
         </thead>
-        <tbody></tbody>
+        <tbody id="campaigns-body"></tbody>
       </table>
     </div>
     <div id="campaigns-pagination">
@@ -697,7 +732,7 @@
       </div>
       <table class="data-table" id="applications-table" style="display: none;">
         <thead><tr><th>Campaign</th><th>Creator</th><th>Bid Amount</th><th>Proposal</th><th>Actions</th></tr></thead>
-        <tbody></tbody>
+        <tbody id="applications-body"></tbody>
       </table>
     </div>
     <div id="applications-pagination">
@@ -714,7 +749,7 @@
       </div>
       <table class="data-table" id="active-projects-table" style="display: none;">
         <thead><tr><th>Campaign</th><th>Creator</th><th>Work URL</th><th>Status</th><th>Auto-Release</th><th>Action</th></tr></thead>
-        <tbody></tbody>
+        <tbody id="active-projects-body"></tbody>
       </table>
     </div>
   </div>
@@ -781,9 +816,6 @@
         <label style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
           <input type="checkbox" id="smsNotificationsToggle"> Receive SMS for urgent updates
         </label>
-        <label style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-          <input type="checkbox" id="soundNotificationsToggle"> Play sound for notifications
-        </label>
       </div>
       <div style="margin-top: 20px;">
         <p><strong>Team Members</strong></p>
@@ -815,25 +847,6 @@
       <div class="stat-card">
         <h4>📊 Engagement Score</h4>
         <div class="amount" id="engagement-score">0</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- API Keys Tab -->
-  <div id="tab-api" class="tab-content">
-    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
-      <h3 style="margin-bottom: 20px;">🔑 API Access</h3>
-      <p>Use these keys to integrate Pebeto with your systems.</p>
-      <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px; margin: 15px 0;">
-        <p><strong>API Keys</strong></p>
-        <div id="api-keys-list"></div>
-        <button class="btn-action" onclick="createApiKey()" style="margin-top: 10px;">+ Create New API Key</button>
-      </div>
-      <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px;">
-        <p><strong>Webhooks</strong></p>
-        <p style="font-size: 13px; color: #a08070;">Receive real-time updates for campaign events.</p>
-        <div id="webhooks-list"></div>
-        <button class="btn-action" onclick="openAddWebhookModal()" style="margin-top: 10px;">+ Add Webhook URL</button>
       </div>
     </div>
   </div>
@@ -972,7 +985,7 @@
 <div id="settings-modal" class="modal">
   <div class="modal-content">
     <h3>Company Settings</h3>
-    <input type="text" id="setting-company" placeholder="Company Name">
+    <input type="text" id="setting-company" placeholder="Company Name / Brand Name">
     <select id="setting-currency">
       <option value="USD">USD ($)</option>
       <option value="KES">KES (KSh)</option>
@@ -1026,24 +1039,6 @@
   </div>
 </div>
 
-<div id="add-webhook-modal" class="modal">
-  <div class="modal-content">
-    <h3>🔗 Add Webhook URL</h3>
-    <input type="url" id="webhook-url" placeholder="https://your-server.com/webhook">
-    <select id="webhook-events">
-      <option value="campaign.created">Campaign Created</option>
-      <option value="campaign.funded">Campaign Funded</option>
-      <option value="bid.received">Bid Received</option>
-      <option value="work.submitted">Work Submitted</option>
-      <option value="payment.released">Payment Released</option>
-    </select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="addWebhook()">Add Webhook</button>
-      <button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <div id="confirm-withdraw-modal" class="modal">
   <div class="modal-content">
     <h3>⚠️ Confirm Withdrawal</h3>
@@ -1085,14 +1080,19 @@
   </div>
 </div>
 
-<div id="api-key-modal" class="modal">
+<div id="audit-modal" class="modal">
   <div class="modal-content">
-    <h3>Create API Key</h3>
-    <input type="text" id="api-key-name" placeholder="Key Name (e.g., Production Server)">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="createApiKeySubmit()">Create</button>
-      <button class="cancel-btn" onclick="closeModal('api-key-modal')">Cancel</button>
-    </div>
+    <h3>📊 Funding Audit History</h3>
+    <div id="audit-list" style="max-height: 400px; overflow-y: auto;"></div>
+    <button class="cancel-btn" onclick="closeModal('audit-modal')">Close</button>
+  </div>
+</div>
+
+<div id="deposit-history-modal" class="modal">
+  <div class="modal-content">
+    <h3>📥 Deposit History</h3>
+    <div id="deposit-history-list" style="max-height: 400px; overflow-y: auto;"></div>
+    <button class="cancel-btn" onclick="closeModal('deposit-history-modal')">Close</button>
   </div>
 </div>
 
@@ -1126,6 +1126,7 @@
   let webhooks = [];
   let apiKeys = [];
   let currentApproveCampaign = null;
+  let allTransactions = [];
 
   // ============================================
   // HELPER FUNCTIONS
@@ -1237,18 +1238,15 @@
       return;
     }
     dropdown.innerHTML = notifications.slice(0, 10).map(n => `
-      <div class="notification-item" onclick="markNotificationRead(this, '${n.time}')">
+      <div class="notification-item" onclick="markNotificationRead(this)">
         <div><strong>${n.message}</strong></div>
         <small style="color: #a08070;">${formatDateTime(n.time)}</small>
       </div>
     `).join('');
   }
 
-  function markNotificationRead(element, time) {
+  function markNotificationRead(element) {
     element.style.opacity = '0.5';
-    const notification = notifications.find(n => n.time.toString() === time);
-    if (notification) notification.read = true;
-    updateNotificationBadge();
   }
 
   function toggleNotifications() {
@@ -1289,7 +1287,7 @@
   }
 
   // ============================================
-  // AVATAR UPLOAD
+  // AVATAR UPLOAD (FIXED)
   // ============================================
   function previewAvatar() {
     const file = document.getElementById('avatar-file').files[0];
@@ -1313,47 +1311,77 @@
   async function uploadAvatar() {
     const fileInput = document.getElementById('avatar-file');
     const file = fileInput.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      try {
-        const token = localStorage.getItem('pebeto_token');
-        const response = await fetch(`${API_BASE}/api/user/avatar`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-        const data = await response.json();
-        if (data.success) {
-          showToast('Profile picture updated!', 'success');
-          location.reload();
-        } else {
-          showToast(data.message || 'Upload failed', 'error');
+    if (!file) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch(`${API_BASE}/api/user/avatar`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        showToast('Profile picture updated!', 'success');
+        if (currentUser) {
+          if (!currentUser.profile) currentUser.profile = {};
+          currentUser.profile.avatarUrl = data.data.avatarUrl;
+          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
         }
-      } catch(e) {
-        showToast('Error uploading image', 'error');
-      }
-    } else {
-      const avatarUrl = document.getElementById('avatar-url').value;
-      if (avatarUrl) {
-        await saveAvatar();
+        document.getElementById('avatar-header').style.backgroundImage = `url(${data.data.avatarUrl})`;
+        document.getElementById('avatar-header').innerHTML = '';
+        document.getElementById('profile-avatar').style.backgroundImage = `url(${data.data.avatarUrl})`;
+        document.getElementById('profile-avatar').innerHTML = '';
+        document.getElementById('avatar-remove-btn').classList.add('show');
+        closeModal('avatar-modal');
+        showToast('Profile picture updated successfully!', 'success');
       } else {
-        showToast('Please select an image or enter URL', 'error');
+        showToast(data.message || 'Upload failed', 'error');
       }
+    } catch(e) {
+      console.error('Avatar upload error:', e);
+      showToast('Error uploading image', 'error');
     }
   }
 
-  async function saveAvatar() {
-    const avatarUrl = document.getElementById('avatar-url').value;
-    if (!avatarUrl) { showToast('Enter image URL', 'error'); return; }
+  async function removeAvatar() {
+    if (!confirm('Remove your profile picture?')) return;
     try {
       const token = localStorage.getItem('pebeto_token');
-      await fetch(`${API_BASE}/api/user/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ profile: { avatarUrl } }) });
-      showToast('Profile picture updated!', 'success');
-      location.reload();
-    } catch(e) { showToast('Error', 'error'); }
+      const response = await fetch(`${API_BASE}/api/user/avatar`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        if (currentUser && currentUser.profile) {
+          currentUser.profile.avatarUrl = null;
+          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+        }
+        const initial = (currentUser?.profile?.companyName?.[0] || currentUser?.email?.[0] || 'B').toUpperCase();
+        document.getElementById('avatar-header').style.backgroundImage = '';
+        document.getElementById('avatar-header').innerHTML = initial;
+        document.getElementById('profile-avatar').style.backgroundImage = '';
+        document.getElementById('profile-avatar').innerHTML = initial;
+        document.getElementById('avatar-remove-btn').classList.remove('show');
+        showToast('Profile picture removed', 'success');
+      } else {
+        showToast(data.message || 'Failed to remove', 'error');
+      }
+    } catch(e) {
+      showToast('Error removing avatar', 'error');
+    }
   }
 
+  // ============================================
+  // SETTINGS (FIXED - edit company name)
+  // ============================================
   async function saveSettings() {
     const companyName = document.getElementById('setting-company').value;
     const currency = document.getElementById('setting-currency').value;
@@ -1361,6 +1389,7 @@
     const address = document.getElementById('setting-address').value;
     const timezone = document.getElementById('setting-timezone').value;
     const language = document.getElementById('setting-language').value;
+    
     try {
       const token = localStorage.getItem('pebeto_token');
       await fetch(`${API_BASE}/api/user/profile`, { 
@@ -1375,6 +1404,13 @@
       if (currency) document.getElementById('setting-currency').value = currency;
       showToast('Settings saved!', 'success');
       closeModal('settings-modal');
+      
+      if (currentUser) {
+        if (!currentUser.profile) currentUser.profile = {};
+        currentUser.profile.companyName = companyName;
+        currentUser.preferredCurrency = currency;
+        localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+      }
     } catch(e) { showToast('Error saving settings', 'error'); }
   }
 
@@ -1389,6 +1425,7 @@
         const escrow = data.data?.balances?.escrow || 0;
         document.getElementById('wallet-balance').innerHTML = formatMoney(available);
         document.getElementById('escrow-balance').innerHTML = formatMoney(escrow);
+        updateWithdrawUI(available);
       }
     } catch(e) { console.error(e); }
   }
@@ -1456,36 +1493,82 @@
     showToast('Processing payment...', 'info');
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/wallet/deposit`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ intentUsd: amount, paymentMethod: selectedDepositMethod }) });
+      const res = await fetch(`${API_BASE}/api/wallet/deposit`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ intentUsd: amount, paymentMethod: selectedDepositMethod }) 
+      });
       const data = await res.json();
       if (data.success) { 
         showToast('Deposit successful!', 'success');
         loadWallet(); 
         closeModal('deposit-modal');
+        document.getElementById('deposit-amount').value = '';
       } else {
         showToast(data.message || 'Deposit failed', 'error');
       }
     } catch(e) { showToast('Network error', 'error'); }
   }
 
-  async function showTotalDeposits() {
-    const data = await fetchJSON(`${API_BASE}/api/wallet/transactions`);
-    if (data.success) {
-      const deposits = data.data?.transactions?.filter(t => t.type === 'deposit') || [];
-      const total = deposits.reduce((s, t) => s + t.grossAmount, 0);
-      document.getElementById('total-deposits').innerHTML = formatMoney(total);
-      alert(`Total Deposits: ${formatMoney(total)}`);
-    }
+  // ============================================
+  // FUNDING AUDIT (FIXED - shows history)
+  // ============================================
+  async function showAuditLedger() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?limit=100`);
+      if (data.success && data.data?.transactions) {
+        allTransactions = data.data.transactions;
+        document.getElementById('audit-count').innerText = allTransactions.length;
+        
+        const auditList = document.getElementById('audit-list');
+        if (allTransactions.length === 0) {
+          auditList.innerHTML = '<div class="empty-state">No transactions found</div>';
+        } else {
+          auditList.innerHTML = allTransactions.map(t => `
+            <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>${t.type}</span>
+              <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
+              <span style="font-size:12px;">${formatDate(t.createdAt)}</span>
+              <span><span class="status-badge ${t.status === 'completed' ? 'active' : ''}">${t.status}</span></span>
+            </div>
+          `).join('');
+        }
+        document.getElementById('audit-modal').style.display = 'flex';
+      } else {
+        showToast('No transaction data available', 'info');
+      }
+    } catch(e) { showToast('Error loading audit data', 'error'); }
   }
 
-  async function showAuditLedger() {
-    const data = await fetchJSON(`${API_BASE}/api/wallet/transactions`);
-    if (data.success) {
-      const txs = data.data?.transactions || [];
-      document.getElementById('audit-count').innerText = txs.length;
-      alert(`Total Transactions: ${txs.length}\n\nDetails in console.`);
-      console.log('Transaction ledger:', txs);
-    }
+  // ============================================
+  // TOTAL DEPOSITS (FIXED - shows history)
+  // ============================================
+  async function showTotalDeposits() {
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/wallet/transactions?type=deposit&limit=100`);
+      if (data.success && data.data?.transactions) {
+        const deposits = data.data.transactions.filter(t => t.type === 'deposit');
+        const total = deposits.reduce((s, t) => s + t.grossAmount, 0);
+        document.getElementById('total-deposits').innerHTML = formatMoney(total);
+        
+        const depositList = document.getElementById('deposit-history-list');
+        if (deposits.length === 0) {
+          depositList.innerHTML = '<div class="empty-state">No deposits found</div>';
+        } else {
+          depositList.innerHTML = deposits.map(t => `
+            <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>Deposit</span>
+              <span style="color:#ff8c42;">${formatMoney(t.grossAmount)}</span>
+              <span style="font-size:12px;">${formatDate(t.createdAt)}</span>
+              <span><span class="status-badge ${t.status === 'completed' ? 'active' : ''}">${t.status}</span></span>
+            </div>
+          `).join('');
+        }
+        document.getElementById('deposit-history-modal').style.display = 'flex';
+      } else {
+        showToast('No deposit data available', 'info');
+      }
+    } catch(e) { showToast('Error loading deposits', 'error'); }
   }
 
   function showActiveEscrow() { alert(`Escrow Balance: ${document.getElementById('escrow-balance').innerText}`); }
@@ -1571,8 +1654,6 @@
     } catch(e) { 
       console.error('Error loading spending chart:', e);
       document.getElementById('chart-loading').style.display = 'none';
-      document.getElementById('spending-chart').style.display = 'none';
-      document.getElementById('chart-loading').innerHTML = 'Error loading spending data';
     }
   }
 
@@ -1631,7 +1712,7 @@
           campaigns = newCampaigns;
         }
         const myCampaigns = campaigns.filter(c => c.businessId === currentUser?._id);
-        const tbody = document.querySelector('#campaigns-table tbody');
+        const tbody = document.getElementById('campaigns-body');
         if (myCampaigns.length === 0) {
           tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">No campaigns yet. Click "Launch New Campaign" to get started!</div><\/td><\/tr>';
         } else {
@@ -1696,12 +1777,12 @@
       filtered = filtered.filter(c => new Date(c.createdAt) <= new Date(endDate));
     }
     
-    const tbody = document.querySelector('#campaigns-table tbody');
+    const tbody = document.getElementById('campaigns-body');
     if (filtered.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">No campaigns match the filters</div><\/td><\/tr>';
     } else {
       tbody.innerHTML = filtered.map(c => `
-        <td>
+        <tr>
           <td>${escapeHtml(c.title)}<\/td>
           <td>${formatMoney(c.budget)}<\/td>
           <td>${c.slots || 1}<\/td>
@@ -1741,7 +1822,11 @@
     }
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/fund`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ intentUsd: parseFloat(amount) }) });
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/fund`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ intentUsd: parseFloat(amount) }) 
+      });
       const data = await res.json();
       if (data.success) { 
         showToast('Escrow funded!', 'success');
@@ -1823,25 +1908,21 @@
         const days = data.data.daysRemaining;
         let statusClass = 'auto-release-normal';
         let statusText = '';
-        let urgency = 'normal';
         
         if (days <= 1 && days > 0) {
           statusClass = 'auto-release-urgent';
           statusText = `⚠️ Auto-release in ${days} day${days !== 1 ? 's' : ''}!`;
-          urgency = 'urgent';
         } else if (days <= 3 && days > 0) {
           statusClass = 'auto-release-warning';
           statusText = `⏰ Auto-release in ${days} days`;
-          urgency = 'warning';
         } else if (days > 0) {
           statusText = `⏳ Auto-release in ${days} days`;
         } else if (data.data.isExpired) {
           statusClass = 'auto-release-urgent';
           statusText = `🔴 Auto-release pending! Review immediately.`;
-          urgency = 'urgent';
         }
         
-        return { statusClass, statusText, days, urgency };
+        return { statusClass, statusText, days };
       }
       return null;
     } catch (error) {
@@ -1919,7 +2000,7 @@
   }
 
   // ============================================
-  // APPLICATIONS
+  // APPLICATIONS (FIXED - shows "No current applications")
   // ============================================
   function filterApplications() {
     loadApplications();
@@ -1933,7 +2014,7 @@
         data.campaigns.forEach(campaign => {
           if (campaign.bids && campaign.bids.length > 0) {
             campaign.bids.forEach(bid => {
-              if (bid.creatorId) {
+              if (bid.creatorId && campaign.businessId === currentUser?._id) {
                 allBids.push({
                   ...bid,
                   campaignTitle: campaign.title,
@@ -1950,9 +2031,9 @@
           displayBids = allBids.filter(b => b.status === 'pending');
         }
         
-        const tbody = document.querySelector('#applications-table tbody');
+        const tbody = document.getElementById('applications-body');
         if (displayBids.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No applications found</div><\/td><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No current applications</div><\/td><\/tr>';
         } else {
           tbody.innerHTML = displayBids.map(b => `
             <tr>
@@ -1986,7 +2067,10 @@
     if (!confirm('Approve this creator?')) return;
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/bids/${bidId}/accept`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/bids/${bidId}/accept`, { 
+        method: 'POST', 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
       if (res.ok) { 
         showToast('Creator approved!', 'success');
         loadApplications(); 
@@ -2002,7 +2086,10 @@
     if (!confirm('Reject this creator?')) return;
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/bids/${bidId}/reject`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/bids/${bidId}/reject`, { 
+        method: 'POST', 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
       if (res.ok) { 
         showToast('Creator rejected', 'info');
         loadApplications();
@@ -2013,7 +2100,7 @@
   }
 
   // ============================================
-  // ACTIVE PROJECTS
+  // ACTIVE PROJECTS (FIXED - shows "No active projects")
   // ============================================
   async function loadActiveProjects() {
     try {
@@ -2021,7 +2108,7 @@
       if (data.success) {
         const myCampaigns = (data.campaigns || []).filter(c => c.businessId === currentUser?._id);
         const active = myCampaigns.filter(c => c.status === 'in_progress' || c.status === 'submitted_for_review');
-        const tbody = document.querySelector('#active-projects-table tbody');
+        const tbody = document.getElementById('active-projects-body');
         if (active.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No active projects</div><\/td><\/tr>';
         } else {
@@ -2044,10 +2131,6 @@
         document.getElementById('active-projects-table').style.display = 'table';
       }
     } catch(e) { console.error(e); }
-  }
-
-  async function completeWork(campaignId) {
-    openApproveWorkModal(campaignId);
   }
 
   // ============================================
@@ -2365,7 +2448,11 @@
 
   function verify2FA() {
     const code = document.getElementById('2fa-code').value;
-    fetch(`${API_BASE}/api/user/2fa/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }, body: JSON.stringify({ code }) })
+    fetch(`${API_BASE}/api/user/2fa/verify`, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }, 
+      body: JSON.stringify({ code }) 
+    })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -2467,102 +2554,6 @@
   }
 
   // ============================================
-  // API KEYS & WEBHOOKS
-  // ============================================
-  async function loadApiKeys() {
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/user/api-keys`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      const container = document.getElementById('api-keys-list');
-      if (data.success && data.data.apiKeys && data.data.apiKeys.length > 0) {
-        apiKeys = data.data.apiKeys;
-        container.innerHTML = apiKeys.map(key => `
-          <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <strong>${escapeHtml(key.name)}</strong>
-                <code style="display: block; font-size: 11px; color: #a08070; margin-top: 5px;">${key.key}</code>
-                <small>Created: ${formatDate(key.createdAt)}</small>
-              </div>
-              <div>
-                <button class="btn-action small" onclick="copyApiKey('${key.key}')">Copy</button>
-                <button class="btn-action danger small" onclick="deleteApiKey('${key.id}')">Delete</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      } else {
-        container.innerHTML = '<div class="empty-state">No API keys created yet</div>';
-      }
-    } catch(e) { console.error(e); }
-  }
-
-  function copyApiKey(key) { 
-    navigator.clipboard.writeText(key); 
-    showToast('API Key copied!', 'success'); 
-  }
-
-  function createApiKey() { 
-    document.getElementById('api-key-modal').style.display = 'flex'; 
-  }
-
-  async function createApiKeySubmit() {
-    const name = document.getElementById('api-key-name').value;
-    if (!name) { showToast('Enter key name', 'error'); return; }
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/user/api-keys`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast(`API Key created: ${data.data.key}`, 'success');
-        closeModal('api-key-modal');
-        loadApiKeys();
-        document.getElementById('api-key-name').value = '';
-      } else { showToast(data.message || 'Failed to create API key', 'error'); }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  async function deleteApiKey(keyId) {
-    if (!confirm('Delete this API key? This cannot be undone.')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/user/api-keys/${keyId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) { showToast('API key deleted', 'success'); loadApiKeys(); }
-      else { showToast('Failed to delete API key', 'error'); }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  function openAddWebhookModal() { document.getElementById('add-webhook-modal').style.display = 'flex'; }
-
-  function addWebhook() { 
-    const url = document.getElementById('webhook-url').value; 
-    if (!url) return showToast('Enter URL', 'error'); 
-    webhooks.push({ url, events: [document.getElementById('webhook-events').value] }); 
-    showToast('Webhook added!', 'success'); 
-    closeModal('add-webhook-modal'); 
-    loadWebhooks(); 
-  }
-
-  function loadWebhooks() { 
-    const container = document.getElementById('webhooks-list'); 
-    if (webhooks.length === 0) { 
-      container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; 
-    } else { 
-      container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); 
-    } 
-  }
-
-  function deleteWebhook(url) { 
-    webhooks = webhooks.filter(w => w.url !== url); 
-    showToast('Webhook deleted', 'success'); 
-    loadWebhooks(); 
-  }
-
-  // ============================================
   // USER DATA
   // ============================================
   async function loadUserData() {
@@ -2580,6 +2571,7 @@
       document.getElementById('avatar-header').innerHTML = '';
       document.getElementById('profile-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
       document.getElementById('profile-avatar').innerHTML = '';
+      document.getElementById('avatar-remove-btn').classList.add('show');
     }
     document.getElementById('setting-company').value = currentUser.profile?.companyName || '';
     document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
@@ -2601,7 +2593,6 @@
       if (btn.dataset.tab === 'active') loadActiveProjects();
       if (btn.dataset.tab === 'activity') loadActivityLog();
       if (btn.dataset.tab === 'analytics') loadCampaignPerformanceChart();
-      if (btn.dataset.tab === 'api') { loadApiKeys(); loadWebhooks(); }
     });
   });
 
@@ -2647,12 +2638,6 @@
     localStorage.setItem('pebeto_sms_notifications', e.target.checked);
   });
 
-  const soundNotifications = localStorage.getItem('pebeto_sound_notifications');
-  if (soundNotifications === 'true') document.getElementById('soundNotificationsToggle').checked = true;
-  document.getElementById('soundNotificationsToggle').addEventListener('change', (e) => {
-    localStorage.setItem('pebeto_sound_notifications', e.target.checked);
-  });
-
   // Initialize
   loadUserData();
   loadWallet();
@@ -2665,8 +2650,6 @@
   loadActiveSessions();
   loadTeamMembers();
   loadCampaignPerformanceChart();
-  loadApiKeys();
-  loadWebhooks();
   
   setTimeout(() => {
     const savedTheme = localStorage.getItem('pebeto_theme');
