@@ -1,75 +1,143 @@
+/**
+ * Wallet Routes for Pebeto Creator's Hub
+ * 
+ * Handles wallet operations including deposits, withdrawals,
+ * balance inquiries, transactions, and tips.
+ * 
+ * @module routes/wallet
+ */
+
 const express = require('express');
+const crypto = require('crypto');
 const { body, query, validationResult } = require('express-validator');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
+const { attachFeeService } = require('../services/feeService');
 const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
 const { getWalletBalance, getTransactionHistory } = require('../services/walletService');
 const { previewWithdrawal, getWithdrawalHistory } = require('../services/withdrawalService');
 const { previewDeposit, processDeposit } = require('../services/depositService');
 const { processWithdrawal } = require('../services/withdrawalService');
+const { sendTip } = require('../controllers/wallet.controller');
 const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../services/exchangeRateService');
+const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
 const Transaction = require('../models/Transaction');
-const User = require('../models/User');
 const logger = require('../utils/logger');
 
 const router = express.Router();
+const publicRouter = express.Router();
 
 // ============================================
 // Validation Rules
 // ============================================
 
 const depositPreviewValidation = [
-  body('intentUsd').optional().isFloat({ min: 1 }).withMessage('Intent amount must be at least $1'),
+  body('intentUsd')
+    .optional()
+    .isFloat({ min: 1 })
+    .withMessage('Intent amount must be at least $1'),
 ];
 
 const withdrawalPreviewValidation = [
-  body('amountUsd').optional().isFloat({ min: 0.01 }).withMessage('Amount must be at least $0.01'),
-  body('amountLocal').optional().isFloat({ min: 0.01 }).withMessage('Local amount must be positive'),
-  body('currency').optional().isString().isLength({ min: 3, max: 3 }),
+  body('amountUsd')
+    .optional()
+    .isFloat({ min: 0.01 })
+    .withMessage('Amount must be at least $0.01'),
+  body('amountLocal')
+    .optional()
+    .isFloat({ min: 0.01 })
+    .withMessage('Local amount must be positive'),
+  body('currency')
+    .optional()
+    .isString()
+    .isLength({ min: 3, max: 3 }),
 ];
 
 const depositValidation = [
-  body('intentUsd').isFloat({ min: 1 }).withMessage('Deposit amount must be at least $1').toFloat(),
+  body('intentUsd')
+    .isFloat({ min: 1 })
+    .withMessage('Deposit amount must be at least $1')
+    .toFloat(),
 ];
 
 const withdrawValidation = [
-  body('payoutMethod').isIn(['mpesa', 'paypal', 'swift', 'bank_transfer']).withMessage('Invalid payout method'),
-  body('payoutDetails').isObject().withMessage('Payout details are required'),
-  body('amountUsd').optional().isFloat({ min: 1 }).withMessage('Amount in USD must be at least $1').toFloat(),
-  body('amountLocal').optional().isFloat({ min: 1 }).withMessage('Amount in local currency must be at least 1').toFloat(),
-  body('currency').optional().isLength({ min: 3, max: 3 }).withMessage('Currency must be a 3-letter code').toUpperCase(),
+  body('payoutMethod')
+    .isIn(['mpesa', 'paypal', 'swift', 'bank_transfer'])
+    .withMessage('Invalid payout method. Must be: mpesa, paypal, swift, or bank_transfer'),
+  body('payoutDetails')
+    .isObject()
+    .withMessage('Payout details are required'),
+  body('amountUsd')
+    .optional()
+    .isFloat({ min: 1 })
+    .withMessage('Amount in USD must be at least $1')
+    .toFloat(),
+  body('amountLocal')
+    .optional()
+    .isFloat({ min: 1 })
+    .withMessage('Amount in local currency must be at least 1')
+    .toFloat(),
+  body('currency')
+    .optional()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Currency must be a 3-letter code (e.g., USD, KES)')
+    .toUpperCase(),
 ];
 
 const tipValidation = [
-  body('recipientUsername').optional().isString().trim(),
-  body('recipientUniqueCode').optional().isString().trim(),
-  body('amount').isFloat({ min: 1 }).withMessage('Tip amount must be at least $1'),
+  body('recipientUsername')
+    .optional()
+    .isString()
+    .trim(),
+  body('recipientUniqueCode')
+    .optional()
+    .isString()
+    .trim(),
+  body('creatorId')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid creator ID'),
+  body('amount')
+    .isFloat({ min: 1 })
+    .withMessage('Tip amount must be at least $1'),
+  body('currency')
+    .optional()
+    .isLength({ min: 3, max: 3 })
+    .withMessage('Currency must be a 3-letter code')
+    .toUpperCase(),
+  body('paymentSource')
+    .optional()
+    .isIn(['wallet', 'mpesa', 'paypal'])
+    .withMessage('Invalid payment source'),
+  body('paymentDetails')
+    .optional()
+    .isObject()
+    .withMessage('Invalid payment details'),
 ];
 
 const balanceValidation = [
-  query('userId').optional().isMongoId().withMessage('Invalid user ID'),
+  query('userId')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid user ID'),
 ];
 
 const transactionsValidation = [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer').toInt(),
-  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100').toInt(),
-  query('type').optional().isIn(['deposit', 'withdrawal', 'tip', 'platform_fee', 'escrow_release']).withMessage('Invalid transaction type'),
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer')
+    .toInt(),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be between 1 and 100')
+    .toInt(),
+  query('type')
+    .optional()
+    .isIn(['deposit', 'withdrawal', 'tip', 'platform_fee', 'escrow_release'])
+    .withMessage('Invalid transaction type'),
 ];
-
-// ============================================
-// Helper function to attach fee service
-// ============================================
-
-function attachFeeService(req, res, next) {
-  try {
-    const feeService = require('../services/feeService');
-    req.feeService = feeService;
-    next();
-  } catch (err) {
-    logger.error('Failed to load fee service:', err.message);
-    next();
-  }
-}
 
 // ============================================
 // Protected Routes (Require Authentication)
@@ -78,7 +146,10 @@ function attachFeeService(req, res, next) {
 router.use(authenticate);
 router.use(attachFeeService);
 
-// GET /api/wallet/balance
+/**
+ * GET /api/wallet/balance
+ * Get user's wallet balance
+ */
 router.get('/balance', balanceValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -120,13 +191,27 @@ router.get('/balance', balanceValidation, catchAsync(async (req, res) => {
   });
 }));
 
-// GET /api/wallet/exchange-rates
+/**
+ * GET /api/wallet/exchange-rates
+ * Get current exchange rates
+ */
 router.get('/exchange-rates', catchAsync(async (req, res) => {
   const rates = await getRatesMap();
-  res.json({ success: true, data: { base: 'USD', rates, timestamp: new Date().toISOString() } });
+  
+  res.json({
+    success: true,
+    data: {
+      base: 'USD',
+      rates,
+      timestamp: new Date().toISOString(),
+    },
+  });
 }));
 
-// POST /api/wallet/deposit/preview
+/**
+ * POST /api/wallet/deposit/preview
+ * Preview deposit fees
+ */
 router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -134,12 +219,18 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   }
 
   const { intentUsd } = req.body;
-  const isAdmin = req.user.role === 'admin';
-  const preview = await previewDeposit(intentUsd, isAdmin);
-  res.json({ success: true, data: preview });
+  const preview = await previewDeposit(intentUsd);
+
+  res.json({
+    success: true,
+    data: preview,
+  });
 }));
 
-// POST /api/wallet/deposit
+/**
+ * POST /api/wallet/deposit
+ * Add funds to wallet (internal wallet transfer)
+ */
 router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -147,32 +238,38 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   }
 
   const { intentUsd, campaignId, idempotencyKey } = req.body;
-  const isAdmin = req.user.role === 'admin';
 
   const result = await processDeposit({
     businessUser: req.user,
     intentUsd,
     campaignId,
     idempotencyKey,
-    paymentMethod: 'wallet',
-    isAdmin: isAdmin,
-    adminFeeWaived: isAdmin
+    paymentMethod: 'wallet'
+  });
+
+  logger.info('Deposit processed', {
+    userId: req.user._id,
+    amount: intentUsd,
+    campaignId,
+    transactionId: result.transactionId
   });
 
   res.json({
     success: true,
-    message: isAdmin ? `Successfully deposited $${intentUsd} with NO fee.` : `Successfully deposited $${intentUsd}.`,
+    message: `Successfully deposited $${intentUsd} to escrow.`,
     data: {
       transactionId: result.transactionId,
       breakdown: result.breakdown,
       escrowCredit: result.breakdown.escrowCreditUsd,
-      feePaid: isAdmin ? 0 : result.breakdown.feeUsd,
-      feeWaived: isAdmin
+      feePaid: result.breakdown.feeUsd
     }
   });
 }));
 
-// POST /api/wallet/withdraw/preview
+/**
+ * POST /api/wallet/withdraw/preview
+ * Preview withdrawal fees
+ */
 router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -187,12 +284,18 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
     usdAmount = convertLocalToUsd(amountLocal, currency, rates);
   }
 
-  const isAdmin = req.user.role === 'admin';
-  const preview = await previewWithdrawal(usdAmount, isAdmin);
-  res.json({ success: true, data: preview });
+  const preview = await previewWithdrawal(usdAmount, req.user.role);
+
+  res.json({
+    success: true,
+    data: preview,
+  });
 }));
 
-// POST /api/wallet/withdraw
+/**
+ * POST /api/wallet/withdraw
+ * Withdraw funds from wallet to external account
+ */
 router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -205,8 +308,6 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
     throw new AppError('Provide amountUsd or amountLocal with currency', 400);
   }
 
-  const isAdmin = req.user.role === 'admin';
-
   const result = await processWithdrawal({
     user: req.user,
     amountUsd,
@@ -214,9 +315,15 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
     currency,
     payoutMethod,
     payoutDetails,
-    idempotencyKey,
-    isAdmin: isAdmin,
-    adminFeeWaived: isAdmin
+    idempotencyKey
+  });
+
+  logger.info('Withdrawal processed', {
+    userId: req.user._id,
+    amount: result.grossUsd,
+    netAmount: result.netToUserUsd,
+    method: payoutMethod,
+    transactionId: result.withdrawal._id
   });
 
   res.json({
@@ -226,17 +333,19 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
       withdrawalId: result.withdrawal._id,
       transactionId: result.withdrawal.transactionId,
       amount: result.grossUsd,
-      fee: isAdmin ? 0 : result.feeUsd,
-      netAmount: isAdmin ? result.grossUsd : result.netToUserUsd,
+      fee: result.feeUsd,
+      netAmount: result.netToUserUsd,
       method: payoutMethod,
       status: result.withdrawal.status,
-      providerReference: result.payoutResult?.reference,
-      feeWaived: isAdmin
+      providerReference: result.payoutResult?.reference
     }
   });
 }));
 
-// GET /api/wallet/transactions
+/**
+ * GET /api/wallet/transactions
+ * Get user's transaction history
+ */
 router.get('/transactions', transactionsValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -273,7 +382,10 @@ router.get('/transactions', transactionsValidation, catchAsync(async (req, res) 
   });
 }));
 
-// GET /api/wallet/withdrawals
+/**
+ * GET /api/wallet/withdrawals
+ * Get user's withdrawal history
+ */
 router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -301,74 +413,137 @@ router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) =
   });
 }));
 
-// POST /api/wallet/tip
+/**
+ * POST /api/wallet/tip
+ * Send a tip to a creator (fee is hidden from user but applied)
+ */
 router.post('/tip', tipValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new AppError(errors.array()[0].msg, 400);
   }
 
-  const { recipientUsername, recipientUniqueCode, amount, idempotencyKey, currency = 'USD' } = req.body;
+  const { creatorId, recipientUsername, recipientUniqueCode, amount, currency = 'USD', paymentSource = 'wallet', paymentDetails = {} } = req.body;
 
-  if ((!recipientUsername && !recipientUniqueCode) || !amount || amount <= 0) {
-    throw new AppError('Invalid recipient or amount.', 400);
+  let recipient = null;
+
+  // Find recipient by ID, username, or unique code
+  if (creatorId) {
+    recipient = await User.findById(creatorId);
+  } else if (recipientUniqueCode) {
+    recipient = await User.findOne({ uniqueCode: recipientUniqueCode });
+  } else if (recipientUsername) {
+    recipient = await User.findOne({ 'profile.stageName': recipientUsername });
   }
-
-  const recipient = await User.findOne({
-    $or: [
-      { uniqueCode: recipientUniqueCode },
-      { username: recipientUsername }
-    ]
-  });
 
   if (!recipient) {
-    throw new AppError('Recipient not found', 404);
+    throw new AppError('Creator not found', 404);
   }
 
-  const { processTip } = require('../services/tipService');
+  if (recipient.role !== 'creator') {
+    throw new AppError('Recipient must be a creator', 400);
+  }
+
+  // Prevent self-tipping
+  if (req.user._id.toString() === recipient._id.toString()) {
+    throw new AppError('You cannot tip yourself', 400);
+  }
+
+  // Process the tip (fee is calculated internally but hidden from user)
+  const { calculateTip, processTip } = require('../services/feeService');
+  const { processTip: processTipTransaction } = require('../services/walletService');
   
-  const result = await processTip({
+  const breakdown = calculateTip(amount);
+  
+  const result = await processTipTransaction({
     fromUser: req.user,
     toCreatorId: recipient._id,
-    grossUsd: amount,
-    idempotencyKey
+    grossUsd: breakdown.grossUsd,
+    idempotencyKey: `tip_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
   });
-  
+
+  logger.info('Tip sent', {
+    fromUserId: req.user._id,
+    toCreatorId: recipient._id,
+    amount: breakdown.grossUsd,
+    fee: breakdown.feeUsd,
+    netToCreator: breakdown.netToCreatorUsd,
+    paymentSource
+  });
+
   res.json({
     success: true,
-    message: `Successfully tipped ${recipient.uniqueCode || recipient.username}`,
+    message: 'Tip sent successfully',
     data: {
-      amount: amount,
-      currency: currency,
-      recipient: recipient.uniqueCode || recipient.username,
+      amount: breakdown.netToCreatorUsd,
       transactionId: result.tipTx._id
     }
   });
 }));
 
-// GET /api/wallet/earnings
+/**
+ * GET /api/wallet/earnings
+ * Get creator earnings overview (last 30 days)
+ */
 router.get('/earnings', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - daysInt);
   
+  // Get all completed tip transactions where user is recipient
   const earningsData = await Transaction.aggregate([
-    { $match: { toUserId: req.user._id, type: 'tip', status: 'completed', createdAt: { $gte: startDate } } },
-    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$netAmount' }, count: { $sum: 1 } } },
+    {
+      $match: {
+        toUserId: req.user._id,
+        type: 'tip',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$netAmount' },
+        count: { $sum: 1 }
+      }
+    },
     { $sort: { '_id.date': 1 } }
   ]);
   
+  // Also get earnings from completed campaigns
   const campaignEarnings = await Transaction.aggregate([
-    { $match: { toUserId: req.user._id, type: 'escrow_release', status: 'completed', createdAt: { $gte: startDate } } },
-    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$netAmount' }, count: { $sum: 1 } } },
+    {
+      $match: {
+        toUserId: req.user._id,
+        type: 'escrow_release',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$netAmount' },
+        count: { $sum: 1 }
+      }
+    },
     { $sort: { '_id.date': 1 } }
   ]);
   
+  // Merge both sources
   const earningsMap = new Map();
   
   earningsData.forEach(item => {
-    earningsMap.set(item._id.date, { tips: item.total, campaigns: 0, total: item.total });
+    earningsMap.set(item._id.date, {
+      tips: item.total,
+      campaigns: 0,
+      total: item.total
+    });
   });
   
   campaignEarnings.forEach(item => {
@@ -377,10 +552,15 @@ router.get('/earnings', catchAsync(async (req, res) => {
       existing.campaigns = item.total;
       existing.total = existing.tips + item.total;
     } else {
-      earningsMap.set(item._id.date, { tips: 0, campaigns: item.total, total: item.total });
+      earningsMap.set(item._id.date, {
+        tips: 0,
+        campaigns: item.total,
+        total: item.total
+      });
     }
   });
   
+  // Generate date range labels
   const labels = [];
   const earnings = [];
   const tipsData = [];
@@ -399,6 +579,7 @@ router.get('/earnings', catchAsync(async (req, res) => {
     campaignsData.push(dayData.campaigns);
   }
   
+  // Calculate summary stats
   const totalTips = earningsData.reduce((sum, item) => sum + item.total, 0);
   const totalCampaigns = campaignEarnings.reduce((sum, item) => sum + item.total, 0);
   const totalEarnings = totalTips + totalCampaigns;
@@ -408,35 +589,83 @@ router.get('/earnings', catchAsync(async (req, res) => {
     data: {
       labels,
       earnings,
-      breakdown: { tips: tipsData, campaigns: campaignsData },
-      summary: { totalEarnings, totalTips, totalCampaigns, period: `${daysInt} days`, averagePerDay: totalEarnings / daysInt }
+      breakdown: {
+        tips: tipsData,
+        campaigns: campaignsData
+      },
+      summary: {
+        totalEarnings,
+        totalTips,
+        totalCampaigns,
+        period: `${daysInt} days`,
+        averagePerDay: totalEarnings / daysInt
+      }
     }
   });
 }));
 
-// GET /api/wallet/spending
+/**
+ * GET /api/wallet/spending
+ * Get business spending overview (last 30 days)
+ */
 router.get('/spending', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - daysInt);
   
+  // Get all deposit transactions where user is sender
   const spendingData = await Transaction.aggregate([
-    { $match: { fromUserId: req.user._id, type: 'deposit', status: 'completed', createdAt: { $gte: startDate } } },
-    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$grossAmount' }, fee: { $sum: '$feeAmount' } } },
+    {
+      $match: {
+        fromUserId: req.user._id,
+        type: 'deposit',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$grossAmount' },
+        fee: { $sum: '$feeAmount' }
+      }
+    },
     { $sort: { '_id.date': 1 } }
   ]);
   
+  // Also get campaign funding
   const campaignFunding = await Transaction.aggregate([
-    { $match: { fromUserId: req.user._id, type: 'campaign_fund', status: 'completed', createdAt: { $gte: startDate } } },
-    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$grossAmount' } } },
+    {
+      $match: {
+        fromUserId: req.user._id,
+        type: 'campaign_fund',
+        status: 'completed',
+        createdAt: { $gte: startDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+        },
+        total: { $sum: '$grossAmount' }
+      }
+    },
     { $sort: { '_id.date': 1 } }
   ]);
   
   const spendingMap = new Map();
   
   spendingData.forEach(item => {
-    spendingMap.set(item._id.date, { deposits: item.total, fees: item.fee, campaigns: 0, total: item.total });
+    spendingMap.set(item._id.date, {
+      deposits: item.total,
+      fees: item.fee,
+      campaigns: 0,
+      total: item.total
+    });
   });
   
   campaignFunding.forEach(item => {
@@ -445,10 +674,16 @@ router.get('/spending', catchAsync(async (req, res) => {
       existing.campaigns = item.total;
       existing.total = existing.deposits + item.total;
     } else {
-      spendingMap.set(item._id.date, { deposits: 0, fees: 0, campaigns: item.total, total: item.total });
+      spendingMap.set(item._id.date, {
+        deposits: 0,
+        fees: 0,
+        campaigns: item.total,
+        total: item.total
+      });
     }
   });
   
+  // Generate date range labels
   const labels = [];
   const spending = [];
   const depositsData = [];
@@ -469,7 +704,9 @@ router.get('/spending', catchAsync(async (req, res) => {
     feesData.push(dayData.fees);
   }
   
-  const totalSpending = spendingData.reduce((sum, item) => sum + item.total, 0) + campaignFunding.reduce((sum, item) => sum + item.total, 0);
+  // Calculate summary stats
+  const totalSpending = spendingData.reduce((sum, item) => sum + item.total, 0) +
+                        campaignFunding.reduce((sum, item) => sum + item.total, 0);
   const totalFees = spendingData.reduce((sum, item) => sum + (item.fee || 0), 0);
   
   res.json({
@@ -477,26 +714,55 @@ router.get('/spending', catchAsync(async (req, res) => {
     data: {
       labels,
       spending,
-      breakdown: { deposits: depositsData, campaigns: campaignsData, fees: feesData },
-      summary: { totalSpending, totalFees, period: `${daysInt} days`, averagePerDay: totalSpending / daysInt }
+      breakdown: {
+        deposits: depositsData,
+        campaigns: campaignsData,
+        fees: feesData
+      },
+      summary: {
+        totalSpending,
+        totalFees,
+        period: `${daysInt} days`,
+        averagePerDay: totalSpending / daysInt
+      }
     }
   });
 }));
 
-// POST /api/wallet/mpesa-callback
-router.post('/mpesa-callback', catchAsync(async (req, res) => {
+// ============================================
+// Public Routes (No Authentication)
+// ============================================
+
+/**
+ * POST /api/wallet/mpesa-callback
+ * M-Pesa payment callback endpoint (public)
+ */
+publicRouter.post('/mpesa-callback', catchAsync(async (req, res) => {
   try {
     const callbackData = req.body.Body?.stkCallback;
+    
     if (!callbackData) {
+      logger.warn('M-Pesa callback received with no stkCallback data');
       return res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
     }
 
     const { ResultCode, ResultDesc, CheckoutRequestID } = callbackData;
+
+    logger.info('M-Pesa callback received', {
+      checkoutRequestId: CheckoutRequestID,
+      resultCode: ResultCode,
+      resultDesc: ResultDesc,
+    });
+
     const transaction = await Transaction.findOne({ 'metadata.checkoutRequestId': CheckoutRequestID });
     
     if (transaction) {
-      transaction.status = ResultCode === 0 ? 'completed' : 'failed';
-      transaction.errorMessage = ResultDesc;
+      if (ResultCode === 0) {
+        transaction.status = 'completed';
+      } else {
+        transaction.status = 'failed';
+        transaction.errorMessage = ResultDesc;
+      }
       transaction.completedAt = new Date();
       await transaction.save();
     }
@@ -508,16 +774,55 @@ router.post('/mpesa-callback', catchAsync(async (req, res) => {
   }
 }));
 
-// GET /api/wallet/payment-methods
-router.get('/payment-methods', catchAsync(async (req, res) => {
+/**
+ * GET /api/wallet/payment-methods
+ * Get available payment methods (public)
+ */
+publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
+  const methods = [
+    {
+      id: 'mpesa',
+      name: 'M-Pesa',
+      region: 'Kenya',
+      type: 'mobile_money',
+      minAmount: 1,
+      maxAmount: 1150,
+      feePercentage: 10,
+      processingTime: 'Instant',
+      enabled: true,
+    },
+    {
+      id: 'paypal',
+      name: 'PayPal',
+      region: 'Global',
+      type: 'digital_wallet',
+      minAmount: 1,
+      maxAmount: 10000,
+      feePercentage: 10,
+      processingTime: 'Instant',
+      enabled: false,
+    },
+    {
+      id: 'wire',
+      name: 'Wire Transfer',
+      region: 'International',
+      type: 'bank_transfer',
+      minAmount: 100,
+      maxAmount: 50000,
+      feePercentage: 10,
+      processingTime: '2-5 business days',
+      enabled: false,
+    },
+  ];
+
   res.json({
     success: true,
-    data: [
-      { id: 'mpesa', name: 'M-Pesa', region: 'Kenya', type: 'mobile_money', minAmount: 1, maxAmount: 1150, feePercentage: 10, processingTime: 'Instant', enabled: true },
-      { id: 'paypal', name: 'PayPal', region: 'Global', type: 'digital_wallet', minAmount: 1, maxAmount: 10000, feePercentage: 10, processingTime: 'Instant', enabled: false },
-      { id: 'wire', name: 'Wire Transfer', region: 'International', type: 'bank_transfer', minAmount: 100, maxAmount: 50000, feePercentage: 10, processingTime: '2-5 business days', enabled: false },
-    ]
+    data: methods,
   });
 }));
 
-module.exports = router;
+// ============================================
+// Exports
+// ============================================
+
+module.exports = { router, publicRouter };
