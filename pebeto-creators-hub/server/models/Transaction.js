@@ -212,6 +212,9 @@ const transactionSchema = new mongoose.Schema(
       ipAddress: { type: String },
       userAgent: { type: String },
       
+      // Auto-release tracking
+      autoRelease: { type: Boolean, default: false },
+      
       // Flexible metadata for future use
       custom: { type: mongoose.Schema.Types.Mixed, default: {} }
     }
@@ -256,9 +259,6 @@ transactionSchema.index({ referenceId: 1 }, { sparse: true });
 transactionSchema.index({ type: 1, status: 1, createdAt: -1 });
 transactionSchema.index({ fromUserId: 1, status: 1, createdAt: -1 });
 transactionSchema.index({ toUserId: 1, status: 1, createdAt: -1 });
-
-// TTL for pending transactions that never completed (optional cleanup)
-// transactionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400, partialFilterExpression: { status: 'pending' } });
 
 // ============================================
 // Virtual Fields
@@ -597,11 +597,6 @@ transactionSchema.pre('save', function(next) {
   }
   next();
 });
-
-/**
- * Update updatedAt on save (handled by timestamps option)
- */
-// Already handled by timestamps: true
 
 // ============================================
 // Exports
