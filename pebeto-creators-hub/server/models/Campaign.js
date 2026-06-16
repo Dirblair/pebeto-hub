@@ -255,33 +255,18 @@ const campaignSchema = new mongoose.Schema(
       }
     },
     
-    // ============================================
-    // NEW: Analytics Fields (for performance tracking)
-    // ============================================
-    
-    /**
-     * Number of times this campaign has been viewed
-     */
+    // Analytics Fields (for performance tracking)
     views: {
       type: Number,
       default: 0,
       min: 0
     },
-    
-    /**
-     * Click-Through Rate percentage (0-100)
-     * Calculated as (clicks / views) * 100
-     */
     ctr: {
       type: Number,
       default: 0,
       min: 0,
       max: 100
     },
-    
-    /**
-     * Return on Investment percentage for completed campaigns
-     */
     roi: {
       type: Number,
       default: 0
@@ -325,7 +310,7 @@ const campaignSchema = new mongoose.Schema(
     },
 
     // ============================================
-    // NEW: Escrow Auto-Release & Mutual Completion Fields
+    // Escrow Auto-Release & Mutual Completion Fields
     // ============================================
 
     /**
@@ -388,21 +373,32 @@ const campaignSchema = new mongoose.Schema(
      * - processing: auto-release in progress
      * - completed: auto-release done
      * - cancelled: business approved before deadline
+     * - failed: auto-release failed
      */
     autoReleaseStatus: {
       type: String,
-      enum: ['pending', 'reminding', 'processing', 'completed', 'cancelled'],
+      enum: ['pending', 'reminding', 'processing', 'completed', 'cancelled', 'failed'],
       default: 'pending'
     },
+
+    /**
+     * When auto-release was completed
+     */
+    autoReleaseCompletedAt: {
+      type: Date
+    },
       
+    /**
+     * Google Drive files uploaded for this campaign
+     */
     driveFiles: [{
-  fileId: String,
-  fileName: String,
-  fileUrl: String,
-  embedUrl: String,
-  uploadedAt: Date,
-  size: Number
-}]
+      fileId: String,
+      fileName: String,
+      fileUrl: String,
+      embedUrl: String,
+      uploadedAt: Date,
+      size: Number
+    }]
   },
   { 
     timestamps: true,
@@ -423,12 +419,12 @@ campaignSchema.index({ status: 1, budget: -1 });
 campaignSchema.index({ category: 1, status: 1 });
 campaignSchema.index({ tags: 1, status: 1 });
 
-// NEW: Indexes for analytics queries
+// Indexes for analytics queries
 campaignSchema.index({ views: -1 });
 campaignSchema.index({ ctr: -1 });
 campaignSchema.index({ roi: -1 });
 
-// NEW: Index for auto-release queries
+// Indexes for auto-release queries
 campaignSchema.index({ autoReleaseDeadline: 1, autoReleaseStatus: 1 });
 campaignSchema.index({ creatorWorkCompleted: 1, businessWorkApproved: 1, autoReleaseDeadline: 1 });
 
@@ -507,14 +503,14 @@ campaignSchema.virtual('fundingProgress').get(function() {
 });
 
 /**
- * NEW: Check if both parties have completed the campaign
+ * Check if both parties have completed the campaign
  */
 campaignSchema.virtual('bothPartiesCompleted').get(function() {
   return this.creatorWorkCompleted === true && this.businessWorkApproved === true;
 });
 
 /**
- * NEW: Check if auto-release is pending
+ * Check if auto-release is pending
  */
 campaignSchema.virtual('isAutoReleasePending').get(function() {
   return this.creatorWorkCompleted === true && 
@@ -523,7 +519,7 @@ campaignSchema.virtual('isAutoReleasePending').get(function() {
 });
 
 /**
- * NEW: Get days remaining until auto-release
+ * Get days remaining until auto-release
  */
 campaignSchema.virtual('autoReleaseDaysRemaining').get(function() {
   if (!this.autoReleaseDeadline) return null;
@@ -533,7 +529,7 @@ campaignSchema.virtual('autoReleaseDaysRemaining').get(function() {
 });
 
 /**
- * NEW: Get hours remaining until auto-release
+ * Get hours remaining until auto-release
  */
 campaignSchema.virtual('autoReleaseHoursRemaining').get(function() {
   if (!this.autoReleaseDeadline) return null;
@@ -686,7 +682,7 @@ campaignSchema.methods.submitWork = async function(creatorId, workUrl) {
 };
 
 /**
- * NEW: Creator marks work as completed (starts auto-release timer)
+ * Creator marks work as completed (starts auto-release timer)
  * @param {string} creatorId - Creator's user ID
  * @param {string} workUrl - Optional work URL if not already submitted
  * @returns {Promise<Campaign>} Updated campaign
@@ -736,7 +732,7 @@ campaignSchema.methods.markCreatorCompleted = async function(creatorId, workUrl 
 };
 
 /**
- * NEW: Business approves work and releases payment
+ * Business approves work and releases payment
  * @param {string} businessId - Business user ID
  * @returns {Promise<Campaign>} Updated campaign
  */
@@ -762,7 +758,7 @@ campaignSchema.methods.markBusinessApproved = async function(businessId) {
 };
 
 /**
- * NEW: Process auto-release (called by cron job)
+ * Process auto-release (called by cron job)
  * @returns {Promise<Object>} Result of auto-release
  */
 campaignSchema.methods.processAutoRelease = async function() {
@@ -901,7 +897,7 @@ campaignSchema.statics.getStatsByBusiness = async function(businessId) {
 };
 
 /**
- * NEW: Find campaigns pending auto-release (deadline passed)
+ * Find campaigns pending auto-release (deadline passed)
  * @returns {Query} Mongoose query
  */
 campaignSchema.statics.findPendingAutoRelease = function() {
@@ -915,7 +911,7 @@ campaignSchema.statics.findPendingAutoRelease = function() {
 };
 
 /**
- * NEW: Find campaigns needing reminders
+ * Find campaigns needing reminders
  * @param {number} daysThreshold - Days before deadline to check
  * @returns {Query} Mongoose query
  */
@@ -982,7 +978,7 @@ campaignSchema.pre('save', function(next) {
 });
 
 /**
- * NEW: Auto-set auto-release deadline when creator marks completed
+ * Auto-set auto-release deadline when creator marks completed
  */
 campaignSchema.pre('save', function(next) {
   // If creatorWorkCompleted just changed from false to true, set deadline
