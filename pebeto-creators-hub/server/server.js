@@ -66,9 +66,6 @@ const cron = require('node-cron');
 const env = require('./config/env');
 const { connectDB, disconnectDB, getDatabaseHealth } = require('./config/db');
 const { errorHandler, notFoundHandler, catchAsync } = require('./middleware/errorHandler');
-// ============================================
-// CHANGED: Now importing from middleware/feeService.js instead of services/feeService.js
-// ============================================
 const attachFeeService = require('./middleware/feeService');
 const { initSockets } = require('./sockets');
 const logger = require('./utils/logger');
@@ -269,9 +266,7 @@ const helmetConfig = {
       formAction: ["'self'"],
       upgradeInsecureRequests: env.isProduction ? [] : null,
       
-      // ============================================
       // FIX: Add these directives for Service Workers
-      // ============================================
       workerSrc: ["'self'", 'blob:'],
       childSrc: ["'self'", 'blob:'],
       manifestSrc: ["'self'"],
@@ -365,13 +360,8 @@ async function bootstrap() {
     // Auth routes (public)
     app.use('/api/auth', authRoutes);
     
-    // Wallet routes (mix of public and protected)
-    if (walletRoutes && walletRoutes.publicRouter) {
-      app.use('/api/wallet', walletRoutes.publicRouter);
-    }
-    if (walletRoutes && walletRoutes.router) {
-      app.use('/api/wallet', walletRoutes.router);
-    }
+    // Wallet routes - FIXED: Use the router directly
+    app.use('/api/wallet', walletRoutes);
     
     // Admin routes (protected)
     app.use('/api/admin', adminRoutes);
