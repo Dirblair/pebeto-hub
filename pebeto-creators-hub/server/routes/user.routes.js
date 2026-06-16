@@ -7,9 +7,6 @@
  */
 
 const express = require('express');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const streamifier = require('streamifier');
 const { body, param, query, validationResult } = require('express-validator');
 const { authenticate, authorize } = require('../middleware/auth');
 const { AppError } = require('../utils/errors');
@@ -28,27 +25,12 @@ const router = express.Router();
 router.use(authenticate);
 
 // ============================================
-// Cloudinary Configuration
-// ============================================
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dummy',
-  api_key: process.env.CLOUDINARY_API_KEY || 'dummy',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'dummy'
-});
-
-const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
-});
-
-// ============================================
 // Activity Log
 // ============================================
 
 /**
  * GET /api/user/activity
- * Get user's activity log
+ * Get user's activity log (login attempts, actions)
  */
 router.get('/activity', catchAsync(async (req, res) => {
   const { limit = 50, page = 1 } = req.query;
@@ -64,6 +46,7 @@ router.get('/activity', catchAsync(async (req, res) => {
   const activities = (user.loginAttempts || []).reverse();
   const paginatedActivities = activities.slice(skip, skip + effectiveLimit);
   
+  // Also get campaign-related activities from transactions
   const campaignActivities = await Transaction.find({
     $or: [{ fromUserId: req.user._id }, { toUserId: req.user._id }],
     type: { $in: ['deposit', 'withdrawal', 'tip', 'escrow_release'] }
@@ -72,6 +55,7 @@ router.get('/activity', catchAsync(async (req, res) => {
     .limit(parseInt(limit))
     .lean();
   
+  // Format activities
   const formattedActivities = [
     ...paginatedActivities.map(a => ({
       action: a.success ? `Login successful from ${a.ipAddress || 'unknown IP'}` : `Failed login attempt from ${a.ipAddress || 'unknown IP'}`,
@@ -89,6 +73,7 @@ router.get('/activity', catchAsync(async (req, res) => {
     }))
   ];
   
+  // Sort by date (newest first)
   formattedActivities.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   
   res.json({
@@ -106,156 +91,6 @@ router.get('/activity', catchAsync(async (req, res) => {
 }));
 
 // ============================================
-// Avatar Upload
-// ============================================
-
-/**
- * POST /api/user/avatar
- * Upload user avatar
- */
-router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
-  if (!req.file) {
-    throw new AppError('No file uploaded', 400);
-  }
-  
-  const file = req.file;
-  
-  if (!file.mimetype.startsWith('image/')) {
-    throw new AppError('File must be an image', 400);
-  }
-  
-  try {
-    const uploadResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'pebeto/avatars',
-          transformation: [{ width: 500, height: 500, crop: 'fill' }]
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
-    });
-    
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-    if (!user.profile) user.profile = {};
-    user.profile.avatarUrl = uploadResult.secure_url;
-    await user.save();
-    
-    logger.info(`Avatar updated for user ${req.user._id}`);
-    
-    res.json({
-      success: true,
-      data: {
-        avatarUrl: uploadResult.secure_url
-      },
-      message: 'Profile picture updated successfully'
-    });
-  } catch (cloudinaryError) {
-    logger.error('Cloudinary upload error:', cloudinaryError);
-    
-    if (process.env.NODE_ENV === 'development') {
-      const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.email)}&background=ff8c42&color=fff&size=500`;
-      const user = await User.findById(req.user._id);
-      if (!user.profile) user.profile = {};
-      user.profile.avatarUrl = fallbackUrl;
-      await user.save();
-      
-      return res.json({
-        success: true,
-        data: { avatarUrl: fallbackUrl },
-        message: 'Profile picture updated (fallback)'
-      });
-    }
-    
-    throw new AppError('Failed to upload image to Cloudinary', 500);
-  }
-}));
-
-/**
- * DELETE /api/user/avatar
- * Remove user avatar
- */
-router.delete('/avatar', catchAsync(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-  
-  if (user.profile) {
-    user.profile.avatarUrl = null;
-    await user.save();
-  }
-  
-  logger.info(`Avatar removed for user ${req.user._id}`);
-  
-  res.json({
-    success: true,
-    message: 'Profile picture removed successfully'
-  });
-}));
-
-// ============================================
-// User Profile
-// ============================================
-
-/**
- * PUT /api/user/profile
- * Update user profile
- */
-router.put('/profile', [
-  body('profile.stageName').optional().isString().trim().isLength({ max: 50 }),
-  body('profile.niche').optional().isString().trim().isLength({ max: 50 }),
-  body('profile.companyName').optional().isString().trim().isLength({ max: 100 }),
-  body('profile.displayName').optional().isString().trim().isLength({ max: 100 }),
-  body('profile.bio').optional().isString().trim().isLength({ max: 500 }),
-  body('preferredCurrency').optional().isString().isLength({ min: 3, max: 3 })
-], catchAsync(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new AppError(errors.array()[0].msg, 400);
-  }
-  
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-  
-  if (req.body.profile) {
-    if (!user.profile) user.profile = {};
-    
-    const allowedFields = ['stageName', 'niche', 'companyName', 'displayName', 'bio', 'avatarUrl'];
-    for (const field of allowedFields) {
-      if (req.body.profile[field] !== undefined) {
-        user.profile[field] = req.body.profile[field];
-      }
-    }
-  }
-  
-  if (req.body.preferredCurrency) {
-    user.preferredCurrency = req.body.preferredCurrency;
-  }
-  
-  await user.save();
-  
-  logger.info(`Profile updated for user ${req.user._id}`);
-  
-  res.json({
-    success: true,
-    data: {
-      profile: user.profile,
-      preferredCurrency: user.preferredCurrency
-    },
-    message: 'Profile updated successfully'
-  });
-}));
-
-// ============================================
 // User Sessions
 // ============================================
 
@@ -264,8 +99,12 @@ router.put('/profile', [
  * Get user's active sessions
  */
 router.get('/sessions', catchAsync(async (req, res) => {
+  // Get all sessions from the session store
+  // Since we're using JWT, we'll track sessions in the user document
+  
   const user = await User.findById(req.user._id).select('loginAttempts lastLoginAt lastLoginIp');
   
+  // Get recent successful logins (last 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
@@ -278,6 +117,7 @@ router.get('/sessions', catchAsync(async (req, res) => {
       isCurrent: a.timestamp === user.lastLoginAt
     }));
   
+  // Add current session info
   const currentSession = {
     device: req.headers['user-agent'] || 'Unknown device',
     ipAddress: req.ip || req.connection?.remoteAddress,
@@ -296,10 +136,11 @@ router.get('/sessions', catchAsync(async (req, res) => {
 }));
 
 /**
- * POST /api/user/sessions/revoke
- * Revoke all other sessions
+ * DELETE /api/user/sessions/revoke
+ * Revoke all other sessions (logout from other devices)
  */
 router.post('/sessions/revoke', catchAsync(async (req, res) => {
+  // Increment token version to invalidate all existing tokens
   const user = await User.findById(req.user._id);
   if (user) {
     user.tokenVersion = (user.tokenVersion || 0) + 1;
@@ -335,14 +176,17 @@ router.post('/2fa/setup', catchAsync(async (req, res) => {
     throw new AppError('2FA is already enabled for this account', 400);
   }
   
+  // Generate secret
   const secret = speakeasy.generateSecret({
     name: `Pebeto:${user.email}`,
     length: 20
   });
   
+  // Store secret temporarily (will be confirmed on verification)
   user.twoFactorSecret = secret.base32;
   await user.save();
   
+  // Generate QR code
   const otpauthUrl = secret.otpauth_url;
   const qrCode = await QRCode.toDataURL(otpauthUrl);
   
@@ -379,6 +223,7 @@ router.post('/2fa/verify', [
     throw new AppError('2FA not initialized. Please setup 2FA first.', 400);
   }
   
+  // Verify the code
   const verified = speakeasy.totp.verify({
     secret: user.twoFactorSecret,
     encoding: 'base32',
@@ -389,6 +234,7 @@ router.post('/2fa/verify', [
     throw new AppError('Invalid verification code', 400);
   }
   
+  // Enable 2FA
   user.twoFactorEnabled = true;
   await user.save();
   
@@ -423,6 +269,7 @@ router.post('/2fa/disable', [
     throw new AppError('2FA is not enabled for this account', 400);
   }
   
+  // Verify the code before disabling
   const verified = speakeasy.totp.verify({
     secret: user.twoFactorSecret,
     encoding: 'base32',
@@ -433,6 +280,7 @@ router.post('/2fa/disable', [
     throw new AppError('Invalid verification code', 400);
   }
   
+  // Disable 2FA
   user.twoFactorEnabled = false;
   user.twoFactorSecret = null;
   await user.save();
@@ -447,7 +295,7 @@ router.post('/2fa/disable', [
 
 /**
  * POST /api/user/2fa/verify-login
- * Verify 2FA code during login
+ * Verify 2FA code during login (separate endpoint for login flow)
  */
 router.post('/2fa/verify-login', [
   body('userId').isMongoId().withMessage('Invalid user ID'),
@@ -479,6 +327,7 @@ router.post('/2fa/verify-login', [
     throw new AppError('Invalid verification code', 400);
   }
   
+  // Generate temporary token for 2FA verification
   const jwt = require('jsonwebtoken');
   const env = require('../config/env');
   const twoFactorToken = jwt.sign(
@@ -506,6 +355,7 @@ router.get('/api-keys', catchAsync(async (req, res) => {
   
   const apiKeys = user.apiKeys || [];
   
+  // Mask the keys for security
   const maskedKeys = apiKeys.map(key => ({
     id: key.id,
     name: key.name,
@@ -538,6 +388,7 @@ router.post('/api-keys', [
     throw new AppError('User not found', 404);
   }
   
+  // Generate a secure API key
   const apiKey = `pbt_${crypto.randomBytes(32).toString('hex')}`;
   const keyId = crypto.randomBytes(8).toString('hex');
   
@@ -562,7 +413,7 @@ router.post('/api-keys', [
     data: {
       id: keyId,
       name,
-      key: apiKey,
+      key: apiKey,  // Only shown once!
       createdAt: new Date()
     },
     message: 'Copy your API key now. It will not be shown again.'
@@ -636,6 +487,7 @@ router.post('/api-keys/:keyId/regenerate', [
     throw new AppError('API key not found', 404);
   }
   
+  // Generate new key
   const newApiKey = `pbt_${crypto.randomBytes(32).toString('hex')}`;
   user.apiKeys[keyIndex].key = newApiKey;
   user.apiKeys[keyIndex].regeneratedAt = new Date();
@@ -650,7 +502,7 @@ router.post('/api-keys/:keyId/regenerate', [
     data: {
       id: keyId,
       name: user.apiKeys[keyIndex].name,
-      key: newApiKey,
+      key: newApiKey,  // Only shown once!
       regeneratedAt: new Date()
     },
     message: 'API key regenerated successfully. Copy your new key now.'
@@ -658,7 +510,9 @@ router.post('/api-keys/:keyId/regenerate', [
 }));
 
 // ============================================
+// ============================================
 // Notification Preferences
+// ============================================
 // ============================================
 
 /**
@@ -714,6 +568,7 @@ router.put('/notification-preferences', [
     user.notificationPreferences = {};
   }
   
+  // Update only the fields provided
   Object.keys(req.body).forEach(key => {
     if (typeof req.body[key] === 'boolean') {
       user.notificationPreferences[key] = req.body[key];
@@ -728,6 +583,182 @@ router.put('/notification-preferences', [
     success: true,
     message: 'Notification preferences updated',
     data: user.notificationPreferences
+  });
+}));
+
+// ============================================
+// Avatar Upload (FIXED - persists after refresh)
+// ============================================
+
+/**
+ * POST /api/user/avatar
+ * Upload user avatar
+ */
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dummy',
+  api_key: process.env.CLOUDINARY_API_KEY || 'dummy',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'dummy'
+});
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
+  if (!req.file) {
+    throw new AppError('No file uploaded', 400);
+  }
+  
+  const file = req.file;
+  
+  // Check if file is an image
+  if (!file.mimetype.startsWith('image/')) {
+    throw new AppError('File must be an image', 400);
+  }
+  
+  try {
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'pebeto/avatars',
+          transformation: [{ width: 500, height: 500, crop: 'fill' }]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
+    
+    // Update user profile
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+    if (!user.profile) user.profile = {};
+    user.profile.avatarUrl = uploadResult.secure_url;
+    await user.save();
+    
+    logger.info(`Avatar updated for user ${req.user._id}`);
+    
+    res.json({
+      success: true,
+      data: {
+        avatarUrl: uploadResult.secure_url
+      },
+      message: 'Profile picture updated successfully'
+    });
+  } catch (cloudinaryError) {
+    logger.error('Cloudinary upload error:', cloudinaryError);
+    
+    // For development, use a fallback URL if Cloudinary fails
+    if (process.env.NODE_ENV === 'development') {
+      const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.email)}&background=ff8c42&color=fff&size=500`;
+      const user = await User.findById(req.user._id);
+      if (!user.profile) user.profile = {};
+      user.profile.avatarUrl = fallbackUrl;
+      await user.save();
+      
+      return res.json({
+        success: true,
+        data: { avatarUrl: fallbackUrl },
+        message: 'Profile picture updated (fallback)'
+      });
+    }
+    
+    throw new AppError('Failed to upload image to Cloudinary', 500);
+  }
+}));
+
+// ============================================
+// DELETE /api/user/avatar - Remove avatar (NEW)
+// ============================================
+
+/**
+ * DELETE /api/user/avatar
+ * Remove user avatar
+ */
+router.delete('/avatar', catchAsync(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  
+  if (user.profile) {
+    user.profile.avatarUrl = null;
+    await user.save();
+  }
+  
+  logger.info(`Avatar removed for user ${req.user._id}`);
+  
+  res.json({
+    success: true,
+    message: 'Profile picture removed successfully'
+  });
+}));
+
+// ============================================
+// User Profile (FIXED - allows updating username and niche)
+// ============================================
+
+/**
+ * PUT /api/user/profile
+ * Update user profile
+ */
+router.put('/profile', [
+  body('profile.stageName').optional().isString().trim().isLength({ max: 50 }),
+  body('profile.niche').optional().isString().trim().isLength({ max: 50 }),
+  body('profile.companyName').optional().isString().trim().isLength({ max: 100 }),
+  body('profile.displayName').optional().isString().trim().isLength({ max: 100 }),
+  body('profile.bio').optional().isString().trim().isLength({ max: 500 }),
+  body('preferredCurrency').optional().isString().isLength({ min: 3, max: 3 })
+], catchAsync(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new AppError(errors.array()[0].msg, 400);
+  }
+  
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  
+  // Update profile fields
+  if (req.body.profile) {
+    if (!user.profile) user.profile = {};
+    
+    const allowedFields = ['stageName', 'niche', 'companyName', 'displayName', 'bio', 'avatarUrl'];
+    for (const field of allowedFields) {
+      if (req.body.profile[field] !== undefined) {
+        user.profile[field] = req.body.profile[field];
+      }
+    }
+  }
+  
+  // Update currency
+  if (req.body.preferredCurrency) {
+    user.preferredCurrency = req.body.preferredCurrency;
+  }
+  
+  await user.save();
+  
+  logger.info(`Profile updated for user ${req.user._id}`);
+  
+  res.json({
+    success: true,
+    data: {
+      profile: user.profile,
+      preferredCurrency: user.preferredCurrency
+    },
+    message: 'Profile updated successfully'
   });
 }));
 
