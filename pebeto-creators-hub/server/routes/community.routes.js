@@ -49,7 +49,7 @@ router.get('/posts', optionalAuthenticate, async (req, res, next) => {
   }
 });
 
-// POST /api/community/posts - Create a new post (upload video/image)
+// POST /api/community/posts - Create a new post
 router.post('/posts', authenticate, upload.single('media'), async (req, res, next) => {
   try {
     if (!req.file) {
@@ -105,12 +105,12 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
 });
 
 // ============================================
-// LIKES (PLATFORM-ONLY - FIXED)
+// LIKES (PLATFORM-ONLY)
 // ============================================
 
 /**
  * POST /api/community/creators/:creatorId/like
- * Toggle like on a creator (platform-only, not sent to TikTok/YouTube)
+ * Toggle like on a creator (platform-only)
  */
 router.post('/creators/:creatorId/like', authenticate, async (req, res, next) => {
   try {
@@ -122,18 +122,15 @@ router.post('/creators/:creatorId/like', authenticate, async (req, res, next) =>
       return res.status(404).json({ success: false, message: 'Creator not found' });
     }
     
-    // Initialize arrays if not exists
     if (!creator.likedBy) creator.likedBy = [];
     if (creator.likeCount === undefined) creator.likeCount = 0;
     
     const hasLiked = creator.likedBy.includes(userId);
     
     if (hasLiked) {
-      // Unlike
       creator.likedBy = creator.likedBy.filter(id => id.toString() !== userId.toString());
       creator.likeCount = Math.max(0, (creator.likeCount || 0) - 1);
     } else {
-      // Like
       creator.likedBy.push(userId);
       creator.likeCount = (creator.likeCount || 0) + 1;
     }
@@ -153,7 +150,7 @@ router.post('/creators/:creatorId/like', authenticate, async (req, res, next) =>
 
 /**
  * DELETE /api/community/creators/:creatorId/like
- * Unlike a creator (alternative method)
+ * Unlike a creator
  */
 router.delete('/creators/:creatorId/like', authenticate, async (req, res, next) => {
   try {
@@ -212,12 +209,12 @@ router.get('/creators/:creatorId/like', authenticate, async (req, res, next) => 
 });
 
 // ============================================
-// COMMENTS (PLATFORM-ONLY - FIXED)
+// COMMENTS (PLATFORM-ONLY)
 // ============================================
 
 /**
  * GET /api/community/creators/:creatorId/comments
- * Get comments for a creator (platform-only)
+ * Get comments for a creator
  */
 router.get('/creators/:creatorId/comments', optionalAuthenticate, async (req, res, next) => {
   try {
@@ -242,7 +239,7 @@ router.get('/creators/:creatorId/comments', optionalAuthenticate, async (req, re
 
 /**
  * POST /api/community/creators/:creatorId/comments
- * Add a comment to a creator (platform-only)
+ * Add a comment to a creator
  */
 router.post('/creators/:creatorId/comments', authenticate, async (req, res, next) => {
   try {
@@ -267,7 +264,6 @@ router.post('/creators/:creatorId/comments', authenticate, async (req, res, next
     const populatedComment = await CommunityComment.findById(comment._id)
       .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
     
-    // Update comment count on creator
     const commentCount = await CommunityComment.countDocuments({ creatorId });
     creator.commentCount = commentCount;
     await creator.save();
@@ -280,7 +276,7 @@ router.post('/creators/:creatorId/comments', authenticate, async (req, res, next
 
 /**
  * DELETE /api/community/comments/:commentId
- * Delete a comment (platform-only)
+ * Delete a comment
  */
 router.delete('/comments/:commentId', authenticate, async (req, res, next) => {
   try {
@@ -296,7 +292,6 @@ router.delete('/comments/:commentId', authenticate, async (req, res, next) => {
     
     await comment.deleteOne();
     
-    // Update comment count
     if (comment.creatorId) {
       const commentCount = await CommunityComment.countDocuments({ creatorId: comment.creatorId });
       await User.findByIdAndUpdate(comment.creatorId, { commentCount });
@@ -333,6 +328,37 @@ router.get('/creators/:creatorId/stats', optionalAuthenticate, async (req, res, 
       likeCount: creator.likeCount || 0,
       commentCount: commentCount,
       isLiked: userId ? creator.likedBy?.includes(userId) || false : false
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// BID CAMPAIGNS (For Bid Tab)
+// ============================================
+
+/**
+ * GET /api/community/bids
+ * Get campaigns that are open for bidding
+ */
+router.get('/bids', authenticate, async (req, res, next) => {
+  try {
+    const campaigns = await Campaign.find({ 
+      status: 'open'
+    })
+    .populate('businessId', 'email profile.companyName')
+    .sort({ createdAt: -1 });
+    
+    const userId = req.user._id;
+    const unbiddedCampaigns = campaigns.filter(c => {
+      const userBid = c.bids?.find(b => b.creatorId && b.creatorId.toString() === userId.toString());
+      return !userBid;
+    });
+    
+    res.json({
+      success: true,
+      data: unbiddedCampaigns
     });
   } catch (err) {
     next(err);
@@ -391,39 +417,6 @@ router.post('/report', authenticate, [
       success: true,
       message: 'Report submitted. Our team will review it.',
       data: { reportId: report._id }
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ============================================
-// BID CAMPAIGNS (For Bid Tab)
-// ============================================
-
-/**
- * GET /api/community/bids
- * Get campaigns that are open for bidding (unbidded by current user)
- */
-router.get('/bids', authenticate, async (req, res, next) => {
-  try {
-    const campaigns = await Campaign.find({ 
-      status: 'open',
-      assignedCreatorId: { $exists: false }
-    })
-    .populate('businessId', 'email profile.companyName')
-    .sort({ createdAt: -1 });
-    
-    // Filter out campaigns where user has already bid
-    const userId = req.user._id;
-    const unbiddedCampaigns = campaigns.filter(c => {
-      const userBid = c.bids?.find(b => b.creatorId && b.creatorId.toString() === userId.toString());
-      return !userBid;
-    });
-    
-    res.json({
-      success: true,
-      data: unbiddedCampaigns
     });
   } catch (err) {
     next(err);
