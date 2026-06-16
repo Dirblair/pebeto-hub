@@ -12,14 +12,13 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
-// Configure Cloudinary (add to env.js)
+// Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dummy',
+  api_key: process.env.CLOUDINARY_API_KEY || 'dummy',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'dummy'
 });
 
-// Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ============================================
@@ -59,16 +58,13 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
     const { caption } = req.body;
     const file = req.file;
     
-    // Determine media type
     const mediaType = file.mimetype.startsWith('video/') ? 'video' : 'image';
     
-    // Upload to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: mediaType === 'video' ? 'video' : 'image',
           folder: 'pebeto/community',
-          transformation: mediaType === 'video' ? [{ width: 720, height: 1280, crop: 'limit' }] : []
         },
         (error, result) => {
           if (error) reject(error);
@@ -78,7 +74,6 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
       streamifier.createReadStream(file.buffer).pipe(uploadStream);
     });
     
-    // Create thumbnail for video
     let thumbnailUrl = null;
     if (mediaType === 'video') {
       thumbnailUrl = cloudinary.url(uploadResult.public_id, {
@@ -108,280 +103,57 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
   }
 });
 
-// POST /api/community/posts/:postId/like - Toggle like on a post
-router.post('/posts/:postId/like', authenticate, async (req, res, next) => {
-  try {
-    const { postId } = req.params;
-    const userId = req.user._id;
-    
-    const post = await CommunityPost.findById(postId);
-    if (!post) throw new AppError('Post not found', 404);
-    
-    const hasLiked = post.likes.includes(userId);
-    
-    if (hasLiked) {
-      post.likes = post.likes.filter(id => id.toString() !== userId.toString());
-      post.likeCount = Math.max(0, post.likeCount - 1);
-    } else {
-      post.likes.push(userId);
-      post.likeCount += 1;
-    }
-    
-    await post.save();
-    
-    res.json({ success: true, liked: !hasLiked, likeCount: post.likeCount });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// DELETE /api/community/posts/:postId - Delete a post (owner or admin only)
-router.delete('/posts/:postId', authenticate, async (req, res, next) => {
-  try {
-    const { postId } = req.params;
-    const post = await CommunityPost.findById(postId);
-    if (!post) throw new AppError('Post not found', 404);
-    
-    if (post.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      throw new AppError('You can only delete your own posts', 403);
-    }
-    
-    await CommunityComment.deleteMany({ postId });
-    await post.deleteOne();
-    
-    res.json({ success: true, message: 'Post deleted' });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// POST /api/community/posts/:postId/save - Save post to user's saved list
-router.post('/posts/:postId/save', authenticate, async (req, res, next) => {
-  try {
-    const { postId } = req.params;
-    const user = await User.findById(req.user._id);
-    if (!user) throw new AppError('User not found', 404);
-    
-    if (!user.metadata) user.metadata = {};
-    if (!user.metadata.savedPosts) user.metadata.savedPosts = [];
-    
-    const alreadySaved = user.metadata.savedPosts.includes(postId);
-    
-    if (alreadySaved) {
-      user.metadata.savedPosts = user.metadata.savedPosts.filter(id => id.toString() !== postId);
-    } else {
-      user.metadata.savedPosts.push(postId);
-    }
-    
-    await user.save();
-    
-    res.json({ success: true, saved: !alreadySaved });
-  } catch (err) {
-    next(err);
-  }
-});
-
 // ============================================
-// COMMENTS (for Posts)
+// LIKES (PLATFORM-ONLY - FIXED)
 // ============================================
 
-// GET /api/community/posts/:postId/comments - Get comments for a post
-router.get('/posts/:postId/comments', optionalAuthenticate, async (req, res, next) => {
-  try {
-    const { postId } = req.params;
-    const { limit = 50 } = req.query;
-    
-    const comments = await CommunityComment.find({ postId })
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
-    
-    res.json({ success: true, comments });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// POST /api/community/posts/:postId/comments - Add a comment
-router.post('/posts/:postId/comments', authenticate, async (req, res, next) => {
-  try {
-    const { postId } = req.params;
-    const { text } = req.body;
-    
-    if (!text || !text.trim()) throw new AppError('Comment text is required', 400);
-    
-    const post = await CommunityPost.findById(postId);
-    if (!post) throw new AppError('Post not found', 404);
-    
-    const comment = await CommunityComment.create({
-      postId,
-      authorId: req.user._id,
-      text: text.trim()
-    });
-    
-    post.commentCount += 1;
-    await post.save();
-    
-    const populatedComment = await CommunityComment.findById(comment._id).populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
-    
-    res.status(201).json({ success: true, comment: populatedComment });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// DELETE /api/community/comments/:commentId - Delete a comment
-router.delete('/comments/:commentId', authenticate, async (req, res, next) => {
-  try {
-    const { commentId } = req.params;
-    const comment = await CommunityComment.findById(commentId);
-    if (!comment) throw new AppError('Comment not found', 404);
-    
-    const post = await CommunityPost.findById(comment.postId);
-    
-    if (comment.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      throw new AppError('You can only delete your own comments', 403);
-    }
-    
-    await comment.deleteOne();
-    
-    if (post) {
-      post.commentCount = Math.max(0, post.commentCount - 1);
-      await post.save();
-    }
-    
-    res.json({ success: true, message: 'Comment deleted' });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ============================================
-// CREATOR COMMENTS & LIKES (Direct Creator Engagement)
-// ============================================
-
-// GET /api/community/creators/:creatorId/comments - Get comments for a creator
-router.get('/creators/:creatorId/comments', optionalAuthenticate, async (req, res, next) => {
-  try {
-    const { creatorId } = req.params;
-    const { limit = 50 } = req.query;
-    
-    // Check if creator exists
-    const creator = await User.findById(creatorId);
-    if (!creator || creator.role !== 'creator') {
-      return res.status(404).json({ success: false, message: 'Creator not found' });
-    }
-    
-    // Find comments for this creator
-    const comments = await CommunityComment.find({ creatorId })
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
-    
-    res.json({ success: true, comments });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// POST /api/community/creators/:creatorId/comments - Add a comment to a creator
-router.post('/creators/:creatorId/comments', authenticate, async (req, res, next) => {
-  try {
-    const { creatorId } = req.params;
-    const { text } = req.body;
-    
-    if (!text || !text.trim()) {
-      throw new AppError('Comment text is required', 400);
-    }
-    
-    // Check if creator exists
-    const creator = await User.findById(creatorId);
-    if (!creator || creator.role !== 'creator') {
-      return res.status(404).json({ success: false, message: 'Creator not found' });
-    }
-    
-    // Create comment with creatorId
-    const comment = await CommunityComment.create({
-      creatorId: creatorId,
-      authorId: req.user._id,
-      text: text.trim()
-    });
-    
-    const populatedComment = await CommunityComment.findById(comment._id).populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
-    
-    res.status(201).json({ success: true, comment: populatedComment });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// DELETE /api/community/creators/:creatorId/comments/:commentId - Delete a comment from a creator
-router.delete('/creators/:creatorId/comments/:commentId', authenticate, async (req, res, next) => {
-  try {
-    const { creatorId, commentId } = req.params;
-    
-    const comment = await CommunityComment.findById(commentId);
-    if (!comment) {
-      return res.status(404).json({ success: false, message: 'Comment not found' });
-    }
-    
-    // Check if comment belongs to this creator
-    if (comment.creatorId && comment.creatorId.toString() !== creatorId) {
-      return res.status(403).json({ success: false, message: 'Comment does not belong to this creator' });
-    }
-    
-    // Check if user is author or admin
-    if (comment.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'You can only delete your own comments' });
-    }
-    
-    await comment.deleteOne();
-    
-    res.json({ success: true, message: 'Comment deleted' });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// POST /api/community/creators/:creatorId/like - Like a creator
+/**
+ * POST /api/community/creators/:creatorId/like
+ * Toggle like on a creator (platform-only, not sent to TikTok/YouTube)
+ */
 router.post('/creators/:creatorId/like', authenticate, async (req, res, next) => {
   try {
     const { creatorId } = req.params;
     const userId = req.user._id;
     
-    // Check if creator exists
     const creator = await User.findById(creatorId);
     if (!creator || creator.role !== 'creator') {
       return res.status(404).json({ success: false, message: 'Creator not found' });
     }
     
-    // Initialize likedBy array if not exists
+    // Initialize arrays if not exists
     if (!creator.likedBy) creator.likedBy = [];
     if (creator.likeCount === undefined) creator.likeCount = 0;
     
     const hasLiked = creator.likedBy.includes(userId);
     
     if (hasLiked) {
+      // Unlike
       creator.likedBy = creator.likedBy.filter(id => id.toString() !== userId.toString());
-      creator.likeCount = Math.max(0, creator.likeCount - 1);
+      creator.likeCount = Math.max(0, (creator.likeCount || 0) - 1);
     } else {
+      // Like
       creator.likedBy.push(userId);
-      creator.likeCount += 1;
+      creator.likeCount = (creator.likeCount || 0) + 1;
     }
     
     await creator.save();
     
-    res.json({ 
-      success: true, 
-      liked: !hasLiked, 
-      likeCount: creator.likeCount || 0 
+    res.json({
+      success: true,
+      liked: !hasLiked,
+      likeCount: creator.likeCount || 0
     });
   } catch (err) {
+    console.error('Error toggling like:', err);
     next(err);
   }
 });
 
-// DELETE /api/community/creators/:creatorId/like - Unlike a creator (alternative method)
+/**
+ * DELETE /api/community/creators/:creatorId/like
+ * Unlike a creator (alternative method)
+ */
 router.delete('/creators/:creatorId/like', authenticate, async (req, res, next) => {
   try {
     const { creatorId } = req.params;
@@ -402,17 +174,20 @@ router.delete('/creators/:creatorId/like', authenticate, async (req, res, next) 
       await creator.save();
     }
     
-    res.json({ 
-      success: true, 
-      liked: false, 
-      likeCount: creator.likeCount || 0 
+    res.json({
+      success: true,
+      liked: false,
+      likeCount: creator.likeCount || 0
     });
   } catch (err) {
     next(err);
   }
 });
 
-// GET /api/community/creators/:creatorId/like - Check if user liked a creator
+/**
+ * GET /api/community/creators/:creatorId/like
+ * Check if user liked a creator
+ */
 router.get('/creators/:creatorId/like', authenticate, async (req, res, next) => {
   try {
     const { creatorId } = req.params;
@@ -425,32 +200,138 @@ router.get('/creators/:creatorId/like', authenticate, async (req, res, next) => 
     
     const isLiked = creator.likedBy ? creator.likedBy.includes(userId) : false;
     
-    res.json({ 
-      success: true, 
-      isLiked, 
-      likeCount: creator.likeCount || 0 
+    res.json({
+      success: true,
+      isLiked,
+      likeCount: creator.likeCount || 0
     });
   } catch (err) {
     next(err);
   }
 });
 
-// GET /api/community/creators/:creatorId/stats - Get creator engagement stats
+// ============================================
+// COMMENTS (PLATFORM-ONLY - FIXED)
+// ============================================
+
+/**
+ * GET /api/community/creators/:creatorId/comments
+ * Get comments for a creator (platform-only)
+ */
+router.get('/creators/:creatorId/comments', optionalAuthenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const { limit = 50 } = req.query;
+    
+    const creator = await User.findById(creatorId);
+    if (!creator || creator.role !== 'creator') {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    const comments = await CommunityComment.find({ creatorId })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
+    
+    res.json({ success: true, comments });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/community/creators/:creatorId/comments
+ * Add a comment to a creator (platform-only)
+ */
+router.post('/creators/:creatorId/comments', authenticate, async (req, res, next) => {
+  try {
+    const { creatorId } = req.params;
+    const { text } = req.body;
+    
+    if (!text || !text.trim()) {
+      throw new AppError('Comment text is required', 400);
+    }
+    
+    const creator = await User.findById(creatorId);
+    if (!creator || creator.role !== 'creator') {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
+    const comment = await CommunityComment.create({
+      creatorId: creatorId,
+      authorId: req.user._id,
+      text: text.trim()
+    });
+    
+    const populatedComment = await CommunityComment.findById(comment._id)
+      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
+    
+    // Update comment count on creator
+    const commentCount = await CommunityComment.countDocuments({ creatorId });
+    creator.commentCount = commentCount;
+    await creator.save();
+    
+    res.status(201).json({ success: true, comment: populatedComment });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/community/comments/:commentId
+ * Delete a comment (platform-only)
+ */
+router.delete('/comments/:commentId', authenticate, async (req, res, next) => {
+  try {
+    const { commentId } = req.params;
+    const comment = await CommunityComment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: 'Comment not found' });
+    }
+    
+    if (comment.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'You can only delete your own comments' });
+    }
+    
+    await comment.deleteOne();
+    
+    // Update comment count
+    if (comment.creatorId) {
+      const commentCount = await CommunityComment.countDocuments({ creatorId: comment.creatorId });
+      await User.findByIdAndUpdate(comment.creatorId, { commentCount });
+    }
+    
+    res.json({ success: true, message: 'Comment deleted' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// CREATOR STATS
+// ============================================
+
+/**
+ * GET /api/community/creators/:creatorId/stats
+ * Get creator engagement stats
+ */
 router.get('/creators/:creatorId/stats', optionalAuthenticate, async (req, res, next) => {
   try {
     const { creatorId } = req.params;
     const userId = req.user?._id;
     
-    const creator = await User.findById(creatorId).select('likedBy likeCount');
+    const creator = await User.findById(creatorId).select('likedBy likeCount commentCount');
+    if (!creator) {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
+    }
+    
     const commentCount = await CommunityComment.countDocuments({ creatorId });
     
-    const isLiked = userId && creator?.likedBy ? creator.likedBy.includes(userId) : false;
-    
-    res.json({ 
-      success: true, 
-      likeCount: creator?.likeCount || 0,
+    res.json({
+      success: true,
+      likeCount: creator.likeCount || 0,
       commentCount: commentCount,
-      isLiked: isLiked
+      isLiked: userId ? creator.likedBy?.includes(userId) || false : false
     });
   } catch (err) {
     next(err);
@@ -458,99 +339,13 @@ router.get('/creators/:creatorId/stats', optionalAuthenticate, async (req, res, 
 });
 
 // ============================================
-// TRENDING & SEARCH
+// REPORTS
 // ============================================
 
-// GET /api/community/trending - Get trending posts
-router.get('/trending', optionalAuthenticate, async (req, res, next) => {
-  try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const posts = await CommunityPost.find({
-      createdAt: { $gte: sevenDaysAgo },
-      likeCount: { $gt: 10 }
-    })
-      .sort({ likeCount: -1, views: -1 })
-      .limit(20)
-      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl profile.niche');
-    
-    res.json({ success: true, posts });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/community/search - Search users and posts
-router.get('/search', optionalAuthenticate, async (req, res, next) => {
-  try {
-    const { q } = req.query;
-    if (!q || q.length < 2) {
-      return res.json({ success: true, users: [], posts: [] });
-    }
-    
-    const searchRegex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    
-    const users = await User.find({
-      $or: [
-        { email: searchRegex },
-        { uniqueCode: searchRegex },
-        { 'profile.stageName': searchRegex },
-        { 'profile.companyName': searchRegex },
-        { 'profile.displayName': searchRegex }
-      ]
-    })
-      .select('email uniqueCode role profile.stageName profile.companyName profile.avatarUrl profile.niche')
-      .limit(20);
-    
-    const posts = await CommunityPost.find({
-      $or: [
-        { caption: searchRegex },
-        { sound: searchRegex }
-      ]
-    })
-      .sort({ likeCount: -1 })
-      .limit(20)
-      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
-    
-    res.json({ success: true, users, posts });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/community/user/:userId/posts - Get posts by specific user
-router.get('/user/:userId/posts', optionalAuthenticate, async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const { limit = 20 } = req.query;
-    
-    const posts = await CommunityPost.find({ authorId: userId })
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
-    
-    res.json({ success: true, posts });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ============================================
-// ============================================
-// NEW: Report Endpoint
-// ============================================
-// ============================================
-
-/**
- * POST /api/community/report
- * Report a user or post for inappropriate content
- */
 router.post('/report', authenticate, [
-  body('reportedUserId').optional().isMongoId().withMessage('Invalid user ID'),
-  body('reportedPostId').optional().isMongoId().withMessage('Invalid post ID'),
-  body('reason').isIn(['spam', 'inappropriate', 'harassment', 'fake_account', 'copyright', 'other']).withMessage('Invalid report reason'),
-  body('description').optional().isString().trim().isLength({ max: 1000 }).withMessage('Description too long')
+  body('creatorId').optional().isMongoId().withMessage('Invalid creator ID'),
+  body('reason').isIn(['spam', 'inappropriate', 'harassment', 'fake', 'other']).withMessage('Invalid report reason'),
+  body('description').optional().isString().trim().isLength({ max: 1000 })
 ], async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -558,84 +353,51 @@ router.post('/report', authenticate, [
       return res.status(400).json({ success: false, message: errors.array()[0].msg });
     }
     
-    const { reportedUserId, reportedPostId, reason, description } = req.body;
+    const { creatorId, reason, description } = req.body;
     
-    // Must report either a user or a post
-    if (!reportedUserId && !reportedPostId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Must report either a user or a post' 
-      });
+    if (!creatorId) {
+      return res.status(400).json({ success: false, message: 'Creator ID required' });
     }
     
     const Report = require('../models/Report');
     
-    // Check for duplicate report (same reporter, same target, pending)
     const existingReport = await Report.findOne({
       reporterId: req.user._id,
-      reportedUserId: reportedUserId || null,
-      reportedPostId: reportedPostId || null,
+      reportedUserId: creatorId,
       status: { $in: ['pending', 'reviewing'] }
     });
     
     if (existingReport) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'You have already reported this content. It is under review.' 
-      });
+      return res.status(400).json({ success: false, message: 'You have already reported this creator' });
     }
     
-    // Verify the reported user exists (if provided)
-    if (reportedUserId) {
-      const reportedUser = await User.findById(reportedUserId);
-      if (!reportedUser) {
-        return res.status(404).json({ success: false, message: 'Reported user not found' });
-      }
+    const reportedUser = await User.findById(creatorId);
+    if (!reportedUser) {
+      return res.status(404).json({ success: false, message: 'Creator not found' });
     }
     
-    // Verify the reported post exists (if provided)
-    if (reportedPostId) {
-      const reportedPost = await CommunityPost.findById(reportedPostId);
-      if (!reportedPost) {
-        return res.status(404).json({ success: false, message: 'Reported post not found' });
-      }
-    }
-    
-    // Create the report
     const report = await Report.create({
       reporterId: req.user._id,
-      reportedUserId: reportedUserId || null,
-      reportedPostId: reportedPostId || null,
+      reportedUserId: creatorId,
       reason,
       description: description || null,
       status: 'pending'
     });
     
-    logger.info(`Report created by user ${req.user._id} for ${reportedUserId ? `user ${reportedUserId}` : `post ${reportedPostId}`}`, {
-      reason,
-      reportId: report._id
-    });
-    
-    // Notify admins via Socket.IO
-    const io = req.app.get('io');
-    if (io) {
-      io.to('status:global').emit('moderation:new-report', {
-        reportId: report._id,
-        reason,
-        createdAt: report.createdAt
-      });
-    }
+    logger.info(`Report created by user ${req.user._id} for creator ${creatorId}`);
     
     res.status(201).json({
       success: true,
-      message: 'Report submitted. Our moderation team will review it shortly.',
+      message: 'Report submitted. Our team will review it.',
       data: { reportId: report._id }
     });
-    
   } catch (err) {
-    logger.error('Report creation error:', err);
     next(err);
   }
 });
+
+// ============================================
+// EXPORTS
+// ============================================
 
 module.exports = router;
