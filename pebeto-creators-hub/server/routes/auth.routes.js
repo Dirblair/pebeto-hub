@@ -1,22 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { body, query, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const env = require('../config/env');
-const { sendVerificationEmail, sendPasswordResetEmail, sendLoginAlertEmail } = require('../services/emailService');
-const { catchAsync, AppError } = require('../middleware/errorHandler');
 
 const router = express.Router();
-
-// ============================================
-// Validation Helpers
-// ============================================
-
-const validateEmail = body('email').isEmail().withMessage('Valid email required');
-const validatePassword = body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters');
 
 // ============================================
 // REGISTER
@@ -61,7 +50,7 @@ router.post('/register', async (req, res) => {
     }
     
     const token = jwt.sign(
-      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
+      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion || 0 },
       env.jwtSecret,
       { expiresIn: '30d' }
     );
@@ -106,13 +95,6 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    if (user.isLocked) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Account is temporarily locked due to too many failed attempts. Please try again later.' 
-      });
-    }
-    
     if (!user.passwordHash) {
       console.error('❌ No passwordHash found for user:', email);
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -120,23 +102,13 @@ router.post('/login', async (req, res) => {
     
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-      await user.recordFailedLogin({ ipAddress: req.ip, userAgent: req.headers['user-agent'] });
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-    
-    if (user.notificationPreferences?.emailOnLogin !== false) {
-      await sendLoginAlertEmail(user.email, {
-        time: new Date().toLocaleString(),
-        device: req.headers['user-agent'],
-        location: req.ip,
-        resetUrl: `${process.env.CLIENT_ORIGIN || 'https://pebeto.com'}/forgot-password`
-      });
     }
     
     await user.recordSuccessfulLogin({ ipAddress: req.ip, userAgent: req.headers['user-agent'] });
     
     const token = jwt.sign(
-      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
+      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion || 0 },
       env.jwtSecret,
       { expiresIn: '30d' }
     );
