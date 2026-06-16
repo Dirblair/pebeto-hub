@@ -8,9 +8,8 @@
  */
 
 const express = require('express');
-const crypto = require('crypto');
 const { body, query, validationResult } = require('express-validator');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { attachFeeService } = require('../middleware/feeService');
 const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
@@ -19,7 +18,6 @@ const { previewWithdrawal, getWithdrawalHistory } = require('../services/withdra
 const { previewDeposit, processDeposit } = require('../services/depositService');
 const { processWithdrawal } = require('../services/withdrawalService');
 const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../services/exchangeRateService');
-const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const logger = require('../utils/logger');
@@ -62,7 +60,7 @@ const depositValidation = [
 const withdrawValidation = [
   body('payoutMethod')
     .isIn(['mpesa', 'paypal', 'swift', 'bank_transfer'])
-    .withMessage('Invalid payout method. Must be: mpesa, paypal, swift, or bank_transfer'),
+    .withMessage('Invalid payout method'),
   body('payoutDetails')
     .isObject()
     .withMessage('Payout details are required'),
@@ -79,7 +77,7 @@ const withdrawValidation = [
   body('currency')
     .optional()
     .isLength({ min: 3, max: 3 })
-    .withMessage('Currency must be a 3-letter code (e.g., USD, KES)')
+    .withMessage('Currency must be a 3-letter code')
     .toUpperCase(),
 ];
 
@@ -201,8 +199,6 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   }
 
   const { intentUsd } = req.body;
-  
-  // Check if admin (no fee for admin)
   const isAdmin = req.user.role === 'admin';
   const preview = await previewDeposit(intentUsd, isAdmin);
 
@@ -212,10 +208,10 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   });
 }));
 
-// ============================================
-// POST /api/wallet/deposit
-// Add funds to wallet (with admin fee waiver)
-// ============================================
+/**
+ * POST /api/wallet/deposit
+ * Add funds to wallet (with admin fee waiver)
+ */
 router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -233,15 +229,6 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
     paymentMethod: 'wallet',
     isAdmin: isAdmin,
     adminFeeWaived: isAdmin
-  });
-
-  logger.info('Deposit processed', {
-    userId: req.user._id,
-    amount: intentUsd,
-    campaignId,
-    transactionId: result.transactionId,
-    isAdmin: isAdmin,
-    feeWaived: isAdmin
   });
 
   res.json({
@@ -286,10 +273,10 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
   });
 }));
 
-// ============================================
-// POST /api/wallet/withdraw
-// Withdraw funds (with admin fee waiver)
-// ============================================
+/**
+ * POST /api/wallet/withdraw
+ * Withdraw funds (with admin fee waiver)
+ */
 router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -314,16 +301,6 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
     idempotencyKey,
     isAdmin: isAdmin,
     adminFeeWaived: isAdmin
-  });
-
-  logger.info('Withdrawal processed', {
-    userId: req.user._id,
-    amount: result.grossUsd,
-    netAmount: result.netToUserUsd,
-    method: payoutMethod,
-    transactionId: result.withdrawal._id,
-    isAdmin: isAdmin,
-    feeWaived: isAdmin
   });
 
   res.json({
@@ -414,10 +391,6 @@ router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) =
   });
 }));
 
-// ============================================
-// TIP (Fee hidden from user)
-// ============================================
-
 /**
  * POST /api/wallet/tip
  * Send a tip (fee is hidden from user but still charged)
@@ -434,7 +407,6 @@ router.post('/tip', tipValidation, catchAsync(async (req, res) => {
     throw new AppError('Invalid recipient or amount.', 400);
   }
 
-  // Find recipient by unique code or username
   const recipient = await User.findOne({
     $or: [
       { uniqueCode: recipientUniqueCode },
@@ -446,7 +418,8 @@ router.post('/tip', tipValidation, catchAsync(async (req, res) => {
     throw new AppError('Recipient not found', 404);
   }
 
-  // Process the tip (fee is calculated internally but not shown to user)
+  const { processTip } = require('../services/tipService');
+  
   const result = await processTip({
     fromUser: req.user,
     toCreatorId: recipient._id,
@@ -454,7 +427,6 @@ router.post('/tip', tipValidation, catchAsync(async (req, res) => {
     idempotencyKey
   });
   
-  // Return success without showing fee breakdown
   res.json({
     success: true,
     message: `Successfully tipped ${recipient.uniqueCode || recipient.username}`,
@@ -706,10 +678,6 @@ router.get('/spending', catchAsync(async (req, res) => {
   });
 }));
 
-// ============================================
-// M-Pesa Callback (Public)
-// ============================================
-
 /**
  * POST /api/wallet/mpesa-callback
  * M-Pesa payment callback endpoint (public)
@@ -799,7 +767,7 @@ router.get('/payment-methods', catchAsync(async (req, res) => {
 }));
 
 // ============================================
-// Exports - SINGLE ROUTER EXPORT (FIXED)
+// EXPORTS - SINGLE ROUTER EXPORT
 // ============================================
 
 module.exports = router;
