@@ -22,6 +22,7 @@ const { sendTip } = require('../controllers/wallet.controller');
 const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../services/exchangeRateService');
 const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
 const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -53,7 +54,6 @@ const withdrawalPreviewValidation = [
     .isLength({ min: 3, max: 3 }),
 ];
 
-// NEW: Deposit validation rules
 const depositValidation = [
   body('intentUsd')
     .isFloat({ min: 1 })
@@ -61,7 +61,6 @@ const depositValidation = [
     .toFloat(),
 ];
 
-// NEW: Withdraw validation rules
 const withdrawValidation = [
   body('payoutMethod')
     .isIn(['mpesa', 'paypal', 'swift', 'bank_transfer'])
@@ -204,7 +203,10 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   }
 
   const { intentUsd } = req.body;
-  const preview = await previewDeposit(intentUsd);
+  
+  // Check if admin (no fee for admin)
+  const isAdmin = req.user.role === 'admin';
+  const preview = await previewDeposit(intentUsd, isAdmin);
 
   res.json({
     success: true,
@@ -213,8 +215,8 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
 }));
 
 // ============================================
-// NEW: POST /api/wallet/deposit
-// Add funds to wallet (internal wallet transfer)
+// POST /api/wallet/deposit
+// Add funds to wallet (with admin fee waiver)
 // ============================================
 router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
@@ -223,30 +225,38 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   }
 
   const { intentUsd, campaignId, idempotencyKey } = req.body;
+  const isAdmin = req.user.role === 'admin';
 
   const result = await processDeposit({
     businessUser: req.user,
     intentUsd,
     campaignId,
     idempotencyKey,
-    paymentMethod: 'wallet'
+    paymentMethod: 'wallet',
+    isAdmin: isAdmin,
+    adminFeeWaived: isAdmin
   });
 
   logger.info('Deposit processed', {
     userId: req.user._id,
     amount: intentUsd,
     campaignId,
-    transactionId: result.transactionId
+    transactionId: result.transactionId,
+    isAdmin: isAdmin,
+    feeWaived: isAdmin
   });
 
   res.json({
     success: true,
-    message: `Successfully deposited $${intentUsd} to escrow.`,
+    message: isAdmin 
+      ? `Successfully deposited $${intentUsd} with NO fee (admin benefit).`
+      : `Successfully deposited $${intentUsd} to escrow.`,
     data: {
       transactionId: result.transactionId,
       breakdown: result.breakdown,
       escrowCredit: result.breakdown.escrowCreditUsd,
-      feePaid: result.breakdown.feeUsd
+      feePaid: isAdmin ? 0 : result.breakdown.feeUsd,
+      feeWaived: isAdmin
     }
   });
 }));
@@ -269,7 +279,8 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
     usdAmount = convertLocalToUsd(amountLocal, currency, rates);
   }
 
-  const preview = await previewWithdrawal(usdAmount, req.user.role);
+  const isAdmin = req.user.role === 'admin';
+  const preview = await previewWithdrawal(usdAmount, isAdmin);
 
   res.json({
     success: true,
@@ -278,8 +289,8 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
 }));
 
 // ============================================
-// NEW: POST /api/wallet/withdraw
-// Withdraw funds from wallet to external account
+// POST /api/wallet/withdraw
+// Withdraw funds (with admin fee waiver)
 // ============================================
 router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
@@ -293,6 +304,8 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
     throw new AppError('Provide amountUsd or amountLocal with currency', 400);
   }
 
+  const isAdmin = req.user.role === 'admin';
+
   const result = await processWithdrawal({
     user: req.user,
     amountUsd,
@@ -300,7 +313,9 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
     currency,
     payoutMethod,
     payoutDetails,
-    idempotencyKey
+    idempotencyKey,
+    isAdmin: isAdmin,
+    adminFeeWaived: isAdmin
   });
 
   logger.info('Withdrawal processed', {
@@ -308,7 +323,9 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
     amount: result.grossUsd,
     netAmount: result.netToUserUsd,
     method: payoutMethod,
-    transactionId: result.withdrawal._id
+    transactionId: result.withdrawal._id,
+    isAdmin: isAdmin,
+    feeWaived: isAdmin
   });
 
   res.json({
@@ -318,11 +335,12 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
       withdrawalId: result.withdrawal._id,
       transactionId: result.withdrawal.transactionId,
       amount: result.grossUsd,
-      fee: result.feeUsd,
-      netAmount: result.netToUserUsd,
+      fee: isAdmin ? 0 : result.feeUsd,
+      netAmount: isAdmin ? result.grossUsd : result.netToUserUsd,
       method: payoutMethod,
       status: result.withdrawal.status,
-      providerReference: result.payoutResult?.reference
+      providerReference: result.payoutResult?.reference,
+      feeWaived: isAdmin
     }
   });
 }));
@@ -399,16 +417,68 @@ router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) =
 }));
 
 // ============================================
-// NEW: GET /api/wallet/earnings
-// Get creator earnings overview (last 30 days)
+// TIP (Fee hidden from user)
 // ============================================
+
+/**
+ * POST /api/wallet/tip
+ * Send a tip (fee is hidden from user but still charged)
+ */
+router.post('/tip', tipValidation, catchAsync(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new AppError(errors.array()[0].msg, 400);
+  }
+
+  const { recipientUsername, recipientUniqueCode, amount, idempotencyKey, currency = 'USD' } = req.body;
+
+  if ((!recipientUsername && !recipientUniqueCode) || !amount || amount <= 0) {
+    throw new AppError('Invalid recipient or amount.', 400);
+  }
+
+  // Find recipient by unique code or username
+  const recipient = await User.findOne({
+    $or: [
+      { uniqueCode: recipientUniqueCode },
+      { username: recipientUsername }
+    ]
+  });
+
+  if (!recipient) {
+    throw new AppError('Recipient not found', 404);
+  }
+
+  // Process the tip (fee is calculated internally but not shown to user)
+  const result = await processTip({
+    fromUser: req.user,
+    toCreatorId: recipient._id,
+    grossUsd: amount,
+    idempotencyKey
+  });
+  
+  // Return success without showing fee breakdown
+  res.json({
+    success: true,
+    message: `Successfully tipped ${recipient.uniqueCode || recipient.username}`,
+    data: {
+      amount: amount,
+      currency: currency,
+      recipient: recipient.uniqueCode || recipient.username,
+      transactionId: result.tipTx._id
+    }
+  });
+}));
+
+/**
+ * GET /api/wallet/earnings
+ * Get creator earnings overview (last 30 days)
+ */
 router.get('/earnings', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - daysInt);
   
-  // Get all completed tip transactions where user is recipient
   const earningsData = await Transaction.aggregate([
     {
       $match: {
@@ -430,7 +500,6 @@ router.get('/earnings', catchAsync(async (req, res) => {
     { $sort: { '_id.date': 1 } }
   ]);
   
-  // Also get earnings from completed campaigns
   const campaignEarnings = await Transaction.aggregate([
     {
       $match: {
@@ -452,7 +521,6 @@ router.get('/earnings', catchAsync(async (req, res) => {
     { $sort: { '_id.date': 1 } }
   ]);
   
-  // Merge both sources
   const earningsMap = new Map();
   
   earningsData.forEach(item => {
@@ -477,7 +545,6 @@ router.get('/earnings', catchAsync(async (req, res) => {
     }
   });
   
-  // Generate date range labels
   const labels = [];
   const earnings = [];
   const tipsData = [];
@@ -496,7 +563,6 @@ router.get('/earnings', catchAsync(async (req, res) => {
     campaignsData.push(dayData.campaigns);
   }
   
-  // Calculate summary stats
   const totalTips = earningsData.reduce((sum, item) => sum + item.total, 0);
   const totalCampaigns = campaignEarnings.reduce((sum, item) => sum + item.total, 0);
   const totalEarnings = totalTips + totalCampaigns;
@@ -521,17 +587,16 @@ router.get('/earnings', catchAsync(async (req, res) => {
   });
 }));
 
-// ============================================
-// NEW: GET /api/wallet/spending
-// Get business spending overview (last 30 days)
-// ============================================
+/**
+ * GET /api/wallet/spending
+ * Get business spending overview (last 30 days)
+ */
 router.get('/spending', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - daysInt);
   
-  // Get all deposit transactions where user is sender
   const spendingData = await Transaction.aggregate([
     {
       $match: {
@@ -553,7 +618,6 @@ router.get('/spending', catchAsync(async (req, res) => {
     { $sort: { '_id.date': 1 } }
   ]);
   
-  // Also get campaign funding
   const campaignFunding = await Transaction.aggregate([
     {
       $match: {
@@ -600,7 +664,6 @@ router.get('/spending', catchAsync(async (req, res) => {
     }
   });
   
-  // Generate date range labels
   const labels = [];
   const spending = [];
   const depositsData = [];
@@ -621,7 +684,6 @@ router.get('/spending', catchAsync(async (req, res) => {
     feesData.push(dayData.fees);
   }
   
-  // Calculate summary stats
   const totalSpending = spendingData.reduce((sum, item) => sum + item.total, 0) +
                         campaignFunding.reduce((sum, item) => sum + item.total, 0);
   const totalFees = spendingData.reduce((sum, item) => sum + (item.fee || 0), 0);
