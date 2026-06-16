@@ -83,10 +83,6 @@
       flex-wrap: wrap;
       align-items: center;
     }
-    .profile-avatar-wrapper {
-      position: relative;
-      cursor: pointer;
-    }
     .profile-avatar {
       width: 80px;
       height: 80px;
@@ -99,38 +95,28 @@
       font-weight: bold;
       background-size: cover;
       background-position: center;
-    }
-    .avatar-edit-overlay {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      background: #ff8c42;
-      border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      border: 2px solid #0a0a0a;
       cursor: pointer;
+      position: relative;
     }
-    .avatar-remove-btn {
+    .profile-avatar .remove-avatar-btn {
       position: absolute;
-      top: -5px;
+      bottom: -5px;
       right: -5px;
       background: #f44336;
+      border: none;
       border-radius: 50%;
       width: 24px;
       height: 24px;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
       display: none;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      border: 2px solid #0a0a0a;
-      cursor: pointer;
     }
-    .avatar-remove-btn.show { display: flex; }
+    .profile-avatar:hover .remove-avatar-btn {
+      display: flex;
+    }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
     .unique-code {
@@ -229,6 +215,10 @@
     .social-status.error {
       background: rgba(244, 67, 54, 0.2);
       color: #f44336;
+    }
+    .social-status.info {
+      background: rgba(33, 150, 243, 0.2);
+      color: #2196f3;
     }
     .connected-badge {
       background: rgba(76, 175, 80, 0.2);
@@ -559,18 +549,6 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
     .deposit-btn {
       background: rgba(76, 175, 80, 0.2);
       border: 1px solid #4caf50;
@@ -641,15 +619,6 @@
       color: white;
     }
     
-    .view-all-link {
-      display: block;
-      text-align: center;
-      margin-top: 15px;
-      color: #ff8c42;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    
     .notification-bell {
       position: relative;
       cursor: pointer;
@@ -679,17 +648,13 @@
       z-index: 200;
       display: none;
     }
-    .notification-dropdown.show {
-      display: block;
-    }
+    .notification-dropdown.show { display: block; }
     .notification-item {
       padding: 12px;
       border-bottom: 1px solid rgba(255,255,255,0.05);
       cursor: pointer;
     }
-    .notification-item:hover {
-      background: rgba(255,140,66,0.1);
-    }
+    .notification-item:hover { background: rgba(255,140,66,0.1); }
     
     .back-to-top {
       position: fixed;
@@ -708,25 +673,12 @@
       visibility: hidden;
       transition: all 0.3s;
     }
-    .back-to-top.show {
-      opacity: 1;
-      visibility: visible;
-    }
-    .back-to-top:hover {
-      background: #e0662c;
-      transform: translateY(-3px);
-    }
+    .back-to-top.show { opacity: 1; visibility: visible; }
+    .back-to-top:hover { background: #e0662c; transform: translateY(-3px); }
     
-    .theme-toggle {
-      cursor: pointer;
-      font-size: 20px;
-    }
+    .theme-toggle { cursor: pointer; font-size: 20px; }
+    .mobile-menu-btn { display: none; font-size: 24px; cursor: pointer; }
     
-    .mobile-menu-btn {
-      display: none;
-      font-size: 24px;
-      cursor: pointer;
-    }
     @media (max-width: 768px) {
       .nav-icons { display: none; }
       .mobile-menu-btn { display: block; }
@@ -756,51 +708,8 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-    .skeleton-text {
-      height: 16px;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    .skeleton-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-    }
-
-    /* Deposit Modal Styles */
-    .deposit-methods {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .deposit-method-btn {
-      flex: 1;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,140,66,0.3);
-      padding: 10px;
-      border-radius: 40px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .deposit-method-btn.active {
-      background: #ff8c42;
-      border-color: #ff8c42;
-      color: white;
-    }
-    .deposit-fields {
-      display: none;
-      margin-top: 15px;
-    }
-    .deposit-fields.active { display: block; }
-    .deposit-fields input {
-      width: 100%;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,140,66,0.3);
-      padding: 12px;
-      border-radius: 30px;
-      margin-bottom: 10px;
-      color: white;
-    }
+    .skeleton-text { height: 16px; width: 100%; margin-bottom: 10px; }
+    .skeleton-avatar { width: 60px; height: 60px; border-radius: 50%; }
   </style>
 </head>
 <body>
@@ -827,10 +736,9 @@
 
 <div class="container">
   <div class="profile-banner">
-    <div class="profile-avatar-wrapper">
-      <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">C</div>
-      <div class="avatar-edit-overlay" onclick="openAvatarModal()"><i class="ri-camera-line"></i></div>
-      <div class="avatar-remove-btn" id="avatar-remove-btn" onclick="removeAvatar()"><i class="ri-close-line"></i></div>
+    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">
+      C
+      <button class="remove-avatar-btn" id="removeAvatarBtn" onclick="event.stopPropagation(); removeAvatar()">✕</button>
     </div>
     <div class="profile-info">
       <h2 id="profile-name">Loading... <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>
@@ -935,7 +843,7 @@
         <thead>
           <tr><th>Title</th><th>Budget</th><th>Status</th><th>Auto-Release</th><th>Action</th>
         </thead>
-        <tbody id="active-body"></tbody>
+        <tbody id="active-tbody"></tbody>
       </table>
     </div>
     <div id="active-pagination">
@@ -955,7 +863,7 @@
         <thead>
           <tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Auto-Release</th><th>Status</th>
         </thead>
-        <tbody id="review-body"></tbody>
+        <tbody id="review-tbody"></tbody>
       </table>
     </div>
     <div id="review-pagination">
@@ -975,7 +883,7 @@
         <thead>
           <tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th>
         </thead>
-        <tbody id="completed-body"></tbody>
+        <tbody id="completed-tbody"></tbody>
       </table>
     </div>
     <div id="completed-pagination">
@@ -991,7 +899,6 @@
       <button class="copy-btn" onclick="copyUniqueCode()">📋 Copy Code</button>
       <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
         <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
-        <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
         <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
       </div>
       <div style="margin-top: 20px;">
@@ -1094,13 +1001,12 @@
   <i class="ri-arrow-up-line"></i>
 </div>
 
-<!-- Avatar Modal -->
+<!-- Modals -->
 <div id="avatar-modal" class="modal">
   <div class="modal-content">
     <h3>Change Profile Picture</h3>
     <div class="avatar-preview" id="avatar-preview"></div>
     <input type="file" id="avatar-file" accept="image/jpeg,image/png,image/gif,image/webp">
-    <p style="font-size: 12px; color: #a08070;">Select an image file (JPEG, PNG, GIF, WEBP)</p>
     <div class="modal-buttons">
       <button class="save-btn" onclick="uploadAvatar()">Upload & Save</button>
       <button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button>
@@ -1108,12 +1014,11 @@
   </div>
 </div>
 
-<!-- Settings Modal -->
 <div id="settings-modal" class="modal">
   <div class="modal-content">
     <h3>Profile Settings</h3>
-    <input type="text" id="setting-stageName" placeholder="Stage Name / Display Name">
-    <input type="text" id="setting-niche" placeholder="Niche (e.g., Music, Art, Fitness)">
+    <input type="text" id="setting-stageName" placeholder="Stage Name">
+    <input type="text" id="setting-niche" placeholder="Niche">
     <div class="modal-buttons">
       <button class="save-btn" onclick="saveSettings()">Save Changes</button>
       <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
@@ -1121,7 +1026,6 @@
   </div>
 </div>
 
-<!-- Wallet Modal -->
 <div id="wallet-modal" class="modal">
   <div class="modal-content">
     <h3>Wallet Balance</h3>
@@ -1132,7 +1036,6 @@
   </div>
 </div>
 
-<!-- Transaction Modal -->
 <div id="txn-modal" class="modal">
   <div class="modal-content">
     <h3>Transaction History</h3>
@@ -1142,7 +1045,6 @@
   </div>
 </div>
 
-<!-- Project Modal -->
 <div id="project-modal" class="modal">
   <div class="modal-content">
     <h3 id="project-title">Project Details</h3>
@@ -1153,7 +1055,6 @@
   </div>
 </div>
 
-<!-- 2FA Modal -->
 <div id="2fa-modal" class="modal">
   <div class="modal-content">
     <h3>🔐 Setup Two-Factor Authentication</h3>
@@ -1170,7 +1071,6 @@
   </div>
 </div>
 
-<!-- Confirm Withdrawal Modal -->
 <div id="confirm-withdraw-modal" class="modal">
   <div class="modal-content">
     <h3>⚠️ Confirm Withdrawal</h3>
@@ -1182,7 +1082,6 @@
   </div>
 </div>
 
-<!-- Submit Work Modal -->
 <div id="submit-work-modal" class="modal">
   <div class="modal-content">
     <h3>📤 Submit Work</h3>
@@ -1208,18 +1107,15 @@
   <div class="modal-content">
     <h3>💰 Add Funds to Wallet</h3>
     <p style="margin-bottom: 15px;">Platform fee: <strong>10%</strong> (you pay extra)</p>
-    <div class="deposit-methods">
-      <div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')">M-Pesa</div>
-      <div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank Transfer</div>
-      <div class="deposit-method-btn" onclick="selectDepositMethod('paypal')">PayPal</div>
+    <div class="deposit-methods" style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer; text-align:center;">M-Pesa</div>
+      <div class="deposit-method-btn" onclick="selectDepositMethod('bank')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer; text-align:center;">Bank Transfer</div>
+      <div class="deposit-method-btn" onclick="selectDepositMethod('paypal')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer; text-align:center;">PayPal</div>
     </div>
     <div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
     <div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
     <div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
-    <div class="form-group">
-      <label>Amount to Deposit (USD)</label>
-      <input type="number" id="deposit-amount" placeholder="Enter amount">
-    </div>
+    <input type="number" id="deposit-amount" placeholder="Amount to Deposit (USD)" oninput="updateDepositPreview()">
     <div id="deposit-preview" style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
       💡 You pay: $0.00 (includes 10% fee)
     </div>
@@ -1238,7 +1134,6 @@
   // ============================================
   let currentUser = null;
   let selectedMethod = 'mpesa';
-  let selectedDepositMethod = 'mpesa';
   let exchangeRates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.79 };
   let projectsData = [];
   let pendingWithdrawAmount = null;
@@ -1320,7 +1215,7 @@
   function logout() { 
     localStorage.removeItem('pebeto_token'); 
     localStorage.removeItem('pebeto_user'); 
-    window.location.href = '/signup.html'; 
+    window.location.href = '/login.html'; 
   }
 
   async function fetchJSON(url, options = {}) {
@@ -1346,18 +1241,18 @@
         }
         if (data.type === 'new_tip') {
           loadWallet();
-          showToast(`💝 You received a tip of ${data.amount}!`, 'success');
-          addNotification(`💝 You received a tip of ${data.amount}!`);
+          showToast(`💝 You received a tip!`, 'success');
+          addNotification(`💝 You received a tip!`);
           loadTipsReceived();
         }
         if (data.type === 'campaign:work-approved') {
-          showToast(`✅ Work approved! Payment released for "${data.campaignTitle}"`, 'success');
+          showToast(`✅ Work approved! Payment released!`, 'success');
           loadCampaigns();
           loadWallet();
         }
         if (data.type === 'campaign:auto-release-warning') {
-          showToast(`⚠️ URGENT: "${data.campaignTitle}" will auto-release in ${data.daysRemaining} days!`, 'warning');
-          addNotification(`⚠️ AUTO-RELEASE WARNING: "${data.campaignTitle}" - ${data.daysRemaining} days remaining`);
+          showToast(`⚠️ URGENT: A campaign will auto-release soon!`, 'warning');
+          addNotification(`⚠️ AUTO-RELEASE WARNING: A campaign will auto-release soon!`);
           loadCampaigns();
         }
       };
@@ -1438,96 +1333,7 @@
   }
 
   // ============================================
-  // AVATAR FUNCTIONS (FIXED)
-  // ============================================
-  function previewAvatar() {
-    const file = document.getElementById('avatar-file').files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('avatar-preview').style.backgroundImage = `url(${e.target.result})`;
-        document.getElementById('avatar-preview').style.backgroundSize = 'cover';
-        document.getElementById('avatar-preview').style.backgroundPosition = 'center';
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  async function uploadAvatar() {
-    const fileInput = document.getElementById('avatar-file');
-    const file = fileInput.files[0];
-    if (!file) {
-      showToast('Please select an image file', 'error');
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('avatar', file);
-    
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const response = await fetch(`${API_BASE}/api/user/avatar`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-      const data = await response.json();
-      if (data.success) {
-        showToast('Profile picture updated!', 'success');
-        // Update local user data
-        if (currentUser) {
-          if (!currentUser.profile) currentUser.profile = {};
-          currentUser.profile.avatarUrl = data.data.avatarUrl;
-          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-        }
-        // Update UI
-        document.getElementById('avatar-header').style.backgroundImage = `url(${data.data.avatarUrl})`;
-        document.getElementById('avatar-header').innerHTML = '';
-        document.getElementById('profile-avatar').style.backgroundImage = `url(${data.data.avatarUrl})`;
-        document.getElementById('profile-avatar').innerHTML = '';
-        document.getElementById('avatar-remove-btn').classList.add('show');
-        closeModal('avatar-modal');
-        showToast('Profile picture updated successfully!', 'success');
-      } else {
-        showToast(data.message || 'Upload failed', 'error');
-      }
-    } catch(e) {
-      console.error('Avatar upload error:', e);
-      showToast('Error uploading image', 'error');
-    }
-  }
-
-  async function removeAvatar() {
-    if (!confirm('Remove your profile picture?')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const response = await fetch(`${API_BASE}/api/user/avatar`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        if (currentUser && currentUser.profile) {
-          currentUser.profile.avatarUrl = null;
-          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-        }
-        const initial = (currentUser?.profile?.stageName?.[0] || currentUser?.email?.[0] || 'C').toUpperCase();
-        document.getElementById('avatar-header').style.backgroundImage = '';
-        document.getElementById('avatar-header').innerHTML = initial;
-        document.getElementById('profile-avatar').style.backgroundImage = '';
-        document.getElementById('profile-avatar').innerHTML = initial;
-        document.getElementById('avatar-remove-btn').classList.remove('show');
-        showToast('Profile picture removed', 'success');
-      } else {
-        showToast(data.message || 'Failed to remove', 'error');
-      }
-    } catch(e) {
-      showToast('Error removing avatar', 'error');
-    }
-  }
-
-  // ============================================
-  // SOCIAL LINKS (FIXED)
+  // SOCIAL LINKS
   // ============================================
   function updateConnectedBadges() {
     const tiktokUrl = document.getElementById('tiktokUrl').value;
@@ -1550,25 +1356,14 @@
   }
 
   function confirmRemoveLink(platform) {
-    const platformName = platform === 'tiktok' ? 'TikTok' : 'YouTube';
-    if (confirm(`Are you sure you want to remove your ${platformName} link? This will also remove it from the community.`)) {
-      removeSocialLink(platform);
+    if (confirm(`Are you sure you want to remove your ${platform === 'tiktok' ? 'TikTok' : 'YouTube'} link? This will also remove your content from the community.`)) {
+      if (platform === 'tiktok') {
+        document.getElementById('tiktokUrl').value = '';
+      } else {
+        document.getElementById('youtubeUrl').value = '';
+      }
+      saveSocialLinks(true);
     }
-  }
-
-  async function removeSocialLink(platform) {
-    if (platform === 'tiktok') {
-      document.getElementById('tiktokUrl').value = '';
-    } else {
-      document.getElementById('youtubeUrl').value = '';
-    }
-    
-    const statusDiv = document.getElementById('socialStatus');
-    statusDiv.style.display = 'block';
-    statusDiv.className = 'social-status info';
-    statusDiv.innerHTML = 'Removing link...';
-    
-    await saveSocialLinks(true);
   }
 
   async function saveSocialLinks(isRemoval = false) {
@@ -1621,9 +1416,7 @@
         updateConnectedBadges();
         showToast(isRemoval ? 'Link removed!' : 'Social links saved!', 'success');
         if (currentUser) {
-          if (!currentUser.socialLinks) currentUser.socialLinks = {};
-          currentUser.socialLinks.tiktok = tiktokUrl;
-          currentUser.socialLinks.youtube = youtubeUrl;
+          currentUser.socialLinks = { tiktok: tiktokUrl, youtube: youtubeUrl };
           localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
         }
       } else {
@@ -1642,7 +1435,92 @@
   }
 
   // ============================================
-  // SETTINGS (FIXED - username + niche only)
+  // AVATAR UPLOAD
+  // ============================================
+  function previewAvatar() {
+    const file = document.getElementById('avatar-file').files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('avatar-preview').style.backgroundImage = `url(${e.target.result})`;
+        document.getElementById('avatar-preview').style.backgroundSize = 'cover';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function uploadAvatar() {
+    const fileInput = document.getElementById('avatar-file');
+    const file = fileInput.files[0];
+    if (!file) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch(`${API_BASE}/api/user/avatar`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        showToast('Profile picture updated!', 'success');
+        if (currentUser) {
+          currentUser.profile.avatarUrl = data.avatarUrl;
+          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+        }
+        // Update avatar display immediately
+        document.getElementById('profile-avatar').style.backgroundImage = `url(${data.avatarUrl})`;
+        document.getElementById('profile-avatar').innerHTML = '';
+        document.getElementById('avatar-header').style.backgroundImage = `url(${data.avatarUrl})`;
+        document.getElementById('avatar-header').innerHTML = '';
+        document.getElementById('removeAvatarBtn').style.display = 'flex';
+        closeModal('avatar-modal');
+      } else {
+        showToast(data.message || 'Upload failed', 'error');
+      }
+    } catch(e) {
+      showToast('Error uploading image', 'error');
+    }
+  }
+
+  async function removeAvatar() {
+    if (!confirm('Are you sure you want to remove your profile picture?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const response = await fetch(`${API_BASE}/api/user/avatar`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        showToast('Profile picture removed', 'success');
+        if (currentUser && currentUser.profile) {
+          currentUser.profile.avatarUrl = null;
+          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+        }
+        // Reset avatar display
+        const initial = (currentUser?.profile?.stageName?.[0] || currentUser?.email?.[0] || 'C').toUpperCase();
+        document.getElementById('profile-avatar').style.backgroundImage = '';
+        document.getElementById('profile-avatar').innerHTML = initial;
+        document.getElementById('avatar-header').style.backgroundImage = '';
+        document.getElementById('avatar-header').innerHTML = initial;
+        document.getElementById('removeAvatarBtn').style.display = 'none';
+      } else {
+        showToast(data.message || 'Failed to remove avatar', 'error');
+      }
+    } catch(e) {
+      showToast('Error removing avatar', 'error');
+    }
+  }
+
+  // ============================================
+  // SETTINGS
   // ============================================
   async function saveSettings() {
     const token = localStorage.getItem('pebeto_token');
@@ -1679,6 +1557,58 @@
   }
 
   // ============================================
+  // DEPOSIT
+  // ============================================
+  function openDepositModal() {
+    document.getElementById('deposit-modal').style.display = 'flex';
+    updateDepositPreview();
+  }
+
+  let selectedDepositMethod = 'mpesa';
+
+  function selectDepositMethod(method) {
+    selectedDepositMethod = method;
+    document.querySelectorAll('.deposit-method-btn').forEach(btn => btn.style.background = 'rgba(255,255,255,0.05)');
+    document.querySelectorAll('.deposit-method-btn').forEach(btn => btn.style.borderColor = 'rgba(255,140,66,0.3)');
+    event.target.style.background = 'rgba(255,140,66,0.2)';
+    event.target.style.borderColor = '#ff8c42';
+    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none');
+    document.getElementById(`deposit-${method}-fields`).style.display = 'block';
+    updateDepositPreview();
+  }
+
+  function updateDepositPreview() {
+    const amount = parseFloat(document.getElementById('deposit-amount').value) || 0;
+    const fee = amount * 0.1;
+    const total = amount + fee;
+    document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${total.toFixed(2)} ($${amount} + $${fee.toFixed(2)} fee)`;
+  }
+
+  async function processDeposit() {
+    const amount = parseFloat(document.getElementById('deposit-amount').value);
+    if (!amount || amount <= 0) { showToast('Enter amount', 'error'); return; }
+    const total = amount + (amount * 0.1);
+    if (!confirm(`Deposit $${amount}? Total: $${total.toFixed(2)} (includes 10% fee)`)) return;
+    showToast('Processing payment...', 'info');
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/wallet/deposit`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ intentUsd: amount, paymentMethod: selectedDepositMethod }) 
+      });
+      const data = await res.json();
+      if (data.success) { 
+        showToast('Deposit successful!', 'success');
+        loadWallet(); 
+        closeModal('deposit-modal');
+      } else {
+        showToast(data.message || 'Deposit failed', 'error');
+      }
+    } catch(e) { showToast('Network error', 'error'); }
+  }
+
+  // ============================================
   // WALLET & TRANSACTIONS
   // ============================================
   async function loadWallet() {
@@ -1694,7 +1624,6 @@
         document.getElementById('wallet-detail-tips').innerHTML = formatMoney(tips);
         document.getElementById('wallet-detail-escrow').innerHTML = formatMoney(escrow);
         document.getElementById('total-tips').innerHTML = formatMoney(tips);
-        document.getElementById('tips-fee').innerHTML = formatMoney(tips * 0.05);
         document.getElementById('tips-net').innerHTML = formatMoney(tips * 0.95);
         updateWithdrawUI(available);
       }
@@ -1785,55 +1714,6 @@
     a.click();
     URL.revokeObjectURL(url);
     showToast('Transactions exported!', 'success');
-  }
-
-  // ============================================
-  // DEPOSIT (FIXED - opens deposit modal, not community)
-  // ============================================
-  function openDepositModal() {
-    document.getElementById('deposit-modal').style.display = 'flex';
-    updateDepositPreview();
-  }
-
-  function selectDepositMethod(method) {
-    selectedDepositMethod = method;
-    document.querySelectorAll('.deposit-method-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none');
-    document.getElementById(`deposit-${method}-fields`).style.display = 'block';
-    updateDepositPreview();
-  }
-
-  function updateDepositPreview() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value) || 0;
-    const fee = amount * 0.1;
-    const total = amount + fee;
-    document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${total.toFixed(2)} ($${amount} + $${fee.toFixed(2)} fee)`;
-  }
-
-  async function processDeposit() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value);
-    if (!amount || amount <= 0) { showToast('Enter amount', 'error'); return; }
-    const total = amount + (amount * 0.1);
-    if (!confirm(`Deposit $${amount}? Total: $${total.toFixed(2)} (includes 10% fee)`)) return;
-    showToast('Processing payment...', 'info');
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/wallet/deposit`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ intentUsd: amount, paymentMethod: selectedDepositMethod }) 
-      });
-      const data = await res.json();
-      if (data.success) { 
-        showToast('Deposit successful!', 'success');
-        loadWallet(); 
-        closeModal('deposit-modal');
-        document.getElementById('deposit-amount').value = '';
-      } else {
-        showToast(data.message || 'Deposit failed', 'error');
-      }
-    } catch(e) { showToast('Network error', 'error'); }
   }
 
   // ============================================
@@ -1944,7 +1824,7 @@
   }
 
   // ============================================
-  // CAMPAIGNS (FIXED - shows empty messages)
+  // CAMPAIGNS
   // ============================================
   async function loadCampaigns(append = false) {
     try {
@@ -1963,11 +1843,11 @@
         const completed = myProjects.filter(p => p.status === 'paid');
         
         // Render Active Projects
-        const activeBody = document.getElementById('active-body');
+        const activeTbody = document.getElementById('active-tbody');
         if (active.length === 0) {
-          activeBody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No active projects currently</div></td></tr>';
+          activeTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No active projects currently</div><\/td><\/tr>';
         } else {
-          activeBody.innerHTML = await Promise.all(active.map(async p => {
+          activeTbody.innerHTML = await Promise.all(active.map(async p => {
             const autoRelease = await getAutoReleaseStatus(p._id);
             const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr onclick="showProjectDetails('${p._id}')">
@@ -1980,11 +1860,11 @@
         }
         
         // Render Review Projects
-        const reviewBody = document.getElementById('review-body');
+        const reviewTbody = document.getElementById('review-tbody');
         if (review.length === 0) {
-          reviewBody.innerHTML = '<tr><td colspan="5"><div class="empty-state">You have no works under Review</div></td></tr>';
+          reviewTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">You have no works under Review</div><\/td><\/tr>';
         } else {
-          reviewBody.innerHTML = await Promise.all(review.map(async p => {
+          reviewTbody.innerHTML = await Promise.all(review.map(async p => {
             const autoRelease = await getAutoReleaseStatus(p._id);
             const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr onclick="showProjectDetails('${p._id}')">
@@ -1998,11 +1878,11 @@
         }
         
         // Render Completed Projects
-        const completedBody = document.getElementById('completed-body');
+        const completedTbody = document.getElementById('completed-tbody');
         if (completed.length === 0) {
-          completedBody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No completed works</div></td></tr>';
+          completedTbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No completed works</div><\/td><\/tr>';
         } else {
-          completedBody.innerHTML = completed.map(p => `<tr onclick="showProjectDetails('${p._id}')">
+          completedTbody.innerHTML = completed.map(p => `<tr onclick="showProjectDetails('${p._id}')">
             <td>${escapeHtml(p.title)}<\/td>
             <td>${formatMoney(p.budget)}<\/td>
             <td>${p.paidAt ? formatDate(p.paidAt) : formatDate(p.updatedAt)}<\/td>
@@ -2010,6 +1890,7 @@
           <\/tr>`).join('');
         }
         
+        // Show tables
         document.getElementById('active-skeleton').style.display = 'none';
         document.getElementById('active-table').style.display = 'table';
         document.getElementById('review-skeleton').style.display = 'none';
@@ -2090,16 +1971,15 @@
   }
 
   // ============================================
-  // GOOGLE DRIVE FUNCTIONS (FIXED - auth)
+  // GOOGLE DRIVE FUNCTIONS
   // ============================================
   async function checkDriveStatus() {
     try {
       const token = localStorage.getItem('pebeto_token');
-      if (!token) {
-        showToast('Please log in to connect Google Drive', 'error');
-        return;
-      }
-      const data = await fetchJSON(`${API_BASE}/api/drive/status`);
+      const response = await fetch(`${API_BASE}/api/drive/status`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
       if (data.success) {
         isDriveConnected = data.data.isConnected && data.data.isValid;
         const driveDiv = document.getElementById('driveStatus');
@@ -2126,8 +2006,7 @@
       showToast('Please log in first', 'error');
       return;
     }
-    // Open in new window to avoid navigation issues
-    window.open(`${API_BASE}/api/drive/auth`, '_blank');
+    window.location.href = `${API_BASE}/api/drive/auth`;
   }
 
   // File upload handlers
@@ -2485,14 +2364,14 @@
   // ============================================
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
-    if (!userStr) { window.location.href = '/signup.html'; return; }
+    if (!userStr) { window.location.href = '/login.html'; return; }
     currentUser = JSON.parse(userStr);
     document.getElementById('profile-name').innerHTML = `${currentUser.profile?.stageName || currentUser.email.split('@')[0]} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`;
     document.getElementById('profile-email').innerText = currentUser.email;
     document.getElementById('unique-code').innerText = currentUser.uniqueCode || 'Not assigned';
     document.getElementById('tip-code').innerText = currentUser.uniqueCode || 'Share your code';
     document.getElementById('profile-niche').innerHTML = `Niche: ${currentUser.profile?.niche || 'Not set'}`;
-    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
+    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'C').toUpperCase();
     document.getElementById('avatar-header').innerHTML = initial;
     document.getElementById('profile-avatar').innerHTML = initial;
     if (currentUser.profile?.avatarUrl) {
@@ -2500,7 +2379,9 @@
       document.getElementById('avatar-header').innerHTML = '';
       document.getElementById('profile-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
       document.getElementById('profile-avatar').innerHTML = '';
-      document.getElementById('avatar-remove-btn').classList.add('show');
+      document.getElementById('removeAvatarBtn').style.display = 'flex';
+    } else {
+      document.getElementById('removeAvatarBtn').style.display = 'none';
     }
     document.getElementById('setting-stageName').value = currentUser.profile?.stageName || '';
     document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
@@ -2529,18 +2410,6 @@
   function openAvatarModal() { 
     document.getElementById('avatar-modal').style.display = 'flex'; 
     document.getElementById('avatar-file').addEventListener('change', previewAvatar);
-  }
-
-  function resendVerification() {
-    fetch(`${API_BASE}/api/user/email/resend`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) showToast('Verification email sent!', 'success');
-      else showToast('Failed to send verification email', 'error');
-    });
   }
 
   // ============================================
