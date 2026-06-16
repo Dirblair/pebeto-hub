@@ -1,12 +1,3 @@
-/**
- * Wallet Routes for Pebeto Creator's Hub
- * 
- * Handles wallet operations including deposits, withdrawals,
- * balance inquiries, transactions, and tips.
- * 
- * @module routes/wallet
- */
-
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
@@ -28,94 +19,41 @@ const router = express.Router();
 // ============================================
 
 const depositPreviewValidation = [
-  body('intentUsd')
-    .optional()
-    .isFloat({ min: 1 })
-    .withMessage('Intent amount must be at least $1'),
+  body('intentUsd').optional().isFloat({ min: 1 }).withMessage('Intent amount must be at least $1'),
 ];
 
 const withdrawalPreviewValidation = [
-  body('amountUsd')
-    .optional()
-    .isFloat({ min: 0.01 })
-    .withMessage('Amount must be at least $0.01'),
-  body('amountLocal')
-    .optional()
-    .isFloat({ min: 0.01 })
-    .withMessage('Local amount must be positive'),
-  body('currency')
-    .optional()
-    .isString()
-    .isLength({ min: 3, max: 3 }),
+  body('amountUsd').optional().isFloat({ min: 0.01 }).withMessage('Amount must be at least $0.01'),
+  body('amountLocal').optional().isFloat({ min: 0.01 }).withMessage('Local amount must be positive'),
+  body('currency').optional().isString().isLength({ min: 3, max: 3 }),
 ];
 
 const depositValidation = [
-  body('intentUsd')
-    .isFloat({ min: 1 })
-    .withMessage('Deposit amount must be at least $1')
-    .toFloat(),
+  body('intentUsd').isFloat({ min: 1 }).withMessage('Deposit amount must be at least $1').toFloat(),
 ];
 
 const withdrawValidation = [
-  body('payoutMethod')
-    .isIn(['mpesa', 'paypal', 'swift', 'bank_transfer'])
-    .withMessage('Invalid payout method'),
-  body('payoutDetails')
-    .isObject()
-    .withMessage('Payout details are required'),
-  body('amountUsd')
-    .optional()
-    .isFloat({ min: 1 })
-    .withMessage('Amount in USD must be at least $1')
-    .toFloat(),
-  body('amountLocal')
-    .optional()
-    .isFloat({ min: 1 })
-    .withMessage('Amount in local currency must be at least 1')
-    .toFloat(),
-  body('currency')
-    .optional()
-    .isLength({ min: 3, max: 3 })
-    .withMessage('Currency must be a 3-letter code')
-    .toUpperCase(),
+  body('payoutMethod').isIn(['mpesa', 'paypal', 'swift', 'bank_transfer']).withMessage('Invalid payout method'),
+  body('payoutDetails').isObject().withMessage('Payout details are required'),
+  body('amountUsd').optional().isFloat({ min: 1 }).withMessage('Amount in USD must be at least $1').toFloat(),
+  body('amountLocal').optional().isFloat({ min: 1 }).withMessage('Amount in local currency must be at least 1').toFloat(),
+  body('currency').optional().isLength({ min: 3, max: 3 }).withMessage('Currency must be a 3-letter code').toUpperCase(),
 ];
 
 const tipValidation = [
-  body('recipientUsername')
-    .optional()
-    .isString()
-    .trim(),
-  body('recipientUniqueCode')
-    .optional()
-    .isString()
-    .trim(),
-  body('amount')
-    .isFloat({ min: 1 })
-    .withMessage('Tip amount must be at least $1'),
+  body('recipientUsername').optional().isString().trim(),
+  body('recipientUniqueCode').optional().isString().trim(),
+  body('amount').isFloat({ min: 1 }).withMessage('Tip amount must be at least $1'),
 ];
 
 const balanceValidation = [
-  query('userId')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid user ID'),
+  query('userId').optional().isMongoId().withMessage('Invalid user ID'),
 ];
 
 const transactionsValidation = [
-  query('page')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer')
-    .toInt(),
-  query('limit')
-    .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage('Limit must be between 1 and 100')
-    .toInt(),
-  query('type')
-    .optional()
-    .isIn(['deposit', 'withdrawal', 'tip', 'platform_fee', 'escrow_release'])
-    .withMessage('Invalid transaction type'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer').toInt(),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100').toInt(),
+  query('type').optional().isIn(['deposit', 'withdrawal', 'tip', 'platform_fee', 'escrow_release']).withMessage('Invalid transaction type'),
 ];
 
 // ============================================
@@ -140,10 +78,7 @@ function attachFeeService(req, res, next) {
 router.use(authenticate);
 router.use(attachFeeService);
 
-/**
- * GET /api/wallet/balance
- * Get user's wallet balance
- */
+// GET /api/wallet/balance
 router.get('/balance', balanceValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -185,27 +120,13 @@ router.get('/balance', balanceValidation, catchAsync(async (req, res) => {
   });
 }));
 
-/**
- * GET /api/wallet/exchange-rates
- * Get current exchange rates
- */
+// GET /api/wallet/exchange-rates
 router.get('/exchange-rates', catchAsync(async (req, res) => {
   const rates = await getRatesMap();
-  
-  res.json({
-    success: true,
-    data: {
-      base: 'USD',
-      rates,
-      timestamp: new Date().toISOString(),
-    },
-  });
+  res.json({ success: true, data: { base: 'USD', rates, timestamp: new Date().toISOString() } });
 }));
 
-/**
- * POST /api/wallet/deposit/preview
- * Preview deposit fees
- */
+// POST /api/wallet/deposit/preview
 router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -215,17 +136,10 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   const { intentUsd } = req.body;
   const isAdmin = req.user.role === 'admin';
   const preview = await previewDeposit(intentUsd, isAdmin);
-
-  res.json({
-    success: true,
-    data: preview,
-  });
+  res.json({ success: true, data: preview });
 }));
 
-/**
- * POST /api/wallet/deposit
- * Add funds to wallet (with admin fee waiver)
- */
+// POST /api/wallet/deposit
 router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -247,9 +161,7 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
 
   res.json({
     success: true,
-    message: isAdmin 
-      ? `Successfully deposited $${intentUsd} with NO fee (admin benefit).`
-      : `Successfully deposited $${intentUsd} to escrow.`,
+    message: isAdmin ? `Successfully deposited $${intentUsd} with NO fee.` : `Successfully deposited $${intentUsd}.`,
     data: {
       transactionId: result.transactionId,
       breakdown: result.breakdown,
@@ -260,10 +172,7 @@ router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   });
 }));
 
-/**
- * POST /api/wallet/withdraw/preview
- * Preview withdrawal fees
- */
+// POST /api/wallet/withdraw/preview
 router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -280,17 +189,10 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
 
   const isAdmin = req.user.role === 'admin';
   const preview = await previewWithdrawal(usdAmount, isAdmin);
-
-  res.json({
-    success: true,
-    data: preview,
-  });
+  res.json({ success: true, data: preview });
 }));
 
-/**
- * POST /api/wallet/withdraw
- * Withdraw funds (with admin fee waiver)
- */
+// POST /api/wallet/withdraw
 router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -334,10 +236,7 @@ router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
   });
 }));
 
-/**
- * GET /api/wallet/transactions
- * Get user's transaction history
- */
+// GET /api/wallet/transactions
 router.get('/transactions', transactionsValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -374,10 +273,7 @@ router.get('/transactions', transactionsValidation, catchAsync(async (req, res) 
   });
 }));
 
-/**
- * GET /api/wallet/withdrawals
- * Get user's withdrawal history
- */
+// GET /api/wallet/withdrawals
 router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -405,10 +301,7 @@ router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) =
   });
 }));
 
-/**
- * POST /api/wallet/tip
- * Send a tip (fee is hidden from user but still charged)
- */
+// POST /api/wallet/tip
 router.post('/tip', tipValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -453,10 +346,7 @@ router.post('/tip', tipValidation, catchAsync(async (req, res) => {
   });
 }));
 
-/**
- * GET /api/wallet/earnings
- * Get creator earnings overview (last 30 days)
- */
+// GET /api/wallet/earnings
 router.get('/earnings', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
@@ -464,55 +354,21 @@ router.get('/earnings', catchAsync(async (req, res) => {
   startDate.setDate(startDate.getDate() - daysInt);
   
   const earningsData = await Transaction.aggregate([
-    {
-      $match: {
-        toUserId: req.user._id,
-        type: 'tip',
-        status: 'completed',
-        createdAt: { $gte: startDate }
-      }
-    },
-    {
-      $group: {
-        _id: {
-          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
-        },
-        total: { $sum: '$netAmount' },
-        count: { $sum: 1 }
-      }
-    },
+    { $match: { toUserId: req.user._id, type: 'tip', status: 'completed', createdAt: { $gte: startDate } } },
+    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$netAmount' }, count: { $sum: 1 } } },
     { $sort: { '_id.date': 1 } }
   ]);
   
   const campaignEarnings = await Transaction.aggregate([
-    {
-      $match: {
-        toUserId: req.user._id,
-        type: 'escrow_release',
-        status: 'completed',
-        createdAt: { $gte: startDate }
-      }
-    },
-    {
-      $group: {
-        _id: {
-          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
-        },
-        total: { $sum: '$netAmount' },
-        count: { $sum: 1 }
-      }
-    },
+    { $match: { toUserId: req.user._id, type: 'escrow_release', status: 'completed', createdAt: { $gte: startDate } } },
+    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$netAmount' }, count: { $sum: 1 } } },
     { $sort: { '_id.date': 1 } }
   ]);
   
   const earningsMap = new Map();
   
   earningsData.forEach(item => {
-    earningsMap.set(item._id.date, {
-      tips: item.total,
-      campaigns: 0,
-      total: item.total
-    });
+    earningsMap.set(item._id.date, { tips: item.total, campaigns: 0, total: item.total });
   });
   
   campaignEarnings.forEach(item => {
@@ -521,11 +377,7 @@ router.get('/earnings', catchAsync(async (req, res) => {
       existing.campaigns = item.total;
       existing.total = existing.tips + item.total;
     } else {
-      earningsMap.set(item._id.date, {
-        tips: 0,
-        campaigns: item.total,
-        total: item.total
-      });
+      earningsMap.set(item._id.date, { tips: 0, campaigns: item.total, total: item.total });
     }
   });
   
@@ -556,25 +408,13 @@ router.get('/earnings', catchAsync(async (req, res) => {
     data: {
       labels,
       earnings,
-      breakdown: {
-        tips: tipsData,
-        campaigns: campaignsData
-      },
-      summary: {
-        totalEarnings,
-        totalTips,
-        totalCampaigns,
-        period: `${daysInt} days`,
-        averagePerDay: totalEarnings / daysInt
-      }
+      breakdown: { tips: tipsData, campaigns: campaignsData },
+      summary: { totalEarnings, totalTips, totalCampaigns, period: `${daysInt} days`, averagePerDay: totalEarnings / daysInt }
     }
   });
 }));
 
-/**
- * GET /api/wallet/spending
- * Get business spending overview (last 30 days)
- */
+// GET /api/wallet/spending
 router.get('/spending', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
@@ -582,55 +422,21 @@ router.get('/spending', catchAsync(async (req, res) => {
   startDate.setDate(startDate.getDate() - daysInt);
   
   const spendingData = await Transaction.aggregate([
-    {
-      $match: {
-        fromUserId: req.user._id,
-        type: 'deposit',
-        status: 'completed',
-        createdAt: { $gte: startDate }
-      }
-    },
-    {
-      $group: {
-        _id: {
-          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
-        },
-        total: { $sum: '$grossAmount' },
-        fee: { $sum: '$feeAmount' }
-      }
-    },
+    { $match: { fromUserId: req.user._id, type: 'deposit', status: 'completed', createdAt: { $gte: startDate } } },
+    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$grossAmount' }, fee: { $sum: '$feeAmount' } } },
     { $sort: { '_id.date': 1 } }
   ]);
   
   const campaignFunding = await Transaction.aggregate([
-    {
-      $match: {
-        fromUserId: req.user._id,
-        type: 'campaign_fund',
-        status: 'completed',
-        createdAt: { $gte: startDate }
-      }
-    },
-    {
-      $group: {
-        _id: {
-          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
-        },
-        total: { $sum: '$grossAmount' }
-      }
-    },
+    { $match: { fromUserId: req.user._id, type: 'campaign_fund', status: 'completed', createdAt: { $gte: startDate } } },
+    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } }, total: { $sum: '$grossAmount' } } },
     { $sort: { '_id.date': 1 } }
   ]);
   
   const spendingMap = new Map();
   
   spendingData.forEach(item => {
-    spendingMap.set(item._id.date, {
-      deposits: item.total,
-      fees: item.fee,
-      campaigns: 0,
-      total: item.total
-    });
+    spendingMap.set(item._id.date, { deposits: item.total, fees: item.fee, campaigns: 0, total: item.total });
   });
   
   campaignFunding.forEach(item => {
@@ -639,12 +445,7 @@ router.get('/spending', catchAsync(async (req, res) => {
       existing.campaigns = item.total;
       existing.total = existing.deposits + item.total;
     } else {
-      spendingMap.set(item._id.date, {
-        deposits: 0,
-        fees: 0,
-        campaigns: item.total,
-        total: item.total
-      });
+      spendingMap.set(item._id.date, { deposits: 0, fees: 0, campaigns: item.total, total: item.total });
     }
   });
   
@@ -668,8 +469,7 @@ router.get('/spending', catchAsync(async (req, res) => {
     feesData.push(dayData.fees);
   }
   
-  const totalSpending = spendingData.reduce((sum, item) => sum + item.total, 0) +
-                        campaignFunding.reduce((sum, item) => sum + item.total, 0);
+  const totalSpending = spendingData.reduce((sum, item) => sum + item.total, 0) + campaignFunding.reduce((sum, item) => sum + item.total, 0);
   const totalFees = spendingData.reduce((sum, item) => sum + (item.fee || 0), 0);
   
   res.json({
@@ -677,51 +477,26 @@ router.get('/spending', catchAsync(async (req, res) => {
     data: {
       labels,
       spending,
-      breakdown: {
-        deposits: depositsData,
-        campaigns: campaignsData,
-        fees: feesData
-      },
-      summary: {
-        totalSpending,
-        totalFees,
-        period: `${daysInt} days`,
-        averagePerDay: totalSpending / daysInt
-      }
+      breakdown: { deposits: depositsData, campaigns: campaignsData, fees: feesData },
+      summary: { totalSpending, totalFees, period: `${daysInt} days`, averagePerDay: totalSpending / daysInt }
     }
   });
 }));
 
-/**
- * POST /api/wallet/mpesa-callback
- * M-Pesa payment callback endpoint (public)
- */
+// POST /api/wallet/mpesa-callback
 router.post('/mpesa-callback', catchAsync(async (req, res) => {
   try {
     const callbackData = req.body.Body?.stkCallback;
-    
     if (!callbackData) {
-      logger.warn('M-Pesa callback received with no stkCallback data');
       return res.status(200).json({ ResultCode: 0, ResultDesc: "Success" });
     }
 
     const { ResultCode, ResultDesc, CheckoutRequestID } = callbackData;
-
-    logger.info('M-Pesa callback received', {
-      checkoutRequestId: CheckoutRequestID,
-      resultCode: ResultCode,
-      resultDesc: ResultDesc,
-    });
-
     const transaction = await Transaction.findOne({ 'metadata.checkoutRequestId': CheckoutRequestID });
     
     if (transaction) {
-      if (ResultCode === 0) {
-        transaction.status = 'completed';
-      } else {
-        transaction.status = 'failed';
-        transaction.errorMessage = ResultDesc;
-      }
+      transaction.status = ResultCode === 0 ? 'completed' : 'failed';
+      transaction.errorMessage = ResultDesc;
       transaction.completedAt = new Date();
       await transaction.save();
     }
@@ -733,55 +508,16 @@ router.post('/mpesa-callback', catchAsync(async (req, res) => {
   }
 }));
 
-/**
- * GET /api/wallet/payment-methods
- * Get available payment methods (public)
- */
+// GET /api/wallet/payment-methods
 router.get('/payment-methods', catchAsync(async (req, res) => {
-  const methods = [
-    {
-      id: 'mpesa',
-      name: 'M-Pesa',
-      region: 'Kenya',
-      type: 'mobile_money',
-      minAmount: 1,
-      maxAmount: 1150,
-      feePercentage: 10,
-      processingTime: 'Instant',
-      enabled: true,
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      region: 'Global',
-      type: 'digital_wallet',
-      minAmount: 1,
-      maxAmount: 10000,
-      feePercentage: 10,
-      processingTime: 'Instant',
-      enabled: false,
-    },
-    {
-      id: 'wire',
-      name: 'Wire Transfer',
-      region: 'International',
-      type: 'bank_transfer',
-      minAmount: 100,
-      maxAmount: 50000,
-      feePercentage: 10,
-      processingTime: '2-5 business days',
-      enabled: false,
-    },
-  ];
-
   res.json({
     success: true,
-    data: methods,
+    data: [
+      { id: 'mpesa', name: 'M-Pesa', region: 'Kenya', type: 'mobile_money', minAmount: 1, maxAmount: 1150, feePercentage: 10, processingTime: 'Instant', enabled: true },
+      { id: 'paypal', name: 'PayPal', region: 'Global', type: 'digital_wallet', minAmount: 1, maxAmount: 10000, feePercentage: 10, processingTime: 'Instant', enabled: false },
+      { id: 'wire', name: 'Wire Transfer', region: 'International', type: 'bank_transfer', minAmount: 100, maxAmount: 50000, feePercentage: 10, processingTime: '2-5 business days', enabled: false },
+    ]
   });
 }));
-
-// ============================================
-// EXPORTS - SINGLE ROUTER EXPORT
-// ============================================
 
 module.exports = router;
