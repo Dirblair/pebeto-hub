@@ -6,6 +6,7 @@
   <title>Community - Pebeto</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -138,6 +139,7 @@
       border-radius: 50px;
       padding: 4px;
       margin-bottom: 20px;
+      overflow-x: auto;
     }
     .feed-tab {
       flex: 1;
@@ -147,6 +149,9 @@
       cursor: pointer;
       transition: all 0.2s;
       font-weight: 500;
+      font-size: 13px;
+      white-space: nowrap;
+      min-width: 60px;
     }
     .feed-tab.active {
       background: #ff8c42;
@@ -278,7 +283,6 @@
       margin-top: 6px;
     }
     .follow-btn, .save-creator-btn {
-      margin-left: auto;
       background: rgba(255,140,66,0.15);
       border: 1px solid #ff8c42;
       padding: 6px 16px;
@@ -291,7 +295,12 @@
       background: #ff8c42;
       color: white;
     }
-    .video-embed-container { padding: 20px; background: #000; position: relative; }
+    .video-embed-container { 
+      padding: 20px; 
+      background: #000; 
+      position: relative;
+      min-height: 400px;
+    }
     .video-controls {
       position: absolute;
       bottom: 40px;
@@ -362,7 +371,7 @@
       border-top: 1px solid rgba(255,255,255,0.05);
       flex-wrap: wrap;
     }
-    .action-btn, .tip-btn, .profile-btn, .share-btn, .report-btn, .dm-btn {
+    .action-btn, .tip-btn, .profile-btn, .share-btn, .report-btn, .dm-btn, .bid-btn {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.2);
       padding: 8px 16px;
@@ -383,6 +392,8 @@
     .report-btn:hover { background: #ef4444; color: white; }
     .dm-btn { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #3b82f6; }
     .dm-btn:hover { background: #3b82f6; color: white; }
+    .bid-btn { background: rgba(34,197,94,0.15); border-color: #4caf50; color: #4ade80; }
+    .bid-btn:hover { background: #4caf50; color: white; }
     .like-animation {
       position: fixed;
       pointer-events: none;
@@ -434,23 +445,45 @@
     .save-btn { background: #ff8c42; color: white; }
     .cancel-btn { background: rgba(255,255,255,0.1); color: white; }
     .comments-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
-    .comment-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; }
+    .comment-item { 
+      display: flex; 
+      gap: 10px; 
+      padding: 10px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.05); 
+      position: relative; 
+      align-items: flex-start;
+    }
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff8c42, #e0662c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .comment-content { flex: 1; }
+    .comment-author { font-weight: 600; font-size: 13px; }
+    .comment-text { font-size: 14px; margin-top: 2px; }
+    .comment-time { font-size: 11px; color: #a08070; margin-top: 4px; }
     .comment-actions {
-      position: absolute;
-      right: 0;
-      top: 10px;
       display: flex;
       gap: 8px;
+      margin-top: 4px;
     }
     .comment-actions button {
       background: none;
       border: none;
       color: #a08070;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
     }
+    .comment-actions button:hover { color: #ff8c42; }
     .reply-form {
-      margin-left: 40px;
+      margin-left: 42px;
       margin-top: 10px;
       display: flex;
       gap: 8px;
@@ -459,9 +492,10 @@
       flex: 1;
       background: rgba(255,255,255,0.05);
       border: none;
-      padding: 8px;
+      padding: 8px 12px;
       border-radius: 20px;
       color: white;
+      outline: none;
     }
     .bottom-nav {
       position: fixed;
@@ -500,6 +534,7 @@
       z-index: 2001;
       animation: slideUp 0.3s ease;
       white-space: nowrap;
+      max-width: 90%;
     }
     @keyframes slideUp {
       from { transform: translateX(-50%) translateY(100%); opacity: 0; }
@@ -714,6 +749,17 @@
       gap: 10px;
     }
     
+    .bid-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,140,66,0.2);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+    .bid-card h4 { color: #ff8c42; margin-bottom: 8px; }
+    .bid-card .bid-details { color: #a08070; font-size: 13px; }
+    .bid-actions { display: flex; gap: 10px; margin-top: 12px; }
+    
     @media (max-width: 768px) {
       .search-bar { display: none; }
       .feed-container { padding: 15px; padding-bottom: 80px; }
@@ -724,6 +770,8 @@
       .toast { white-space: normal; max-width: 90%; text-align: center; }
       .chat-panel { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; }
       .chat-toggle-btn { bottom: 70px; right: 15px; }
+      .feed-tabs { gap: 2px; }
+      .feed-tab { font-size: 11px; padding: 8px; min-width: 50px; }
     }
     @media (prefers-contrast: high) {
       .creator-card { border: 2px solid #ff8c42; }
@@ -732,6 +780,11 @@
     .keyboard-focus:focus-visible {
       outline: 2px solid #ff8c42;
       outline-offset: 2px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #a08070;
     }
   </style>
   <link rel="manifest" href="/manifest.json">
@@ -765,6 +818,7 @@
     <div class="feed-tab" data-feed="following" onclick="switchFeedTab('following')">Following</div>
     <div class="feed-tab" data-feed="saved" onclick="switchFeedTab('saved')">Saved</div>
     <div class="feed-tab" data-feed="trending" onclick="switchFeedTab('trending')">🔥 Trending</div>
+    <div class="feed-tab" data-feed="bid" onclick="switchFeedTab('bid')">💰 Bid</div>
   </div>
 
   <div class="filter-sort-bar">
@@ -794,6 +848,7 @@
 <div class="bottom-nav">
   <div class="bottom-nav-item active" data-nav="foryou" onclick="switchFeedTab('foryou')"><i class="ri-home-5-line"></i><span>Home</span></div>
   <div class="bottom-nav-item" data-nav="trending" onclick="switchFeedTab('trending')"><i class="ri-fire-line"></i><span>Trending</span></div>
+  <div class="bottom-nav-item" data-nav="bid" onclick="switchFeedTab('bid')"><i class="ri-money-dollar-circle-line"></i><span>Bid</span></div>
   <div class="bottom-nav-item" data-nav="notifications" onclick="toggleNotifications()"><i class="ri-notification-3-line"></i><span>Alerts</span></div>
   <div class="bottom-nav-item" data-nav="profile" onclick="goToDashboard()"><i class="ri-user-line"></i><span>Profile</span></div>
 </div>
@@ -834,7 +889,8 @@
     </select>
     <div id="mpesa-details" style="display: none;"><input type="tel" id="mpesa-phone" placeholder="M-Pesa Phone (254712345678)"></div>
     <div id="paypal-details" style="display: none;"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
-    <div style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
+    <!-- Fee breakdown hidden from user -->
+    <div style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px; display: none;">
       💡 5% fee | Creator gets: <span id="creator-receives">0.00</span>
     </div>
     <div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send Tip</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div>
@@ -845,16 +901,8 @@
   <div class="modal-content">
     <h3>💬 Comments</h3>
     <div id="comments-list" class="comments-list"></div>
-    <div style="display: flex; gap: 10px;"><input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;"><button class="save-btn" onclick="addComment()">Post</button></div>
+    <div style="display: flex; gap: 10px;"><input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:30px; color:white;"><button class="save-btn" onclick="addComment()">Post</button></div>
     <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('comments-modal')">Close</button></div>
-  </div>
-</div>
-
-<div id="edit-comment-modal" class="modal">
-  <div class="modal-content">
-    <h3>✏️ Edit Comment</h3>
-    <input type="text" id="edit-comment-text" placeholder="Edit your comment...">
-    <div class="modal-buttons"><button class="save-btn" onclick="saveEditedComment()">Save</button><button class="cancel-btn" onclick="closeModal('edit-comment-modal')">Cancel</button></div>
   </div>
 </div>
 
@@ -866,14 +914,8 @@
       <button class="save-btn" onclick="shareTo('twitter')"><i class="ri-twitter-line"></i> Twitter</button>
       <button class="save-btn" onclick="shareTo('facebook')"><i class="ri-facebook-line"></i> Facebook</button>
       <button class="save-btn" onclick="shareTo('whatsapp')"><i class="ri-whatsapp-line"></i> WhatsApp</button>
-      <button class="save-btn" onclick="shareTo('instagram')"><i class="ri-instagram-line"></i> Instagram</button>
-      <button class="save-btn" onclick="shareTo('threads')"><i class="ri-threads-line"></i> Threads</button>
       <button class="save-btn" onclick="copyShareLink()"><i class="ri-link"></i> Copy Link</button>
-      <button class="save-btn" onclick="shareNative()"><i class="ri-share-line"></i> Share (Native)</button>
-    </div>
-    <div style="margin: 15px 0; text-align: center;">
-      <canvas id="qr-code-canvas" style="width: 120px; height: 120px; background: white; border-radius: 12px; display: none;"></canvas>
-      <button class="btn-action" onclick="showQRCode()">Show QR Code</button>
+      <button class="save-btn" onclick="shareNative()"><i class="ri-share-line"></i> Share</button>
     </div>
     <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('share-modal')">Close</button></div>
   </div>
@@ -903,11 +945,13 @@
   </div>
 </div>
 
-<div id="confirm-modal" class="modal">
+<div id="bid-modal" class="modal">
   <div class="modal-content">
-    <h3 id="confirm-title">Confirm Action</h3>
-    <p id="confirm-message"></p>
-    <div class="modal-buttons"><button class="save-btn" id="confirm-yes-btn">Yes</button><button class="cancel-btn" onclick="closeModal('confirm-modal')">Cancel</button></div>
+    <h3>💰 Place Bid</h3>
+    <p id="bid-campaign-name" style="margin-bottom: 15px;"></p>
+    <input type="number" id="bid-amount" placeholder="Your bid amount (USD)" min="1">
+    <textarea id="bid-proposal" rows="3" placeholder="Tell the brand why you're the right creator..."></textarea>
+    <div class="modal-buttons"><button class="save-btn" onclick="submitBid()">Submit Bid</button><button class="cancel-btn" onclick="closeModal('bid-modal')">Cancel</button></div>
   </div>
 </div>
 
@@ -933,11 +977,11 @@
   let pendingComment = false;
   let pendingTip = false;
   let currentCommentCreatorId = null;
-  let currentEditingComment = null;
   let currentTipCreatorId = null, currentTipCreatorName = '', selectedPaymentSource = 'wallet';
   let currentShareCreatorId = null, currentShareCreatorName = '';
   let currentReportCreatorId = null, currentReportCreatorName = '';
   let currentDMRecipientId = null, currentDMRecipientName = '';
+  let currentBidCampaignId = null, currentBidCampaignTitle = '';
   let isLoading = false;
   let hasMore = true;
   let virtualScrollObserver = null;
@@ -945,6 +989,7 @@
   let debounceTimer = null;
   let cache = new Map();
   let autoRefreshInterval = null;
+  let allCampaigns = [];
   
   // Video autoplay tracking
   let currentlyPlayingVideo = null;
@@ -958,6 +1003,10 @@
   let typingTimeout = null;
   let chatPanelOpen = false;
 
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
+  
   function showToast(msg) { 
     const t = document.createElement('div'); 
     t.className = 'toast'; 
@@ -965,15 +1014,18 @@
     document.body.appendChild(t); 
     setTimeout(() => t.remove(), 3000); 
   }
+  
   function formatMoney(amt) { return `$${(amt || 0).toFixed(2)}`; }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   function logout() { localStorage.clear(); showToast('Logged out'); setTimeout(() => window.location.href = '/login.html', 500); }
   function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+  
   function formatNumber(num) { 
     if (num >= 1000000) return (num/1000000).toFixed(1) + 'M'; 
     if (num >= 1000) return (num/1000).toFixed(1) + 'K'; 
     return num.toString(); 
   }
+  
   function formatTimeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
@@ -985,16 +1037,22 @@
     if (days < 7) return `${days}d ago`;
     return new Date(date).toLocaleDateString();
   }
+  
   function formatDateTime(date) {
     return new Date(date).toLocaleString();
   }
 
+  // ============================================
+  // THEME & UI
+  // ============================================
+  
   function toggleTheme() { 
     document.body.classList.toggle('light-theme'); 
     localStorage.setItem('pebeto_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
   }
 
   function toggleNotifications() { document.getElementById('notification-dropdown').classList.toggle('show'); }
+  
   function addNotification(msg) { 
     notifications.unshift({ message: msg, time: new Date(), read: false }); 
     const unread = notifications.filter(n => !n.read).length;
@@ -1003,8 +1061,33 @@
     badge.innerText = unread > 9 ? '9+' : unread;
     document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,10).map(n => `<div class="notification-item" onclick="markNotificationRead(this)">${n.message}<br><small>${formatDateTime(n.time)}</small></div>`).join(''); 
   }
-  function markNotificationRead(el) { el.style.opacity = '0.5'; }
+  
+  function markNotificationRead(el) { 
+    el.style.opacity = '0.5'; 
+    // Find and mark as read
+    const text = el.querySelector('div')?.innerText;
+    if (text) {
+      const notif = notifications.find(n => n.message === text);
+      if (notif) notif.read = true;
+      updateNotificationBadge();
+    }
+  }
+  
+  function updateNotificationBadge() {
+    const unread = notifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notification-badge');
+    if (unread > 0) {
+      badge.style.display = 'flex';
+      badge.innerText = unread > 9 ? '9+' : unread;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
 
+  // ============================================
+  // API HELPERS
+  // ============================================
+  
   async function fetchJSON(url, opts) { 
     const token = localStorage.getItem('pebeto_token'); 
     if (cache.has(url) && !opts?.noCache) return cache.get(url);
@@ -1015,6 +1098,10 @@
     return data; 
   }
 
+  // ============================================
+  // NAVIGATION
+  // ============================================
+  
   function goToDashboard() { 
     const token = localStorage.getItem('pebeto_token');
     if (!token) { window.location.href = '/login.html'; return; }
@@ -1030,6 +1117,10 @@
     } else { window.location.href = '/login.html'; }
   }
 
+  // ============================================
+  // SEARCH
+  // ============================================
+  
   function saveSearchHistory(query) {
     if (!query) return;
     searchHistory = searchHistory.filter(q => q !== query);
@@ -1037,6 +1128,7 @@
     if (searchHistory.length > 5) searchHistory.pop();
     localStorage.setItem('pebeto_search_history', JSON.stringify(searchHistory));
   }
+  
   function showSearchHistory() {
     const history = JSON.parse(localStorage.getItem('pebeto_search_history') || '[]');
     const dropdown = document.getElementById('search-history-dropdown');
@@ -1047,6 +1139,7 @@
     dropdown.classList.add('show');
     setTimeout(() => dropdown.classList.remove('show'), 3000);
   }
+  
   function setSearch(query) {
     document.getElementById('global-search').value = query;
     searchGlobal();
@@ -1057,6 +1150,10 @@
     debounceTimer = setTimeout(() => { searchGlobal(); }, 300);
   }
 
+  // ============================================
+  // FEED TABS
+  // ============================================
+  
   function switchFeedTab(tab) {
     currentFeedTab = tab;
     document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
@@ -1065,29 +1162,142 @@
     document.querySelector(`.bottom-nav-item[data-nav="${tab}"]`)?.classList.add('active');
     currentOffset = 0;
     filteredCreators = [];
-    applyFiltersAndSort();
+    
+    if (tab === 'bid') {
+      loadBidCampaigns();
+    } else {
+      applyFiltersAndSort();
+    }
   }
 
+  // ============================================
+  // BID TAB
+  // ============================================
+  
+  async function loadBidCampaigns() {
+    const container = document.getElementById('feed-content');
+    container.innerHTML = '<div class="loading-spinner">Loading campaigns...</div>';
+    
+    try {
+      const data = await fetchJSON(`${API_BASE}/api/campaigns?status=open`);
+      if (data.success && data.data.campaigns) {
+        allCampaigns = data.data.campaigns;
+        const unbiddedCampaigns = allCampaigns.filter(c => {
+          // Check if user has already bid on this campaign
+          const userBid = c.bids?.find(b => b.creatorId === currentUser?._id);
+          return !userBid && c.status === 'open';
+        });
+        
+        if (unbiddedCampaigns.length === 0) {
+          container.innerHTML = '<div class="empty-state">No unbidded campaigns available right now. Check back later!</div>';
+        } else {
+          container.innerHTML = unbiddedCampaigns.map(c => `
+            <div class="bid-card">
+              <h4>${escapeHtml(c.title)}</h4>
+              <div class="bid-details">
+                <p>💰 Budget: ${formatMoney(c.budget)}</p>
+                <p>🏢 Business: ${escapeHtml(c.businessId?.profile?.companyName || c.businessId?.email || 'Anonymous')}</p>
+                <p>📝 ${escapeHtml(c.description?.substring(0, 100) || 'No description')}${c.description?.length > 100 ? '...' : ''}</p>
+                ${c.deadline ? `<p>⏰ Deadline: ${formatDate(c.deadline)}</p>` : ''}
+              </div>
+              <div class="bid-actions">
+                <button class="btn-action" onclick="openBidModal('${c._id}', '${escapeHtml(c.title)}')">Place Bid</button>
+                <button class="btn-action" onclick="viewCampaignDetails('${c._id}')">View Details</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } else {
+        container.innerHTML = '<div class="empty-state">No campaigns available</div>';
+      }
+    } catch (error) {
+      console.error('Error loading bid campaigns:', error);
+      container.innerHTML = '<div class="empty-state">Error loading campaigns</div>';
+    }
+  }
+
+  function openBidModal(campaignId, campaignTitle) {
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      showToast('Please log in to place a bid');
+      window.location.href = '/login.html';
+      return;
+    }
+    currentBidCampaignId = campaignId;
+    currentBidCampaignTitle = campaignTitle;
+    document.getElementById('bid-campaign-name').innerHTML = `Placing bid for: <strong>${escapeHtml(campaignTitle)}</strong>`;
+    document.getElementById('bid-modal').style.display = 'flex';
+    document.getElementById('bid-amount').value = '';
+    document.getElementById('bid-proposal').value = '';
+  }
+
+  async function submitBid() {
+    const amount = parseFloat(document.getElementById('bid-amount').value);
+    const proposal = document.getElementById('bid-proposal').value.trim();
+    
+    if (!amount || amount <= 0) {
+      showToast('Please enter a valid bid amount', 'error');
+      return;
+    }
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) {
+      showToast('Please log in to place a bid');
+      window.location.href = '/login.html';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/campaigns/${currentBidCampaignId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount, proposal })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        showToast(`✅ Bid of ${formatMoney(amount)} placed successfully!`);
+        closeModal('bid-modal');
+        loadBidCampaigns();
+        addNotification(`You placed a bid on "${currentBidCampaignTitle}"`);
+      } else {
+        showToast(data.message || 'Failed to place bid', 'error');
+      }
+    } catch (error) {
+      console.error('Error placing bid:', error);
+      showToast('Error placing bid', 'error');
+    }
+  }
+
+  function viewCampaignDetails(campaignId) {
+    window.open(`/campaign.html?id=${campaignId}`, '_blank');
+  }
+
+  // ============================================
+  // SAVE/FOLLOW/BLOCK/MUTE
+  // ============================================
+  
   function toggleSaveCreator(creatorId, btn) {
     if (savedCreators.has(creatorId)) { savedCreators.delete(creatorId); btn.classList.remove('saved'); btn.innerText = 'Save'; showToast('Removed from saved'); }
     else { savedCreators.add(creatorId); btn.classList.add('saved'); btn.innerText = 'Saved'; showToast('Saved to your collection'); addNotification('Creator saved to your collection'); }
     localStorage.setItem('pebeto_saved_creators', JSON.stringify([...savedCreators]));
   }
+  
   function blockCreator(creatorId, creatorName) {
-    document.getElementById('confirm-title').innerText = 'Block Creator';
-    document.getElementById('confirm-message').innerHTML = `Are you sure you want to block ${creatorName}? You won't see their content.`;
-    document.getElementById('confirm-yes-btn').onclick = () => {
+    if (confirm(`Block ${creatorName}? You won't see their content.`)) {
       blockedCreators.add(creatorId);
       localStorage.setItem('pebeto_blocked_creators', JSON.stringify([...blockedCreators]));
       applyFiltersAndSort();
-      closeModal('confirm-modal');
       showToast(`${creatorName} blocked`);
-    };
-    document.getElementById('confirm-modal').style.display = 'flex';
+    }
   }
+  
   function muteCreator(creatorId, creatorName) {
     if (mutedCreators.has(creatorId)) { mutedCreators.delete(creatorId); showToast(`${creatorName} unmuted`); }
-    else { mutedCreators.add(creatorId); showToast(`${creatorName} muted - you won't see their content`); }
+    else { mutedCreators.add(creatorId); showToast(`${creatorName} muted`); }
     localStorage.setItem('pebeto_muted_creators', JSON.stringify([...mutedCreators]));
     applyFiltersAndSort();
   }
@@ -1103,6 +1313,10 @@
     if (followingSaved) following = new Set(JSON.parse(followingSaved));
   }
 
+  // ============================================
+  // PAYMENT SOURCE
+  // ============================================
+  
   function selectPaymentSource(source) {
     selectedPaymentSource = source;
     document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
@@ -1111,16 +1325,19 @@
     document.getElementById('mpesa-details').style.display = source === 'mpesa' ? 'block' : 'none';
     document.getElementById('paypal-details').style.display = source === 'paypal' ? 'block' : 'none';
   }
-  function updateCreatorReceives() { const amt = parseFloat(document.getElementById('tip-amount').value) || 0; document.getElementById('creator-receives').innerHTML = (amt * 0.95).toFixed(2); }
+  
   function validateTipAmount() { 
     const amt = parseFloat(document.getElementById('tip-amount').value) || 0;
     if (amt < 1 && amt > 0) { document.getElementById('tip-amount').value = 1; }
     const warning = document.getElementById('balance-warning');
     if (selectedPaymentSource === 'wallet' && amt > userWalletBalance) { warning.style.display = 'block'; }
     else { warning.style.display = 'none'; }
-    updateCreatorReceives();
   }
 
+  // ============================================
+  // WALLET BALANCE
+  // ============================================
+  
   async function loadUserBalance() {
     try {
       const token = localStorage.getItem('pebeto_token');
@@ -1130,6 +1347,10 @@
     } catch(e) {}
   }
 
+  // ============================================
+  // LOAD CREATORS
+  // ============================================
+  
   async function loadCreators() {
     try {
       const response = await fetch(`${API_BASE}/api/creators`);
@@ -1167,6 +1388,10 @@
     }
   }
 
+  // ============================================
+  // FILTER & SORT
+  // ============================================
+  
   function applyFiltersAndSort() {
     let filtered = [...allCreators];
     if (blockedCreators.size > 0) filtered = filtered.filter(c => !blockedCreators.has(c._id));
@@ -1186,6 +1411,10 @@
     renderFeed();
   }
 
+  // ============================================
+  // VIDEO AUTO-PLAY
+  // ============================================
+  
   function setupVideoAutoplay() {
     if (videoObserver) videoObserver.disconnect();
     videoObserver = new IntersectionObserver((entries) => {
@@ -1221,6 +1450,10 @@
     });
   }
 
+  // ============================================
+  // VIRTUAL SCROLL & INFINITE SCROLL
+  // ============================================
+  
   function setupVirtualScroll() {
     if (virtualScrollObserver) virtualScrollObserver.disconnect();
     const container = document.getElementById('feed-content');
@@ -1238,7 +1471,7 @@
 
   function setupInfiniteScroll() {
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isLoading && hasMore) {
+      if (entries[0].isIntersecting && !isLoading && hasMore && currentFeedTab !== 'bid') {
         loadMoreCreators();
       }
     }, { threshold: 0.1 });
@@ -1247,7 +1480,7 @@
   }
 
   function loadMoreCreators() {
-    if (isLoading || currentOffset >= filteredCreators.length) {
+    if (isLoading || currentOffset >= filteredCreators.length || currentFeedTab === 'bid') {
       hasMore = false;
       return;
     }
@@ -1259,6 +1492,10 @@
     isLoading = false;
   }
 
+  // ============================================
+  // RENDER FEED
+  // ============================================
+  
   function renderFeed() {
     const container = document.getElementById('feed-content');
     const toRender = filteredCreators.slice(0, PAGE_SIZE);
@@ -1277,14 +1514,15 @@
     setTimeout(setupVideoAutoplay, 100);
   }
 
+  // ============================================
+  // VIDEO CONTROLS
+  // ============================================
+  
   function unmuteVideo(btn, iframe) {
     if (iframe && iframe.src.includes('youtube')) {
       iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
       btn.innerHTML = '<i class="ri-volume-up-line"></i>';
       btn.onclick = () => muteVideo(btn, iframe);
-      showToast('Sound enabled');
-    } else if (iframe && iframe.src.includes('tiktok')) {
-      showToast('Tap the TikTok video to unmute');
     }
   }
   
@@ -1293,10 +1531,128 @@
       iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
       btn.innerHTML = '<i class="ri-volume-mute-line"></i>';
       btn.onclick = () => unmuteVideo(btn, iframe);
-      showToast('Sound muted');
     }
   }
 
+  function toggleFullscreen(btn) {
+    const container = btn.closest('.video-embed-container');
+    if (container?.requestFullscreen) container.requestFullscreen();
+  }
+
+  // ============================================
+  // LIKE ANIMATION
+  // ============================================
+  
+  function showLikeAnimation(x, y) {
+    const anim = document.createElement('div');
+    anim.className = 'like-animation';
+    anim.innerHTML = '❤️';
+    anim.style.left = x + 'px';
+    anim.style.top = y + 'px';
+    document.body.appendChild(anim);
+    setTimeout(() => anim.remove(), 800);
+  }
+
+  // ============================================
+  // LIKE TOGGLE (PLATFORM-ONLY)
+  // ============================================
+  
+  async function toggleLike(event, button, creatorId) {
+    event.stopPropagation();
+    if (pendingLike) return;
+    pendingLike = true;
+    const rect = button.getBoundingClientRect();
+    showLikeAnimation(rect.left + rect.width/2, rect.top);
+    
+    const token = localStorage.getItem('pebeto_token');
+    if (!token) { showToast('Please log in to like'); window.location.href = '/login.html'; pendingLike = false; return; }
+    
+    const icon = button.querySelector('i'); 
+    const countSpan = button.querySelector('.like-count');
+    const isCurrentlyLiked = button.classList.contains('liked');
+    let currentCount = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
+    
+    if (isCurrentlyLiked) { 
+      button.classList.remove('liked'); 
+      icon.classList.replace('ri-heart-fill', 'ri-heart-line'); 
+      countSpan.innerText = formatNumber(Math.max(0, currentCount - 1)); 
+    } else { 
+      button.classList.add('liked'); 
+      icon.classList.replace('ri-heart-line', 'ri-heart-fill'); 
+      countSpan.innerText = formatNumber(currentCount + 1); 
+    }
+    
+    try {
+      const method = isCurrentlyLiked ? 'DELETE' : 'POST';
+      const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, { 
+        method, 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Update the count from server response
+        countSpan.innerText = formatNumber(data.likeCount || 0);
+        if (data.liked) {
+          button.classList.add('liked');
+          icon.classList.replace('ri-heart-line', 'ri-heart-fill');
+        } else {
+          button.classList.remove('liked');
+          icon.classList.replace('ri-heart-fill', 'ri-heart-line');
+        }
+        // Update local data
+        const creator = allCreators.find(c => c._id === creatorId);
+        if (creator) {
+          creator.likeCount = data.likeCount || 0;
+          creator.isLiked = data.liked || false;
+        }
+      }
+    } catch (error) { 
+      console.error('Error toggling like:', error);
+    }
+    pendingLike = false;
+  }
+
+  // ============================================
+  // FOLLOW TOGGLE
+  // ============================================
+  
+  async function toggleFollow(creatorId, btn) {
+    const isFollowing = following.has(creatorId);
+    if (isFollowing) { following.delete(creatorId); btn.classList.remove('following'); btn.innerText = 'Follow'; showToast('Unfollowed creator'); }
+    else { following.add(creatorId); btn.classList.add('following'); btn.innerText = 'Following'; showToast('Now following creator'); addNotification(`You started following a creator`); }
+    localStorage.setItem('pebeto_following', JSON.stringify([...following]));
+    if (currentFeedTab === 'following') applyFiltersAndSort();
+  }
+
+  // ============================================
+  // FILTER & SORT CONTROLS
+  // ============================================
+  
+  function filterByNiche(niche) { 
+    currentNicheFilter = niche; 
+    document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active')); 
+    document.querySelector(`.filter-chip[data-niche="${niche}"]`).classList.add('active'); 
+    if (currentFeedTab === 'bid') loadBidCampaigns();
+    else applyFiltersAndSort(); 
+  }
+  
+  function sortCreators() { 
+    currentSort = document.getElementById('sort-select').value; 
+    if (currentFeedTab === 'bid') loadBidCampaigns();
+    else applyFiltersAndSort(); 
+  }
+  
+  function searchGlobal() { 
+    currentSearchQuery = document.getElementById('global-search').value.toLowerCase(); 
+    if (currentSearchQuery) saveSearchHistory(currentSearchQuery);
+    if (currentFeedTab === 'bid') loadBidCampaigns();
+    else applyFiltersAndSort(); 
+  }
+
+  // ============================================
+  // CREATE CREATOR CARD
+  // ============================================
+  
   function createCreatorCard(creator) {
     const card = document.createElement('div'); 
     card.className = 'creator-card'; 
@@ -1325,6 +1681,8 @@
     if (creator.socialLinks?.tiktok) {
       const tiktokMatch = creator.socialLinks.tiktok.match(/@([a-zA-Z0-9_.]+)/);
       const tiktokUsername = tiktokMatch ? tiktokMatch[1] : 'tiktok';
+      // Try to get a random video from the profile
+      const randomVideoId = getRandomTikTokVideoId(tiktokUsername);
       embedHtml = `<div id="${videoId}" class="video-embed-container tiktok-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div>
         <div class="video-controls">
@@ -1333,9 +1691,16 @@
         </div>
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
         <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;"><section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section></blockquote>
+        <script async src="https://www.tiktok.com/embed.js"></script>
       </div>`;
     } else if (creator.socialLinks?.youtube) {
-      let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}&autoplay=0&mute=1&playsinline=1` : `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}&autoplay=0&mute=1&playsinline=1`;
+      // Get channel ID from URL
+      const channelMatch = creator.socialLinks.youtube.match(/@([a-zA-Z0-9_]+)/);
+      const channelId = channelMatch ? channelMatch[1] : '';
+      const youtubeEmbedUrl = channelId ? 
+        `https://www.youtube.com/embed?listType=user_uploads&list=${channelId}&autoplay=1&mute=1&playsinline=1` :
+        `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}&autoplay=1&mute=1&playsinline=1`;
+      
       embedHtml = `<div id="${videoId}" class="video-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div>
         <div class="video-controls">
@@ -1345,7 +1710,9 @@
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
         <div class="youtube-embed-container"><iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%; height:100%;"></iframe></div>
       </div>`;
-    } else { embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos connected yet.</p></div>`; }
+    } else { 
+      embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos connected yet.</p></div>`; 
+    }
     
     card.innerHTML = `
       <div class="creator-header">
@@ -1359,7 +1726,6 @@
           <h3>${escapeHtml(displayName)} ${isVerified ? '<i class="ri-verified-badge-fill" style="color:#1da1f2;"></i>' : ''}<span style="font-size:12px;color:#a08070;">${escapeHtml(username)}</span></h3>
           <p>🎨 Creator • ${formatNumber(viewCount)} total views</p>
           <span class="creator-niche">${escapeHtml(niche)}</span>
-          ${creator.milestones ? `<span class="creator-niche">🏆 ${formatNumber(creator.milestones.followers || 0)} followers</span>` : ''}
         </div>
         <div style="display: flex; flex-direction: column; gap: 5px;">
           <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${creator._id}', this)">${isFollowing ? 'Following' : 'Follow'}</button>
@@ -1377,7 +1743,7 @@
         <button class="report-btn" onclick="openReportModal('${creator._id}', '${escapeHtml(displayName)}')"><i class="ri-flag-line"></i> Report</button>
       </div>
       <div style="padding: 0 20px 15px 20px; font-size: 11px; color: #a08070; display: flex; justify-content: space-between;">
-        <span><i class="ri-user-add-line"></i> ${formatNumber(creator.milestones?.followers || 0)} followers</span>
+        <span><i class="ri-user-add-line"></i> ${formatNumber(creator.social?.followerCount || 0)} followers</span>
         <span><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</span>
         <span><i class="ri-heart-line"></i> ${formatNumber(likeCount)} likes</span>
       </div>
@@ -1385,67 +1751,20 @@
     return card;
   }
 
-  function toggleFullscreen(btn) {
-    const container = btn.closest('.video-embed-container');
-    if (container?.requestFullscreen) container.requestFullscreen();
-    else showToast('Fullscreen not available');
+  // ============================================
+  // TIKTOK RANDOM VIDEO HELPER
+  // ============================================
+  
+  function getRandomTikTokVideoId(username) {
+    // TikTok embed will show the creator's latest video by default
+    // We return a random string to trigger refresh if needed
+    return Math.random().toString(36).substring(2, 8);
   }
 
-  function showLikeAnimation(x, y) {
-    const anim = document.createElement('div');
-    anim.className = 'like-animation';
-    anim.innerHTML = '❤️';
-    anim.style.left = x + 'px';
-    anim.style.top = y + 'px';
-    document.body.appendChild(anim);
-    setTimeout(() => anim.remove(), 800);
-  }
-
-  async function toggleLike(event, button, creatorId) {
-    event.stopPropagation();
-    if (pendingLike) return;
-    pendingLike = true;
-    const rect = button.getBoundingClientRect();
-    showLikeAnimation(rect.left + rect.width/2, rect.top);
-    
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please log in to like'); window.location.href = '/login.html'; pendingLike = false; return; }
-    const icon = button.querySelector('i'); const countSpan = button.querySelector('.like-count');
-    const isCurrentlyLiked = button.classList.contains('liked');
-    let currentCount = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
-    if (isCurrentlyLiked) { button.classList.remove('liked'); icon.classList.replace('ri-heart-fill', 'ri-heart-line'); countSpan.innerText = formatNumber(currentCount - 1); }
-    else { button.classList.add('liked'); icon.classList.replace('ri-heart-line', 'ri-heart-fill'); countSpan.innerText = formatNumber(currentCount + 1); }
-    try {
-      const method = isCurrentlyLiked ? 'DELETE' : 'POST';
-      await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
-      const creator = allCreators.find(c => c._id === creatorId);
-      if (creator) { creator.likeCount = isCurrentlyLiked ? currentCount - 1 : currentCount + 1; creator.isLiked = !isCurrentlyLiked; }
-      userInteractions.likes++;
-    } catch (error) { console.error('Error toggling like:', error); }
-    pendingLike = false;
-  }
-
-  async function toggleFollow(creatorId, btn) {
-    const isFollowing = following.has(creatorId);
-    if (isFollowing) { following.delete(creatorId); btn.classList.remove('following'); btn.innerText = 'Follow'; showToast('Unfollowed creator'); }
-    else { following.add(creatorId); btn.classList.add('following'); btn.innerText = 'Following'; showToast('Now following creator'); addNotification(`You started following ${btn.parentElement?.parentElement?.querySelector('.creator-info h3')?.innerText?.split(' ')[0] || 'a creator'}`); }
-    localStorage.setItem('pebeto_following', JSON.stringify([...following]));
-    if (currentFeedTab === 'following') applyFiltersAndSort();
-  }
-
-  function filterByNiche(niche) { 
-    currentNicheFilter = niche; 
-    document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active')); 
-    document.querySelector(`.filter-chip[data-niche="${niche}"]`).classList.add('active'); 
-    applyFiltersAndSort(); 
-  }
-  function sortCreators() { currentSort = document.getElementById('sort-select').value; applyFiltersAndSort(); }
-  function searchGlobal() { 
-    currentSearchQuery = document.getElementById('global-search').value.toLowerCase(); 
-    if (currentSearchQuery) saveSearchHistory(currentSearchQuery);
-    applyFiltersAndSort(); 
-  }
-
+  // ============================================
+  // COMMENTS (PLATFORM-ONLY)
+  // ============================================
+  
   async function openCommentsModal(creatorId, creatorName) {
     currentCommentCreatorId = creatorId; 
     const modal = document.getElementById('comments-modal'); 
@@ -1458,24 +1777,30 @@
       const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/comments`, { headers });
       const data = await response.json(); 
       const comments = data.comments || [];
-      if (comments.length === 0) commentsList.innerHTML = '<div style="text-align:center;padding:20px;">No comments yet. Be the first!</div>';
-      else {
+      if (comments.length === 0) {
+        commentsList.innerHTML = '<div style="text-align:center;padding:20px;">No comments yet. Be the first!</div>';
+      } else {
         commentsList.innerHTML = comments.map(c => `
-          <div class="comment-item" data-comment-id="${c._id}" data-comment-text="${escapeHtml(c.text)}">
-            <div style="width:32px;height:32px;border-radius:50%;background:#ff8c42;display:flex;align-items:center;justify-content:center;font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
-            <div style="flex:1;"><strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong><p style="font-size:13px;">${escapeHtml(c.text)}</p>
-            <button class="reply-btn" style="background:none;border:none;color:#a08070;font-size:11px;cursor:pointer;" onclick="showReplyForm('${c._id}')">Reply</button>
-            <div id="replies-${c._id}" style="margin-left:30px;margin-top:8px;"></div>
-            </div>
-            <div class="comment-actions">
-              <button onclick="editComment('${c._id}', '${escapeHtml(c.text)}')"><i class="ri-edit-line"></i></button>
-              <button onclick="deleteComment('${c._id}')"><i class="ri-delete-bin-line"></i></button>
+          <div class="comment-item" data-comment-id="${c._id}">
+            <div class="comment-avatar">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
+            <div class="comment-content">
+              <div class="comment-author">${escapeHtml(c.author?.uniqueCode || 'User')}</div>
+              <div class="comment-text">${escapeHtml(c.text)}</div>
+              <div class="comment-time">${formatTimeAgo(c.createdAt)}</div>
+              <div class="comment-actions">
+                ${c.authorId === currentUser?._id ? `<button onclick="deleteComment('${c._id}')">Delete</button>` : ''}
+                <button onclick="replyToComment('${c._id}')">Reply</button>
+              </div>
+              <div id="replies-${c._id}" style="margin-top:8px;"></div>
             </div>
           </div>
         `).join('');
         for (let comment of comments) { loadReplies(comment._id); }
       }
-    } catch (error) { commentsList.innerHTML = '<div style="text-align:center;padding:20px;">Failed to load comments</div>'; }
+    } catch (error) { 
+      console.error('Error loading comments:', error);
+      commentsList.innerHTML = '<div style="text-align:center;padding:20px;">Failed to load comments</div>'; 
+    }
   }
   
   async function loadReplies(commentId) {
@@ -1486,74 +1811,58 @@
       const repliesContainer = document.getElementById(`replies-${commentId}`);
       if (replies.length > 0) {
         repliesContainer.innerHTML = replies.map(r => `
-          <div style="display:flex;gap:8px;margin-top:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.05);">
+          <div style="display:flex; gap:8px; margin-top:8px; padding:5px 0; border-top:1px solid rgba(255,255,255,0.05);">
             <div style="width:24px;height:24px;border-radius:50%;background:#ff8c42;display:flex;align-items:center;justify-content:center;font-size:10px;">${(r.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
-            <div><strong>${escapeHtml(r.author?.uniqueCode || 'User')}</strong><p style="font-size:12px;">${escapeHtml(r.text)}</p><small style="font-size:10px;color:#a08070;">${formatDateTime(r.createdAt)}</small></div>
+            <div><strong>${escapeHtml(r.author?.uniqueCode || 'User')}</strong><p style="font-size:12px;">${escapeHtml(r.text)}</p><small style="font-size:10px;color:#a08070;">${formatTimeAgo(r.createdAt)}</small></div>
           </div>
         `).join('');
       }
-    } catch(e) {}
+    } catch(e) { console.error('Error loading replies:', e); }
   }
   
-  function showReplyForm(commentId) {
+  function replyToComment(commentId) {
     const form = document.createElement('div');
     form.className = 'reply-form';
-    form.innerHTML = `<input type="text" class="reply-input" placeholder="Write a reply..."><button class="save-btn" onclick="postReply('${commentId}', this.previousElementSibling.value)">Reply</button>`;
+    form.innerHTML = `<input type="text" class="reply-input" placeholder="Write a reply..." id="reply-input-${commentId}"><button class="save-btn" onclick="postReply('${commentId}', document.getElementById('reply-input-${commentId}').value)">Reply</button>`;
     const replyContainer = document.getElementById(`replies-${commentId}`);
     const existingForm = replyContainer.querySelector('.reply-form');
     if (existingForm) existingForm.remove();
     replyContainer.appendChild(form);
+    document.getElementById(`reply-input-${commentId}`)?.focus();
   }
   
   async function postReply(commentId, text) {
     if (!text.trim()) return;
     const token = localStorage.getItem('pebeto_token');
-    if (!token) { alert('Please login to reply'); return; }
+    if (!token) { showToast('Please login to reply'); return; }
     try {
-      await fetch(`${API_BASE}/api/community/comments/${commentId}/replies`, {
+      const response = await fetch(`${API_BASE}/api/community/comments/${commentId}/replies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ text })
       });
-      loadReplies(commentId);
-      showToast('Reply posted');
-    } catch(e) { alert('Error posting reply'); }
+      const data = await response.json();
+      if (data.success) {
+        loadReplies(commentId);
+        showToast('Reply posted!');
+      }
+    } catch(e) { showToast('Error posting reply', 'error'); }
   }
   
-  let currentEditingCommentId = null;
-  function editComment(commentId, text) {
-    currentEditingCommentId = commentId;
-    document.getElementById('edit-comment-text').value = text;
-    document.getElementById('edit-comment-modal').style.display = 'flex';
-  }
-  async function saveEditedComment() {
-    const newText = document.getElementById('edit-comment-text').value;
-    if (!newText.trim()) return;
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) return;
-    try {
-      await fetch(`${API_BASE}/api/community/comments/${currentEditingCommentId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ text: newText })
-      });
-      closeModal('edit-comment-modal');
-      await openCommentsModal(currentCommentCreatorId, '');
-      showToast('Comment updated');
-    } catch(e) { alert('Error updating comment'); }
-  }
   async function deleteComment(commentId) {
     if (!confirm('Delete this comment?')) return;
     const token = localStorage.getItem('pebeto_token');
     if (!token) return;
     try {
-      await fetch(`${API_BASE}/api/community/comments/${commentId}`, {
+      const response = await fetch(`${API_BASE}/api/community/comments/${commentId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      await openCommentsModal(currentCommentCreatorId, '');
-      showToast('Comment deleted');
-    } catch(e) { alert('Error deleting comment'); }
+      if (response.ok) {
+        showToast('Comment deleted');
+        await openCommentsModal(currentCommentCreatorId, '');
+      }
+    } catch(e) { showToast('Error deleting comment', 'error'); }
   }
 
   async function addComment() { 
@@ -1563,7 +1872,7 @@
     if (pendingComment) return;
     pendingComment = true;
     const token = localStorage.getItem('pebeto_token'); 
-    if (!token) { alert('Please login to comment'); window.location.href = '/login.html'; pendingComment = false; return; }
+    if (!token) { showToast('Please login to comment'); window.location.href = '/login.html'; pendingComment = false; return; }
     try { 
       const response = await fetch(`${API_BASE}/api/community/creators/${currentCommentCreatorId}/comments`, { 
         method: 'POST', 
@@ -1584,22 +1893,30 @@
           } 
         } 
         userInteractions.comments++;
+        addNotification(`You commented on ${creator?.profile?.stageName || 'a creator'}'s profile`);
+      } else {
+        showToast(data.message || 'Failed to add comment', 'error');
       }
-      else alert('Failed to add comment');
-    } catch (error) { alert('Network error'); }
+    } catch (error) { 
+      console.error('Error adding comment:', error);
+      showToast('Network error', 'error');
+    }
     pendingComment = false;
   }
 
+  // ============================================
+  // TIP (FEE HIDDEN)
+  // ============================================
+  
   function openTipModal(creatorId, creatorName) { 
     const token = localStorage.getItem('pebeto_token'); 
-    if (!token) { alert('Please log in to send tips'); window.location.href = '/login.html'; return; }
+    if (!token) { showToast('Please log in to send tips'); window.location.href = '/login.html'; return; }
     loadUserBalance();
     currentTipCreatorId = creatorId; 
     currentTipCreatorName = creatorName; 
     document.getElementById('tip-creator-name').innerHTML = `To: <strong>${escapeHtml(creatorName)}</strong>`; 
     document.getElementById('tip-modal').style.display = 'flex';
     document.getElementById('tip-amount').value = ''; 
-    document.getElementById('creator-receives').innerHTML = '0.00'; 
     selectedPaymentSource = 'wallet';
     document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
     const walletBtn = document.querySelector('.payment-source-btn[data-source="wallet"]'); 
@@ -1614,19 +1931,34 @@
     pendingTip = true;
     const amount = parseFloat(document.getElementById('tip-amount').value); 
     const currency = document.getElementById('tip-currency').value; 
-    if (!amount || amount <= 0 || amount < 1) { alert('Minimum tip is $1'); pendingTip = false; return; }
-    if (selectedPaymentSource === 'wallet' && amount > userWalletBalance) { alert('Insufficient wallet balance'); pendingTip = false; return; }
+    if (!amount || amount <= 0 || amount < 1) { showToast('Minimum tip is $1', 'error'); pendingTip = false; return; }
+    if (selectedPaymentSource === 'wallet' && amount > userWalletBalance) { showToast('Insufficient wallet balance', 'error'); pendingTip = false; return; }
     
     const token = localStorage.getItem('pebeto_token'); 
-    if (!token) { alert('Please log in'); window.location.href = '/login.html'; pendingTip = false; return; }
+    if (!token) { showToast('Please log in'); window.location.href = '/login.html'; pendingTip = false; return; }
+    
     let paymentDetails = { method: selectedPaymentSource };
-    if (selectedPaymentSource === 'mpesa') { const phone = document.getElementById('mpesa-phone').value; if (!phone || !/^254\d{9}$/.test(phone)) { alert('Enter valid M-Pesa phone number (254XXXXXXXXX)'); pendingTip = false; return; } paymentDetails.phoneNumber = phone; }
-    else if (selectedPaymentSource === 'paypal') { const email = document.getElementById('paypal-email').value; if (!email || !email.includes('@')) { alert('Enter valid PayPal email'); pendingTip = false; return; } paymentDetails.paypalEmail = email; }
+    if (selectedPaymentSource === 'mpesa') { 
+      const phone = document.getElementById('mpesa-phone').value; 
+      if (!phone || !/^254\d{9}$/.test(phone)) { showToast('Enter valid M-Pesa phone number (254XXXXXXXXX)', 'error'); pendingTip = false; return; } 
+      paymentDetails.phoneNumber = phone; 
+    } else if (selectedPaymentSource === 'paypal') { 
+      const email = document.getElementById('paypal-email').value; 
+      if (!email || !email.includes('@')) { showToast('Enter valid PayPal email', 'error'); pendingTip = false; return; } 
+      paymentDetails.paypalEmail = email; 
+    }
+    
     try { 
       const response = await fetch(`${API_BASE}/api/wallet/tip`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ creatorId: currentTipCreatorId, amount, currency, paymentSource: selectedPaymentSource, paymentDetails }) 
+        body: JSON.stringify({ 
+          creatorId: currentTipCreatorId, 
+          amount, 
+          currency, 
+          paymentSource: selectedPaymentSource, 
+          paymentDetails 
+        }) 
       }); 
       const data = await response.json();
       if (data.success) { 
@@ -1636,12 +1968,111 @@
         addNotification(`You sent a tip to ${currentTipCreatorName}`);
         userInteractions.tips++;
         userWalletBalance -= amount;
-      } else alert('Failed to send tip: ' + (data.message || 'Unknown error'));
-    } catch (error) { alert('Network error'); }
+      } else {
+        showToast(data.message || 'Failed to send tip', 'error');
+      }
+    } catch (error) { 
+      console.error('Error sending tip:', error);
+      showToast('Network error', 'error');
+    }
     pendingTip = false;
   }
 
-  // DM Functions
+  // ============================================
+  // SHARE
+  // ============================================
+  
+  function openShareModal(creatorId, creatorName) { 
+    currentShareCreatorId = creatorId; 
+    currentShareCreatorName = creatorName; 
+    document.getElementById('share-creator-name').innerHTML = `Share <strong>${escapeHtml(creatorName)}</strong>'s profile`; 
+    document.getElementById('share-modal').style.display = 'flex';
+  }
+  
+  function shareTo(platform) { 
+    const url = encodeURIComponent(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); 
+    const text = encodeURIComponent(`Check out ${currentShareCreatorName} on Pebeto!`); 
+    let shareUrl = ''; 
+    if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+    else if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    else if (platform === 'whatsapp') shareUrl = `https://wa.me/?text=${text}%20${url}`;
+    if (shareUrl) window.open(shareUrl, '_blank'); 
+    closeModal('share-modal'); 
+    addNotification(`Shared ${currentShareCreatorName}'s profile`); 
+  }
+  
+  function shareNative() {
+    if (navigator.share) {
+      navigator.share({
+        title: currentShareCreatorName,
+        text: `Check out ${currentShareCreatorName} on Pebeto!`,
+        url: `${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`
+      }).catch(e => console.log('Share cancelled'));
+    } else showToast('Share not supported on this browser');
+  }
+  
+  function copyShareLink() { 
+    navigator.clipboard.writeText(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); 
+    showToast('Link copied to clipboard!'); 
+    closeModal('share-modal'); 
+  }
+
+  // ============================================
+  // REPORT
+  // ============================================
+  
+  let lastReportTime = 0;
+  
+  function openReportModal(creatorId, creatorName) { 
+    currentReportCreatorId = creatorId; 
+    currentReportCreatorName = creatorName; 
+    document.getElementById('report-creator-name').innerHTML = `Report <strong>${escapeHtml(creatorName)}</strong>`; 
+    document.getElementById('report-modal').style.display = 'flex'; 
+  }
+  
+  async function submitReport() { 
+    const now = Date.now();
+    if (now - lastReportTime < 60000) { showToast('Please wait before reporting again', 'error'); return; }
+    const reason = document.getElementById('report-reason').value; 
+    const description = document.getElementById('report-description').value; 
+    if (!reason) { showToast('Please select a reason', 'error'); return; } 
+    const token = localStorage.getItem('pebeto_token'); 
+    if (!token) { showToast('Please log in'); window.location.href = '/login.html'; return; }
+    try { 
+      const response = await fetch(`${API_BASE}/api/community/report`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ creatorId: currentReportCreatorId, reason, description }) 
+      }); 
+      const data = await response.json();
+      if (data.success) { 
+        showToast('Thank you for your report. We will review it.'); 
+        closeModal('report-modal'); 
+        document.getElementById('report-description').value = ''; 
+        addNotification(`Report submitted for ${currentReportCreatorName}`);
+        lastReportTime = now;
+      } else {
+        showToast(data.message || 'Failed to submit report', 'error');
+      }
+    } catch (error) { 
+      console.error('Error submitting report:', error);
+      showToast('Network error', 'error');
+    }
+  }
+
+  // ============================================
+  // VIEW CREATOR PROFILE
+  // ============================================
+  
+  function viewCreatorProfile(creatorId) { 
+    localStorage.setItem('viewingCreatorId', creatorId); 
+    window.location.href = `/creator-profile.html?id=${creatorId}`; 
+  }
+
+  // ============================================
+  // DM FUNCTIONS
+  // ============================================
+  
   function openDMModal(creatorId, creatorName) {
     openChatWithUser(creatorId, creatorName);
   }
@@ -1649,7 +2080,7 @@
   function openChatWithUser(userId, userName) {
     const token = localStorage.getItem('pebeto_token');
     if (!token) {
-      alert('Please log in to send messages');
+      showToast('Please log in to send messages');
       window.location.href = '/login.html';
       return;
     }
@@ -1738,10 +2169,20 @@
       const data = await fetchJSON(`${API_BASE}/api/messages/conversations/${conversationId}/messages`);
       if (data.success) {
         renderMessages(data.data.messages);
+        // Mark messages as read when viewing
         await fetch(`${API_BASE}/api/messages/conversations/${conversationId}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
         });
+        // Update unread count
+        const unreadData = await fetchJSON(`${API_BASE}/api/messages/unread/count`);
+        if (unreadData.success) {
+          updateUnreadBadge(unreadData.data.count);
+          // Also update the notification badge in the header
+          updateNotificationBadge();
+        }
+        // Reload conversations to update unread counts
+        loadConversations();
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -1839,6 +2280,8 @@
         loadConversations();
         updateUnreadBadge();
       }
+      // Update notification badge
+      updateNotificationBadge();
     });
     
     chatSocket.on('dm:typing', (data) => {
@@ -1853,6 +2296,14 @@
     
     chatSocket.on('dm:unread-update', (data) => {
       updateUnreadBadge(data.count);
+      updateNotificationBadge();
+    });
+
+    chatSocket.on('dm:read-receipt', (data) => {
+      // Refresh messages to show read status
+      if (data.conversationId === currentConversationId) {
+        loadMessages(currentConversationId);
+      }
     });
   }
 
@@ -1937,83 +2388,10 @@
     update();
   }
 
-  function openShareModal(creatorId, creatorName) { 
-    currentShareCreatorId = creatorId; 
-    currentShareCreatorName = creatorName; 
-    document.getElementById('share-creator-name').innerHTML = `Share <strong>${escapeHtml(creatorName)}</strong>'s profile`; 
-    document.getElementById('share-modal').style.display = 'flex';
-    document.getElementById('qr-code-canvas').style.display = 'none';
-  }
-  function shareTo(platform) { 
-    const url = encodeURIComponent(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); 
-    const text = encodeURIComponent(`Check out ${currentShareCreatorName} on Pebeto!`); 
-    let shareUrl = ''; 
-    if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
-    else if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-    else if (platform === 'whatsapp') shareUrl = `https://wa.me/?text=${text}%20${url}`;
-    else if (platform === 'instagram') showToast('Instagram sharing - copy link and paste in Instagram DM');
-    else if (platform === 'threads') showToast('Threads sharing - copy link and paste in Threads');
-    if (shareUrl) window.open(shareUrl, '_blank'); 
-    closeModal('share-modal'); 
-    addNotification(`Shared ${currentShareCreatorName}'s profile`); 
-  }
-  function shareNative() {
-    if (navigator.share) {
-      navigator.share({
-        title: currentShareCreatorName,
-        text: `Check out ${currentShareCreatorName} on Pebeto!`,
-        url: `${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`
-      }).catch(e => console.log('Share cancelled'));
-    } else showToast('Share not supported on this browser');
-  }
-  function copyShareLink() { 
-    navigator.clipboard.writeText(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); 
-    showToast('Link copied to clipboard!'); 
-    closeModal('share-modal'); 
-  }
-  function showQRCode() {
-    const canvas = document.getElementById('qr-code-canvas');
-    canvas.style.display = 'block';
-    showToast('QR code feature - integrates with QR library');
-  }
-
-  let lastReportTime = 0;
-  function openReportModal(creatorId, creatorName) { 
-    currentReportCreatorId = creatorId; 
-    currentReportCreatorName = creatorName; 
-    document.getElementById('report-creator-name').innerHTML = `Report <strong>${escapeHtml(creatorName)}</strong>`; 
-    document.getElementById('report-modal').style.display = 'flex'; 
-  }
-  async function submitReport() { 
-    const now = Date.now();
-    if (now - lastReportTime < 60000) { alert('Please wait before reporting again'); return; }
-    const reason = document.getElementById('report-reason').value; 
-    const description = document.getElementById('report-description').value; 
-    if (!reason) { alert('Please select a reason'); return; } 
-    const token = localStorage.getItem('pebeto_token'); 
-    if (!token) { alert('Please log in'); window.location.href = '/login.html'; return; }
-    try { 
-      const response = await fetch(`${API_BASE}/api/community/report`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ creatorId: currentReportCreatorId, reason, description }) 
-      }); 
-      const data = await response.json();
-      if (data.success) { 
-        alert('Thank you for your report. We will review it.'); 
-        closeModal('report-modal'); 
-        document.getElementById('report-description').value = ''; 
-        addNotification(`Report submitted for ${currentReportCreatorName}`);
-        lastReportTime = now;
-      } else alert('Failed to submit report');
-    } catch (error) { alert('Network error'); }
-  }
-
-  function viewCreatorProfile(creatorId) { 
-    localStorage.setItem('viewingCreatorId', creatorId); 
-    window.location.href = `/creator-profile.html?id=${creatorId}`; 
-  }
-
+  // ============================================
+  // USER DATA
+  // ============================================
+  
   function loadUserData() { 
     const userStr = localStorage.getItem('pebeto_user'); 
     if (userStr) { 
@@ -2029,20 +2407,36 @@
     } 
   }
 
+  // ============================================
+  // AUTO-REFRESH
+  // ============================================
+  
   function startAutoRefresh() {
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     autoRefreshInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        loadCreators();
+        if (currentFeedTab === 'bid') {
+          loadBidCampaigns();
+        } else {
+          loadCreators();
+        }
         loadConversations();
       }
     }, 30000);
   }
 
+  // ============================================
+  // SERVICE WORKER
+  // ============================================
+  
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
   }
 
+  // ============================================
+  // KEYBOARD NAVIGATION
+  // ============================================
+  
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown') {
       const cards = document.querySelectorAll('.creator-card');
@@ -2058,15 +2452,30 @@
     }
   });
 
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+  
   const savedTheme = localStorage.getItem('pebeto_theme'); 
   if (savedTheme === 'light') document.body.classList.add('light-theme');
   loadUserData(); 
   loadCreators(); 
   loadUserBalance();
+  loadConversations();
   startAutoRefresh();
   addNotification('Welcome to the Pebeto Community!');
-  
   updateUnreadBadge();
+
+  // Handle DM message read updates from Socket.IO
+  document.addEventListener('dm:read-receipt', function(e) {
+    if (e.detail && e.detail.conversationId) {
+      loadConversations();
+      updateUnreadBadge();
+    }
+  });
+
+  console.log('🚀 Pebeto Community loaded successfully!');
+  console.log('✅ Features: Auto-playing videos, platform-only likes/comments, Bid tab, real-time DMs');
 </script>
 </body>
 </html>
