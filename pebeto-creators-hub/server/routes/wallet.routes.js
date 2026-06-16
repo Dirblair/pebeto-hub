@@ -11,14 +11,13 @@ const express = require('express');
 const crypto = require('crypto');
 const { body, query, validationResult } = require('express-validator');
 const { authenticate, authorize } = require('../middleware/auth');
-const { attachFeeService } = require('../services/feeService');
+const { attachFeeService } = require('../middleware/feeService');
 const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
 const { getWalletBalance, getTransactionHistory } = require('../services/walletService');
 const { previewWithdrawal, getWithdrawalHistory } = require('../services/withdrawalService');
 const { previewDeposit, processDeposit } = require('../services/depositService');
 const { processWithdrawal } = require('../services/withdrawalService');
-const { sendTip } = require('../controllers/wallet.controller');
 const { getRatesMap, convertUsdToLocal, convertLocalToUsd } = require('../services/exchangeRateService');
 const { MIN_WITHDRAWAL_USD, FEE_RATES } = require('../services/feeService');
 const Transaction = require('../models/Transaction');
@@ -26,7 +25,6 @@ const User = require('../models/User');
 const logger = require('../utils/logger');
 
 const router = express.Router();
-const publicRouter = express.Router();
 
 // ============================================
 // Validation Rules
@@ -709,14 +707,14 @@ router.get('/spending', catchAsync(async (req, res) => {
 }));
 
 // ============================================
-// Public Routes (No Authentication)
+// M-Pesa Callback (Public)
 // ============================================
 
 /**
  * POST /api/wallet/mpesa-callback
  * M-Pesa payment callback endpoint (public)
  */
-publicRouter.post('/mpesa-callback', catchAsync(async (req, res) => {
+router.post('/mpesa-callback', catchAsync(async (req, res) => {
   try {
     const callbackData = req.body.Body?.stkCallback;
     
@@ -757,7 +755,7 @@ publicRouter.post('/mpesa-callback', catchAsync(async (req, res) => {
  * GET /api/wallet/payment-methods
  * Get available payment methods (public)
  */
-publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
+router.get('/payment-methods', catchAsync(async (req, res) => {
   const methods = [
     {
       id: 'mpesa',
@@ -804,4 +802,4 @@ publicRouter.get('/payment-methods', catchAsync(async (req, res) => {
 // Exports
 // ============================================
 
-module.exports = { router, publicRouter };
+module.exports = router;
