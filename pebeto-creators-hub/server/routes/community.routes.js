@@ -6,7 +6,6 @@ const { authenticate, optionalAuthenticate } = require('../middleware/auth');
 const CommunityPost = require('../models/CommunityPost');
 const CommunityComment = require('../models/CommunityComment');
 const User = require('../models/User');
-const Campaign = require('../models/Campaign');
 const { AppError } = require('../utils/errors');
 const { body, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
@@ -459,53 +458,6 @@ router.get('/creators/:creatorId/stats', optionalAuthenticate, async (req, res, 
 });
 
 // ============================================
-// NEW: GET /api/community/creators-with-open-campaigns
-// Get creators who have open campaigns (for Bid tab)
-// ============================================
-router.get('/creators-with-open-campaigns', optionalAuthenticate, async (req, res, next) => {
-  try {
-    const userId = req.user?._id;
-    
-    // Get all open campaigns with no assigned creator
-    const campaigns = await Campaign.find({ 
-      status: 'open',
-      assignedCreatorId: { $exists: false }
-    }).populate('businessId', 'email profile.companyName profile.stageName');
-    
-    // Get creator IDs from campaigns
-    const creatorIds = campaigns.map(c => c.businessId?._id).filter(Boolean);
-    const uniqueCreatorIds = [...new Set(creatorIds.map(id => id.toString()))];
-    
-    // Get creators with open campaigns
-    const creators = await User.find({
-      _id: { $in: uniqueCreatorIds },
-      role: 'creator',
-      status: 'active'
-    }).select('_id email uniqueCode profile socialLinks social createdAt status');
-    
-    // Add hasOpenCampaigns flag
-    const creatorsWithCampaigns = creators.map(creator => {
-      const creatorObj = creator.toObject();
-      creatorObj.hasOpenCampaigns = true;
-      // Find the campaign for this creator
-      const campaign = campaigns.find(c => c.businessId?._id.toString() === creator._id.toString());
-      creatorObj.openCampaignId = campaign?._id;
-      creatorObj.campaignTitle = campaign?.title;
-      creatorObj.campaignBudget = campaign?.budget;
-      return creatorObj;
-    });
-    
-    res.json({
-      success: true,
-      creators: creatorsWithCampaigns
-    });
-  } catch (err) {
-    logger.error('Error fetching creators with open campaigns:', err);
-    next(err);
-  }
-});
-
-// ============================================
 // TRENDING & SEARCH
 // ============================================
 
@@ -585,7 +537,9 @@ router.get('/user/:userId/posts', optionalAuthenticate, async (req, res, next) =
 });
 
 // ============================================
-// REPORT Endpoint
+// ============================================
+// NEW: Report Endpoint
+// ============================================
 // ============================================
 
 /**
@@ -595,7 +549,6 @@ router.get('/user/:userId/posts', optionalAuthenticate, async (req, res, next) =
 router.post('/report', authenticate, [
   body('reportedUserId').optional().isMongoId().withMessage('Invalid user ID'),
   body('reportedPostId').optional().isMongoId().withMessage('Invalid post ID'),
-  body('creatorId').optional().isMongoId().withMessage('Invalid creator ID'),
   body('reason').isIn(['spam', 'inappropriate', 'harassment', 'fake_account', 'copyright', 'other']).withMessage('Invalid report reason'),
   body('description').optional().isString().trim().isLength({ max: 1000 }).withMessage('Description too long')
 ], async (req, res, next) => {
@@ -605,13 +558,13 @@ router.post('/report', authenticate, [
       return res.status(400).json({ success: false, message: errors.array()[0].msg });
     }
     
-    const { reportedUserId, reportedPostId, creatorId, reason, description } = req.body;
+    const { reportedUserId, reportedPostId, reason, description } = req.body;
     
     // Must report either a user or a post
-    if (!reportedUserId && !reportedPostId && !creatorId) {
+    if (!reportedUserId && !reportedPostId) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Must report either a user, creator, or a post' 
+        message: 'Must report either a user or a post' 
       });
     }
     
@@ -620,7 +573,7 @@ router.post('/report', authenticate, [
     // Check for duplicate report (same reporter, same target, pending)
     const existingReport = await Report.findOne({
       reporterId: req.user._id,
-      reportedUserId: reportedUserId || creatorId || null,
+      reportedUserId: reportedUserId || null,
       reportedPostId: reportedPostId || null,
       status: { $in: ['pending', 'reviewing'] }
     });
@@ -633,9 +586,8 @@ router.post('/report', authenticate, [
     }
     
     // Verify the reported user exists (if provided)
-    if (reportedUserId || creatorId) {
-      const targetId = reportedUserId || creatorId;
-      const reportedUser = await User.findById(targetId);
+    if (reportedUserId) {
+      const reportedUser = await User.findById(reportedUserId);
       if (!reportedUser) {
         return res.status(404).json({ success: false, message: 'Reported user not found' });
       }
@@ -652,14 +604,14 @@ router.post('/report', authenticate, [
     // Create the report
     const report = await Report.create({
       reporterId: req.user._id,
-      reportedUserId: reportedUserId || creatorId || null,
+      reportedUserId: reportedUserId || null,
       reportedPostId: reportedPostId || null,
       reason,
       description: description || null,
       status: 'pending'
     });
     
-    logger.info(`Report created by user ${req.user._id}`, {
+    logger.info(`Report created by user ${req.user._id} for ${reportedUserId ? `user ${reportedUserId}` : `post ${reportedPostId}`}`, {
       reason,
       reportId: report._id
     });
