@@ -96,26 +96,6 @@
       background-size: cover;
       background-position: center;
       cursor: pointer;
-      position: relative;
-    }
-    .profile-avatar .remove-avatar-btn {
-      position: absolute;
-      bottom: -5px;
-      right: -5px;
-      background: #f44336;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      color: white;
-      cursor: pointer;
-      font-size: 12px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    .profile-avatar:hover .remove-avatar-btn {
-      display: flex;
     }
     .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
     .profile-info p { color: #a08070; font-size: 14px; }
@@ -216,10 +196,6 @@
       background: rgba(244, 67, 54, 0.2);
       color: #f44336;
     }
-    .social-status.info {
-      background: rgba(33, 150, 243, 0.2);
-      color: #2196f3;
-    }
     .connected-badge {
       background: rgba(76, 175, 80, 0.2);
       color: #4caf50;
@@ -245,6 +221,7 @@
       color: white;
     }
     
+    /* Google Drive Section Styles */
     .drive-section {
       background: linear-gradient(135deg, rgba(255,140,66,0.08), rgba(0,0,0,0.2));
       border: 1px solid rgba(255,140,66,0.2);
@@ -313,6 +290,7 @@
       border-radius: 12px;
     }
     
+    /* Auto-Release Status Styles */
     .auto-release-status {
       background: rgba(255,255,255,0.03);
       border-radius: 12px;
@@ -549,6 +527,18 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
     .deposit-btn {
       background: rgba(76, 175, 80, 0.2);
       border: 1px solid #4caf50;
@@ -619,6 +609,15 @@
       color: white;
     }
     
+    .view-all-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      color: #ff8c42;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
     .notification-bell {
       position: relative;
       cursor: pointer;
@@ -648,13 +647,17 @@
       z-index: 200;
       display: none;
     }
-    .notification-dropdown.show { display: block; }
+    .notification-dropdown.show {
+      display: block;
+    }
     .notification-item {
       padding: 12px;
       border-bottom: 1px solid rgba(255,255,255,0.05);
       cursor: pointer;
     }
-    .notification-item:hover { background: rgba(255,140,66,0.1); }
+    .notification-item:hover {
+      background: rgba(255,140,66,0.1);
+    }
     
     .back-to-top {
       position: fixed;
@@ -673,12 +676,25 @@
       visibility: hidden;
       transition: all 0.3s;
     }
-    .back-to-top.show { opacity: 1; visibility: visible; }
-    .back-to-top:hover { background: #e0662c; transform: translateY(-3px); }
+    .back-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .back-to-top:hover {
+      background: #e0662c;
+      transform: translateY(-3px);
+    }
     
-    .theme-toggle { cursor: pointer; font-size: 20px; }
-    .mobile-menu-btn { display: none; font-size: 24px; cursor: pointer; }
+    .theme-toggle {
+      cursor: pointer;
+      font-size: 20px;
+    }
     
+    .mobile-menu-btn {
+      display: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
     @media (max-width: 768px) {
       .nav-icons { display: none; }
       .mobile-menu-btn { display: block; }
@@ -708,8 +724,16 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-    .skeleton-text { height: 16px; width: 100%; margin-bottom: 10px; }
-    .skeleton-avatar { width: 60px; height: 60px; border-radius: 50%; }
+    .skeleton-text {
+      height: 16px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .skeleton-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
@@ -736,17 +760,14 @@
 
 <div class="container">
   <div class="profile-banner">
-    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">
-      C
-      <button class="remove-avatar-btn" id="removeAvatarBtn" onclick="event.stopPropagation(); removeAvatar()">✕</button>
-    </div>
+    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">C</div>
     <div class="profile-info">
       <h2 id="profile-name">Loading... <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>
         <span id="email-verify-badge"></span>
       </h2>
       <p id="profile-email">Loading...</p>
       <div class="unique-code" id="unique-code">Loading...</div>
-      <div style="margin-top: 8px;"><span id="profile-niche">Niche: </span></div>
+      <div style="margin-top: 8px;"><span id="profile-niche">Niche: </span> • <span id="profile-currency">Currency: USD</span></div>
     </div>
   </div>
 
@@ -829,6 +850,7 @@
     <button class="tab-btn" data-tab="activity">🔐 Activity Log</button>
     <button class="tab-btn" data-tab="security">🛡️ Security</button>
     <button class="tab-btn" data-tab="withdrawals">📤 Withdrawals</button>
+    <button class="tab-btn" data-tab="referrals">🔗 Referrals</button>
   </div>
 
   <!-- Active Projects Tab -->
@@ -843,7 +865,7 @@
         <thead>
           <tr><th>Title</th><th>Budget</th><th>Status</th><th>Auto-Release</th><th>Action</th>
         </thead>
-        <tbody id="active-tbody"></tbody>
+        <tbody></tbody>
       </table>
     </div>
     <div id="active-pagination">
@@ -863,7 +885,7 @@
         <thead>
           <tr><th>Title</th><th>Budget</th><th>Submitted</th><th>Auto-Release</th><th>Status</th>
         </thead>
-        <tbody id="review-tbody"></tbody>
+        <tbody></tbody>
       </table>
     </div>
     <div id="review-pagination">
@@ -883,7 +905,7 @@
         <thead>
           <tr><th>Title</th><th>Earned</th><th>Completed On</th><th>Status</th>
         </thead>
-        <tbody id="completed-tbody"></tbody>
+        <tbody></tbody>
       </table>
     </div>
     <div id="completed-pagination">
@@ -899,6 +921,7 @@
       <button class="copy-btn" onclick="copyUniqueCode()">📋 Copy Code</button>
       <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
         <div><strong id="total-tips">$0</strong><br><small>Total Tips</small></div>
+        <div><strong id="tips-fee">$0</strong><br><small>Platform Fee (5%)</small></div>
         <div><strong id="tips-net">$0</strong><br><small>You Keep (95%)</small></div>
       </div>
       <div style="margin-top: 20px;">
@@ -971,6 +994,34 @@
     </div>
   </div>
 
+  <!-- Referrals Tab -->
+  <div id="tab-referrals" class="tab-content">
+    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
+      <h3>🔗 Referral Program</h3>
+      <p>Share your referral link and earn 10% of your referrals' platform fees!</p>
+      <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin: 15px 0;">
+        <p><strong>Your Referral Link:</strong></p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="referral-link" readonly style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,140,66,0.3); padding: 10px; border-radius: 30px; color: white;">
+          <button class="copy-btn" onclick="copyReferralLink()">Copy Link</button>
+        </div>
+      </div>
+      <div>
+        <p><strong>Referral Stats</strong></p>
+        <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 10px;">
+          <div><strong id="ref-total">0</strong><br><small>Total Referrals</small></div>
+          <div><strong id="ref-earned">$0</strong><br><small>Earned from Referrals</small></div>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <h4>📋 Your Referrals</h4>
+        <div id="referrals-list" style="max-height: 200px; overflow-y: auto;">
+          <div class="empty-state">Loading referrals...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="withdraw-section" class="withdraw-section">
     <h3>💸 Withdraw Funds</h3>
     <p>Minimum $30 USD | Maximum $10,000 USD per day | 3% fee</p>
@@ -1019,6 +1070,11 @@
     <h3>Profile Settings</h3>
     <input type="text" id="setting-stageName" placeholder="Stage Name">
     <input type="text" id="setting-niche" placeholder="Niche">
+    <select id="setting-currency">
+      <option value="USD">USD</option>
+      <option value="KES">KES</option>
+      <option value="EUR">EUR</option>
+    </select>
     <div class="modal-buttons">
       <button class="save-btn" onclick="saveSettings()">Save Changes</button>
       <button class="cancel-btn" onclick="closeModal('settings-modal')">Cancel</button>
@@ -1098,30 +1154,6 @@
     <div class="modal-buttons">
       <button class="save-btn" onclick="submitWorkWithDrive()">Submit Work</button>
       <button class="cancel-btn" onclick="closeModal('submit-work-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- Deposit Modal -->
-<div id="deposit-modal" class="modal">
-  <div class="modal-content">
-    <h3>💰 Add Funds to Wallet</h3>
-    <p style="margin-bottom: 15px;">Platform fee: <strong>10%</strong> (you pay extra)</p>
-    <div class="deposit-methods" style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer; text-align:center;">M-Pesa</div>
-      <div class="deposit-method-btn" onclick="selectDepositMethod('bank')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer; text-align:center;">Bank Transfer</div>
-      <div class="deposit-method-btn" onclick="selectDepositMethod('paypal')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,140,66,0.3); padding:10px; border-radius:40px; cursor:pointer; text-align:center;">PayPal</div>
-    </div>
-    <div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
-    <div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
-    <div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
-    <input type="number" id="deposit-amount" placeholder="Amount to Deposit (USD)" oninput="updateDepositPreview()">
-    <div id="deposit-preview" style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
-      💡 You pay: $0.00 (includes 10% fee)
-    </div>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="processDeposit()">Add Funds</button>
-      <button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -1215,7 +1247,7 @@
   function logout() { 
     localStorage.removeItem('pebeto_token'); 
     localStorage.removeItem('pebeto_user'); 
-    window.location.href = '/login.html'; 
+    window.location.href = '/signup.html'; 
   }
 
   async function fetchJSON(url, options = {}) {
@@ -1241,18 +1273,18 @@
         }
         if (data.type === 'new_tip') {
           loadWallet();
-          showToast(`💝 You received a tip!`, 'success');
-          addNotification(`💝 You received a tip!`);
+          showToast(`💝 You received a tip of ${data.amount}!`, 'success');
+          addNotification(`💝 You received a tip of ${data.amount}!`);
           loadTipsReceived();
         }
         if (data.type === 'campaign:work-approved') {
-          showToast(`✅ Work approved! Payment released!`, 'success');
+          showToast(`✅ Work approved! Payment released for "${data.campaignTitle}"`, 'success');
           loadCampaigns();
           loadWallet();
         }
         if (data.type === 'campaign:auto-release-warning') {
-          showToast(`⚠️ URGENT: A campaign will auto-release soon!`, 'warning');
-          addNotification(`⚠️ AUTO-RELEASE WARNING: A campaign will auto-release soon!`);
+          showToast(`⚠️ URGENT: "${data.campaignTitle}" will auto-release in ${data.daysRemaining} days!`, 'warning');
+          addNotification(`⚠️ AUTO-RELEASE WARNING: "${data.campaignTitle}" - ${data.daysRemaining} days remaining`);
           loadCampaigns();
         }
       };
@@ -1333,7 +1365,7 @@
   }
 
   // ============================================
-  // SOCIAL LINKS
+  // SOCIAL LINKS WITH DELETE FUNCTIONALITY
   // ============================================
   function updateConnectedBadges() {
     const tiktokUrl = document.getElementById('tiktokUrl').value;
@@ -1343,27 +1375,32 @@
     if (tiktokUrl) {
       html += `<div style="display: inline-block; margin-right: 15px; margin-bottom: 10px;">
         <span class="connected-badge">✓ TikTok Connected</span>
-        <button class="remove-link-btn" onclick="confirmRemoveLink('tiktok')">✗ Remove</button>
+        <button class="remove-link-btn" onclick="removeSocialLink('tiktok')">✗ Remove</button>
       </div>`;
     }
     if (youtubeUrl) {
       html += `<div style="display: inline-block; margin-right: 15px; margin-bottom: 10px;">
         <span class="connected-badge">✓ YouTube Connected</span>
-        <button class="remove-link-btn" onclick="confirmRemoveLink('youtube')">✗ Remove</button>
+        <button class="remove-link-btn" onclick="removeSocialLink('youtube')">✗ Remove</button>
       </div>`;
     }
     badgesDiv.innerHTML = html;
   }
 
-  function confirmRemoveLink(platform) {
-    if (confirm(`Are you sure you want to remove your ${platform === 'tiktok' ? 'TikTok' : 'YouTube'} link? This will also remove your content from the community.`)) {
-      if (platform === 'tiktok') {
-        document.getElementById('tiktokUrl').value = '';
-      } else {
-        document.getElementById('youtubeUrl').value = '';
-      }
-      saveSocialLinks(true);
+  async function removeSocialLink(platform) {
+    if (platform === 'tiktok') {
+      document.getElementById('tiktokUrl').value = '';
+    } else {
+      document.getElementById('youtubeUrl').value = '';
     }
+    
+    // Show saving indicator
+    const statusDiv = document.getElementById('socialStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'social-status info';
+    statusDiv.innerHTML = 'Removing link...';
+    
+    await saveSocialLinks(true);
   }
 
   async function saveSocialLinks(isRemoval = false) {
@@ -1474,48 +1511,12 @@
           currentUser.profile.avatarUrl = data.avatarUrl;
           localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
         }
-        // Update avatar display immediately
-        document.getElementById('profile-avatar').style.backgroundImage = `url(${data.avatarUrl})`;
-        document.getElementById('profile-avatar').innerHTML = '';
-        document.getElementById('avatar-header').style.backgroundImage = `url(${data.avatarUrl})`;
-        document.getElementById('avatar-header').innerHTML = '';
-        document.getElementById('removeAvatarBtn').style.display = 'flex';
-        closeModal('avatar-modal');
+        location.reload();
       } else {
         showToast(data.message || 'Upload failed', 'error');
       }
     } catch(e) {
       showToast('Error uploading image', 'error');
-    }
-  }
-
-  async function removeAvatar() {
-    if (!confirm('Are you sure you want to remove your profile picture?')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const response = await fetch(`${API_BASE}/api/user/avatar`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        showToast('Profile picture removed', 'success');
-        if (currentUser && currentUser.profile) {
-          currentUser.profile.avatarUrl = null;
-          localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-        }
-        // Reset avatar display
-        const initial = (currentUser?.profile?.stageName?.[0] || currentUser?.email?.[0] || 'C').toUpperCase();
-        document.getElementById('profile-avatar').style.backgroundImage = '';
-        document.getElementById('profile-avatar').innerHTML = initial;
-        document.getElementById('avatar-header').style.backgroundImage = '';
-        document.getElementById('avatar-header').innerHTML = initial;
-        document.getElementById('removeAvatarBtn').style.display = 'none';
-      } else {
-        showToast(data.message || 'Failed to remove avatar', 'error');
-      }
-    } catch(e) {
-      showToast('Error removing avatar', 'error');
     }
   }
 
@@ -1526,23 +1527,26 @@
     const token = localStorage.getItem('pebeto_token');
     const stageName = document.getElementById('setting-stageName').value;
     const niche = document.getElementById('setting-niche').value;
+    const currency = document.getElementById('setting-currency').value;
     
     try {
       const response = await fetch(`${API_BASE}/api/user/profile`, { 
         method: 'PUT', 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ profile: { stageName, niche } }) 
+        body: JSON.stringify({ profile: { stageName, niche }, preferredCurrency: currency }) 
       });
       const data = await response.json();
       
       if (data.success) {
         if (stageName) document.getElementById('profile-name').innerHTML = `${stageName} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`;
         if (niche) document.getElementById('profile-niche').innerHTML = `Niche: ${niche}`;
+        if (currency) document.getElementById('profile-currency').innerHTML = `Currency: ${currency}`;
         
         if (currentUser) {
           if (!currentUser.profile) currentUser.profile = {};
           currentUser.profile.stageName = stageName;
           currentUser.profile.niche = niche;
+          currentUser.preferredCurrency = currency;
           localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
         }
         
@@ -1554,58 +1558,6 @@
     } catch(e) { 
       showToast('Error saving settings', 'error');
     }
-  }
-
-  // ============================================
-  // DEPOSIT
-  // ============================================
-  function openDepositModal() {
-    document.getElementById('deposit-modal').style.display = 'flex';
-    updateDepositPreview();
-  }
-
-  let selectedDepositMethod = 'mpesa';
-
-  function selectDepositMethod(method) {
-    selectedDepositMethod = method;
-    document.querySelectorAll('.deposit-method-btn').forEach(btn => btn.style.background = 'rgba(255,255,255,0.05)');
-    document.querySelectorAll('.deposit-method-btn').forEach(btn => btn.style.borderColor = 'rgba(255,140,66,0.3)');
-    event.target.style.background = 'rgba(255,140,66,0.2)';
-    event.target.style.borderColor = '#ff8c42';
-    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none');
-    document.getElementById(`deposit-${method}-fields`).style.display = 'block';
-    updateDepositPreview();
-  }
-
-  function updateDepositPreview() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value) || 0;
-    const fee = amount * 0.1;
-    const total = amount + fee;
-    document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${total.toFixed(2)} ($${amount} + $${fee.toFixed(2)} fee)`;
-  }
-
-  async function processDeposit() {
-    const amount = parseFloat(document.getElementById('deposit-amount').value);
-    if (!amount || amount <= 0) { showToast('Enter amount', 'error'); return; }
-    const total = amount + (amount * 0.1);
-    if (!confirm(`Deposit $${amount}? Total: $${total.toFixed(2)} (includes 10% fee)`)) return;
-    showToast('Processing payment...', 'info');
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/wallet/deposit`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ intentUsd: amount, paymentMethod: selectedDepositMethod }) 
-      });
-      const data = await res.json();
-      if (data.success) { 
-        showToast('Deposit successful!', 'success');
-        loadWallet(); 
-        closeModal('deposit-modal');
-      } else {
-        showToast(data.message || 'Deposit failed', 'error');
-      }
-    } catch(e) { showToast('Network error', 'error'); }
   }
 
   // ============================================
@@ -1624,6 +1576,7 @@
         document.getElementById('wallet-detail-tips').innerHTML = formatMoney(tips);
         document.getElementById('wallet-detail-escrow').innerHTML = formatMoney(escrow);
         document.getElementById('total-tips').innerHTML = formatMoney(tips);
+        document.getElementById('tips-fee').innerHTML = formatMoney(tips * 0.05);
         document.getElementById('tips-net').innerHTML = formatMoney(tips * 0.95);
         updateWithdrawUI(available);
       }
@@ -1805,6 +1758,41 @@
   }
 
   // ============================================
+  // REFERRALS
+  // ============================================
+  async function loadReferrals() {
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/user/referrals`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('ref-total').innerText = data.totalReferrals || 0;
+        document.getElementById('ref-earned').innerHTML = formatMoney(data.earnedFromReferrals || 0);
+        document.getElementById('referral-link').value = `${window.location.origin}/signup.html?ref=${currentUser?.uniqueCode || ''}`;
+        
+        const referralsList = document.getElementById('referrals-list');
+        if (data.referrals && data.referrals.length > 0) {
+          referralsList.innerHTML = data.referrals.map(r => `
+            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>${escapeHtml(r.email)}</span>
+              <span style="font-size:12px;">Joined: ${formatDate(r.createdAt)}</span>
+            </div>
+          `).join('');
+        } else {
+          referralsList.innerHTML = '<div class="empty-state">No referrals yet. Share your link!</div>';
+        }
+      }
+    } catch(e) { console.error('Error loading referrals:', e); }
+  }
+
+  function copyReferralLink() {
+    const link = document.getElementById('referral-link');
+    link.select();
+    document.execCommand('copy');
+    showToast('Referral link copied!', 'success');
+  }
+
+  // ============================================
   // ACTIVE SESSIONS
   // ============================================
   async function loadActiveSessions() {
@@ -1842,12 +1830,11 @@
         const review = myProjects.filter(p => p.status === 'submitted_for_review');
         const completed = myProjects.filter(p => p.status === 'paid');
         
-        // Render Active Projects
-        const activeTbody = document.getElementById('active-tbody');
+        // Render Active Projects with auto-release status
         if (active.length === 0) {
-          activeTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No active projects currently</div><\/td><\/tr>';
+          document.querySelector('#active-table tbody').innerHTML = '<tr><td colspan="5">No active projects<\/td><\/tr>';
         } else {
-          activeTbody.innerHTML = await Promise.all(active.map(async p => {
+          document.querySelector('#active-table tbody').innerHTML = await Promise.all(active.map(async p => {
             const autoRelease = await getAutoReleaseStatus(p._id);
             const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr onclick="showProjectDetails('${p._id}')">
@@ -1860,11 +1847,10 @@
         }
         
         // Render Review Projects
-        const reviewTbody = document.getElementById('review-tbody');
         if (review.length === 0) {
-          reviewTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">You have no works under Review</div><\/td><\/tr>';
+          document.querySelector('#review-table tbody').innerHTML = '<tr><td colspan="5">No projects under review<\/td><\/tr>';
         } else {
-          reviewTbody.innerHTML = await Promise.all(review.map(async p => {
+          document.querySelector('#review-table tbody').innerHTML = await Promise.all(review.map(async p => {
             const autoRelease = await getAutoReleaseStatus(p._id);
             const statusHtml = autoRelease ? `<div class="auto-release-status ${autoRelease.statusClass}">${autoRelease.statusText}</div>` : '';
             return `<tr onclick="showProjectDetails('${p._id}')">
@@ -1878,27 +1864,27 @@
         }
         
         // Render Completed Projects
-        const completedTbody = document.getElementById('completed-tbody');
-        if (completed.length === 0) {
-          completedTbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No completed works</div><\/td><\/tr>';
-        } else {
-          completedTbody.innerHTML = completed.map(p => `<tr onclick="showProjectDetails('${p._id}')">
-            <td>${escapeHtml(p.title)}<\/td>
-            <td>${formatMoney(p.budget)}<\/td>
-            <td>${p.paidAt ? formatDate(p.paidAt) : formatDate(p.updatedAt)}<\/td>
-            <td><span class="status-badge active">Paid ✅<\/span><\/td>
-          <\/tr>`).join('');
-        }
+        document.querySelector('#completed-table tbody').innerHTML = completed.length === 0 ? '<tr><td colspan="4">No completed works<\/td><\/tr>' : completed.map(p => `<tr onclick="showProjectDetails('${p._id}')">
+          <td>${escapeHtml(p.title)}<\/td>
+          <td>${formatMoney(p.budget)}<\/td>
+          <td>${p.paidAt ? formatDate(p.paidAt) : formatDate(p.updatedAt)}<\/td>
+          <td><span class="status-badge active">Paid ✅<\/span><\/td>
+        <\/tr>`).join('');
         
-        // Show tables
-        document.getElementById('active-skeleton').style.display = 'none';
-        document.getElementById('active-table').style.display = 'table';
-        document.getElementById('review-skeleton').style.display = 'none';
-        document.getElementById('review-table').style.display = 'table';
-        document.getElementById('completed-skeleton').style.display = 'none';
-        document.getElementById('completed-table').style.display = 'table';
+        showTableWithSkeleton('active-table', 'active-skeleton', active.length > 0);
+        showTableWithSkeleton('review-table', 'review-skeleton', review.length > 0);
+        showTableWithSkeleton('completed-table', 'completed-skeleton', completed.length > 0);
       }
     } catch(e) { console.error(e); }
+  }
+
+  function showTableWithSkeleton(tableId, skeletonId, hasData) {
+    const skeleton = document.getElementById(skeletonId);
+    const table = document.getElementById(tableId);
+    if (skeleton && table) {
+      skeleton.style.display = 'none';
+      table.style.display = 'table';
+    }
   }
 
   async function loadMoreCampaigns(type) {
@@ -1937,6 +1923,11 @@
     document.getElementById('project-modal').style.display = 'flex';
   }
 
+  function showSubmitWork(campaignId) { 
+    const project = projectsData.find(p => p._id === campaignId);
+    if (project) openSubmitWorkModal(project);
+  }
+
   // ============================================
   // AUTO-RELEASE STATUS HELPER
   // ============================================
@@ -1973,13 +1964,10 @@
   // ============================================
   // GOOGLE DRIVE FUNCTIONS
   // ============================================
+  
   async function checkDriveStatus() {
     try {
-      const token = localStorage.getItem('pebeto_token');
-      const response = await fetch(`${API_BASE}/api/drive/status`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
+      const data = await fetchJSON(`${API_BASE}/api/drive/status`);
       if (data.success) {
         isDriveConnected = data.data.isConnected && data.data.isValid;
         const driveDiv = document.getElementById('driveStatus');
@@ -2007,6 +1995,18 @@
       return;
     }
     window.location.href = `${API_BASE}/api/drive/auth`;
+  }
+
+  async function disconnectGoogleDrive() {
+    if (!confirm('Disconnect Google Drive? You will need to reconnect to upload videos.')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      await fetch(`${API_BASE}/api/drive/disconnect`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      showToast('Google Drive disconnected', 'success');
+      checkDriveStatus();
+    } catch (error) {
+      showToast('Failed to disconnect', 'error');
+    }
   }
 
   // File upload handlers
@@ -2086,6 +2086,7 @@
   // ============================================
   // SUBMIT WORK WITH GOOGLE DRIVE
   // ============================================
+  
   async function submitWorkWithDrive() {
     if (!currentSubmitCampaign) {
       showToast('No campaign selected', 'error');
@@ -2364,14 +2365,15 @@
   // ============================================
   async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
-    if (!userStr) { window.location.href = '/login.html'; return; }
+    if (!userStr) { window.location.href = '/signup.html'; return; }
     currentUser = JSON.parse(userStr);
     document.getElementById('profile-name').innerHTML = `${currentUser.profile?.stageName || currentUser.email.split('@')[0]} <i class="ri-edit-line edit-icon" onclick="openSettings()"></i>`;
     document.getElementById('profile-email').innerText = currentUser.email;
     document.getElementById('unique-code').innerText = currentUser.uniqueCode || 'Not assigned';
     document.getElementById('tip-code').innerText = currentUser.uniqueCode || 'Share your code';
     document.getElementById('profile-niche').innerHTML = `Niche: ${currentUser.profile?.niche || 'Not set'}`;
-    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'C').toUpperCase();
+    document.getElementById('profile-currency').innerHTML = `Currency: ${currentUser.preferredCurrency || 'USD'}`;
+    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0]).toUpperCase();
     document.getElementById('avatar-header').innerHTML = initial;
     document.getElementById('profile-avatar').innerHTML = initial;
     if (currentUser.profile?.avatarUrl) {
@@ -2379,12 +2381,10 @@
       document.getElementById('avatar-header').innerHTML = '';
       document.getElementById('profile-avatar').style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
       document.getElementById('profile-avatar').innerHTML = '';
-      document.getElementById('removeAvatarBtn').style.display = 'flex';
-    } else {
-      document.getElementById('removeAvatarBtn').style.display = 'none';
     }
     document.getElementById('setting-stageName').value = currentUser.profile?.stageName || '';
     document.getElementById('setting-niche').value = currentUser.profile?.niche || '';
+    document.getElementById('setting-currency').value = currentUser.preferredCurrency || 'USD';
     
     if (currentUser.socialLinks) {
       if (currentUser.socialLinks.tiktok) document.getElementById('tiktokUrl').value = currentUser.socialLinks.tiktok;
@@ -2412,6 +2412,22 @@
     document.getElementById('avatar-file').addEventListener('change', previewAvatar);
   }
 
+  function resendVerification() {
+    fetch(`${API_BASE}/api/user/email/resend`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) showToast('Verification email sent!', 'success');
+      else showToast('Failed to send verification email', 'error');
+    });
+  }
+
+  function openDepositModal() {
+    window.location.href = '/deposit.html';
+  }
+
   // ============================================
   // EVENT LISTENERS & INITIALIZATION
   // ============================================
@@ -2423,6 +2439,7 @@
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
       
       if (btn.dataset.tab === 'withdrawals') loadWithdrawalsHistory();
+      if (btn.dataset.tab === 'referrals') loadReferrals();
     });
   });
   
@@ -2447,6 +2464,7 @@
   loadEarningsChart();
   loadTipsReceived();
   loadWithdrawalsHistory();
+  loadReferrals();
   loadActiveSessions();
   checkDriveStatus();
   
