@@ -21,4 +21,4 @@ communityPostSchema.index({ createdAt: -1 });
 communityPostSchema.index({ authorId: 1, createdAt: -1 });
 communityPostSchema.index({ isTrending: 1, likeCount: -1 });
 
-module.exports = mongoose.model('CommunityPost', communityPostSchema);
+module.exports = mongoose.model('CommunityPost', communityPostSchema)
