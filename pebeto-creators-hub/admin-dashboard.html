@@ -487,19 +487,6 @@
       background: rgba(255,140,66,0.1);
     }
     
-    .spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: #ff8c42;
-      animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
     @media (max-width: 768px) { 
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .stats-grid-auto { grid-template-columns: repeat(2, 1fr); }
@@ -581,7 +568,7 @@
     <div class="stat-card" onclick="openDepositModal()">
       <h4>💰 Admin Wallet</h4>
       <div class="amount" id="admin-wallet">$0.00</div>
-      <div style="font-size:11px;">👇 Click to add funds (No fees)</div>
+      <div style="font-size:11px;">👇 Click to add funds</div>
     </div>
     <div class="stat-card" onclick="showActiveEscrow()">
       <h4>🔒 Active Escrow</h4>
@@ -631,7 +618,7 @@
 
   <!-- DASHBOARD TAB -->
   <div id="tab-dashboard" class="tab-content active">
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
       <div class="stat-card" onclick="loadDashboardStats()"><h4>👥 Total Users</h4><div class="amount" id="total-users">0</div></div>
       <div class="stat-card"><h4>🏢 Total Businesses</h4><div class="amount" id="total-businesses">0</div></div>
       <div class="stat-card"><h4>📢 Active Campaigns</h4><div class="amount" id="active-campaigns">0</div></div>
@@ -919,31 +906,7 @@
 
 <!-- MODALS -->
 <div id="avatar-modal" class="modal"><div class="modal-content"><h3>Change Profile Picture</h3><div class="avatar-preview" id="avatar-preview"></div><input type="text" id="avatar-url" placeholder="Image URL"><input type="file" id="avatar-file" accept="image/*"><div class="modal-buttons"><button class="save-btn" onclick="saveAvatar()">Save</button><button class="cancel-btn" onclick="closeModal('avatar-modal')">Cancel</button></div></div></div>
-
-<!-- Deposit Modal - NO FEES FOR ADMIN -->
-<div id="deposit-modal" class="modal">
-  <div class="modal-content">
-    <h3>💰 Add Funds to Admin Wallet</h3>
-    <p style="margin-bottom: 15px; color: #4caf50;"><strong>✓ No platform fees for admin deposits</strong></p>
-    <div class="deposit-methods">
-      <div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')">M-Pesa</div>
-      <div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank Transfer</div>
-      <div class="deposit-method-btn" onclick="selectDepositMethod('paypal')">PayPal</div>
-    </div>
-    <div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="M-Pesa Phone Number"></div>
-    <div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div>
-    <div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div>
-    <input type="number" id="deposit-amount" placeholder="Amount to Deposit (USD)" oninput="updateDepositPreview()">
-    <div id="deposit-preview" style="background: rgba(76,175,80,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px; color: #4caf50;">
-      💡 No fees! You pay: $0.00
-    </div>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="processAdminDeposit()">Add Funds</button>
-      <button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
+<div id="deposit-modal" class="modal"><div class="modal-content"><h3>💰 Add Funds (10% fee)</h3><div class="deposit-methods"><div class="deposit-method-btn" onclick="selectDepositMethod('mpesa')">M-Pesa</div><div class="deposit-method-btn" onclick="selectDepositMethod('bank')">Bank</div><div class="deposit-method-btn" onclick="selectDepositMethod('paypal')">PayPal</div></div><div id="deposit-mpesa-fields" class="deposit-fields"><input type="tel" id="deposit-phone" placeholder="Phone Number"></div><div id="deposit-bank-fields" class="deposit-fields" style="display:none"><input type="text" id="deposit-bank" placeholder="Bank Name"><input type="text" id="deposit-account" placeholder="Account Number"></div><div id="deposit-paypal-fields" class="deposit-fields" style="display:none"><input type="email" id="deposit-paypal-email" placeholder="PayPal Email"></div><input type="number" id="deposit-amount" placeholder="Amount (USD)" oninput="updateDepositPreview()"><div id="deposit-preview"></div><div class="modal-buttons"><button class="save-btn" onclick="processDeposit()">Add Funds</button><button class="cancel-btn" onclick="closeModal('deposit-modal')">Cancel</button></div></div></div>
 <div id="campaign-modal" class="modal"><div class="modal-content"><h3>📢 Launch Campaign</h3><input type="text" id="campaign-title" placeholder="Campaign Title"><input type="number" id="campaign-budget" placeholder="Total Budget (USD)" oninput="updateBudgetBreakdown()"><input type="number" id="campaign-slots" placeholder="Number of Creators" value="1" oninput="updateBudgetBreakdown()"><input type="date" id="campaign-deadline"><textarea id="campaign-instructions" rows="3" placeholder="Instructions for creators"></textarea><div id="budget-breakdown"></div><div id="campaign-error" style="color:#f44336;"></div><div class="modal-buttons"><button class="save-btn" onclick="createCampaign()">Launch</button><button class="cancel-btn" onclick="closeModal('campaign-modal')">Cancel</button></div></div></div>
 <div id="edit-campaign-modal" class="modal"><div class="modal-content"><h3>✏️ Edit Campaign</h3><input type="hidden" id="edit-campaign-id"><input type="text" id="edit-campaign-title" placeholder="Title"><input type="number" id="edit-campaign-budget" placeholder="Budget"><input type="number" id="edit-campaign-slots" placeholder="Slots"><input type="date" id="edit-campaign-deadline"><textarea id="edit-campaign-instructions" rows="3" placeholder="Instructions"></textarea><div id="edit-campaign-error" style="color:#f44336;"></div><div class="modal-buttons"><button class="save-btn" onclick="updateCampaign()">Save</button><button class="cancel-btn" onclick="closeModal('edit-campaign-modal')">Cancel</button></div></div></div>
 <div id="tip-modal" class="modal"><div class="modal-content"><h3>💝 Send Tip</h3><p id="tip-creator-name"></p><input type="number" id="tip-amount" placeholder="Amount"><select id="tip-currency"><option value="USD">USD ($)</option><option value="KES">KES (KSh)</option><option value="EUR">EUR (€)</option></select><div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div></div></div>
@@ -966,7 +929,7 @@
   // VARIABLES
   // ============================================
   let selectedWithdrawMethod = 'mpesa', selectedDepositMethod = 'mpesa';
-  let notifications = [], campaigns = [], allBids = [], allTransactions = [], activeProjects = [], allUsersData = [];
+  let notifications = [], campaigns = [], allBids = [], allTransactions = [], activeProjects = [], allUsers = [];
   let currentTipCreatorId = null, currentTipCreatorName = '';
   let currentHireCreatorId = null, currentHireCreatorName = '';
   let spendingChart = null, userGrowthChart = null, revenueChart = null, campaignChart = null, feeChart = null;
@@ -974,6 +937,7 @@
   let reports = [], currentReportToResolve = null;
   let transactionPage = 1, transactionHasMore = true;
   let currentUser = null;
+  let allUsersData = [];
 
   // ============================================
   // HELPER FUNCTIONS
@@ -1024,236 +988,124 @@
   }
 
   // ============================================
-  // AVATAR FUNCTIONS
-  // ============================================
-  function openAvatarModal() { 
-    document.getElementById('avatar-modal').style.display = 'flex'; 
-    document.getElementById('avatar-file').addEventListener('change', previewAvatar);
-  }
-  
-  function previewAvatar() {
-    const file = document.getElementById('avatar-file').files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('avatar-preview').style.backgroundImage = `url(${e.target.result})`;
-        document.getElementById('avatar-preview').style.backgroundSize = 'cover';
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  async function saveAvatar() {
-    const fileInput = document.getElementById('avatar-file');
-    const file = fileInput.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      try {
-        const token = localStorage.getItem('pebeto_token');
-        const response = await fetch(`${API_BASE}/api/user/avatar`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-        const data = await response.json();
-        if (data.success) {
-          showToast('Profile picture updated!', 'success');
-          if (currentUser) {
-            currentUser.profile.avatarUrl = data.avatarUrl;
-            localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-          }
-          location.reload();
-        } else {
-          showToast(data.message || 'Upload failed', 'error');
-        }
-      } catch(e) {
-        showToast('Error uploading image', 'error');
-      }
-    } else {
-      const avatarUrl = document.getElementById('avatar-url').value;
-      if (avatarUrl) {
-        try {
-          const token = localStorage.getItem('pebeto_token');
-          await fetch(`${API_BASE}/api/user/profile`, { 
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-            body: JSON.stringify({ profile: { avatarUrl } }) 
-          });
-          showToast('Profile picture updated!', 'success');
-          if (currentUser) {
-            currentUser.profile.avatarUrl = avatarUrl;
-            localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
-          }
-          location.reload();
-        } catch(e) { showToast('Error', 'error'); }
-      } else {
-        showToast('Please select an image or enter URL', 'error');
-      }
-    }
-    closeModal('avatar-modal');
-  }
-
-  // ============================================
   // DEPOSIT & WITHDRAWAL UI
   // ============================================
   
   function openDepositModal() { document.getElementById('deposit-modal').style.display = 'flex'; updateDepositPreview(); }
-  function selectDepositMethod(m) { 
-    selectedDepositMethod = m; 
-    document.querySelectorAll('.deposit-method-btn').forEach(b => b.classList.remove('active')); 
-    if (event && event.target) event.target.classList.add('active'); 
-    document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none'); 
-    document.getElementById(`deposit-${m}-fields`).style.display = 'block'; 
-    updateDepositPreview(); 
-  }
+  function selectDepositMethod(m) { selectedDepositMethod = m; document.querySelectorAll('.deposit-method-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.deposit-fields').forEach(f => f.style.display = 'none'); document.getElementById(`deposit-${m}-fields`).style.display = 'block'; updateDepositPreview(); }
+  function updateDepositPreview() { let amt = parseFloat(document.getElementById('deposit-amount').value) || 0; let fee = amt * 0.1; document.getElementById('deposit-preview').innerHTML = `💡 You pay: $${(amt + fee).toFixed(2)} ($${amt} + $${fee.toFixed(2)} fee)`; }
+  function processDeposit() { let amt = parseFloat(document.getElementById('deposit-amount').value); if (!amt || amt <= 0) return showToast('Enter amount', 'error'); showToast(`Deposit $${amt} submitted!`, 'success'); closeModal('deposit-modal'); addNotification(`Deposited $${amt}`); }
   
-  function updateDepositPreview() { 
-    let amt = parseFloat(document.getElementById('deposit-amount').value) || 0; 
-    // NO FEES FOR ADMIN
-    document.getElementById('deposit-preview').innerHTML = `💡 No fees! You pay: $${amt.toFixed(2)}`; 
-  }
+  function selectWithdrawMethod(m) { selectedWithdrawMethod = m; document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); document.getElementById(`withdraw-${m}-fields`).style.display = 'block'; updateWithdrawPreview(); }
+  function updateWithdrawPreview() { let amt = parseFloat(document.getElementById('withdraw-amount').value) || 0; const btn = document.getElementById('withdraw-btn'); if (amt > 0) { btn.classList.add('active'); btn.disabled = false; } else { btn.classList.remove('active'); btn.disabled = true; } }
+  function withdraw() { let amt = parseFloat(document.getElementById('withdraw-amount').value); if (!amt || amt <= 0) return showToast('Enter amount', 'error'); const method = selectedWithdrawMethod; if (method === 'mpesa') { const phone = document.getElementById('mpesa-phone').value; if (!phone || phone.length < 10) return showToast('Valid phone number required', 'error'); } document.getElementById('confirm-details').innerHTML = `Amount: ${formatMoney(amt)}<br>Method: ${method.toUpperCase()}<br>No fees!`; document.getElementById('confirm-withdraw-modal').style.display = 'flex'; }
+  function processWithdrawal() { const amt = parseFloat(document.getElementById('withdraw-amount').value); showToast(`Withdrawal of ${formatMoney(amt)} submitted!`, 'success'); closeModal('confirm-withdraw-modal'); addNotification(`Withdrew ${formatMoney(amt)}`); document.getElementById('withdraw-amount').value = ''; updateWithdrawPreview(); }
   
-  async function processAdminDeposit() {
-    let amt = parseFloat(document.getElementById('deposit-amount').value); 
-    if (!amt || amt <= 0) { showToast('Enter amount', 'error'); return; }
-    // NO FEES FOR ADMIN
-    if (!confirm(`Deposit $${amt}? No fees apply.`)) return;
-    showToast('Processing payment...', 'info');
+  function openAvatarModal() { document.getElementById('avatar-modal').style.display = 'flex'; }
+  function previewAvatar() { const file = document.getElementById('avatar-file').files[0]; if (file) { const reader = new FileReader(); reader.onload = e => { document.getElementById('avatar-preview').style.backgroundImage = `url(${e.target.result})`; document.getElementById('avatar-preview').style.backgroundSize = 'cover'; }; reader.readAsDataURL(file); } }
+  function saveAvatar() { const url = document.getElementById('avatar-url').value; if (url) { showToast('Avatar updated', 'success'); closeModal('avatar-modal'); } else if (document.getElementById('avatar-file').files[0]) { showToast('Avatar uploaded', 'success'); closeModal('avatar-modal'); } else { showToast('Enter image URL or select file', 'error'); } }
+  
+  function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+  function saveSettings() { showToast('Settings saved', 'success'); closeModal('settings-modal'); }
+  
+  function openMessageModal(id, name) { document.getElementById('msg-name').innerText = name; document.getElementById('message-modal').style.display = 'flex'; }
+  function sendMessage() { const msg = document.getElementById('msg-text').value; if (!msg) return showToast('Enter message', 'error'); showToast('Message sent!', 'success'); closeModal('message-modal'); addNotification('Message sent to creator'); }
+  document.getElementById('msg-text')?.addEventListener('input', () => { const remaining = 500 - (document.getElementById('msg-text').value?.length || 0); document.getElementById('msg-counter').innerText = `${remaining} characters remaining`; });
+  
+  function openCampaignModal() { document.getElementById('campaign-modal').style.display = 'flex'; updateBudgetBreakdown(); }
+  function updateBudgetBreakdown() { let b = parseFloat(document.getElementById('campaign-budget').value) || 0; let s = parseInt(document.getElementById('campaign-slots').value) || 1; document.getElementById('budget-breakdown').innerHTML = `💰 $${b} total → $${(b / s).toFixed(2)} per creator (${s} creator${s !== 1 ? 's' : ''})`; }
+  
+  async function createCampaign() {
+    const title = document.getElementById('campaign-title').value.trim();
+    const budget = parseFloat(document.getElementById('campaign-budget').value);
+    const slots = parseInt(document.getElementById('campaign-slots').value) || 1;
+    const deadline = document.getElementById('campaign-deadline').value;
+    const instructions = document.getElementById('campaign-instructions').value;
+    const errorDiv = document.getElementById('campaign-error');
+    
+    if (!title) { errorDiv.innerHTML = 'Enter title'; return; }
+    if (!budget || budget <= 0) { errorDiv.innerHTML = 'Enter valid budget'; return; }
+    if (budget / slots < 10) { errorDiv.innerHTML = 'Minimum $10 per creator'; return; }
+    errorDiv.innerHTML = '';
+    
     try {
       const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/admin/wallet/deposit`, { 
+      const res = await fetch(`${API_BASE}/api/campaigns`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({ amount: amt, paymentMethod: selectedDepositMethod }) 
+        body: JSON.stringify({ title, budget: budget / slots, description: instructions, slots, deadline }) 
       });
-      const data = await res.json();
-      if (data.success) { 
-        showToast(`Deposit of $${amt} successful!`, 'success');
-        loadDashboardStats();
-        closeModal('deposit-modal');
-        addNotification(`Deposited $${amt} to admin wallet`);
+      if (res.ok) { 
+        showToast('Campaign launched!', 'success');
+        closeModal('campaign-modal');
+        loadCampaigns();
+        document.getElementById('campaign-title').value = '';
+        document.getElementById('campaign-budget').value = '';
+        document.getElementById('campaign-slots').value = '1';
+        document.getElementById('campaign-deadline').value = '';
+        document.getElementById('campaign-instructions').value = '';
       } else {
-        showToast(data.message || 'Deposit failed', 'error');
+        showToast('Failed to create campaign', 'error');
       }
-    } catch(e) { showToast('Network error', 'error'); }
+    } catch(e) { showToast('Error', 'error'); }
   }
   
-  function selectWithdrawMethod(m) { 
-    selectedWithdrawMethod = m; 
-    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active')); 
-    if (event && event.target) event.target.classList.add('active'); 
-    document.querySelectorAll('.method-fields').forEach(f => f.style.display = 'none'); 
-    document.getElementById(`withdraw-${m}-fields`).style.display = 'block'; 
-    updateWithdrawPreview(); 
-  }
-  
-  function updateWithdrawPreview() { 
-    let amt = parseFloat(document.getElementById('withdraw-amount').value) || 0; 
-    const btn = document.getElementById('withdraw-btn'); 
-    if (amt > 0) { 
-      btn.classList.add('active'); 
-      btn.disabled = false; 
-    } else { 
-      btn.classList.remove('active'); 
-      btn.disabled = true; 
-    } 
-  }
-  
-  function withdraw() { 
-    let amt = parseFloat(document.getElementById('withdraw-amount').value); 
-    if (!amt || amt <= 0) { showToast('Enter amount', 'error'); return; } 
-    const method = selectedWithdrawMethod; 
-    if (method === 'mpesa') { 
-      const phone = document.getElementById('mpesa-phone').value; 
-      if (!phone || phone.length < 10) { showToast('Valid phone number required', 'error'); return; } 
-    } 
-    document.getElementById('confirm-details').innerHTML = `Amount: ${formatMoney(amt)}<br>Method: ${method.toUpperCase()}<br>No fees!`; 
-    document.getElementById('confirm-withdraw-modal').style.display = 'flex'; 
-  }
-  
-  function processWithdrawal() { 
-    const amt = parseFloat(document.getElementById('withdraw-amount').value); 
-    showToast(`Withdrawal of ${formatMoney(amt)} submitted!`, 'success'); 
-    closeModal('confirm-withdraw-modal'); 
-    addNotification(`Withdrew ${formatMoney(amt)}`); 
-    document.getElementById('withdraw-amount').value = ''; 
-    updateWithdrawPreview(); 
-  }
-
-  // ============================================
-  // LOAD DASHBOARD STATS - UPDATED WITH REAL NUMBERS
-  // ============================================
-  async function loadDashboardStats() {
+  function editCampaign(id) { const campaign = campaigns.find(c => c._id === id); if (!campaign) return; document.getElementById('edit-campaign-id').value = id; document.getElementById('edit-campaign-title').value = campaign.title; document.getElementById('edit-campaign-budget').value = campaign.budget; document.getElementById('edit-campaign-slots').value = campaign.slots; document.getElementById('edit-campaign-modal').style.display = 'flex'; }
+  async function updateCampaign() {
+    const id = document.getElementById('edit-campaign-id').value;
+    const title = document.getElementById('edit-campaign-title').value.trim();
+    const budget = parseFloat(document.getElementById('edit-campaign-budget').value);
+    const slots = parseInt(document.getElementById('edit-campaign-slots').value) || 1;
+    const deadline = document.getElementById('edit-campaign-deadline').value;
+    const instructions = document.getElementById('edit-campaign-instructions').value;
+    const errorDiv = document.getElementById('edit-campaign-error');
+    
+    if (!title) { errorDiv.innerHTML = 'Enter title'; return; }
+    if (!budget || budget <= 0) { errorDiv.innerHTML = 'Enter valid budget'; return; }
+    if (budget / slots < 10) { errorDiv.innerHTML = 'Minimum $10 per creator'; return; }
+    errorDiv.innerHTML = '';
+    
     try {
-      console.log('🔄 Loading dashboard stats...');
-      
-      // Fetch users data
       const token = localStorage.getItem('pebeto_token');
-      const usersRes = await fetch(`${API_BASE}/api/admin/users?limit=200`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API_BASE}/api/campaigns/${id}`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ title, budget: budget / slots, description: instructions, slots, deadline }) 
       });
-      const usersData = await usersRes.json();
-      
-      if (usersData.success && usersData.data.users) {
-        const fetchedUsers = usersData.data.users;
-        const totalUsers = fetchedUsers.length;
-        const businesses = fetchedUsers.filter(u => u.role === 'business').length;
-        const creators = fetchedUsers.filter(u => u.role === 'creator').length;
-        const admins = fetchedUsers.filter(u => u.role === 'admin').length;
-        
-        // Update Dashboard stats
-        document.getElementById('total-users').innerText = totalUsers;
-        document.getElementById('total-businesses').innerText = businesses;
-        document.getElementById('total-users-count').innerText = totalUsers;
-        document.getElementById('total-creators-count').innerText = creators;
-        document.getElementById('total-businesses-count').innerText = businesses;
-        document.getElementById('total-admins-count').innerText = admins;
-        
-        // Update Users tab stats
-        document.querySelectorAll('#total-users, #total-users-count').forEach(el => el.innerText = totalUsers);
-        document.querySelectorAll('#total-businesses, #total-businesses-count').forEach(el => el.innerText = businesses);
-        
-        console.log(`✅ Dashboard stats: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      if (res.ok) { 
+        showToast('Campaign updated!', 'success');
+        closeModal('edit-campaign-modal');
+        loadCampaigns();
+      } else {
+        showToast('Failed to update campaign', 'error');
       }
-      
-      // Get campaign stats
-      const campaignsData = await fetchJSON(`${API_BASE}/api/campaigns?limit=200`);
-      if (campaignsData.success && campaignsData.data.campaigns) {
-        const allCampaigns = campaignsData.data.campaigns;
-        const activeCampaigns = allCampaigns.filter(c => c.status === 'open' || c.status === 'in_progress').length;
-        const completedCampaigns = allCampaigns.filter(c => c.status === 'paid').length;
-        document.getElementById('active-campaigns').innerText = activeCampaigns;
-        document.getElementById('completed-campaigns').innerText = completedCampaigns;
-        
-        // Update campaign stats in campaigns tab
-        const totalBudget = allCampaigns.reduce((s, c) => s + (c.budget || 0), 0);
-        const totalBids = allCampaigns.reduce((s, c) => s + (c.bids?.length || 0), 0);
-        document.getElementById('campaign-stats-total-budget').innerHTML = formatMoney(totalBudget);
-        document.getElementById('campaign-stats-total-bids').innerText = totalBids;
-        document.getElementById('campaign-stats-completed').innerText = completedCampaigns;
-      }
-      
-      // Get wallet balance
-      const walletData = await fetchJSON(`${API_BASE}/api/wallet/balance`);
-      if (walletData.success) {
-        document.getElementById('admin-wallet').innerHTML = formatMoney(walletData.data?.balances?.available || 0);
-      }
-      
-      // Get escrow and transaction stats
-      const metricsData = await fetchJSON(`${API_BASE}/api/admin/metrics`);
-      if (metricsData.success) {
-        document.getElementById('total-escrow').innerHTML = formatMoney(metricsData.data?.totalEscrow || 0);
-        const totalDeposits = metricsData.data?.platformStats?.totalDeposits || 0;
-        document.getElementById('total-deposits').innerHTML = formatMoney(totalDeposits);
-        document.getElementById('audit-count').innerText = metricsData.data?.platformStats?.totalWithdrawals || 0;
-      }
-      
-    } catch(e) { 
-      console.error('Error loading dashboard stats:', e);
-    }
+    } catch(e) { showToast('Error', 'error'); }
   }
-
+  
+  async function deleteCampaign(id) {
+    if (!confirm('Delete this campaign?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/campaigns/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { 
+        showToast('Campaign deleted!', 'success');
+        loadCampaigns();
+      } else {
+        showToast('Failed to delete campaign', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+  
+  function exportCampaigns() {
+    if (campaigns.length === 0) { showToast('No campaigns to export', 'error'); return; }
+    let csv = 'Title,Budget,Slots,Status,Created\n';
+    campaigns.forEach(c => { csv += `"${c.title}",${c.budget},${c.slots || 1},${c.status},${formatDate(c.createdAt)}\n`; });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `campaigns_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
+    showToast('Campaigns exported!', 'success');
+  }
+  
   // ============================================
   // LOAD CAMPAIGNS
   // ============================================
@@ -1274,6 +1126,13 @@
       
       if (data.success && data.data.campaigns) {
         campaigns = data.data.campaigns;
+        const totalBudget = campaigns.reduce((s, c) => s + (c.budget || 0), 0);
+        const totalBids = campaigns.reduce((s, c) => s + (c.bids?.length || 0), 0);
+        const completed = campaigns.filter(c => c.status === 'paid').length;
+        document.getElementById('campaign-stats-total-budget').innerHTML = formatMoney(totalBudget);
+        document.getElementById('campaign-stats-total-bids').innerText = totalBids;
+        document.getElementById('campaign-stats-completed').innerText = completed;
+        
         if (campaigns.length === 0) {
           tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No campaigns found<\/td><\/tr>';
         } else {
@@ -1299,7 +1158,7 @@
       console.error(e); 
     }
   }
-
+  
   // ============================================
   // LOAD APPLICATIONS (BIDS)
   // ============================================
@@ -1356,7 +1215,37 @@
       console.error(e); 
     }
   }
-
+  
+  async function acceptBid(campaignId, bidId) {
+    if (!confirm('Approve this creator?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/bids/${bidId}/accept`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { 
+        showToast('Creator approved!', 'success');
+        loadApplications();
+        loadCampaigns();
+        loadActiveProjects();
+      } else {
+        showToast('Failed to approve', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+  
+  async function rejectBid(campaignId, bidId) {
+    if (!confirm('Reject this creator?')) return;
+    try {
+      const token = localStorage.getItem('pebeto_token');
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/bids/${bidId}/reject`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { 
+        showToast('Creator rejected', 'info');
+        loadApplications();
+      } else {
+        showToast('Failed to reject', 'error');
+      }
+    } catch(e) { showToast('Error', 'error'); }
+  }
+  
   // ============================================
   // LOAD ACTIVE PROJECTS
   // ============================================
@@ -1396,7 +1285,7 @@
       console.error(e); 
     }
   }
-
+  
   // ============================================
   // SEARCH CREATORS
   // ============================================
@@ -1443,15 +1332,15 @@
       console.error(e);
     }
   }
-
+  
   function viewCreatorProfile(creatorId) {
     window.open(`/creator-profile.html?id=${creatorId}`, '_blank');
   }
-
+  
   // ============================================
-  // LOAD USERS
+  // LOAD USERS - FIXED WITH REAL DATA
   // ============================================
-  async function loadUsers() {
+ async function loadUsers() {
     const loadingDiv = document.getElementById('users-loading');
     const tbody = document.querySelector('#users-table tbody');
     
@@ -1474,6 +1363,7 @@
       if (data.success && data.data.users) {
         allUsersData = data.data.users;
         
+        // Filter by search term
         let filteredUsers = allUsersData;
         if (search) {
           const searchLower = search.toLowerCase();
@@ -1486,6 +1376,7 @@
           );
         }
         
+        // Update stats
         const creators = allUsersData.filter(u => u.role === 'creator').length;
         const businesses = allUsersData.filter(u => u.role === 'business').length;
         const admins = allUsersData.filter(u => u.role === 'admin').length;
@@ -1494,6 +1385,7 @@
         document.getElementById('total-businesses-count').innerText = businesses;
         document.getElementById('total-admins-count').innerText = admins;
         
+        // ALSO UPDATE DASHBOARD STATS
         document.getElementById('total-users').innerText = allUsersData.length;
         document.getElementById('total-businesses').innerText = businesses;
         
@@ -1526,7 +1418,7 @@
       console.error(e);
     }
   }
-
+  
   function filterUsers() {
     const searchTerm = document.getElementById('user-search').value.toLowerCase();
     const tbody = document.querySelector('#users-table tbody');
@@ -1573,7 +1465,7 @@
       `).join('');
     }
   }
-
+  
   async function viewUserDetails(userId) {
     try {
       const token = localStorage.getItem('pebeto_token');
@@ -1594,7 +1486,7 @@
       }
     } catch(e) { showToast('Error loading user details', 'error'); }
   }
-
+  
   async function toggleUserStatus(userId, currentStatus) {
     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
     const action = newStatus === 'suspended' ? 'suspend' : 'activate';
@@ -1610,7 +1502,7 @@
       else { showToast(data.message || 'Failed to update user status', 'error'); }
     } catch(e) { showToast('Error updating user status', 'error'); }
   }
-
+  
   // ============================================
   // LOAD TRANSACTIONS
   // ============================================
@@ -1646,7 +1538,7 @@
         document.getElementById('total-deposits').innerHTML = formatMoney(depositsTotal);
         
         if (allTransactions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found<\/td><\/tr>';
+          tbody.innerHTML = '</tr><td colspan="7" class="empty-state">No transactions found<\/td><\/tr>';
         } else {
           tbody.innerHTML = allTransactions.map(t => `
             <tr>
@@ -1667,10 +1559,10 @@
       console.error(e); 
     }
   }
-
+  
   function filterTransactions() { loadTransactions(true); }
   function loadMoreTransactions() { transactionPage++; loadTransactions(false); }
-
+  
   // ============================================
   // LOAD ADMIN WITHDRAWALS
   // ============================================
@@ -1706,7 +1598,7 @@
       console.error(e); 
     }
   }
-
+  
   // ============================================
   // LOAD ACTIVITY LOG
   // ============================================
@@ -1744,13 +1636,13 @@
       console.error(e); 
     }
   }
-
+  
   function filterActivityLog() {
     const term = document.getElementById('activity-search').value.toLowerCase();
     const rows = document.querySelectorAll('#activity-list tr');
     rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none'; });
   }
-
+  
   function exportActivityLog() {
     const rows = document.querySelectorAll('#activity-list tr');
     let csv = 'Action,User,IP Address,Device,Date\n';
@@ -1760,7 +1652,7 @@
     const a = document.createElement('a'); a.href = url; a.download = `activity_log_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
     showToast('Activity log exported!', 'success');
   }
-
+  
   // ============================================
   // SECURITY & TEAM FUNCTIONS
   // ============================================
@@ -1772,7 +1664,7 @@
   function addTeamMember() { const email = document.getElementById('team-email').value; if (!email) return showToast('Enter email', 'error'); teamMembers.push({ email, role: document.getElementById('team-role').value }); showToast(`Invitation sent to ${email}`, 'success'); closeModal('add-team-member-modal'); loadTeamMembers(); }
   function loadTeamMembers() { const container = document.getElementById('team-members-list'); if (teamMembers.length === 0) { container.innerHTML = '<div class="empty-state">No team members yet</div>'; } else { container.innerHTML = teamMembers.map(m => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(m.email)}</strong><span class="status-badge" style="margin-left:10px;">${m.role}</span></div><button class="btn-action danger" onclick="removeTeamMember('${m.email}')">Remove</button></div>`).join(''); } }
   function removeTeamMember(email) { teamMembers = teamMembers.filter(m => m.email !== email); showToast('Member removed', 'success'); loadTeamMembers(); }
-
+  
   // ============================================
   // API KEYS
   // ============================================
@@ -1804,7 +1696,7 @@
       }
     } catch(e) { console.error(e); }
   }
-
+  
   function copyApiKey(key) { navigator.clipboard.writeText(key); showToast('API Key copied!', 'success'); }
   function createApiKey() { document.getElementById('api-key-modal').style.display = 'flex'; }
   async function createApiKeySubmit() {
@@ -1825,7 +1717,7 @@
       } else { showToast(data.message || 'Failed to create API key', 'error'); }
     } catch(e) { showToast('Error', 'error'); }
   }
-
+  
   async function deleteApiKey(keyId) {
     if (!confirm('Delete this API key? This cannot be undone.')) return;
     try {
@@ -1835,7 +1727,7 @@
       else { showToast('Failed to delete API key', 'error'); }
     } catch(e) { showToast('Error', 'error'); }
   }
-
+  
   // ============================================
   // WEBHOOKS
   // ============================================
@@ -1843,7 +1735,7 @@
   function addWebhook() { const url = document.getElementById('webhook-url').value; if (!url) return showToast('Enter URL', 'error'); webhooks.push({ url, events: [document.getElementById('webhook-events').value] }); showToast('Webhook added!', 'success'); closeModal('add-webhook-modal'); loadWebhooks(); }
   function loadWebhooks() { const container = document.getElementById('webhooks-list'); if (webhooks.length === 0) { container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; } else { container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); } }
   function deleteWebhook(url) { webhooks = webhooks.filter(w => w.url !== url); showToast('Webhook deleted', 'success'); loadWebhooks(); }
-
+  
   // ============================================
   // AUTO-RELEASE FUNCTIONS
   // ============================================
@@ -1860,7 +1752,7 @@
       }
     } catch(e) { console.error(e); }
   }
-
+  
   async function loadAutoReleaseCampaigns() {
     try {
       const token = localStorage.getItem('pebeto_token');
@@ -1881,10 +1773,10 @@
       } else { container.innerHTML = '<div class="empty-state">No campaigns pending auto-release</div>'; }
     } catch(e) { console.error(e); }
   }
-
+  
   function viewCampaignDetails(campaignId) { window.open(`/campaign.html?id=${campaignId}`, '_blank'); }
   function contactBusiness(businessId) { showToast('Messaging feature - will open chat', 'info'); }
-
+  
   // ============================================
   // MODERATION FUNCTIONS
   // ============================================
@@ -1920,7 +1812,7 @@
       }
     } catch(e) { console.error(e); }
   }
-
+  
   function openResolveReportModal(reportId, targetName) { currentReportToResolve = reportId; document.getElementById('resolve-report-info').innerHTML = `Resolving report for: <strong>${targetName}</strong>`; document.getElementById('resolve-report-modal').style.display = 'flex'; }
   async function resolveReport() {
     if (!currentReportToResolve) return;
@@ -1951,7 +1843,7 @@
     } catch(e) { showToast('Error dismissing report', 'error'); }
   }
   function viewReportDetails(reportId) { const report = reports.find(r => r._id === reportId); if (report) { alert(`Report Details:\n\nReason: ${report.reasonLabel}\nDescription: ${report.description || 'N/A'}\nStatus: ${report.status}\nSubmitted: ${formatDateTime(report.createdAt)}`); } }
-
+  
   // ============================================
   // CHART FUNCTIONS
   // ============================================
@@ -1965,7 +1857,7 @@
       spendingChart = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Spending ($)', data: spendingData, borderColor: '#ff8c42', fill: true, backgroundColor: 'rgba(255,140,66,0.1)' }] }, options: { responsive: true } });
     } catch(e) { console.error(e); }
   }
-
+  
   async function loadUserGrowthChart() {
     try {
       const data = await fetchJSON(`${API_BASE}/api/admin/registrations`);
@@ -1978,7 +1870,7 @@
       userGrowthChart = new Chart(ctx, { type: 'line', data: { labels: last7Days.map(d => d.slice(5)), datasets: [{ label: 'New Users', data: counts, borderColor: '#ff8c42', fill: false }] }, options: { responsive: true } });
     } catch(e) { console.error(e); }
   }
-
+  
   async function loadRevenueChart() {
     try {
       const data = await fetchJSON(`${API_BASE}/api/admin/metrics`);
@@ -1987,7 +1879,7 @@
       revenueChart = new Chart(ctx, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Revenue ($)', data: [0, 0, 0, 0, 0, 0], borderColor: '#4ade80', fill: false }] }, options: { responsive: true } });
     } catch(e) { console.error(e); }
   }
-
+  
   async function loadCampaignPerformanceChart() {
     try {
       const data = await fetchJSON(`${API_BASE}/api/campaigns/performance`);
@@ -1999,7 +1891,7 @@
       document.getElementById('roi-value').innerText = (data.roi || 0) + '%';
     } catch(e) { console.error(e); }
   }
-
+  
   async function loadFeeChart() {
     try {
       const data = await fetchJSON(`${API_BASE}/api/admin/metrics`);
@@ -2009,54 +1901,130 @@
       feeChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Deposit Fees', 'Tip Fees', 'Withdrawal Fees'], datasets: [{ data: [fees.deposit, fees.tip, fees.withdrawal], backgroundColor: ['#ff8c42', '#4ade80', '#2196f3'] }] }, options: { responsive: true } });
     } catch(e) { console.error(e); }
   }
-
+  
   // ============================================
-  // USER DATA
+  // LOAD DASHBOARD STATS
   // ============================================
-  function loadUserData() {
+  async function loadDashboardStats() {
+    try {
+      console.log('Loading dashboard stats...');
+      
+      // Get user stats from allUsersData if available
+      if (allUsersData && allUsersData.length > 0) {
+        const totalUsers = allUsersData.length;
+        const businesses = allUsersData.filter(u => u.role === 'business').length;
+        const creators = allUsersData.filter(u => u.role === 'creator').length;
+        const admins = allUsersData.filter(u => u.role === 'admin').length;
+        
+        document.getElementById('total-users').innerText = totalUsers;
+        document.getElementById('total-businesses').innerText = businesses;
+        document.getElementById('total-users-count').innerText = totalUsers;
+        document.getElementById('total-creators-count').innerText = creators;
+        document.getElementById('total-businesses-count').innerText = businesses;
+        document.getElementById('total-admins-count').innerText = admins;
+        
+        console.log(`Dashboard stats: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      } else {
+        // Fetch fresh user data
+        const token = localStorage.getItem('pebeto_token');
+        const usersRes = await fetch(`${API_BASE}/api/admin/users?limit=200`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const usersData = await usersRes.json();
+        
+        if (usersData.success && usersData.data.users) {
+          const fetchedUsers = usersData.data.users;
+          const totalUsers = fetchedUsers.length;
+          const businesses = fetchedUsers.filter(u => u.role === 'business').length;
+          const creators = fetchedUsers.filter(u => u.role === 'creator').length;
+          const admins = fetchedUsers.filter(u => u.role === 'admin').length;
+          
+          document.getElementById('total-users').innerText = totalUsers;
+          document.getElementById('total-businesses').innerText = businesses;
+          document.getElementById('total-users-count').innerText = totalUsers;
+          document.getElementById('total-creators-count').innerText = creators;
+          document.getElementById('total-businesses-count').innerText = businesses;
+          document.getElementById('total-admins-count').innerText = admins;
+          
+          console.log(`Dashboard stats from API: ${totalUsers} users`);
+        }
+      }
+      
+      // Get campaign stats
+      const campaignsData = await fetchJSON(`${API_BASE}/api/campaigns?limit=200`);
+      if (campaignsData.success && campaignsData.data.campaigns) {
+        const activeCampaigns = campaignsData.data.campaigns.filter(c => c.status === 'open' || c.status === 'in_progress').length;
+        const completedCampaigns = campaignsData.data.campaigns.filter(c => c.status === 'paid').length;
+        document.getElementById('active-campaigns').innerText = activeCampaigns;
+        document.getElementById('completed-campaigns').innerText = completedCampaigns;
+      }
+      
+      // Get wallet balance
+      const adminWallet = await fetchJSON(`${API_BASE}/api/wallet/balance`);
+      if (adminWallet.success) {
+        document.getElementById('admin-wallet').innerHTML = formatMoney(adminWallet.data?.balances?.available || 0);
+      }
+      
+      // Get escrow stats
+      const escrowData = await fetchJSON(`${API_BASE}/api/admin/metrics`);
+      if (escrowData.success) {
+        document.getElementById('total-escrow').innerHTML = formatMoney(escrowData.data?.totalEscrow || 0);
+        const totalDeposits = escrowData.data?.platformStats?.totalDeposits || 0;
+        if (document.getElementById('total-deposits')) {
+          document.getElementById('total-deposits').innerHTML = formatMoney(totalDeposits);
+        }
+        if (document.getElementById('audit-count')) {
+          document.getElementById('audit-count').innerText = escrowData.data?.platformStats?.totalWithdrawals || 0;
+        }
+      }
+      
+    } catch(e) { 
+      console.error('Error loading dashboard stats:', e);
+    }
+  }
+  
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+  async function loadUserData() {
     const userStr = localStorage.getItem('pebeto_user');
     if (userStr) { 
       currentUser = JSON.parse(userStr); 
       document.getElementById('admin-email').innerText = currentUser.email; 
     }
   }
-
-  // ============================================
-  // INITIALIZATION
-  // ============================================
-  document.querySelectorAll('.tab-btn').forEach(btn => { 
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      const tabId = `tab-${btn.dataset.tab}`;
-      document.getElementById(tabId).classList.add('active');
-      if (btn.dataset.tab === 'users') loadUsers();
-      if (btn.dataset.tab === 'campaigns') loadCampaigns();
-      if (btn.dataset.tab === 'applications') loadApplications();
-      if (btn.dataset.tab === 'active') loadActiveProjects();
-      if (btn.dataset.tab === 'transactions') loadTransactions();
-      if (btn.dataset.tab === 'withdrawals') loadAdminWithdrawals();
-      if (btn.dataset.tab === 'activity') loadActivityLog();
-      if (btn.dataset.tab === 'api') { loadApiKeys(); loadWebhooks(); }
-      if (btn.dataset.tab === 'security') loadTeamMembers();
-      if (btn.dataset.tab === 'moderation') loadReports();
-      if (btn.dataset.tab === 'auto-release') { loadAutoReleaseCampaigns(); loadAutoReleaseStats(); }
-      if (btn.dataset.tab === 'dashboard') { 
-        loadDashboardStats(); 
-        loadCampaignPerformanceChart(); 
-      }
-      if (btn.dataset.tab === 'creators') document.getElementById('creators-results').innerHTML = '<div class="empty-state">Enter search criteria to find creators</div>';
-    }); 
-  });
-
+  
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const tabId = `tab-${btn.dataset.tab}`;
+    document.getElementById(tabId).classList.add('active');
+    if (btn.dataset.tab === 'users') loadUsers();
+    if (btn.dataset.tab === 'campaigns') loadCampaigns();
+    if (btn.dataset.tab === 'applications') loadApplications();
+    if (btn.dataset.tab === 'active') loadActiveProjects();
+    if (btn.dataset.tab === 'transactions') loadTransactions();
+    if (btn.dataset.tab === 'withdrawals') loadAdminWithdrawals();
+    if (btn.dataset.tab === 'activity') loadActivityLog();
+    if (btn.dataset.tab === 'api') { loadApiKeys(); loadWebhooks(); }
+    if (btn.dataset.tab === 'security') loadTeamMembers();
+    if (btn.dataset.tab === 'moderation') loadReports();
+    if (btn.dataset.tab === 'auto-release') { loadAutoReleaseCampaigns(); loadAutoReleaseStats(); }
+    if (btn.dataset.tab === 'dashboard') { 
+      loadDashboardStats(); 
+      if (typeof loadCampaignPerformanceChart === 'function') loadCampaignPerformanceChart(); 
+    }
+    if (btn.dataset.tab === 'creators') document.getElementById('creators-results').innerHTML = '<div class="empty-state">Enter search criteria to find creators</div>';
+  }); });
+  
   document.getElementById('withdraw-btn')?.addEventListener('click', withdraw);
   document.getElementById('campaign-budget')?.addEventListener('input', updateBudgetBreakdown);
   document.getElementById('campaign-slots')?.addEventListener('input', updateBudgetBreakdown);
   window.addEventListener('scroll', () => { const btn = document.getElementById('backToTop'); if (window.scrollY > 300) btn.classList.add('show'); else btn.classList.remove('show'); });
   document.getElementById('emailNotificationsToggle')?.addEventListener('change', (e) => localStorage.setItem('pebeto_email_notifications', e.target.checked));
   document.getElementById('smsNotificationsToggle')?.addEventListener('change', (e) => localStorage.setItem('pebeto_sms_notifications', e.target.checked));
-
+  
   // Initial page load
   loadUserData();
   loadSpendingChart();
@@ -2065,8 +2033,11 @@
   loadCampaignPerformanceChart();
   loadFeeChart();
   
-  loadUsers();
-  loadDashboardStats();
+  // Load users first, then dashboard stats
+  loadUsers().then(() => {
+    loadDashboardStats();
+  });
+  
   loadCampaigns();
   loadApiKeys();
   loadWebhooks();
@@ -2074,89 +2045,160 @@
   addNotification('Welcome to Pebeto Admin Dashboard');
   
   // Emergency fix - force update after delays
-  setTimeout(() => { loadDashboardStats(); }, 1000);
-  setTimeout(() => { loadDashboardStats(); }, 2000);
-  setTimeout(() => { loadDashboardStats(); }, 3000);
+  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 1000);
+  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 2000);
+  setTimeout(() => { if (allUsersData && allUsersData.length > 0) loadDashboardStats(); }, 3000);
+</script>
+
+<!-- DIRECT FIX: Force update dashboard stats from the users table -->
+<script>
+(function fixDashboardStats() {
+  console.log('🔧 Running dashboard stats fix...');
   
-  // ============================================
-  // DIRECT FIX: Force update dashboard stats
-  // ============================================
-  (function fixDashboardStats() {
-    console.log('🔧 Running dashboard stats fix...');
+  function updateStatsFromTable() {
+    const userRows = document.querySelectorAll('#users-table tbody tr');
+    let totalUsers = 0;
+    let creators = 0;
+    let businesses = 0;
+    let admins = 0;
     
-    function updateStatsFromTable() {
-      const userRows = document.querySelectorAll('#users-table tbody tr');
-      let totalUsers = 0;
-      let creators = 0;
-      let businesses = 0;
-      let admins = 0;
-      
-      userRows.forEach(row => {
-        if (row.cells.length > 1 && !row.innerHTML.includes('No users found') && !row.innerHTML.includes('Loading users')) {
-          totalUsers++;
-          const roleCell = row.cells[2];
-          if (roleCell) {
-            const roleText = roleCell.innerText.toLowerCase();
-            if (roleText.includes('creator')) creators++;
-            else if (roleText.includes('business')) businesses++;
-            else if (roleText.includes('admin')) admins++;
-          }
+    userRows.forEach(row => {
+      if (row.cells.length > 1 && !row.innerHTML.includes('No users found') && !row.innerHTML.includes('Loading users')) {
+        totalUsers++;
+        
+        const roleCell = row.cells[2];
+        if (roleCell) {
+          const roleText = roleCell.innerText.toLowerCase();
+          if (roleText.includes('creator')) creators++;
+          else if (roleText.includes('business')) businesses++;
+          else if (roleText.includes('admin')) admins++;
         }
-      });
-      
-      if (totalUsers > 0) {
-        console.log(`✅ Updating stats from table: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
-        document.querySelectorAll('#total-users, #total-users-count').forEach(el => { if (el) el.innerText = totalUsers; });
-        document.querySelectorAll('#total-businesses, #total-businesses-count').forEach(el => { if (el) el.innerText = businesses; });
-        const creatorsEl = document.getElementById('total-creators-count');
-        if (creatorsEl) creatorsEl.innerText = creators;
-        const adminsEl = document.getElementById('total-admins-count');
-        if (adminsEl) adminsEl.innerText = admins;
-        return true;
       }
-      return false;
-    }
+    });
     
-    setTimeout(() => updateStatsFromTable(), 500);
-    setTimeout(() => updateStatsFromTable(), 1000);
-    setTimeout(() => updateStatsFromTable(), 2000);
-    setTimeout(() => updateStatsFromTable(), 3000);
+    if (totalUsers > 0) {
+      console.log(`✅ Updating stats from table: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      
+      const totalUsersEls = document.querySelectorAll('#total-users, #total-users-count');
+      totalUsersEls.forEach(el => { if (el) el.innerText = totalUsers; });
+      
+      const totalBusinessesEls = document.querySelectorAll('#total-businesses, #total-businesses-count');
+      totalBusinessesEls.forEach(el => { if (el) el.innerText = businesses; });
+      
+      const creatorsEl = document.getElementById('total-creators-count');
+      if (creatorsEl) creatorsEl.innerText = creators;
+      
+      const adminsEl = document.getElementById('total-admins-count');
+      if (adminsEl) adminsEl.innerText = admins;
+      
+      return true;
+    }
+    return false;
+  }
+  
+  setTimeout(() => updateStatsFromTable(), 500);
+  setTimeout(() => updateStatsFromTable(), 1000);
+  setTimeout(() => updateStatsFromTable(), 2000);
+  setTimeout(() => updateStatsFromTable(), 3000);
+  
+  const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
+  if (usersTab) {
+    usersTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 500); });
+  }
+  
+  const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  if (dashboardTab) {
+    dashboardTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 100); });
+  }
+})();
+</script>
+            <script>
+// DIRECT FIX: Force update dashboard stats from the visible users table
+(function() {
+  console.log('🔧 Dashboard stats fix loaded');
+  
+  function updateDashboardStats() {
+    // Get all rows from the users table
+    const userRows = document.querySelectorAll('#users-table tbody tr');
+    let totalUsers = 0;
+    let creators = 0;
+    let businesses = 0;
+    let admins = 0;
     
-    const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
-    if (usersTab) {
-      usersTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 500); });
-    }
+    userRows.forEach(row => {
+      // Skip if it's a loading/empty message
+      if (row.cells.length > 1 && 
+          !row.innerHTML.includes('No users found') && 
+          !row.innerHTML.includes('Loading users') &&
+          row.cells[0] && row.cells[0].innerText !== '') {
+        totalUsers++;
+        
+        // Role is in the 3rd column (index 2)
+        const roleCell = row.cells[2];
+        if (roleCell) {
+          const roleText = roleCell.innerText.toLowerCase();
+          if (roleText.includes('creator')) creators++;
+          else if (roleText.includes('business')) businesses++;
+          else if (roleText.includes('admin')) admins++;
+        }
+      }
+    });
     
-    const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
-    if (dashboardTab) {
-      dashboardTab.addEventListener('click', function() { setTimeout(() => updateStatsFromTable(), 100); });
+    if (totalUsers > 0) {
+      console.log(`✅ Updating stats: ${totalUsers} users (${creators} creators, ${businesses} businesses, ${admins} admins)`);
+      
+      // Update Dashboard tab stats
+      const totalUsersEl = document.getElementById('total-users');
+      const totalBusinessesEl = document.getElementById('total-businesses');
+      if (totalUsersEl) totalUsersEl.innerText = totalUsers;
+      if (totalBusinessesEl) totalBusinessesEl.innerText = businesses;
+      
+      // Update Users tab stats
+      const totalUsersCountEl = document.getElementById('total-users-count');
+      const totalCreatorsCountEl = document.getElementById('total-creators-count');
+      const totalBusinessesCountEl = document.getElementById('total-businesses-count');
+      const totalAdminsCountEl = document.getElementById('total-admins-count');
+      
+      if (totalUsersCountEl) totalUsersCountEl.innerText = totalUsers;
+      if (totalCreatorsCountEl) totalCreatorsCountEl.innerText = creators;
+      if (totalBusinessesCountEl) totalBusinessesCountEl.innerText = businesses;
+      if (totalAdminsCountEl) totalAdminsCountEl.innerText = admins;
     }
-  })();
-
-  // ============================================
-  // BUDGET BREAKDOWN
-  // ============================================
-  function updateBudgetBreakdown() {
-    const budget = parseFloat(document.getElementById('campaign-budget')?.value) || 0;
-    const slots = parseInt(document.getElementById('campaign-slots')?.value) || 1;
-    const breakdownDiv = document.getElementById('budget-breakdown');
-    if (breakdownDiv) {
-      breakdownDiv.innerHTML = `💰 $${budget} total → $${(budget / slots).toFixed(2)} per creator (${slots} creator${slots !== 1 ? 's' : ''})`;
+    return totalUsers;
+  }
+  
+  // Run when page loads and when users tab is clicked
+  setTimeout(updateDashboardStats, 1000);
+  setTimeout(updateDashboardStats, 2000);
+  setTimeout(updateDashboardStats, 3000);
+  
+  // Watch for when the Dashboard tab is clicked
+  const dashboardTab = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  if (dashboardTab) {
+    dashboardTab.addEventListener('click', function() {
+      setTimeout(updateDashboardStats, 100);
+      setTimeout(updateDashboardStats, 500);
+    });
+  }
+  
+  // Watch for when the Users tab is clicked (so data gets loaded)
+  const usersTab = document.querySelector('.tab-btn[data-tab="users"]');
+  if (usersTab) {
+    usersTab.addEventListener('click', function() {
+      setTimeout(updateDashboardStats, 1000);
+      setTimeout(updateDashboardStats, 2000);
+    });
+  }
+  
+  // Also override the loadDashboardStats function
+  const originalLoadDashboardStats = window.loadDashboardStats;
+  window.loadDashboardStats = function() {
+    console.log('🎯 Override: loadDashboardStats called');
+    if (updateDashboardStats() === 0 && originalLoadDashboardStats) {
+      originalLoadDashboardStats();
     }
-  }
-
-  function openMessageModal(creatorId, name) {
-    document.getElementById('msg-name').innerText = name;
-    document.getElementById('message-modal').style.display = 'flex';
-  }
-
-  function sendMessage() {
-    const message = document.getElementById('msg-text').value;
-    if (!message) { showToast('Enter message', 'error'); return; }
-    showToast('Message sent!', 'success');
-    closeModal('message-modal');
-    document.getElementById('msg-text').value = '';
-  }
+  };
+})();
 </script>
 </body>
 </html>
