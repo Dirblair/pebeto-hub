@@ -25,6 +25,7 @@ const {
   runInTransaction
 } = require('./walletService');
 const { roundUsd } = require('./feeService');
+const { sendNotificationToUser } = require('../sockets');
 const logger = require('../utils/logger');
 
 // ============================================
