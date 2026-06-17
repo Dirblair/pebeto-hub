@@ -97,7 +97,7 @@ router.get('/creators/:id', async (req, res) => {
   }
 });
 
-// POST /api/creator/social-links - Save or update creator's social links (FIXED - allows removal)
+// POST /api/creator/social-links - Save or update creator's social links
 router.post('/creator/social-links', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
@@ -112,14 +112,12 @@ router.post('/creator/social-links', authenticate, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only creators can set social links' });
     }
     
-    // Initialize socialLinks if not exists
-    if (!user.socialLinks) {
-      user.socialLinks = {};
-    }
-    
-    // Update only the fields provided (allow empty string to remove)
-    if (tiktokUrl !== undefined) user.socialLinks.tiktok = tiktokUrl || '';
-    if (youtubeUrl !== undefined) user.socialLinks.youtube = youtubeUrl || '';
+    user.socialLinks = {
+      tiktok: tiktokUrl || '',
+      youtube: youtubeUrl || '',
+      instagram: user.socialLinks?.instagram || '',
+      twitter: user.socialLinks?.twitter || ''
+    };
     
     await user.save();
     
