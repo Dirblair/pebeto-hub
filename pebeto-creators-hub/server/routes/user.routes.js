@@ -511,7 +511,7 @@ router.post('/api-keys/:keyId/regenerate', [
 
 // ============================================
 // ============================================
-// Notification Preferences
+// NEW: Email Notification Preferences
 // ============================================
 // ============================================
 
@@ -587,7 +587,7 @@ router.put('/notification-preferences', [
 }));
 
 // ============================================
-// Avatar Upload (FIXED - persists after refresh)
+// Avatar Upload
 // ============================================
 
 /**
@@ -600,15 +600,12 @@ const streamifier = require('streamifier');
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dummy',
-  api_key: process.env.CLOUDINARY_API_KEY || 'dummy',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'dummy'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
   if (!req.file) {
@@ -617,148 +614,35 @@ router.post('/avatar', upload.single('avatar'), catchAsync(async (req, res) => {
   
   const file = req.file;
   
-  // Check if file is an image
-  if (!file.mimetype.startsWith('image/')) {
-    throw new AppError('File must be an image', 400);
-  }
-  
-  try {
-    // Upload to Cloudinary
-    const uploadResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'pebeto/avatars',
-          transformation: [{ width: 500, height: 500, crop: 'fill' }]
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
-    });
-    
-    // Update user profile
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-    if (!user.profile) user.profile = {};
-    user.profile.avatarUrl = uploadResult.secure_url;
-    await user.save();
-    
-    logger.info(`Avatar updated for user ${req.user._id}`);
-    
-    res.json({
-      success: true,
-      data: {
-        avatarUrl: uploadResult.secure_url
+  // Upload to Cloudinary
+  const uploadResult = await new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'pebeto/avatars',
+        transformation: [{ width: 500, height: 500, crop: 'fill' }]
       },
-      message: 'Profile picture updated successfully'
-    });
-  } catch (cloudinaryError) {
-    logger.error('Cloudinary upload error:', cloudinaryError);
-    
-    // For development, use a fallback URL if Cloudinary fails
-    if (process.env.NODE_ENV === 'development') {
-      const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.email)}&background=ff8c42&color=fff&size=500`;
-      const user = await User.findById(req.user._id);
-      if (!user.profile) user.profile = {};
-      user.profile.avatarUrl = fallbackUrl;
-      await user.save();
-      
-      return res.json({
-        success: true,
-        data: { avatarUrl: fallbackUrl },
-        message: 'Profile picture updated (fallback)'
-      });
-    }
-    
-    throw new AppError('Failed to upload image to Cloudinary', 500);
-  }
-}));
-
-// ============================================
-// DELETE /api/user/avatar - Remove avatar (NEW)
-// ============================================
-
-/**
- * DELETE /api/user/avatar
- * Remove user avatar
- */
-router.delete('/avatar', catchAsync(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-  
-  if (user.profile) {
-    user.profile.avatarUrl = null;
-    await user.save();
-  }
-  
-  logger.info(`Avatar removed for user ${req.user._id}`);
-  
-  res.json({
-    success: true,
-    message: 'Profile picture removed successfully'
-  });
-}));
-
-// ============================================
-// User Profile (FIXED - allows updating username and niche)
-// ============================================
-
-/**
- * PUT /api/user/profile
- * Update user profile
- */
-router.put('/profile', [
-  body('profile.stageName').optional().isString().trim().isLength({ max: 50 }),
-  body('profile.niche').optional().isString().trim().isLength({ max: 50 }),
-  body('profile.companyName').optional().isString().trim().isLength({ max: 100 }),
-  body('profile.displayName').optional().isString().trim().isLength({ max: 100 }),
-  body('profile.bio').optional().isString().trim().isLength({ max: 500 }),
-  body('preferredCurrency').optional().isString().isLength({ min: 3, max: 3 })
-], catchAsync(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new AppError(errors.array()[0].msg, 400);
-  }
-  
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-  
-  // Update profile fields
-  if (req.body.profile) {
-    if (!user.profile) user.profile = {};
-    
-    const allowedFields = ['stageName', 'niche', 'companyName', 'displayName', 'bio', 'avatarUrl'];
-    for (const field of allowedFields) {
-      if (req.body.profile[field] !== undefined) {
-        user.profile[field] = req.body.profile[field];
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
       }
-    }
-  }
+    );
+    streamifier.createReadStream(file.buffer).pipe(uploadStream);
+  });
   
-  // Update currency
-  if (req.body.preferredCurrency) {
-    user.preferredCurrency = req.body.preferredCurrency;
-  }
-  
+  // Update user profile
+  const user = await User.findById(req.user._id);
+  if (!user.profile) user.profile = {};
+  user.profile.avatarUrl = uploadResult.secure_url;
   await user.save();
   
-  logger.info(`Profile updated for user ${req.user._id}`);
+  logger.info(`Avatar updated for user ${req.user._id}`);
   
   res.json({
     success: true,
     data: {
-      profile: user.profile,
-      preferredCurrency: user.preferredCurrency
+      avatarUrl: uploadResult.secure_url
     },
-    message: 'Profile updated successfully'
+    message: 'Profile picture updated successfully'
   });
 }));
 
