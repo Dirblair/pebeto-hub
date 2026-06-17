@@ -1,741 +1,1235 @@
+/**
+ * Admin Routes for Pebeto Creator's Hub
+ * 
+ * Provides administrative endpoints for platform metrics, user management,
+ * transaction monitoring, system configuration, and moderation queue.
+ * 
+ * @module routes/admin
+ */
+
 const express = require('express');
-const { body, param, query, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+const Wallet = require('../models/Wallet');
+const User = require('../models/User');
+const Transaction = require('../models/Transaction');
+const Campaign = require('../models/Campaign');
 const { authenticate, authorize } = require('../middleware/auth');
-const { AppError } = require('../utils/errors');
-const { catchAsync } = require('../middleware/errorHandler');
+// attachFeeService is already applied globally in server.js
+const { rateLimit } = require('express-rate-limit');
+const { body, query, param, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
-const {
-  listCampaignsForUser,
-  createCampaign,
-  fundCampaignEscrow,
-  placeBid,
-  acceptBid,
-  submitWork,
-  completeAndPay,
-  getCampaignById,
-  cancelCampaign,
-} = require('../services/campaignService');
 
 const router = express.Router();
 
 // ============================================
-// Middleware
+// Rate Limiting for Admin Routes
 // ============================================
 
-router.use(authenticate);
+const adminRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => req.user?._id?.toString() || req.ip,
+});
 
-/**
- * Emit platform activity via Socket.IO
- */
-function emitPlatformActivity(req, payload) {
-  const io = req.app.get('io');
-  if (io) {
-    io.to('status:global').emit('platform:activity', payload);
-    logger.debug('Platform activity emitted', payload);
-  }
-}
-
-/**
- * Check if request is in view-only mode
- */
-function assertWritable(req) {
-  if (req.query.viewOnly === '1' && req.user.role === 'admin') {
-    throw new AppError('View-only mode: changes are disabled', 403);
-  }
-  if (req.query.viewOnly === '1') {
-    throw new AppError('View-only mode: changes are disabled', 403);
-  }
-}
+router.use(authenticate, authorize('admin'), adminRateLimit);
 
 // ============================================
-// Validation Rules
+// Validation Helpers
 // ============================================
 
-const createCampaignValidation = [
-  body('title').trim().notEmpty().withMessage('Campaign title is required').isLength({ min: 3, max: 200 }).withMessage('Title must be between 3 and 200 characters'),
-  body('budget').isFloat({ min: 1 }).withMessage('Budget must be at least $1'),
-  body('description').optional().trim().isLength({ max: 5000 }).withMessage('Description cannot exceed 5000 characters'),
-  body('instructions').optional().trim().isLength({ max: 2000 }).withMessage('Instructions cannot exceed 2000 characters'),
-  body('deadline').optional().isISO8601().withMessage('Invalid deadline format').custom((value) => new Date(value) > new Date()).withMessage('Deadline must be in the future'),
-  body('category').optional().isString().trim(),
-  body('requirements').optional().isArray().withMessage('Requirements must be an array'),
+const validateDateRange = [
+  query('startDate').optional().isISO8601().withMessage('Invalid start date'),
+  query('endDate').optional().isISO8601().withMessage('Invalid end date'),
 ];
 
-const fundCampaignValidation = [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-  body('intentUsd').isFloat({ min: 1 }).withMessage('Intent amount must be at least $1').toFloat(),
-];
-
-const placeBidValidation = [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-  body('amount').isFloat({ min: 1 }).withMessage('Bid amount must be at least $1'),
-  body('proposal').optional().trim().isLength({ max: 2000 }).withMessage('Proposal cannot exceed 2000 characters'),
-];
-
-const acceptBidValidation = [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-  param('bidId').isMongoId().withMessage('Invalid bid ID'),
-];
-
-const submitWorkValidation = [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-  body('workUrl').notEmpty().withMessage('Work URL is required').isURL({ protocols: ['http', 'https'], require_protocol: true }).withMessage('Please provide a valid URL starting with http:// or https://'),
-];
-
-const completeCampaignValidation = [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-];
-
-const cancelCampaignValidation = [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-  body('reason').optional().trim().isLength({ max: 500 }).withMessage('Reason cannot exceed 500 characters'),
-];
-
-const listCampaignsValidation = [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer').toInt(),
-  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100').toInt(),
-  query('status').optional().isIn(['open', 'in_progress', 'submitted_for_review', 'completed', 'paid', 'cancelled']).withMessage('Invalid status filter'),
+const validatePagination = [
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
 ];
 
 // ============================================
-// Routes
+// Metrics Endpoint
 // ============================================
 
 /**
- * GET /api/campaigns
- * List campaigns accessible to the authenticated user
+ * GET /api/admin/metrics
+ * Get platform-wide metrics including profit wallet, escrow total, and fee breakdown
  */
-router.get('/', listCampaignsValidation, catchAsync(async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new AppError(errors.array()[0].msg, 400);
-  }
-
-  const viewUserId = req.query.userId;
-  const page = parseInt(req.query.page) || 1;
-  const limit = Math.min(parseInt(req.query.limit) || 20, 100);
-  const statusFilter = req.query.status;
-
-  if (viewUserId && req.user.role !== 'admin') {
-    throw new AppError('Forbidden: Cannot view other users campaigns', 403);
-  }
-
-  const result = await listCampaignsForUser(req.user, {
-    viewUserId,
-    page,
-    limit,
-    status: statusFilter,
-  });
-
-  res.json({
-    success: true,
-    data: {
-      campaigns: result.campaigns,
-      pagination: result.pagination,
-      viewOnly: req.query.viewOnly === '1',
-    },
-  });
-}));
-
-/**
- * GET /api/campaigns/:id
- * Get a specific campaign by ID
- */
-router.get('/:id', [
-  param('id').isMongoId().withMessage('Invalid campaign ID'),
-], catchAsync(async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new AppError(errors.array()[0].msg, 400);
-  }
-
-  const viewUserId = req.query.userId;
-
-  if (viewUserId && req.user.role !== 'admin') {
-    throw new AppError('Forbidden', 403);
-  }
-
-  const campaign = await getCampaignById(req.user, req.params.id, { viewUserId });
-
-  res.json({
-    success: true,
-    data: {
-      campaign,
-      viewOnly: req.query.viewOnly === '1',
-    },
-  });
-}));
-
-/**
- * POST /api/campaigns
- * Create a new campaign (Business only)
- */
-router.post(
-  '/',
-  authorize('business'),
-  createCampaignValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
+router.get('/metrics', validateDateRange, async (req, res, next) => {
+  try {
+    // Validate query parameters
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
+      return res.status(400).json({ success: false, errors: errors.array() });
     }
-
-    const campaign = await createCampaign(req.user, req.body);
-
-    emitPlatformActivity(req, {
-      type: 'campaign_created',
-      campaignId: campaign._id,
-      campaignTitle: campaign.title,
-      businessId: req.user._id,
-    });
-
-    logger.info('Campaign created', {
-      campaignId: campaign._id,
-      businessId: req.user._id,
-      title: campaign.title,
-      budget: campaign.budget,
-    });
-
-    res.status(201).json({
-      success: true,
-      data: { campaign },
-    });
-  })
-);
-
-/**
- * POST /api/campaigns/:id/fund
- * Fund escrow for a campaign (Business only)
- */
-router.post(
-  '/:id/fund',
-  authorize('business'),
-  fundCampaignValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const intentUsd = Number(req.body.intentUsd);
     
-    const result = await fundCampaignEscrow(req.user, req.params.id, intentUsd);
-
-    emitPlatformActivity(req, {
-      type: 'escrow_deposit',
-      campaignId: req.params.id,
-      amountUsd: result.breakdown.escrowCreditUsd,
-      feeUsd: result.breakdown.feeUsd,
+    const { startDate, endDate } = req.query;
+    const dateFilter = {};
+    
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+    
+    const matchStage = dateFilter.createdAt ? { createdAt: dateFilter } : {};
+    
+    // Run queries in parallel for better performance
+    const [
+      adminWallet,
+      escrowAgg,
+      withdrawalAgg,
+      feeBreakdown,
+      platformStats
+    ] = await Promise.all([
+      // Admin profit wallet
+      Wallet.findOne({ userId: req.user._id, walletType: 'profit' }).lean(),
+      
+      // Total escrow across all wallets
+      Wallet.aggregate([
+        { $group: { _id: null, totalEscrow: { $sum: '$balances.escrow' } } }
+      ]),
+      
+      // Admin withdrawals
+      Transaction.aggregate([
+        {
+          $match: {
+            type: 'withdrawal',
+            fromUserId: req.user._id,
+            status: 'completed',
+            ...matchStage
+          }
+        },
+        { $group: { _id: null, total: { $sum: '$grossAmount' } } }
+      ]),
+      
+      // Fee breakdown by source
+      Transaction.aggregate([
+        {
+          $match: {
+            type: 'platform_fee',
+            feeRecipient: req.user._id,
+            status: 'completed',
+            ...matchStage
+          }
+        },
+        { $group: { _id: '$feeSource', total: { $sum: '$netAmount' } } }
+      ]),
+      
+      // Additional platform stats
+      Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ role: 'creator', status: 'active' }),
+        User.countDocuments({ role: 'business', status: 'active' }),
+        Campaign.countDocuments(),
+        Campaign.countDocuments({ status: 'open' }),
+        Transaction.countDocuments({ type: 'deposit', status: 'completed', ...matchStage }),
+        Transaction.countDocuments({ type: 'withdrawal', status: 'completed', ...matchStage })
+      ])
+    ]);
+    
+    const profitBalance = adminWallet?.balances?.available || 0;
+    const totalEscrow = escrowAgg[0]?.totalEscrow || 0;
+    const totalAdminWithdrawals = withdrawalAgg[0]?.total || 0;
+    
+    const feesBySource = { deposit: 0, tip: 0, withdrawal: 0, escrow: 0 };
+    feeBreakdown.forEach((row) => {
+      if (row._id) feesBySource[row._id] = row.total;
     });
-
-    logger.info('Campaign funded', {
-      campaignId: req.params.id,
-      businessId: req.user._id,
-      intentUsd,
-      totalChargeUsd: result.breakdown.totalChargeUsd,
-    });
-
+    
+    const totalFees = Object.values(feesBySource).reduce((a, b) => a + b, 0);
+    
+    const [
+      totalUsers,
+      totalCreators,
+      totalBusinesses,
+      totalCampaigns,
+      openCampaigns,
+      totalDeposits,
+      totalWithdrawals
+    ] = platformStats;
+    
     res.json({
       success: true,
       data: {
-        campaign: result.campaign,
-        breakdown: result.breakdown,
-        depositTx: result.depositTx,
-      },
+        profitWallet: profitBalance,
+        totalEscrow,
+        totalAdminWithdrawals,
+        feeBreakdown: {
+          deposit: feesBySource.deposit,
+          tip: feesBySource.tip,
+          withdrawal: feesBySource.withdrawal,
+          escrow: feesBySource.escrow,
+          total: totalFees,
+          percentages: {
+            deposit: totalFees ? ((feesBySource.deposit / totalFees) * 100).toFixed(2) : '0',
+            tip: totalFees ? ((feesBySource.tip / totalFees) * 100).toFixed(2) : '0',
+            withdrawal: totalFees ? ((feesBySource.withdrawal / totalFees) * 100).toFixed(2) : '0',
+            escrow: totalFees ? ((feesBySource.escrow / totalFees) * 100).toFixed(2) : '0',
+          },
+        },
+        platformStats: {
+          totalUsers,
+          totalCreators,
+          totalBusinesses,
+          totalCampaigns,
+          openCampaigns,
+          totalDeposits,
+          totalWithdrawals,
+        },
+        dateRange: { startDate: startDate || null, endDate: endDate || null }
+      }
     });
-  })
-);
-
-/**
- * POST /api/campaigns/:id/bids
- * Place a bid on a campaign (Creator only)
- */
-router.post(
-  '/:id/bids',
-  authorize('creator'),
-  placeBidValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const campaign = await placeBid(req.user, req.params.id, {
-      amount: req.body.amount,
-      proposal: req.body.proposal,
-    });
-
-    emitPlatformActivity(req, {
-      type: 'bid_placed',
-      campaignId: req.params.id,
-      creatorId: req.user._id,
-      amount: req.body.amount,
-    });
-
-    logger.info('Bid placed', {
-      campaignId: req.params.id,
-      creatorId: req.user._id,
-      amount: req.body.amount,
-    });
-
-    res.json({
-      success: true,
-      data: { campaign },
-    });
-  })
-);
-
-/**
- * POST /api/campaigns/:id/bids/:bidId/accept
- * Accept a bid and assign creator (Business only)
- */
-router.post(
-  '/:id/bids/:bidId/accept',
-  authorize('business'),
-  acceptBidValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const campaign = await acceptBid(req.user, req.params.id, req.params.bidId);
-
-    emitPlatformActivity(req, {
-      type: 'bid_accepted',
-      campaignId: req.params.id,
-      bidId: req.params.bidId,
-    });
-
-    logger.info('Bid accepted', {
-      campaignId: req.params.id,
-      bidId: req.params.bidId,
-      businessId: req.user._id,
-    });
-
-    res.json({
-      success: true,
-      data: { campaign },
-    });
-  })
-);
-
-/**
- * POST /api/campaigns/:id/submit
- * Submit work for a campaign (Creator only)
- */
-router.post(
-  '/:id/submit',
-  authorize('creator'),
-  submitWorkValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const campaign = await submitWork(req.user, req.params.id, {
-      workUrl: req.body.workUrl,
-    });
-
-    emitPlatformActivity(req, {
-      type: 'work_submitted',
-      campaignId: req.params.id,
-      creatorId: req.user._id,
-    });
-
-    logger.info('Work submitted', {
-      campaignId: req.params.id,
-      creatorId: req.user._id,
-      workUrl: req.body.workUrl,
-    });
-
-    res.json({
-      success: true,
-      data: { campaign },
-    });
-  })
-);
-
-/**
- * POST /api/campaigns/:id/complete
- * Complete campaign and release payment (Business only)
- */
-router.post(
-  '/:id/complete',
-  authorize('business'),
-  completeCampaignValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const campaign = await completeAndPay(req.user, req.params.id);
-
-    emitPlatformActivity(req, {
-      type: 'escrow_release',
-      campaignId: req.params.id,
-      status: 'paid',
-    });
-
-    logger.info('Campaign completed and paid', {
-      campaignId: req.params.id,
-      businessId: req.user._id,
-      assignedCreatorId: campaign.assignedCreatorId,
-    });
-
-    res.json({
-      success: true,
-      data: { campaign },
-    });
-  })
-);
-
-/**
- * POST /api/campaigns/:id/cancel
- * Cancel a campaign (Business only)
- */
-router.post(
-  '/:id/cancel',
-  authorize('business'),
-  cancelCampaignValidation,
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const { reason } = req.body;
-    const campaign = await cancelCampaign(req.user, req.params.id, reason);
-
-    emitPlatformActivity(req, {
-      type: 'campaign_cancelled',
-      campaignId: req.params.id,
-      reason: reason || 'No reason provided',
-    });
-
-    logger.info('Campaign cancelled', {
-      campaignId: req.params.id,
-      businessId: req.user._id,
-      reason,
-    });
-
-    res.json({
-      success: true,
-      message: 'Campaign cancelled successfully',
-      data: { campaign },
-    });
-  })
-);
-
-/**
- * GET /api/campaigns/performance
- * Get campaign performance metrics for analytics
- */
-router.get('/performance', catchAsync(async (req, res) => {
-  const userId = req.user._id;
-  const userRole = req.user.role;
-  
-  let campaignQuery = {};
-  
-  if (userRole === 'business') {
-    campaignQuery = { businessId: userId };
-  } else if (userRole === 'creator') {
-    campaignQuery = { assignedCreatorId: userId };
+  } catch (err) {
+    next(err);
   }
-  
-  const { Campaign } = require('../models/Campaign');
-  const campaigns = await Campaign.find(campaignQuery)
-    .select('title status budget views bids createdAt completedAt ctr roi')
-    .sort({ createdAt: -1 })
-    .limit(10);
-  
-  const totalViews = campaigns.reduce((sum, c) => sum + (c.views || 0), 0);
-  const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
-  const completedCampaigns = campaigns.filter(c => c.status === 'paid').length;
-  const totalCampaigns = campaigns.length;
-  
-  const avgCtr = totalCampaigns > 0 
-    ? campaigns.reduce((sum, c) => sum + (c.ctr || 0), 0) / totalCampaigns 
-    : 0;
-  
-  let totalRoi = 0;
-  let roiCount = 0;
-  campaigns.forEach(c => {
-    if (c.status === 'paid' && c.roi) {
-      totalRoi += c.roi;
-      roiCount++;
-    }
-  });
-  const avgRoi = roiCount > 0 ? totalRoi / roiCount : 0;
-  
-  const engagementScore = totalCampaigns > 0
-    ? Math.min(100, Math.round((totalViews / Math.max(totalBudget, 1)) * 10))
-    : 0;
-  
-  const labels = campaigns.slice(0, 7).map(c => c.title?.substring(0, 20) || 'Untitled');
-  const viewsData = campaigns.slice(0, 7).map(c => c.views || 0);
-  const engagementData = campaigns.slice(0, 7).map(c => {
-    const engagement = c.status === 'paid' ? 85 : c.status === 'in_progress' ? 45 : 20;
-    return engagement;
-  });
-  
-  res.json({
-    success: true,
-    data: {
-      performance: {
-        totalViews,
-        totalBudget,
-        completedCampaigns,
-        totalCampaigns,
-        ctr: Math.round(avgCtr * 100) / 100,
-        roi: Math.round(avgRoi * 100) / 100,
-        engagementScore
-      },
-      chart: {
-        labels,
-        views: viewsData,
-        engagement: engagementData
-      },
-      campaigns: campaigns.map(c => ({
-        id: c._id,
-        title: c.title,
-        status: c.status,
-        budget: c.budget,
-        views: c.views || 0,
-        ctr: c.ctr || 0,
-        roi: c.roi || 0,
-        createdAt: c.createdAt
-      }))
-    }
-  });
-}));
+});
+
+// ============================================
+// Registrations Endpoint
+// ============================================
 
 /**
- * POST /api/campaigns/:id/creator-complete
- * Creator marks work as completed (starts 7-day auto-release timer)
+ * GET /api/admin/registrations
+ * Get user registration counts by role
  */
-router.post(
-  '/:id/creator-complete',
-  authorize('creator'),
-  [
-    param('id').isMongoId().withMessage('Invalid campaign ID'),
-    body('workUrl')
-      .optional()
-      .isURL({ protocols: ['http', 'https'], require_protocol: true })
-      .withMessage('Valid work URL required if not already submitted'),
-    body('driveFileId')
-      .optional()
-      .isString()
-      .withMessage('Invalid drive file ID'),
-    body('driveFileUrl')
-      .optional()
-      .isURL()
-      .withMessage('Invalid drive file URL')
-  ],
-  catchAsync(async (req, res, next) => {
-    assertWritable(req);
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
-    }
-
-    const campaign = await require('../models/Campaign').Campaign.findOne({
-      _id: req.params.id,
-      assignedCreatorId: req.user._id
-    });
-
-    if (!campaign) {
-      throw new AppError('Campaign not found or you are not the assigned creator', 404);
-    }
-
-    if (campaign.status !== 'in_progress' && campaign.status !== 'submitted_for_review') {
-      throw new AppError(`Cannot mark work completed for campaign with status: ${campaign.status}`, 400);
-    }
-
-    if (campaign.creatorWorkCompleted) {
-      throw new AppError('You have already marked this work as completed', 400);
-    }
-
-    // Save work URL if provided
-    if (req.body.workUrl) {
-      const bid = campaign.bids.find(
-        b => String(b.creatorId) === String(req.user._id) && b.status === 'accepted'
-      );
-      if (bid) {
-        bid.submittedWorkUrl = req.body.workUrl;
-        bid.submittedAt = new Date();
-      }
-    }
-
-    // Save Google Drive file info if provided
-    if (req.body.driveFileId && req.body.driveFileUrl) {
-      if (!campaign.driveFiles) {
-        campaign.driveFiles = [];
-      }
-      campaign.driveFiles.push({
-        fileId: req.body.driveFileId,
-        fileUrl: req.body.driveFileUrl,
-        embedUrl: req.body.driveFileUrl?.replace('/view', '/preview'),
-        uploadedAt: new Date(),
-        fileName: req.body.fileName || 'Video submission'
-      });
-    }
-
-    // Mark creator completion
-    campaign.creatorWorkCompleted = true;
-    campaign.creatorWorkCompletedAt = new Date();
-
-    // Set auto-release deadline (7 days from now)
-    if (!campaign.autoReleaseDeadline) {
-      const autoReleaseDays = parseInt(process.env.AUTO_RELEASE_DAYS) || 7;
-      campaign.autoReleaseDeadline = new Date();
-      campaign.autoReleaseDeadline.setDate(campaign.autoReleaseDeadline.getDate() + autoReleaseDays);
-    }
-    campaign.autoReleaseStatus = 'pending';
-
-    // Update campaign status
-    if (campaign.status === 'in_progress') {
-      campaign.status = 'submitted_for_review';
-      campaign.businessStage = 'Submitted for Review';
-      campaign.creatorStage = 'Completed';
-      campaign.submittedAt = new Date();
-    }
-
-    await campaign.save();
-
-    // Send notification to business
-    const User = require('../models/User');
-    const Notification = require('../models/Notification');
-    const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITIES } = require('../models/Notification');
-
-    const business = await User.findById(campaign.businessId);
-    const creator = await User.findById(req.user._id);
-
-    if (business) {
-      await Notification.createNotification({
-        userId: business._id,
-        type: NOTIFICATION_TYPES.WORK_SUBMITTED,
-        title: 'Work Completed - Ready for Review',
-        message: `${creator?.profile?.stageName || creator?.uniqueCode || 'Creator'} has completed work for "${campaign.title}". Please review within 7 days.`,
-        priority: NOTIFICATION_PRIORITIES.HIGH,
-        actionUrl: `/campaign.html?id=${campaign._id}`,
-        actionType: 'campaign',
-        fromUserId: req.user._id,
-        fromUserName: creator?.profile?.stageName || creator?.uniqueCode
-      });
-    }
-
-    // Send real-time notification via Socket.IO
-    const io = req.app.get('io');
-    if (io && business) {
-      io.to(`user:${campaign.businessId}`).emit('campaign:work-completed', {
-        campaignId: campaign._id,
-        campaignTitle: campaign.title,
-        creatorName: creator?.profile?.stageName || creator?.uniqueCode,
-        deadline: campaign.autoReleaseDeadline,
-        daysRemaining: 7
-      });
-    }
-
-    logger.info('Creator marked work completed', {
-      campaignId: campaign._id,
-      creatorId: req.user._id,
-      businessId: campaign.businessId,
-      autoReleaseDeadline: campaign.autoReleaseDeadline
-    });
-
+router.get('/registrations', async (_req, res, next) => {
+  try {
+    const [total, creators, businesses, pending, suspended] = await Promise.all([
+      User.countDocuments({ role: { $ne: 'admin' } }),
+      User.countDocuments({ role: 'creator', status: 'active' }),
+      User.countDocuments({ role: 'business', status: 'active' }),
+      User.countDocuments({ status: 'pending' }),
+      User.countDocuments({ status: 'suspended' }),
+    ]);
+    
+    // Get registration trends (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentRegistrations = await User.aggregate([
+      {
+        $match: {
+          role: { $ne: 'admin' },
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            role: '$role'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.date': 1 } }
+    ]);
+    
     res.json({
       success: true,
-      message: 'Work marked as completed. Business has 7 days to review. Funds will auto-release if no response.',
       data: {
-        campaign: {
-          _id: campaign._id,
-          title: campaign.title,
-          status: campaign.status,
-          creatorWorkCompleted: campaign.creatorWorkCompleted,
-          businessWorkApproved: campaign.businessWorkApproved,
-          autoReleaseDeadline: campaign.autoReleaseDeadline,
-          daysRemaining: Math.ceil((campaign.autoReleaseDeadline - new Date()) / (1000 * 60 * 60 * 24))
+        total,
+        creators,
+        businesses,
+        pending,
+        suspended,
+        recentRegistrations,
+        lastUpdated: new Date()
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// Search Endpoint
+// ============================================
+
+/**
+ * GET /api/admin/search
+ * Search users by unique code, name, email, or company
+ */
+router.get('/search', [
+  query('q').notEmpty().withMessage('Search query is required'),
+  query('q').isLength({ min: 2 }).withMessage('Search query must be at least 2 characters'),
+  validatePagination
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const q = (req.query.q || '').trim();
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+    
+    // Use text search or regex
+    const searchRegex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    
+    const query = {
+      $or: [
+        { uniqueCode: searchRegex },
+        { email: searchRegex },
+        { 'profile.displayName': searchRegex },
+        { 'profile.companyName': searchRegex },
+        { 'profile.stageName': searchRegex },
+      ]
+    };
+    
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select('-passwordHash -payoutProfiles -resetPasswordToken -emailVerificationToken')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(query)
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        results: users,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + users.length < total
+        },
+        viewOnly: true
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// User Management Endpoints
+// ============================================
+
+/**
+ * GET /api/admin/users
+ * List all users with pagination and filtering
+ */
+router.get('/users', [
+  query('role').optional().isIn(['creator', 'business', 'admin']),
+  query('status').optional().isIn(['active', 'suspended', 'pending', 'banned']),
+  validatePagination
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { role, status } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+    
+    const query = {};
+    if (role) query.role = role;
+    if (status) query.status = status;
+    
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select('-passwordHash -payoutProfiles.details -resetPasswordToken -emailVerificationToken')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(query)
+    ]);
+    
+    // Get wallet balances for each user
+    const userIds = users.map(u => u._id);
+    const wallets = await Wallet.find({ userId: { $in: userIds } }).lean();
+    const walletMap = new Map(wallets.map(w => [w.userId.toString(), w]));
+    
+    const enrichedUsers = users.map(user => ({
+      ...user,
+      wallet: walletMap.get(user._id.toString()) || null
+    }));
+    
+    res.json({
+      success: true,
+      data: {
+        users: enrichedUsers,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + users.length < total
         }
       }
     });
-  })
-);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
- * GET /api/campaigns/:id/auto-release-status
- * Get auto-release status for a campaign
+ * GET /api/admin/users/:userId
+ * Get detailed user information
  */
-router.get(
-  '/:id/auto-release-status',
-  [
-    param('id').isMongoId().withMessage('Invalid campaign ID')
-  ],
-  catchAsync(async (req, res) => {
+router.get('/users/:userId', [
+  param('userId').isMongoId().withMessage('Invalid user ID')
+], async (req, res, next) => {
+  try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new AppError(errors.array()[0].msg, 400);
+      return res.status(400).json({ success: false, errors: errors.array() });
     }
-
-    const campaign = await require('../models/Campaign').Campaign.findById(req.params.id)
-      .select('creatorWorkCompleted businessWorkApproved autoReleaseDeadline autoReleaseStatus autoReleaseReminderSent lastReminderSentAt');
-
-    if (!campaign) {
-      throw new AppError('Campaign not found', 404);
-    }
-
-    // Check authorization
-    const isBusiness = campaign.businessId && campaign.businessId.toString() === req.user._id.toString();
-    const isCreator = campaign.assignedCreatorId && campaign.assignedCreatorId.toString() === req.user._id.toString();
     
-    if (req.user.role !== 'admin' && !isBusiness && !isCreator) {
-      throw new AppError('Access denied', 403);
+    const user = await User.findById(req.params.userId)
+      .select('-passwordHash -resetPasswordToken -emailVerificationToken')
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-
-    let daysRemaining = null;
-    let hoursRemaining = null;
-    let isExpired = false;
-
-    if (campaign.autoReleaseDeadline) {
-      const now = new Date();
-      daysRemaining = Math.max(0, Math.ceil((campaign.autoReleaseDeadline - now) / (1000 * 60 * 60 * 24)));
-      hoursRemaining = Math.max(0, Math.ceil((campaign.autoReleaseDeadline - now) / (1000 * 60 * 60)));
-      isExpired = now >= campaign.autoReleaseDeadline;
-    }
-
+    
+    const [wallet, transactions, campaigns] = await Promise.all([
+      Wallet.findOne({ userId: user._id }).lean(),
+      Transaction.find({
+        $or: [{ fromUserId: user._id }, { toUserId: user._id }]
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean(),
+      Campaign.find({
+        $or: [{ businessId: user._id }, { assignedCreatorId: user._id }]
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean()
+    ]);
+    
     res.json({
       success: true,
       data: {
-        creatorWorkCompleted: campaign.creatorWorkCompleted,
-        businessWorkApproved: campaign.businessWorkApproved,
-        autoReleaseDeadline: campaign.autoReleaseDeadline,
-        autoReleaseStatus: campaign.autoReleaseStatus,
-        autoReleaseReminderSent: campaign.autoReleaseReminderSent,
-        lastReminderSentAt: campaign.lastReminderSentAt,
-        daysRemaining,
-        hoursRemaining,
-        isExpired,
-        willAutoRelease: campaign.creatorWorkCompleted === true && campaign.businessWorkApproved === false && !isExpired
+        user,
+        wallet,
+        recentTransactions: transactions,
+        recentCampaigns: campaigns
       }
     });
-  })
-);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * PUT /api/admin/users/:userId/status
+ * Update user status (suspend, activate, ban)
+ */
+router.put('/users/:userId/status', [
+  param('userId').isMongoId().withMessage('Invalid user ID'),
+  body('status').isIn(['active', 'suspended', 'banned']).withMessage('Invalid status'),
+  body('reason').optional().isString().trim().isLength({ max: 500 })
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { status, reason } = req.body;
+    
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Don't allow changing admin status
+    if (user.role === 'admin') {
+      return res.status(403).json({ success: false, message: 'Cannot modify admin user status' });
+    }
+    
+    const oldStatus = user.status;
+    user.status = status;
+    user.statusReason = reason || null;
+    
+    if (status === 'suspended') {
+      // Freeze user's wallet
+      const wallet = await Wallet.findOne({ userId: user._id });
+      if (wallet) await wallet.freeze(`Account suspended: ${reason || 'Violation of terms'}`);
+    } else if (status === 'active' && oldStatus === 'suspended') {
+      // Unfreeze wallet
+      const wallet = await Wallet.findOne({ userId: user._id });
+      if (wallet) await wallet.unfreeze();
+    }
+    
+    await user.save();
+    
+    // Log admin action
+    logger.info(`[ADMIN] User ${req.user._id} changed status of ${user._id} from ${oldStatus} to ${status}`);
+    
+    res.json({
+      success: true,
+      message: `User status updated to ${status}`,
+      data: { userId: user._id, oldStatus, newStatus: status }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// Transaction History Endpoints
+// ============================================
+
+/**
+ * GET /api/admin/escrow-history
+ * Get escrow transaction history
+ */
+router.get('/escrow-history', [
+  validatePagination,
+  query('fromDate').optional().isISO8601(),
+  query('toDate').optional().isISO8601()
+], async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const skip = (page - 1) * limit;
+    
+    const match = { type: 'deposit', status: 'completed' };
+    
+    if (req.query.fromDate || req.query.toDate) {
+      match.createdAt = {};
+      if (req.query.fromDate) match.createdAt.$gte = new Date(req.query.fromDate);
+      if (req.query.toDate) match.createdAt.$lte = new Date(req.query.toDate);
+    }
+    
+    const [history, total] = await Promise.all([
+      Transaction.find(match)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('fromUserId', 'email profile.companyName uniqueCode role')
+        .populate('toUserId', 'email profile.companyName uniqueCode role')
+        .lean(),
+      Transaction.countDocuments(match)
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        history,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + history.length < total
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/transactions
+ * Get all platform transactions with filtering
+ */
+router.get('/transactions', [
+  query('type').optional().isIn(['deposit', 'withdrawal', 'tip', 'platform_fee', 'escrow_release']),
+  query('status').optional().isIn(['pending', 'completed', 'failed']),
+  validatePagination,
+  query('fromDate').optional().isISO8601(),
+  query('toDate').optional().isISO8601()
+], async (req, res, next) => {
+  try {
+    const { type, status, fromDate, toDate } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const skip = (page - 1) * limit;
+    
+    const match = {};
+    if (type) match.type = type;
+    if (status) match.status = status;
+    if (fromDate || toDate) {
+      match.createdAt = {};
+      if (fromDate) match.createdAt.$gte = new Date(fromDate);
+      if (toDate) match.createdAt.$lte = new Date(toDate);
+    }
+    
+    const [transactions, total] = await Promise.all([
+      Transaction.find(match)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('fromUserId', 'email uniqueCode role')
+        .populate('toUserId', 'email uniqueCode role')
+        .populate('feeRecipient', 'email uniqueCode role')
+        .lean(),
+      Transaction.countDocuments(match)
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        transactions,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + transactions.length < total
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/profit-withdrawal-history
+ * Get admin profit withdrawal history
+ */
+router.get('/profit-withdrawal-history', [
+  validatePagination,
+  query('fromDate').optional().isISO8601(),
+  query('toDate').optional().isISO8601()
+], async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const skip = (page - 1) * limit;
+    
+    const match = {
+      type: 'withdrawal',
+      fromUserId: req.user._id,
+      status: 'completed'
+    };
+    
+    if (req.query.fromDate || req.query.toDate) {
+      match.createdAt = {};
+      if (req.query.fromDate) match.createdAt.$gte = new Date(req.query.fromDate);
+      if (req.query.toDate) match.createdAt.$lte = new Date(req.query.toDate);
+    }
+    
+    const [history, total] = await Promise.all([
+      Transaction.find(match)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Transaction.countDocuments(match)
+    ]);
+    
+    // Calculate summary
+    const summary = {
+      totalWithdrawn: history.reduce((sum, t) => sum + t.grossAmount, 0),
+      totalFees: history.reduce((sum, t) => sum + t.feeAmount, 0),
+      transactionCount: total,
+      averageWithdrawal: total > 0 ? history.reduce((sum, t) => sum + t.grossAmount, 0) / total : 0
+    };
+    
+    res.json({
+      success: true,
+      data: {
+        history,
+        summary,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + history.length < total
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/activity
+ * Get recent platform activity feed
+ */
+router.get('/activity', [
+  validatePagination,
+  query('type').optional().isIn(['deposit', 'escrow_release', 'platform_fee', 'withdrawal', 'tip', 'campaign_created'])
+], async (req, res, next) => {
+  try {
+    const { type } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const skip = (page - 1) * limit;
+    
+    const types = type ? [type] : ['deposit', 'escrow_release', 'platform_fee', 'withdrawal', 'tip'];
+    
+    const [transactions, total] = await Promise.all([
+      Transaction.find({
+        type: { $in: types },
+        status: 'completed'
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('fromUserId', 'email profile.companyName uniqueCode role profile.stageName')
+        .populate('toUserId', 'email profile.companyName uniqueCode role profile.stageName')
+        .lean(),
+      Transaction.countDocuments({
+        type: { $in: types },
+        status: 'completed'
+      })
+    ]);
+    
+    // Enrich activity with formatted messages
+    const enrichedActivity = transactions.map(t => ({
+      ...t,
+      formattedMessage: formatActivityMessage(t)
+    }));
+    
+    res.json({
+      success: true,
+      data: {
+        activity: enrichedActivity,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + transactions.length < total
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Helper function to format activity messages
+function formatActivityMessage(transaction) {
+  const fromUser = transaction.fromUserId;
+  const toUser = transaction.toUserId;
+  
+  switch (transaction.type) {
+    case 'deposit':
+      return `${fromUser?.profile?.companyName || fromUser?.email} deposited ${transaction.grossAmount} USD`;
+    case 'withdrawal':
+      return `${fromUser?.email} withdrew ${transaction.grossAmount} USD via ${transaction.metadata?.payoutMethod}`;
+    case 'tip':
+      return `${fromUser?.email} tipped ${toUser?.profile?.stageName || toUser?.email} ${transaction.grossAmount} USD`;
+    case 'platform_fee':
+      return `Platform earned ${transaction.grossAmount} USD from ${transaction.feeSource} fees`;
+    default:
+      return `${transaction.type}: ${transaction.grossAmount} USD`;
+  }
+}
+
+// ============================================
+// Dashboard Stats Endpoint
+// ============================================
+
+/**
+ * GET /api/admin/dashboard-stats
+ * Get comprehensive dashboard statistics
+ */
+router.get('/dashboard-stats', async (_req, res, next) => {
+  try {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisWeek = new Date(now.setDate(now.getDate() - 7));
+    const thisMonth = new Date(now.setMonth(now.getMonth() - 1));
+    
+    const [
+      totalUsers,
+      todayRegistrations,
+      weekRegistrations,
+      monthRegistrations,
+      totalTransactions,
+      todayVolume,
+      weekVolume,
+      monthVolume
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ createdAt: { $gte: today } }),
+      User.countDocuments({ createdAt: { $gte: thisWeek } }),
+      User.countDocuments({ createdAt: { $gte: thisMonth } }),
+      Transaction.countDocuments({ status: 'completed' }),
+      Transaction.aggregate([
+        { $match: { status: 'completed', createdAt: { $gte: today } } },
+        { $group: { _id: null, total: { $sum: '$grossAmount' } } }
+      ]),
+      Transaction.aggregate([
+        { $match: { status: 'completed', createdAt: { $gte: thisWeek } } },
+        { $group: { _id: null, total: { $sum: '$grossAmount' } } }
+      ]),
+      Transaction.aggregate([
+        { $match: { status: 'completed', createdAt: { $gte: thisMonth } } },
+        { $group: { _id: null, total: { $sum: '$grossAmount' } } }
+      ])
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        users: {
+          total: totalUsers,
+          today: todayRegistrations,
+          week: weekRegistrations,
+          month: monthRegistrations
+        },
+        volume: {
+          total: totalTransactions,
+          today: todayVolume[0]?.total || 0,
+          week: weekVolume[0]?.total || 0,
+          month: monthVolume[0]?.total || 0
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ============================================
+// NEW: Auto-Release Statistics Endpoints
+// ============================================
+
+/**
+ * GET /api/admin/auto-release/stats
+ * Get auto-release statistics for admin dashboard
+ */
+router.get('/auto-release/stats', async (req, res, next) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.setHours(0, 0, 0, 0));
+    
+    // Get campaigns pending auto-release (creator completed, business not approved, deadline not passed)
+    const pendingAutoRelease = await Campaign.countDocuments({
+      creatorWorkCompleted: true,
+      businessWorkApproved: false,
+      autoReleaseDeadline: { $gt: new Date() },
+      autoReleaseStatus: { $in: ['pending', 'reminding'] }
+    });
+    
+    // Get campaigns auto-released today
+    const autoReleasedToday = await Campaign.countDocuments({
+      autoReleaseStatus: 'completed',
+      autoReleaseCompletedAt: { $gte: todayStart }
+    });
+    
+    // Get total auto-released amounts
+    const autoReleaseTransactions = await Transaction.aggregate([
+      {
+        $match: {
+          type: 'escrow_release',
+          'metadata.autoRelease': true,
+          status: 'completed'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$grossAmount' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Get reminders sent today
+    const remindersSentToday = await Campaign.countDocuments({
+      lastReminderSentAt: { $gte: todayStart }
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        pendingAutoRelease,
+        autoReleasedToday,
+        totalAutoReleasedAmount: autoReleaseTransactions[0]?.totalAmount || 0,
+        totalAutoReleasedCount: autoReleaseTransactions[0]?.count || 0,
+        remindersSentToday
+      }
+    });
+  } catch (err) {
+    logger.error('Error fetching auto-release stats:', err);
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/auto-release/campaigns
+ * Get list of campaigns pending auto-release with details
+ */
+router.get('/auto-release/campaigns', [
+  validatePagination,
+  query('status').optional().isIn(['pending', 'warning', 'urgent', 'all'])
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+    const statusFilter = req.query.status || 'all';
+    
+    const now = new Date();
+    const query = {
+      creatorWorkCompleted: true,
+      businessWorkApproved: false,
+      autoReleaseDeadline: { $gt: now },
+      autoReleaseStatus: { $in: ['pending', 'reminding'] }
+    };
+    
+    const campaigns = await Campaign.find(query)
+      .populate('businessId', 'email profile.companyName profile.displayName')
+      .populate('assignedCreatorId', 'email uniqueCode profile.stageName profile.displayName')
+      .sort({ autoReleaseDeadline: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+    
+    const enrichedCampaigns = campaigns.map(campaign => {
+      const deadline = new Date(campaign.autoReleaseDeadline);
+      const daysRemaining = Math.max(0, Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)));
+      const hoursRemaining = Math.max(0, Math.ceil((deadline - now) / (1000 * 60 * 60)));
+      
+      // Get accepted bid amount
+      const acceptedBid = campaign.bids?.find(b => b.status === 'accepted');
+      const amount = acceptedBid?.amount || campaign.escrowHeld || 0;
+      
+      let urgency = 'normal';
+      if (daysRemaining <= 1) urgency = 'urgent';
+      else if (daysRemaining <= 3) urgency = 'warning';
+      
+      return {
+        _id: campaign._id,
+        title: campaign.title,
+        businessId: campaign.businessId?._id,
+        businessEmail: campaign.businessId?.email,
+        businessName: campaign.businessId?.profile?.companyName || campaign.businessId?.profile?.displayName,
+        creatorId: campaign.assignedCreatorId?._id,
+        creatorEmail: campaign.assignedCreatorId?.email,
+        creatorName: campaign.assignedCreatorId?.profile?.stageName || campaign.assignedCreatorId?.profile?.displayName || campaign.assignedCreatorId?.uniqueCode,
+        amount,
+        autoReleaseDeadline: campaign.autoReleaseDeadline,
+        daysRemaining,
+        hoursRemaining,
+        urgency,
+        reminderCount: campaign.autoReleaseReminderSent || 0,
+        lastReminderSentAt: campaign.lastReminderSentAt
+      };
+    });
+    
+    // Apply status filter
+    let filteredCampaigns = enrichedCampaigns;
+    if (statusFilter === 'urgent') {
+      filteredCampaigns = enrichedCampaigns.filter(c => c.urgency === 'urgent');
+    } else if (statusFilter === 'warning') {
+      filteredCampaigns = enrichedCampaigns.filter(c => c.urgency === 'warning');
+    }
+    
+    const total = filteredCampaigns.length;
+    const paginatedCampaigns = filteredCampaigns.slice(0, limit);
+    
+    res.json({
+      success: true,
+      data: {
+        campaigns: paginatedCampaigns,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + paginatedCampaigns.length < total
+        },
+        summary: {
+          totalPending: enrichedCampaigns.length,
+          urgent: enrichedCampaigns.filter(c => c.urgency === 'urgent').length,
+          warning: enrichedCampaigns.filter(c => c.urgency === 'warning').length
+        }
+      }
+    });
+  } catch (err) {
+    logger.error('Error fetching auto-release campaigns:', err);
+    next(err);
+  }
+});
+
+/**
+ * POST /api/admin/auto-release/:campaignId/manual
+ * Manually trigger auto-release for a specific campaign (admin override)
+ */
+router.post('/auto-release/:campaignId/manual', [
+  param('campaignId').isMongoId().withMessage('Invalid campaign ID'),
+  body('reason').optional().isString().trim().isLength({ max: 500 })
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { campaignId } = req.params;
+    const { reason } = req.body;
+    
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: 'Campaign not found' });
+    }
+    
+    if (!campaign.creatorWorkCompleted) {
+      return res.status(400).json({ success: false, message: 'Creator has not marked work as completed' });
+    }
+    
+    if (campaign.businessWorkApproved) {
+      return res.status(400).json({ success: false, message: 'Business has already approved this work' });
+    }
+    
+    if (campaign.autoReleaseStatus === 'completed') {
+      return res.status(400).json({ success: false, message: 'Funds have already been released' });
+    }
+    
+    // Import auto-release service
+    const { executeAutoRelease } = require('../services/autoReleaseService');
+    
+    // Override deadline to now and execute
+    campaign.autoReleaseDeadline = new Date();
+    campaign.autoReleaseStatus = 'processing';
+    await campaign.save();
+    
+    const result = await executeAutoRelease(campaign);
+    
+    logger.info(`Manual auto-release triggered by admin ${req.user._id} for campaign ${campaignId}`, { reason });
+    
+    res.json({
+      success: true,
+      message: 'Manual auto-release completed',
+      data: result
+    });
+  } catch (err) {
+    logger.error('Error in manual auto-release:', err);
+    next(err);
+  }
+});
+
+// ============================================
+// Moderation Queue Endpoints
+// ============================================
+
+/**
+ * GET /api/admin/reports
+ * Get pending reports (moderation queue)
+ */
+router.get('/reports', [
+  query('status').optional().isIn(['pending', 'reviewing', 'resolved', 'dismissed']),
+  validatePagination
+], async (req, res, next) => {
+  try {
+    const { status = 'pending' } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+    
+    const Report = require('../models/Report');
+    
+    const [reports, total] = await Promise.all([
+      Report.find({ status })
+        .sort({ createdAt: 1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('reporterId', 'email uniqueCode role profile.stageName profile.companyName')
+        .populate('reportedUserId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl')
+        .populate('reportedPostId', 'caption mediaUrl mediaType createdAt')
+        .lean(),
+      Report.countDocuments({ status })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        reports,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasMore: skip + reports.length < total
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/reports/:reportId
+ * Get single report details
+ */
+router.get('/reports/:reportId', [
+  param('reportId').isMongoId().withMessage('Invalid report ID')
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { reportId } = req.params;
+    const Report = require('../models/Report');
+    
+    const report = await Report.findById(reportId)
+      .populate('reporterId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl')
+      .populate('reportedUserId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl')
+      .populate('reportedPostId', 'caption mediaUrl mediaType createdAt likeCount commentCount')
+      .lean();
+    
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+    
+    res.json({
+      success: true,
+      data: report
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * PUT /api/admin/reports/:reportId
+ * Update report status (resolve/dismiss)
+ */
+router.put('/reports/:reportId', [
+  param('reportId').isMongoId().withMessage('Invalid report ID'),
+  body('status').isIn(['resolved', 'dismissed', 'reviewing']).withMessage('Invalid status'),
+  body('resolution').optional().isString().trim().isLength({ max: 1000 }),
+  body('action').optional().isIn(['none', 'warn', 'suspend', 'ban', 'delete_post'])
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    
+    const { reportId } = req.params;
+    const { status, resolution, action = 'none' } = req.body;
+    
+    const Report = require('../models/Report');
+    
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+    
+    // Update report
+    report.status = status;
+    report.resolution = resolution || report.resolution;
+    report.reviewedBy = req.user._id;
+    report.reviewedAt = new Date();
+    await report.save();
+    
+    // Take action on reported content/user
+    if (status === 'resolved') {
+      switch (action) {
+        case 'warn':
+          // Add warning to user account
+          await User.findByIdAndUpdate(report.reportedUserId, {
+            $push: { warnings: { message: resolution, issuedBy: req.user._id, issuedAt: new Date() } }
+          });
+          logger.info(`[ADMIN] Warning issued to user ${report.reportedUserId} by ${req.user._id}`);
+          break;
+          
+        case 'suspend':
+          await User.findByIdAndUpdate(report.reportedUserId, { status: 'suspended', statusReason: resolution });
+          logger.info(`[ADMIN] User ${report.reportedUserId} suspended by ${req.user._id}`);
+          break;
+          
+        case 'ban':
+          await User.findByIdAndUpdate(report.reportedUserId, { status: 'banned', statusReason: resolution });
+          logger.info(`[ADMIN] User ${report.reportedUserId} banned by ${req.user._id}`);
+          break;
+          
+        case 'delete_post':
+          if (report.reportedPostId) {
+            const CommunityPost = require('../models/CommunityPost');
+            await CommunityPost.findByIdAndDelete(report.reportedPostId);
+            logger.info(`[ADMIN] Post ${report.reportedPostId} deleted by ${req.user._id}`);
+          }
+          break;
+          
+        default:
+          break;
+      }
+    }
+    
+    logger.info(`Report ${reportId} ${status} by admin ${req.user._id}, action: ${action}`);
+    
+    res.json({
+      success: true,
+      message: `Report ${status}`,
+      data: report
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/reports/stats
+ * Get report statistics
+ */
+router.get('/reports/stats', async (req, res, next) => {
+  try {
+    const Report = require('../models/Report');
+    
+    const stats = await Report.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    const byReason = await Report.aggregate([
+      {
+        $group: {
+          _id: '$reason',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    const pendingCount = await Report.countDocuments({ status: 'pending' });
+    const resolvedToday = await Report.countDocuments({
+      status: 'resolved',
+      reviewedAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        byStatus: stats,
+        byReason,
+        pendingCount,
+        resolvedToday,
+        totalReports: await Report.countDocuments()
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;
