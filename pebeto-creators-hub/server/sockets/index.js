@@ -4,7 +4,7 @@
  * Handles real-time features including:
  * - Authentication middleware
  * - User presence (online/offline)
- * - Direct messaging (fully implemented)
+ * - Direct messaging (NEW - fully implemented)
  * - Campaign notifications
  * - Platform activity broadcasts
  * - Live feed updates
@@ -639,7 +639,7 @@ function initSockets(io) {
     // Status subscription
     socket.on('status:subscribe', () => handleStatusSubscribe(socket));
     
-    // Direct messaging
+    // Direct messaging (UPDATED)
     socket.on('dm:typing', (payload) => handleDirectMessageTyping(socket, io, payload));
     socket.on('dm:stop-typing', (payload) => handleDirectMessageStopTyping(socket, io, payload));
     socket.on('dm:send', (payload) => handleSendDirectMessage(socket, io, payload));
