@@ -109,6 +109,7 @@ const payoutProfileSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function(details) {
+        // Validate required fields based on method
         const parent = this.parent();
         if (!parent) return true;
         
@@ -145,7 +146,10 @@ const loginAttemptSchema = new mongoose.Schema({
   userAgent: { type: String }
 }, { _id: false });
 
-// API Key Sub-Schema
+// ============================================
+// NEW: API Key Sub-Schema
+// ============================================
+
 const apiKeySchema = new mongoose.Schema({
   id: { 
     type: String, 
@@ -218,6 +222,9 @@ const userSchema = new mongoose.Schema(
     emailVerificationExpires: { type: Date, select: false },
     
     // Session management
+    // ============================================
+    // NEW: tokenVersion for session invalidation
+    // ============================================
     tokenVersion: { 
       type: Number, 
       default: 0,
@@ -359,7 +366,9 @@ const userSchema = new mongoose.Schema(
       phoneNumber: { type: String, trim: true }
     },
     
+    // ============================================
     // SOCIAL MEDIA LINKS FOR CREATORS
+    // ============================================
     socialLinks: {
       tiktok: { type: String, default: '' },
       youtube: { type: String, default: '' },
@@ -384,22 +393,32 @@ const userSchema = new mongoose.Schema(
       campaignsCompleted: { type: Number, default: 0, min: 0 }
     },
     
+    // ============================================
     // Creator Likes Tracking (for community engagement)
+    // ============================================
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     likeCount: { type: Number, default: 0 },
     
     // ========== Security ==========
     publicKey: { type: String, trim: true },
     twoFactorEnabled: { type: Boolean, default: false },
+    
+    // ============================================
+    // NEW: twoFactorSecret for 2FA
+    // ============================================
     twoFactorSecret: { 
       type: String, 
-      select: false
+      select: false  // Don't return by default
     },
     
-    // API Keys array
+    // ============================================
+    // NEW: API Keys array
+    // ============================================
     apiKeys: [apiKeySchema],
     
-    // Notification Preferences
+    // ============================================
+    // NEW: Notification Preferences
+    // ============================================
     notificationPreferences: {
       emailOnLogin: { type: Boolean, default: true },
       emailOnTip: { type: Boolean, default: true },
@@ -420,23 +439,47 @@ const userSchema = new mongoose.Schema(
       referralCode: { type: String, index: true, sparse: true }
     },
 
-    // Google Drive OAuth Tokens (for private video uploads)
+    // ============================================
+    // NEW: Google Drive OAuth Tokens (for private video uploads)
+    // ============================================
+    
+    /**
+     * Google OAuth access token for Drive API
+     * Used to upload videos to creator's own Google Drive
+     */
     googleDriveAccessToken: {
       type: String,
-      select: false
+      select: false  // Don't return by default for security
     },
+    
+    /**
+     * Google OAuth refresh token for Drive API
+     * Used to get new access tokens when expired
+     */
     googleDriveRefreshToken: {
       type: String,
-      select: false
+      select: false  // Don't return by default for security
     },
+    
+    /**
+     * When the access token expires
+     */
     googleDriveTokenExpiresAt: {
       type: Date,
       select: false
     },
+    
+    /**
+     * Whether the user has connected their Google Drive
+     */
     googleDriveConnected: {
       type: Boolean,
       default: false
     },
+    
+    /**
+     * When Google Drive was last connected
+     */
     googleDriveConnectedAt: {
       type: Date
     }
@@ -472,7 +515,7 @@ userSchema.index({ 'profile.tags': 1 });
 userSchema.index({ 'social.followerCount': -1 });
 userSchema.index({ 'social.totalTipsReceived': -1 });
 
-// Creator likes indexes
+// Creator likes indexes (NEW)
 userSchema.index({ likeCount: -1 });
 userSchema.index({ likedBy: 1 });
 
@@ -480,7 +523,7 @@ userSchema.index({ likedBy: 1 });
 userSchema.index({ lockedUntil: 1 }, { expireAfterSeconds: 0, partialFilterExpression: { lockedUntil: { $exists: true } } });
 userSchema.index({ status: 1, deactivatedAt: 1 });
 
-// Google Drive token expiration index for cleanup
+// NEW: Google Drive token expiration index for cleanup
 userSchema.index({ googleDriveTokenExpiresAt: 1 });
 
 // ============================================
@@ -560,7 +603,7 @@ userSchema.virtual('publicIdentifier').get(function() {
 });
 
 /**
- * Check if Google Drive is connected and token is valid
+ * NEW: Check if Google Drive is connected and token is valid
  */
 userSchema.virtual('isGoogleDriveConnected').get(function() {
   return this.googleDriveConnected === true && 
@@ -808,7 +851,7 @@ userSchema.methods.updateLastSeen = async function(ipAddress) {
 };
 
 /**
- * Set Google Drive tokens after OAuth flow
+ * NEW: Set Google Drive tokens after OAuth flow
  * @param {Object} tokens - Google OAuth tokens
  * @param {string} tokens.accessToken - Access token
  * @param {string} tokens.refreshToken - Refresh token
@@ -829,7 +872,7 @@ userSchema.methods.setGoogleDriveTokens = async function(tokens) {
 };
 
 /**
- * Clear Google Drive tokens (disconnect)
+ * NEW: Clear Google Drive tokens (disconnect)
  * @returns {Promise<void>}
  */
 userSchema.methods.clearGoogleDriveTokens = async function() {
@@ -841,7 +884,7 @@ userSchema.methods.clearGoogleDriveTokens = async function() {
 };
 
 /**
- * Check if Google Drive token needs refresh
+ * NEW: Check if Google Drive token needs refresh
  * @returns {boolean}
  */
 userSchema.methods.needsGoogleDriveRefresh = function() {
@@ -853,7 +896,7 @@ userSchema.methods.needsGoogleDriveRefresh = function() {
 };
 
 /**
- * Get valid Google Drive access token (refreshes if needed)
+ * NEW: Get valid Google Drive access token (refreshes if needed)
  * @param {Function} refreshFunction - Function to refresh token
  * @returns {Promise<string|null>} Access token or null
  */
@@ -950,7 +993,7 @@ userSchema.statics.findActiveByRole = function(role, limit = 100) {
 };
 
 /**
- * Find users with expired Google Drive tokens
+ * NEW: Find users with expired Google Drive tokens
  * @returns {Query} Mongoose query
  */
 userSchema.statics.findWithExpiredDriveTokens = function() {
