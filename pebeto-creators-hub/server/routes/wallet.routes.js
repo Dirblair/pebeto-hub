@@ -53,6 +53,7 @@ const withdrawalPreviewValidation = [
     .isLength({ min: 3, max: 3 }),
 ];
 
+// NEW: Deposit validation rules
 const depositValidation = [
   body('intentUsd')
     .isFloat({ min: 1 })
@@ -60,6 +61,7 @@ const depositValidation = [
     .toFloat(),
 ];
 
+// NEW: Withdraw validation rules
 const withdrawValidation = [
   body('payoutMethod')
     .isIn(['mpesa', 'paypal', 'swift', 'bank_transfer'])
@@ -93,26 +95,9 @@ const tipValidation = [
     .optional()
     .isString()
     .trim(),
-  body('creatorId')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid creator ID'),
   body('amount')
     .isFloat({ min: 1 })
     .withMessage('Tip amount must be at least $1'),
-  body('currency')
-    .optional()
-    .isLength({ min: 3, max: 3 })
-    .withMessage('Currency must be a 3-letter code')
-    .toUpperCase(),
-  body('paymentSource')
-    .optional()
-    .isIn(['wallet', 'mpesa', 'paypal'])
-    .withMessage('Invalid payment source'),
-  body('paymentDetails')
-    .optional()
-    .isObject()
-    .withMessage('Invalid payment details'),
 ];
 
 const balanceValidation = [
@@ -227,10 +212,10 @@ router.post('/deposit/preview', depositPreviewValidation, catchAsync(async (req,
   });
 }));
 
-/**
- * POST /api/wallet/deposit
- * Add funds to wallet (internal wallet transfer)
- */
+// ============================================
+// NEW: POST /api/wallet/deposit
+// Add funds to wallet (internal wallet transfer)
+// ============================================
 router.post('/deposit', depositValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -292,10 +277,10 @@ router.post('/withdraw/preview', withdrawalPreviewValidation, catchAsync(async (
   });
 }));
 
-/**
- * POST /api/wallet/withdraw
- * Withdraw funds from wallet to external account
- */
+// ============================================
+// NEW: POST /api/wallet/withdraw
+// Withdraw funds from wallet to external account
+// ============================================
 router.post('/withdraw', withdrawValidation, catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -413,78 +398,10 @@ router.get('/withdrawals', transactionsValidation, catchAsync(async (req, res) =
   });
 }));
 
-/**
- * POST /api/wallet/tip
- * Send a tip to a creator (fee is hidden from user but applied)
- */
-router.post('/tip', tipValidation, catchAsync(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new AppError(errors.array()[0].msg, 400);
-  }
-
-  const { creatorId, recipientUsername, recipientUniqueCode, amount, currency = 'USD', paymentSource = 'wallet', paymentDetails = {} } = req.body;
-
-  let recipient = null;
-
-  // Find recipient by ID, username, or unique code
-  if (creatorId) {
-    recipient = await User.findById(creatorId);
-  } else if (recipientUniqueCode) {
-    recipient = await User.findOne({ uniqueCode: recipientUniqueCode });
-  } else if (recipientUsername) {
-    recipient = await User.findOne({ 'profile.stageName': recipientUsername });
-  }
-
-  if (!recipient) {
-    throw new AppError('Creator not found', 404);
-  }
-
-  if (recipient.role !== 'creator') {
-    throw new AppError('Recipient must be a creator', 400);
-  }
-
-  // Prevent self-tipping
-  if (req.user._id.toString() === recipient._id.toString()) {
-    throw new AppError('You cannot tip yourself', 400);
-  }
-
-  // Process the tip (fee is calculated internally but hidden from user)
-  const { calculateTip, processTip } = require('../services/feeService');
-  const { processTip: processTipTransaction } = require('../services/walletService');
-  
-  const breakdown = calculateTip(amount);
-  
-  const result = await processTipTransaction({
-    fromUser: req.user,
-    toCreatorId: recipient._id,
-    grossUsd: breakdown.grossUsd,
-    idempotencyKey: `tip_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
-  });
-
-  logger.info('Tip sent', {
-    fromUserId: req.user._id,
-    toCreatorId: recipient._id,
-    amount: breakdown.grossUsd,
-    fee: breakdown.feeUsd,
-    netToCreator: breakdown.netToCreatorUsd,
-    paymentSource
-  });
-
-  res.json({
-    success: true,
-    message: 'Tip sent successfully',
-    data: {
-      amount: breakdown.netToCreatorUsd,
-      transactionId: result.tipTx._id
-    }
-  });
-}));
-
-/**
- * GET /api/wallet/earnings
- * Get creator earnings overview (last 30 days)
- */
+// ============================================
+// NEW: GET /api/wallet/earnings
+// Get creator earnings overview (last 30 days)
+// ============================================
 router.get('/earnings', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
@@ -604,10 +521,10 @@ router.get('/earnings', catchAsync(async (req, res) => {
   });
 }));
 
-/**
- * GET /api/wallet/spending
- * Get business spending overview (last 30 days)
- */
+// ============================================
+// NEW: GET /api/wallet/spending
+// Get business spending overview (last 30 days)
+// ============================================
 router.get('/spending', catchAsync(async (req, res) => {
   const { days = 30 } = req.query;
   const daysInt = parseInt(days) || 30;
