@@ -138,20 +138,15 @@
       border-radius: 50px;
       padding: 4px;
       margin-bottom: 20px;
-      overflow-x: auto;
-      flex-wrap: nowrap;
     }
     .feed-tab {
       flex: 1;
-      padding: 10px 16px;
+      padding: 10px;
       border-radius: 40px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
       font-weight: 500;
-      font-size: 13px;
-      white-space: nowrap;
-      min-width: 70px;
     }
     .feed-tab.active {
       background: #ff8c42;
@@ -296,12 +291,7 @@
       background: #ff8c42;
       color: white;
     }
-    .video-embed-container { 
-      padding: 20px; 
-      background: #000; 
-      position: relative; 
-      min-height: 400px;
-    }
+    .video-embed-container { padding: 20px; background: #000; position: relative; }
     .video-controls {
       position: absolute;
       bottom: 40px;
@@ -372,7 +362,7 @@
       border-top: 1px solid rgba(255,255,255,0.05);
       flex-wrap: wrap;
     }
-    .action-btn, .tip-btn, .profile-btn, .share-btn, .report-btn, .dm-btn, .bid-now-btn {
+    .action-btn, .tip-btn, .profile-btn, .share-btn, .report-btn, .dm-btn {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.2);
       padding: 8px 16px;
@@ -393,8 +383,6 @@
     .report-btn:hover { background: #ef4444; color: white; }
     .dm-btn { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #3b82f6; }
     .dm-btn:hover { background: #3b82f6; color: white; }
-    .bid-now-btn { background: rgba(76,175,80,0.2); border-color: #4caf50; color: #4caf50; }
-    .bid-now-btn:hover { background: #4caf50; color: white; }
     .like-animation {
       position: fixed;
       pointer-events: none;
@@ -725,11 +713,6 @@
       align-items: center;
       gap: 10px;
     }
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #a08070;
-    }
     
     @media (max-width: 768px) {
       .search-bar { display: none; }
@@ -741,10 +724,18 @@
       .toast { white-space: normal; max-width: 90%; text-align: center; }
       .chat-panel { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; }
       .chat-toggle-btn { bottom: 70px; right: 15px; }
-      .feed-tab { font-size: 11px; padding: 8px 12px; min-width: 60px; }
+    }
+    @media (prefers-contrast: high) {
+      .creator-card { border: 2px solid #ff8c42; }
+      .action-btn, .tip-btn { border: 2px solid; }
+    }
+    .keyboard-focus:focus-visible {
+      outline: 2px solid #ff8c42;
+      outline-offset: 2px;
     }
   </style>
   <link rel="manifest" href="/manifest.json">
+  <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
 
@@ -774,7 +765,6 @@
     <div class="feed-tab" data-feed="following" onclick="switchFeedTab('following')">Following</div>
     <div class="feed-tab" data-feed="saved" onclick="switchFeedTab('saved')">Saved</div>
     <div class="feed-tab" data-feed="trending" onclick="switchFeedTab('trending')">🔥 Trending</div>
-    <div class="feed-tab" data-feed="bid" onclick="switchFeedTab('bid')">💰 Bid</div>
   </div>
 
   <div class="filter-sort-bar">
@@ -826,7 +816,7 @@
   </div>
 </div>
 
-<!-- Tip Modal - FEE TEXT REMOVED (kept secret) -->
+<!-- Tip Modal -->
 <div id="tip-modal" class="modal">
   <div class="modal-content">
     <h3>💝 Send Tip</h3>
@@ -844,7 +834,9 @@
     </select>
     <div id="mpesa-details" style="display: none;"><input type="tel" id="mpesa-phone" placeholder="M-Pesa Phone (254712345678)"></div>
     <div id="paypal-details" style="display: none;"><input type="email" id="paypal-email" placeholder="PayPal Email"></div>
-    <!-- FEE TEXT REMOVED - kept secret -->
+    <div style="background: rgba(255,140,66,0.1); padding: 12px; border-radius: 16px; margin: 15px 0; font-size: 13px;">
+      💡 5% fee | Creator gets: <span id="creator-receives">0.00</span>
+    </div>
     <div class="modal-buttons"><button class="save-btn" onclick="sendTip()">Send Tip</button><button class="cancel-btn" onclick="closeModal('tip-modal')">Cancel</button></div>
   </div>
 </div>
@@ -879,6 +871,10 @@
       <button class="save-btn" onclick="copyShareLink()"><i class="ri-link"></i> Copy Link</button>
       <button class="save-btn" onclick="shareNative()"><i class="ri-share-line"></i> Share (Native)</button>
     </div>
+    <div style="margin: 15px 0; text-align: center;">
+      <canvas id="qr-code-canvas" style="width: 120px; height: 120px; background: white; border-radius: 12px; display: none;"></canvas>
+      <button class="btn-action" onclick="showQRCode()">Show QR Code</button>
+    </div>
     <div class="modal-buttons"><button class="cancel-btn" onclick="closeModal('share-modal')">Close</button></div>
   </div>
 </div>
@@ -904,17 +900,6 @@
     <h3>💬 Message <span id="dm-creator-name"></span></h3>
     <textarea id="dm-message" rows="4" placeholder="Type your message..."></textarea>
     <div class="modal-buttons"><button class="save-btn" onclick="sendDM()">Send</button><button class="cancel-btn" onclick="closeModal('dm-modal')">Cancel</button></div>
-  </div>
-</div>
-
-<div id="bid-modal" class="modal">
-  <div class="modal-content">
-    <h3>💰 Place Bid</h3>
-    <p id="bid-campaign-name" style="margin-bottom: 15px;">Campaign: <strong></strong></p>
-    <p id="bid-creator-name" style="margin-bottom: 15px;">Creator: <strong></strong></p>
-    <input type="number" id="bid-amount" placeholder="Bid Amount (USD)" min="1">
-    <textarea id="bid-proposal" rows="3" placeholder="Why should they choose you?"></textarea>
-    <div class="modal-buttons"><button class="save-btn" onclick="submitBid()">Submit Bid</button><button class="cancel-btn" onclick="closeModal('bid-modal')">Cancel</button></div>
   </div>
 </div>
 
@@ -953,7 +938,6 @@
   let currentShareCreatorId = null, currentShareCreatorName = '';
   let currentReportCreatorId = null, currentReportCreatorName = '';
   let currentDMRecipientId = null, currentDMRecipientName = '';
-  let currentBidCampaign = null;
   let isLoading = false;
   let hasMore = true;
   let virtualScrollObserver = null;
@@ -965,7 +949,6 @@
   // Video autoplay tracking
   let currentlyPlayingVideo = null;
   let videoObserver = null;
-  let viewCountCache = new Map();
 
   // DM CHAT VARIABLES
   let socket = null;
@@ -1020,12 +1003,7 @@
     badge.innerText = unread > 9 ? '9+' : unread;
     document.getElementById('notification-dropdown').innerHTML = notifications.slice(0,10).map(n => `<div class="notification-item" onclick="markNotificationRead(this)">${n.message}<br><small>${formatDateTime(n.time)}</small></div>`).join(''); 
   }
-  function markNotificationRead(el) { 
-    el.style.opacity = '0.5'; 
-    const index = Array.from(el.parentElement.children).indexOf(el);
-    if (index >= 0 && notifications[index]) notifications[index].read = true;
-    updateNotificationBadge();
-  }
+  function markNotificationRead(el) { el.style.opacity = '0.5'; }
 
   async function fetchJSON(url, opts) { 
     const token = localStorage.getItem('pebeto_token'); 
@@ -1127,22 +1105,20 @@
 
   function selectPaymentSource(source) {
     selectedPaymentSource = source;
-    document.querySelectorAll('.payment-source-btn').forEach(btn => { 
-      btn.style.background = 'rgba(255,255,255,0.05)'; 
-      btn.style.border = '1px solid rgba(255,140,66,0.3)'; 
-    });
+    document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
     const activeBtn = document.querySelector(`.payment-source-btn[data-source="${source}"]`);
     if (activeBtn) { activeBtn.style.background = 'rgba(255,140,66,0.2)'; activeBtn.style.border = '1px solid #ff8c42'; }
     document.getElementById('mpesa-details').style.display = source === 'mpesa' ? 'block' : 'none';
     document.getElementById('paypal-details').style.display = source === 'paypal' ? 'block' : 'none';
   }
-
+  function updateCreatorReceives() { const amt = parseFloat(document.getElementById('tip-amount').value) || 0; document.getElementById('creator-receives').innerHTML = (amt * 0.95).toFixed(2); }
   function validateTipAmount() { 
     const amt = parseFloat(document.getElementById('tip-amount').value) || 0;
     if (amt < 1 && amt > 0) { document.getElementById('tip-amount').value = 1; }
     const warning = document.getElementById('balance-warning');
     if (selectedPaymentSource === 'wallet' && amt > userWalletBalance) { warning.style.display = 'block'; }
     else { warning.style.display = 'none'; }
+    updateCreatorReceives();
   }
 
   async function loadUserBalance() {
@@ -1154,67 +1130,12 @@
     } catch(e) {}
   }
 
-  // ============================================
-  // FETCH ORIGINAL VIEW COUNTS FROM PLATFORMS
-  // ============================================
-  async function fetchOriginalViewCount(url, platform) {
-    if (viewCountCache.has(url)) return viewCountCache.get(url);
-    
-    try {
-      let viewCount = 0;
-      
-      if (platform === 'youtube') {
-        // Extract video ID from YouTube URL
-        const videoId = extractYouTubeVideoId(url);
-        if (videoId) {
-          const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
-          const data = await response.json();
-          if (data && data.views) {
-            viewCount = parseInt(data.views) || 0;
-          }
-        }
-      } else if (platform === 'tiktok') {
-        // TikTok view count extraction (simplified - uses embed data)
-        const response = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
-        const data = await response.json();
-        if (data && data.author_name) {
-          // TikTok oembed doesn't give views directly, we'll show a placeholder
-          viewCount = Math.floor(Math.random() * 10000) + 100; // Fallback for demo
-        }
-      }
-      
-      viewCountCache.set(url, viewCount);
-      return viewCount;
-    } catch (error) {
-      console.error('Error fetching view count:', error);
-      return 0;
-    }
-  }
-
-  function extractYouTubeVideoId(url) {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[7].length === 11) ? match[7] : null;
-  }
-
-  // ============================================
-  // LOAD CREATORS
-  // ============================================
   async function loadCreators() {
     try {
       const response = await fetch(`${API_BASE}/api/creators`);
       const data = await response.json();
       if (data.success && data.creators && data.creators.length > 0) { 
-        allCreators = data.creators;
-        
-        // Fetch view counts for each creator's videos
-        for (let creator of allCreators) {
-          if (creator.socialLinks?.tiktok) {
-            creator.originalViews = await fetchOriginalViewCount(creator.socialLinks.tiktok, 'tiktok');
-          } else if (creator.socialLinks?.youtube) {
-            creator.originalViews = await fetchOriginalViewCount(creator.socialLinks.youtube, 'youtube');
-          }
-        }
+        allCreators = data.creators.filter(c => c.socialLinks && (c.socialLinks.tiktok || c.socialLinks.youtube));
       }
       else { 
         allCreators = [];
@@ -1248,37 +1169,18 @@
 
   function applyFiltersAndSort() {
     let filtered = [...allCreators];
-    
-    // Apply filters based on feed tab
+    if (blockedCreators.size > 0) filtered = filtered.filter(c => !blockedCreators.has(c._id));
+    if (mutedCreators.size > 0 && currentFeedTab !== 'following') filtered = filtered.filter(c => !mutedCreators.has(c._id));
     if (currentFeedTab === 'following') filtered = filtered.filter(c => following.has(c._id));
     if (currentFeedTab === 'saved') filtered = filtered.filter(c => savedCreators.has(c._id));
     if (currentFeedTab === 'trending') filtered = filtered.filter(c => (c.engagementRate || 0) > 4).sort((a,b) => (b.engagementRate || 0) - (a.engagementRate || 0));
-    if (currentFeedTab === 'bid') {
-      // Show creators who have open campaigns with no bids yet
-      filtered = filtered.filter(c => c.hasOpenCampaigns === true);
-    }
-    
-    // Filter by blocked and muted
-    if (blockedCreators.size > 0) filtered = filtered.filter(c => !blockedCreators.has(c._id));
-    if (mutedCreators.size > 0 && currentFeedTab !== 'following') filtered = filtered.filter(c => !mutedCreators.has(c._id));
-    
-    // Filter by niche
     if (currentNicheFilter !== 'all') filtered = filtered.filter(c => (c.profile?.niche || '') === currentNicheFilter);
-    
-    // Filter by search
-    if (currentSearchQuery) filtered = filtered.filter(c => 
-      (c.profile?.stageName || '').toLowerCase().includes(currentSearchQuery) || 
-      (c.profile?.niche || '').toLowerCase().includes(currentSearchQuery) ||
-      (c.uniqueCode || '').toLowerCase().includes(currentSearchQuery)
-    );
-    
-    // Sort
+    if (currentSearchQuery) filtered = filtered.filter(c => (c.profile?.stageName || '').toLowerCase().includes(currentSearchQuery) || (c.profile?.niche || '').toLowerCase().includes(currentSearchQuery));
     if (currentSort === 'likes') filtered.sort((a,b) => (b.likeCount || 0) - (a.likeCount || 0));
     else if (currentSort === 'newest') filtered.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     else if (currentSort === 'oldest') filtered.sort((a,b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     else if (currentSort === 'name') filtered.sort((a,b) => (a.profile?.stageName || '').localeCompare(b.profile?.stageName || ''));
     else if (currentSort === 'engagement') filtered.sort((a,b) => (b.engagementRate || 0) - (a.engagementRate || 0));
-    
     filteredCreators = filtered;
     currentOffset = 0;
     renderFeed();
@@ -1410,13 +1312,12 @@
     const isFollowing = following.has(creator._id);
     const isSaved = savedCreators.has(creator._id);
     const isVerified = creator.verified || false;
-    const viewCount = creator.originalViews || creator.viewCount || 0;
+    const viewCount = creator.viewCount || 0;
     const isOnline = creator.isOnline || false;
     const isLive = creator.isLive || false;
     const likeCount = creator.likeCount || 0;
     const isLiked = creator.isLiked || false;
     const commentCount = creator.commentCount || 0;
-    const hasOpenCampaign = creator.hasOpenCampaigns || false;
     
     let embedHtml = '';
     let videoId = `video-${creator._id}`;
@@ -1434,9 +1335,7 @@
         <blockquote class="tiktok-embed" cite="${creator.socialLinks.tiktok}" data-unique-id="${tiktokUsername}" data-embed-type="creator" style="max-width: 100%;"><section><a target="_blank" href="${creator.socialLinks.tiktok}">@${tiktokUsername}</a></section></blockquote>
       </div>`;
     } else if (creator.socialLinks?.youtube) {
-      let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? 
-        `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}&autoplay=0&mute=1&playsinline=1` : 
-        `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}&autoplay=0&mute=1&playsinline=1`;
+      let youtubeEmbedUrl = creator.socialLinks.youtube.includes('/@') ? `https://www.youtube.com/embed?listType=user_uploads&list=${creator.socialLinks.youtube.split('/@')[1]}&autoplay=0&mute=1&playsinline=1` : `https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(creator.socialLinks.youtube)}&autoplay=0&mute=1&playsinline=1`;
       embedHtml = `<div id="${videoId}" class="video-embed-container" data-video-id="${creator._id}">
         <div class="view-count-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)} views</div>
         <div class="video-controls">
@@ -1446,9 +1345,7 @@
         <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
         <div class="youtube-embed-container"><iframe src="${youtubeEmbedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%; height:100%;"></iframe></div>
       </div>`;
-    } else { 
-      embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos connected yet.</p></div>`; 
-    }
+    } else { embedHtml = `<div class="video-embed-container"><p style="color:#a08070;text-align:center;padding:40px;">No videos connected yet.</p></div>`; }
     
     card.innerHTML = `
       <div class="creator-header">
@@ -1467,7 +1364,6 @@
         <div style="display: flex; flex-direction: column; gap: 5px;">
           <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${creator._id}', this)">${isFollowing ? 'Following' : 'Follow'}</button>
           <button class="save-creator-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveCreator('${creator._id}', this)">${isSaved ? 'Saved' : 'Save'}</button>
-          ${hasOpenCampaign && currentFeedTab === 'bid' ? `<button class="bid-now-btn" onclick="openBidModal('${creator._id}', '${escapeHtml(displayName)}', '${escapeHtml(creator._id)}')">💰 Bid Now</button>` : ''}
         </div>
       </div>
       ${embedHtml}
@@ -1517,62 +1413,22 @@
     const icon = button.querySelector('i'); const countSpan = button.querySelector('.like-count');
     const isCurrentlyLiked = button.classList.contains('liked');
     let currentCount = parseInt(countSpan.innerText.replace(/[^0-9]/g, '')) || 0;
-    if (isCurrentlyLiked) { 
-      button.classList.remove('liked'); 
-      icon.classList.replace('ri-heart-fill', 'ri-heart-line'); 
-      countSpan.innerText = formatNumber(Math.max(0, currentCount - 1)); 
-    } else { 
-      button.classList.add('liked'); 
-      icon.classList.replace('ri-heart-line', 'ri-heart-fill'); 
-      countSpan.innerText = formatNumber(currentCount + 1); 
-    }
+    if (isCurrentlyLiked) { button.classList.remove('liked'); icon.classList.replace('ri-heart-fill', 'ri-heart-line'); countSpan.innerText = formatNumber(currentCount - 1); }
+    else { button.classList.add('liked'); icon.classList.replace('ri-heart-line', 'ri-heart-fill'); countSpan.innerText = formatNumber(currentCount + 1); }
     try {
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
-      const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, { 
-        method, 
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
-      });
-      const data = await response.json();
-      if (data.success) {
-        // Update local data
-        const creator = allCreators.find(c => c._id === creatorId);
-        if (creator) { 
-          creator.likeCount = data.likeCount; 
-          creator.isLiked = data.liked; 
-        }
-        // Update count from server response
-        countSpan.innerText = formatNumber(data.likeCount);
-      }
-    } catch (error) { 
-      console.error('Error toggling like:', error);
-      // Revert on error
-      if (isCurrentlyLiked) {
-        button.classList.add('liked');
-        icon.classList.replace('ri-heart-line', 'ri-heart-fill');
-        countSpan.innerText = formatNumber(currentCount);
-      } else {
-        button.classList.remove('liked');
-        icon.classList.replace('ri-heart-fill', 'ri-heart-line');
-        countSpan.innerText = formatNumber(currentCount);
-      }
-    }
+      await fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
+      const creator = allCreators.find(c => c._id === creatorId);
+      if (creator) { creator.likeCount = isCurrentlyLiked ? currentCount - 1 : currentCount + 1; creator.isLiked = !isCurrentlyLiked; }
+      userInteractions.likes++;
+    } catch (error) { console.error('Error toggling like:', error); }
     pendingLike = false;
   }
 
   async function toggleFollow(creatorId, btn) {
     const isFollowing = following.has(creatorId);
-    if (isFollowing) { 
-      following.delete(creatorId); 
-      btn.classList.remove('following'); 
-      btn.innerText = 'Follow'; 
-      showToast('Unfollowed creator'); 
-    } else { 
-      following.add(creatorId); 
-      btn.classList.add('following'); 
-      btn.innerText = 'Following'; 
-      showToast('Now following creator'); 
-      addNotification(`You started following ${btn.parentElement?.parentElement?.querySelector('.creator-info h3')?.innerText?.split(' ')[0] || 'a creator'}`);
-    }
+    if (isFollowing) { following.delete(creatorId); btn.classList.remove('following'); btn.innerText = 'Follow'; showToast('Unfollowed creator'); }
+    else { following.add(creatorId); btn.classList.add('following'); btn.innerText = 'Following'; showToast('Now following creator'); addNotification(`You started following ${btn.parentElement?.parentElement?.querySelector('.creator-info h3')?.innerText?.split(' ')[0] || 'a creator'}`); }
     localStorage.setItem('pebeto_following', JSON.stringify([...following]));
     if (currentFeedTab === 'following') applyFiltersAndSort();
   }
@@ -1729,7 +1585,7 @@
         } 
         userInteractions.comments++;
       }
-      else alert('Failed to add comment: ' + (data.message || 'Unknown error'));
+      else alert('Failed to add comment');
     } catch (error) { alert('Network error'); }
     pendingComment = false;
   }
@@ -1743,11 +1599,9 @@
     document.getElementById('tip-creator-name').innerHTML = `To: <strong>${escapeHtml(creatorName)}</strong>`; 
     document.getElementById('tip-modal').style.display = 'flex';
     document.getElementById('tip-amount').value = ''; 
+    document.getElementById('creator-receives').innerHTML = '0.00'; 
     selectedPaymentSource = 'wallet';
-    document.querySelectorAll('.payment-source-btn').forEach(btn => { 
-      btn.style.background = 'rgba(255,255,255,0.05)'; 
-      btn.style.border = '1px solid rgba(255,140,66,0.3)'; 
-    });
+    document.querySelectorAll('.payment-source-btn').forEach(btn => { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.border = '1px solid rgba(255,140,66,0.3)'; });
     const walletBtn = document.querySelector('.payment-source-btn[data-source="wallet"]'); 
     if (walletBtn) { walletBtn.style.background = 'rgba(255,140,66,0.2)'; walletBtn.style.border = '1px solid #ff8c42'; }
     document.getElementById('mpesa-details').style.display = 'none'; 
@@ -1766,15 +1620,8 @@
     const token = localStorage.getItem('pebeto_token'); 
     if (!token) { alert('Please log in'); window.location.href = '/login.html'; pendingTip = false; return; }
     let paymentDetails = { method: selectedPaymentSource };
-    if (selectedPaymentSource === 'mpesa') { 
-      const phone = document.getElementById('mpesa-phone').value; 
-      if (!phone || !/^254\d{9}$/.test(phone)) { alert('Enter valid M-Pesa phone number (254XXXXXXXXX)'); pendingTip = false; return; } 
-      paymentDetails.phoneNumber = phone; 
-    } else if (selectedPaymentSource === 'paypal') { 
-      const email = document.getElementById('paypal-email').value; 
-      if (!email || !email.includes('@')) { alert('Enter valid PayPal email'); pendingTip = false; return; } 
-      paymentDetails.paypalEmail = email; 
-    }
+    if (selectedPaymentSource === 'mpesa') { const phone = document.getElementById('mpesa-phone').value; if (!phone || !/^254\d{9}$/.test(phone)) { alert('Enter valid M-Pesa phone number (254XXXXXXXXX)'); pendingTip = false; return; } paymentDetails.phoneNumber = phone; }
+    else if (selectedPaymentSource === 'paypal') { const email = document.getElementById('paypal-email').value; if (!email || !email.includes('@')) { alert('Enter valid PayPal email'); pendingTip = false; return; } paymentDetails.paypalEmail = email; }
     try { 
       const response = await fetch(`${API_BASE}/api/wallet/tip`, { 
         method: 'POST', 
@@ -1789,17 +1636,12 @@
         addNotification(`You sent a tip to ${currentTipCreatorName}`);
         userInteractions.tips++;
         userWalletBalance -= amount;
-        // Update wallet balance in UI
-        const walletEl = document.querySelector('.wallet-balance-display');
-        if (walletEl) walletEl.innerText = formatMoney(userWalletBalance);
       } else alert('Failed to send tip: ' + (data.message || 'Unknown error'));
     } catch (error) { alert('Network error'); }
     pendingTip = false;
   }
 
-  // ============================================
-  // DM FUNCTIONS
-  // ============================================
+  // DM Functions
   function openDMModal(creatorId, creatorName) {
     openChatWithUser(creatorId, creatorName);
   }
@@ -1811,6 +1653,7 @@
       window.location.href = '/login.html';
       return;
     }
+    
     currentChatRecipient = { id: userId, name: userName };
     loadConversation(userId);
     openChatPanel();
@@ -1895,13 +1738,10 @@
       const data = await fetchJSON(`${API_BASE}/api/messages/conversations/${conversationId}/messages`);
       if (data.success) {
         renderMessages(data.data.messages);
-        // Mark as read - this updates the unread count
         await fetch(`${API_BASE}/api/messages/conversations/${conversationId}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('pebeto_token')}` }
         });
-        // Update unread badge after marking as read
-        updateUnreadBadge();
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -2001,11 +1841,6 @@
       }
     });
     
-    chatSocket.on('dm:read-receipt', (data) => {
-      // Update unread count when messages are read
-      updateUnreadBadge();
-    });
-    
     chatSocket.on('dm:typing', (data) => {
       const typingDiv = document.getElementById('chatTyping');
       if (typingDiv && data.isTyping) {
@@ -2018,10 +1853,6 @@
     
     chatSocket.on('dm:unread-update', (data) => {
       updateUnreadBadge(data.count);
-    });
-    
-    chatSocket.on('dm:message-recalled', (data) => {
-      loadMessages(currentConversationId);
     });
   }
 
@@ -2106,69 +1937,12 @@
     update();
   }
 
-  // ============================================
-  // BID FUNCTIONS
-  // ============================================
-  function openBidModal(creatorId, creatorName, campaignId) {
-    const token = localStorage.getItem('pebeto_token');
-    if (!token) {
-      alert('Please log in to place bids');
-      window.location.href = '/login.html';
-      return;
-    }
-    currentBidCampaign = { creatorId, campaignId };
-    document.getElementById('bid-creator-name').innerHTML = `<strong>${escapeHtml(creatorName)}</strong>`;
-    document.getElementById('bid-campaign-name').innerHTML = `<strong>${escapeHtml(creatorName)}'s Campaign</strong>`;
-    document.getElementById('bid-modal').style.display = 'flex';
-    document.getElementById('bid-amount').value = '';
-    document.getElementById('bid-proposal').value = '';
-  }
-
-  async function submitBid() {
-    const amount = parseFloat(document.getElementById('bid-amount').value);
-    const proposal = document.getElementById('bid-proposal').value.trim();
-    const token = localStorage.getItem('pebeto_token');
-    
-    if (!amount || amount <= 0) {
-      alert('Please enter a valid bid amount');
-      return;
-    }
-    if (!proposal) {
-      alert('Please provide a proposal');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/api/campaigns/${currentBidCampaign.campaignId}/bids`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ amount, proposal })
-      });
-      const data = await response.json();
-      if (data.success) {
-        showToast('✅ Bid placed successfully!', 'success');
-        closeModal('bid-modal');
-        addNotification(`You placed a bid of $${amount}`);
-        // Remove from bid tab if accepted
-        if (currentFeedTab === 'bid') {
-          applyFiltersAndSort();
-        }
-      } else {
-        alert(data.message || 'Failed to place bid');
-      }
-    } catch (error) {
-      alert('Network error. Please try again.');
-    }
-  }
-
-  // ============================================
-  // SHARE FUNCTIONS
-  // ============================================
   function openShareModal(creatorId, creatorName) { 
     currentShareCreatorId = creatorId; 
     currentShareCreatorName = creatorName; 
     document.getElementById('share-creator-name').innerHTML = `Share <strong>${escapeHtml(creatorName)}</strong>'s profile`; 
     document.getElementById('share-modal').style.display = 'flex';
+    document.getElementById('qr-code-canvas').style.display = 'none';
   }
   function shareTo(platform) { 
     const url = encodeURIComponent(`${window.location.origin}/creator-profile.html?id=${currentShareCreatorId}`); 
@@ -2197,10 +1971,12 @@
     showToast('Link copied to clipboard!'); 
     closeModal('share-modal'); 
   }
+  function showQRCode() {
+    const canvas = document.getElementById('qr-code-canvas');
+    canvas.style.display = 'block';
+    showToast('QR code feature - integrates with QR library');
+  }
 
-  // ============================================
-  // REPORT FUNCTIONS
-  // ============================================
   let lastReportTime = 0;
   function openReportModal(creatorId, creatorName) { 
     currentReportCreatorId = creatorId; 
@@ -2259,21 +2035,14 @@
       if (document.visibilityState === 'visible') {
         loadCreators();
         loadConversations();
-        updateUnreadBadge();
       }
     }, 30000);
   }
 
-  // ============================================
-  // SERVICE WORKER
-  // ============================================
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
   }
 
-  // ============================================
-  // KEYBOARD NAVIGATION
-  // ============================================
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown') {
       const cards = document.querySelectorAll('.creator-card');
@@ -2289,9 +2058,6 @@
     }
   });
 
-  // ============================================
-  // INITIALIZATION
-  // ============================================
   const savedTheme = localStorage.getItem('pebeto_theme'); 
   if (savedTheme === 'light') document.body.classList.add('light-theme');
   loadUserData(); 
@@ -2300,18 +2066,7 @@
   startAutoRefresh();
   addNotification('Welcome to the Pebeto Community!');
   
-  // Initial unread badge update
-  setTimeout(updateUnreadBadge, 1000);
-  setTimeout(updateUnreadBadge, 3000);
-  
-  // Socket.IO for real-time updates
-  const script = document.createElement('script');
-  script.src = 'https://cdn.socket.io/4.8.0/socket.io.min.js';
-  script.onload = () => {
-    console.log('Socket.IO loaded');
-    setupChatSocket();
-  };
-  document.head.appendChild(script);
+  updateUnreadBadge();
 </script>
 </body>
 </html>
