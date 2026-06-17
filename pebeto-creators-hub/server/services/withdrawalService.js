@@ -7,7 +7,6 @@
  * - Multiple payout methods (M-Pesa, PayPal, Wire Transfer, Bank Transfer)
  * - Provider dispatch and callback handling
  * - Transaction recording
- * - ADMIN FEE WAIVER
  * 
  * @module services/withdrawalService
  */
@@ -528,10 +527,9 @@ async function adminRejectWithdrawal(withdrawalId, adminId, reason) {
  * @param {number} params.amountUsd - Amount in USD (optional)
  * @param {number} params.amountLocal - Amount in local currency (optional)
  * @param {string} params.currency - Currency code for local amount
- * @param {boolean} params.isAdmin - Whether user is admin (fee waived)
  * @returns {Promise<Object>} Validated withdrawal breakdown
  */
-async function previewWithdrawal({ role, amountUsd, amountLocal, currency, isAdmin = false }) {
+async function previewWithdrawal({ role, amountUsd, amountLocal, currency }) {
   let grossUsd = amountUsd;
   
   if (amountLocal && currency) {
@@ -543,11 +541,9 @@ async function previewWithdrawal({ role, amountUsd, amountLocal, currency, isAdm
     throw new AppError('Withdrawal amount must be positive', 400);
   }
   
-  const effectiveRole = isAdmin ? 'admin' : role;
-  const breakdown = calculateWithdrawal(grossUsd, effectiveRole);
+  const breakdown = calculateWithdrawal(grossUsd, role);
   
-  // Skip minimum check for admin
-  if (!isAdmin && role !== 'admin' && grossUsd < MIN_WITHDRAWAL_USD) {
+  if (role !== 'admin' && grossUsd < MIN_WITHDRAWAL_USD) {
     throw new AppError(`Minimum withdrawal amount is $${MIN_WITHDRAWAL_USD} USD`, 400);
   }
   
@@ -563,11 +559,10 @@ async function previewWithdrawal({ role, amountUsd, amountLocal, currency, isAdm
     feePercentage: breakdown.feePercentage,
     feeSource: breakdown.feeSource,
     adminExempt: breakdown.adminExempt,
-    feeWaived: isAdmin || breakdown.adminExempt,
     displayCurrency,
     displayAmount,
     exchangeRateUsed: currency ? rates[currency] : 1,
-    meetsMinimum: isAdmin || grossUsd >= MIN_WITHDRAWAL_USD,
+    meetsMinimum: grossUsd >= MIN_WITHDRAWAL_USD,
     minimumRequired: MIN_WITHDRAWAL_USD,
   };
 }
@@ -648,8 +643,6 @@ async function checkExistingWithdrawal(idempotencyKey) {
  * @param {string} params.payoutMethod - Payout method (mpesa, paypal, swift, bank_transfer)
  * @param {Object} params.payoutDetails - Payout details for the method
  * @param {string} params.idempotencyKey - Optional idempotency key
- * @param {boolean} params.isAdmin - Whether user is admin (fee waived)
- * @param {boolean} params.adminFeeWaived - Whether admin fee is waived
  * @returns {Promise<Object>} Withdrawal result
  */
 async function processWithdrawal({
@@ -660,8 +653,6 @@ async function processWithdrawal({
   payoutMethod,
   payoutDetails,
   idempotencyKey = null,
-  isAdmin = false,
-  adminFeeWaived = false
 }) {
   // Validate payout details
   validatePayoutDetails(payoutMethod, payoutDetails);
@@ -678,11 +669,9 @@ async function processWithdrawal({
     throw new AppError('Withdrawal amount must be positive', 400);
   }
   
-  const effectiveRole = (isAdmin || adminFeeWaived) ? 'admin' : user.role;
-  const breakdown = calculateWithdrawal(grossUsd, effectiveRole);
+  const breakdown = calculateWithdrawal(grossUsd, user.role);
   
-  // Skip minimum check for admin
-  if (!isAdmin && !adminFeeWaived && user.role !== 'admin' && grossUsd < MIN_WITHDRAWAL_USD) {
+  if (user.role !== 'admin' && grossUsd < MIN_WITHDRAWAL_USD) {
     throw new AppError(`Minimum withdrawal amount is $${MIN_WITHDRAWAL_USD} USD`, 400);
   }
   
@@ -736,15 +725,12 @@ async function processWithdrawal({
           exchangeRateUsed: currency ? rates[currency] : 1,
           idempotencyKey,
           initiatedAt: new Date(),
-          isAdmin: isAdmin || adminFeeWaived,
-          feeWaived: isAdmin || adminFeeWaived
         },
       },
       session
     );
     
-    // Only charge fee if not waived
-    if (breakdown.feeUsd > 0 && profitWallet && !isAdmin && !adminFeeWaived) {
+    if (breakdown.feeUsd > 0 && profitWallet) {
       await creditWallet(profitWallet._id, 'available', breakdown.feeUsd, session);
       
       await recordTransaction(
@@ -764,7 +750,6 @@ async function processWithdrawal({
           metadata: {
             withdrawalId: withdrawalTx._id,
             note: 'Withdrawal platform fee',
-            feeWaived: isAdmin || adminFeeWaived
           },
         },
         session
@@ -808,7 +793,6 @@ async function processWithdrawal({
       method: payoutMethod,
       providerReference: payoutResult.reference,
       requiresApproval: payoutResult.requiresAdminApproval || false,
-      feeWaived: isAdmin || adminFeeWaived
     });
     
   } catch (error) {
@@ -836,9 +820,8 @@ async function processWithdrawal({
     grossUsd: breakdown.grossUsd,
     feeUsd: breakdown.feeUsd,
     netToUserUsd: breakdown.netToUserUsd,
-    feeWaived: isAdmin || adminFeeWaived,
-    message: isAdmin || adminFeeWaived
-      ? 'Admin withdrawal processed successfully with NO fee.'
+    message: user.role === 'admin'
+      ? 'Admin withdrawal processed successfully.'
       : `Withdrawal of $${breakdown.netToUserUsd} USD via ${payoutMethod} has been initiated.`,
   };
 }
