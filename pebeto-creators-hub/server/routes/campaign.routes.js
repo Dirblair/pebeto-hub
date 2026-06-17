@@ -10,59 +10,34 @@
 const express = require('express');
 const { body, param, query, validationResult } = require('express-validator');
 const { authenticate, authorize } = require('../middleware/auth');
+const { attachFeeService } = require('../services/feeService');
 const { AppError } = require('../utils/errors');
 const { catchAsync } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const {
+  listCampaignsForUser,
+  createCampaign,
+  fundCampaignEscrow,
+  placeBid,
+  acceptBid,
+  submitWork,
+  completeAndPay,
+  getCampaignById,
+  cancelCampaign,
+} = require('../services/campaignService');
 
-// Create router
 const router = express.Router();
-
-// ============================================
-// Lazy load services to avoid circular dependencies
-// ============================================
-
-const getCampaignService = () => {
-  try {
-    return require('../services/campaignService');
-  } catch (err) {
-    console.error('❌ Failed to load campaignService:', err.message);
-    throw err;
-  }
-};
-
-const getCampaignModel = () => {
-  try {
-    return require('../models/Campaign');
-  } catch (err) {
-    console.error('❌ Failed to load Campaign model:', err.message);
-    throw err;
-  }
-};
-
-const getUserModel = () => {
-  try {
-    return require('../models/User');
-  } catch (err) {
-    console.error('❌ Failed to load User model:', err.message);
-    throw err;
-  }
-};
-
-const getNotificationModel = () => {
-  try {
-    return require('../models/Notification');
-  } catch (err) {
-    console.error('❌ Failed to load Notification model:', err.message);
-    throw err;
-  }
-};
 
 // ============================================
 // Middleware
 // ============================================
 
+router.use(authenticate, attachFeeService);
+
 /**
  * Emit platform activity via Socket.IO
+ * @param {Object} req - Express request object
+ * @param {Object} payload - Activity payload
  */
 function emitPlatformActivity(req, payload) {
   const io = req.app.get('io');
@@ -74,6 +49,8 @@ function emitPlatformActivity(req, payload) {
 
 /**
  * Check if request is in view-only mode
+ * @param {Object} req - Express request object
+ * @throws {AppError} If view-only mode is active
  */
 function assertWritable(req) {
   if (req.query.viewOnly === '1' && req.user.role === 'admin') {
@@ -152,17 +129,10 @@ const acceptBidValidation = [
 const submitWorkValidation = [
   param('id').isMongoId().withMessage('Invalid campaign ID'),
   body('workUrl')
-    .optional()
+    .notEmpty()
+    .withMessage('Work URL is required')
     .isURL({ protocols: ['http', 'https'], require_protocol: true })
     .withMessage('Please provide a valid URL starting with http:// or https://'),
-  body('driveFileId')
-    .optional()
-    .isString()
-    .withMessage('Invalid drive file ID'),
-  body('driveFileUrl')
-    .optional()
-    .isURL()
-    .withMessage('Invalid drive file URL'),
 ];
 
 const completeCampaignValidation = [
@@ -203,13 +173,12 @@ const listCampaignsValidation = [
  * GET /api/campaigns
  * List campaigns accessible to the authenticated user
  */
-router.get('/', authenticate, listCampaignsValidation, catchAsync(async (req, res) => {
+router.get('/', listCampaignsValidation, catchAsync(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new AppError(errors.array()[0].msg, 400);
   }
 
-  const campaignService = getCampaignService();
   const viewUserId = req.query.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -219,7 +188,7 @@ router.get('/', authenticate, listCampaignsValidation, catchAsync(async (req, re
     throw new AppError('Forbidden: Cannot view other users campaigns', 403);
   }
 
-  const result = await campaignService.listCampaignsForUser(req.user, {
+  const result = await listCampaignsForUser(req.user, {
     viewUserId,
     page,
     limit,
@@ -240,22 +209,21 @@ router.get('/', authenticate, listCampaignsValidation, catchAsync(async (req, re
  * GET /api/campaigns/:id
  * Get a specific campaign by ID
  */
-router.get('/:id', authenticate, [
+router.get('/:id', [
   param('id').isMongoId().withMessage('Invalid campaign ID'),
-], catchAsync(async (req, res) => {
+], catchAsync(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new AppError(errors.array()[0].msg, 400);
   }
 
-  const campaignService = getCampaignService();
   const viewUserId = req.query.userId;
 
   if (viewUserId && req.user.role !== 'admin') {
     throw new AppError('Forbidden', 403);
   }
 
-  const campaign = await campaignService.getCampaignById(req.user, req.params.id, { viewUserId });
+  const campaign = await getCampaignById(req.user, req.params.id, { viewUserId });
 
   res.json({
     success: true,
@@ -272,10 +240,9 @@ router.get('/:id', authenticate, [
  */
 router.post(
   '/',
-  authenticate,
   authorize('business'),
   createCampaignValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -283,8 +250,7 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
-    const campaign = await campaignService.createCampaign(req.user, req.body);
+    const campaign = await createCampaign(req.user, req.body);
 
     emitPlatformActivity(req, {
       type: 'campaign_created',
@@ -313,10 +279,9 @@ router.post(
  */
 router.post(
   '/:id/fund',
-  authenticate,
   authorize('business'),
   fundCampaignValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -324,22 +289,23 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
     const intentUsd = Number(req.body.intentUsd);
+    const preview = req.feeService.calculateDeposit(intentUsd);
     
-    const result = await campaignService.fundCampaignEscrow(req.user, req.params.id, intentUsd);
+    const result = await fundCampaignEscrow(req.user, req.params.id, intentUsd);
 
     emitPlatformActivity(req, {
       type: 'escrow_deposit',
       campaignId: req.params.id,
-      amountUsd: result.breakdown.escrowCreditUsd,
-      feeUsd: result.breakdown.feeUsd,
+      amountUsd: preview.escrowCreditUsd,
+      feeUsd: preview.feeUsd,
     });
 
     logger.info('Campaign funded', {
       campaignId: req.params.id,
       businessId: req.user._id,
       intentUsd,
+      totalChargeUsd: preview.totalChargeUsd,
     });
 
     res.json({
@@ -359,10 +325,9 @@ router.post(
  */
 router.post(
   '/:id/bids',
-  authenticate,
   authorize('creator'),
   placeBidValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -370,8 +335,7 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
-    const campaign = await campaignService.placeBid(req.user, req.params.id, {
+    const campaign = await placeBid(req.user, req.params.id, {
       amount: req.body.amount,
       proposal: req.body.proposal,
     });
@@ -402,10 +366,9 @@ router.post(
  */
 router.post(
   '/:id/bids/:bidId/accept',
-  authenticate,
   authorize('business'),
   acceptBidValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -413,8 +376,7 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
-    const campaign = await campaignService.acceptBid(req.user, req.params.id, req.params.bidId);
+    const campaign = await acceptBid(req.user, req.params.id, req.params.bidId);
 
     emitPlatformActivity(req, {
       type: 'bid_accepted',
@@ -441,10 +403,9 @@ router.post(
  */
 router.post(
   '/:id/submit',
-  authenticate,
   authorize('creator'),
   submitWorkValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -452,8 +413,7 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
-    const campaign = await campaignService.submitWork(req.user, req.params.id, {
+    const campaign = await submitWork(req.user, req.params.id, {
       workUrl: req.body.workUrl,
     });
 
@@ -482,10 +442,9 @@ router.post(
  */
 router.post(
   '/:id/complete',
-  authenticate,
   authorize('business'),
   completeCampaignValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -493,8 +452,7 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
-    const campaign = await campaignService.completeAndPay(req.user, req.params.id);
+    const campaign = await completeAndPay(req.user, req.params.id);
 
     emitPlatformActivity(req, {
       type: 'escrow_release',
@@ -521,10 +479,9 @@ router.post(
  */
 router.post(
   '/:id/cancel',
-  authenticate,
   authorize('business'),
   cancelCampaignValidation,
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -532,9 +489,8 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const campaignService = getCampaignService();
     const { reason } = req.body;
-    const campaign = await campaignService.cancelCampaign(req.user, req.params.id, reason);
+    const campaign = await cancelCampaign(req.user, req.params.id, reason);
 
     emitPlatformActivity(req, {
       type: 'campaign_cancelled',
@@ -556,12 +512,11 @@ router.post(
   })
 );
 
-/**
- * GET /api/campaigns/performance
- * Get campaign performance metrics for analytics
- */
-router.get('/performance', authenticate, catchAsync(async (req, res) => {
-  const { Campaign } = getCampaignModel();
+// ============================================
+// NEW: GET /api/campaigns/performance
+// Get campaign performance metrics for analytics
+// ============================================
+router.get('/performance', catchAsync(async (req, res) => {
   const userId = req.user._id;
   const userRole = req.user.role;
   
@@ -572,21 +527,26 @@ router.get('/performance', authenticate, catchAsync(async (req, res) => {
   } else if (userRole === 'creator') {
     campaignQuery = { assignedCreatorId: userId };
   }
+  // Admin sees all campaigns
   
+  const { Campaign } = require('../models/Campaign');
   const campaigns = await Campaign.find(campaignQuery)
     .select('title status budget views bids createdAt completedAt ctr roi')
     .sort({ createdAt: -1 })
     .limit(10);
   
+  // Calculate performance metrics
   const totalViews = campaigns.reduce((sum, c) => sum + (c.views || 0), 0);
   const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
   const completedCampaigns = campaigns.filter(c => c.status === 'paid').length;
   const totalCampaigns = campaigns.length;
   
+  // Calculate average CTR (Click Through Rate)
   const avgCtr = totalCampaigns > 0 
     ? campaigns.reduce((sum, c) => sum + (c.ctr || 0), 0) / totalCampaigns 
     : 0;
   
+  // Calculate ROI for completed campaigns
   let totalRoi = 0;
   let roiCount = 0;
   campaigns.forEach(c => {
@@ -597,10 +557,12 @@ router.get('/performance', authenticate, catchAsync(async (req, res) => {
   });
   const avgRoi = roiCount > 0 ? totalRoi / roiCount : 0;
   
+  // Engagement score calculation
   const engagementScore = totalCampaigns > 0
     ? Math.min(100, Math.round((totalViews / Math.max(totalBudget, 1)) * 10))
     : 0;
   
+  // Prepare chart data
   const labels = campaigns.slice(0, 7).map(c => c.title?.substring(0, 20) || 'Untitled');
   const viewsData = campaigns.slice(0, 7).map(c => c.views || 0);
   const engagementData = campaigns.slice(0, 7).map(c => {
@@ -639,13 +601,12 @@ router.get('/performance', authenticate, catchAsync(async (req, res) => {
   });
 }));
 
-/**
- * POST /api/campaigns/:id/creator-complete
- * Creator marks work as completed (starts 7-day auto-release timer)
- */
+// ============================================
+// NEW: POST /api/campaigns/:id/creator-complete
+// Creator marks work as completed (starts 7-day auto-release timer)
+// ============================================
 router.post(
   '/:id/creator-complete',
-  authenticate,
   authorize('creator'),
   [
     param('id').isMongoId().withMessage('Invalid campaign ID'),
@@ -662,7 +623,7 @@ router.post(
       .isURL()
       .withMessage('Invalid drive file URL')
   ],
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res, next) => {
     assertWritable(req);
 
     const errors = validationResult(req);
@@ -670,12 +631,7 @@ router.post(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const { Campaign } = getCampaignModel();
-    const User = getUserModel();
-    const { Notification } = getNotificationModel();
-    const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITIES } = require('../models/Notification');
-
-    const campaign = await Campaign.findOne({
+    const campaign = await require('../models/Campaign').Campaign.findOne({
       _id: req.params.id,
       assignedCreatorId: req.user._id
     });
@@ -717,11 +673,11 @@ router.post(
       });
     }
 
-    // Mark creator completion
+    // Mark creator completion (this also sets auto-release deadline via pre-save hook)
     campaign.creatorWorkCompleted = true;
     campaign.creatorWorkCompletedAt = new Date();
 
-    // Set auto-release deadline (7 days from now)
+    // Set auto-release deadline (7 days from now) if not already set by pre-save hook
     if (!campaign.autoReleaseDeadline) {
       const autoReleaseDays = parseInt(process.env.AUTO_RELEASE_DAYS) || 7;
       campaign.autoReleaseDeadline = new Date();
@@ -740,6 +696,10 @@ router.post(
     await campaign.save();
 
     // Send notification to business
+    const User = require('../models/User');
+    const Notification = require('../models/Notification');
+    const { NOTIFICATION_TYPES, NOTIFICATION_PRIORITIES } = require('../models/Notification');
+
     const business = await User.findById(campaign.businessId);
     const creator = await User.findById(req.user._id);
 
@@ -794,13 +754,12 @@ router.post(
   })
 );
 
-/**
- * GET /api/campaigns/:id/auto-release-status
- * Get auto-release status for a campaign
- */
+// ============================================
+// NEW: GET /api/campaigns/:id/auto-release-status
+// Get auto-release status for a campaign
+// ============================================
 router.get(
   '/:id/auto-release-status',
-  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid campaign ID')
   ],
@@ -810,8 +769,7 @@ router.get(
       throw new AppError(errors.array()[0].msg, 400);
     }
 
-    const { Campaign } = getCampaignModel();
-    const campaign = await Campaign.findById(req.params.id)
+    const campaign = await require('../models/Campaign').Campaign.findById(req.params.id)
       .select('creatorWorkCompleted businessWorkApproved autoReleaseDeadline autoReleaseStatus autoReleaseReminderSent lastReminderSentAt');
 
     if (!campaign) {
@@ -840,11 +798,11 @@ router.get(
     res.json({
       success: true,
       data: {
-        creatorWorkCompleted: campaign.creatorWorkCompleted || false,
-        businessWorkApproved: campaign.businessWorkApproved || false,
+        creatorWorkCompleted: campaign.creatorWorkCompleted,
+        businessWorkApproved: campaign.businessWorkApproved,
         autoReleaseDeadline: campaign.autoReleaseDeadline,
-        autoReleaseStatus: campaign.autoReleaseStatus || 'pending',
-        autoReleaseReminderSent: campaign.autoReleaseReminderSent || 0,
+        autoReleaseStatus: campaign.autoReleaseStatus,
+        autoReleaseReminderSent: campaign.autoReleaseReminderSent,
         lastReminderSentAt: campaign.lastReminderSentAt,
         daysRemaining,
         hoursRemaining,
@@ -854,9 +812,5 @@ router.get(
     });
   })
 );
-
-// ============================================
-// Export - CRITICAL: This must be here
-// ============================================
 
 module.exports = router;
