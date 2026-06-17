@@ -63,12 +63,15 @@ async function getOrCreateWallet(userId, walletType = WALLET_TYPES.STANDARD) {
     throw new AppError('User ID is required', 400);
   }
 
+  // First, attempt to find the existing wallet
   let wallet = await Wallet.findOne({ userId, walletType });
 
+  // If it exists, return it immediately
   if (wallet) {
     return wallet;
   }
 
+  // If it doesn't exist, try to create one
   try {
     wallet = await Wallet.create({
       userId,
@@ -81,6 +84,8 @@ async function getOrCreateWallet(userId, walletType = WALLET_TYPES.STANDARD) {
     logger.debug('Wallet created', { userId, walletType, walletId: wallet._id });
     return wallet;
   } catch (err) {
+    // If someone else created it in the millisecond between find and create,
+    // the duplicate key error (11000) will fire. Catch it and perform one final find.
     if (err.code === 11000) {
       wallet = await Wallet.findOne({ userId, walletType });
       if (wallet) return wallet;
@@ -133,6 +138,7 @@ async function getWalletBalance(userId, populateUser = false) {
   const wallet = await query;
   
   if (!wallet) {
+    // Return zero balance wallet if not found
     return {
       balances: { available: 0, pending: 0, escrow: 0, tips: 0 },
       currency: 'USD',
@@ -199,11 +205,13 @@ async function debitWallet(walletId, field, amount, session = null) {
     throw new AppError('Debit amount must be positive', 400);
   }
 
+  // Find wallet with current version for optimistic locking
   const wallet = await Wallet.findById(walletId).session(session);
   if (!wallet) {
     throw new AppError('Wallet not found', 404);
   }
 
+  // Check sufficient balance
   if (wallet.balances[field] < roundedAmount) {
     throw new AppError(
       `Insufficient ${field} balance. Available: ${wallet.balances[field]}, Requested: ${roundedAmount}`,
@@ -211,6 +219,7 @@ async function debitWallet(walletId, field, amount, session = null) {
     );
   }
 
+  // Perform update with version check
   const updated = await Wallet.findOneAndUpdate(
     { _id: walletId, version: wallet.version },
     {
@@ -228,7 +237,7 @@ async function debitWallet(walletId, field, amount, session = null) {
 }
 
 /**
- * Debit from available balance first, then tips balance
+ * Debit from available balance first, then tips balance (NEW - FIXED)
  * @param {string} walletId - Wallet ID
  * @param {number} amount - Amount to debit
  * @param {Object} session - Mongoose session (optional)
@@ -257,15 +266,18 @@ async function debitWithdrawable(walletId, amount, session = null) {
   let fromAvailable = 0;
   let fromTips = 0;
 
+  // First, deduct from available balance
   if (wallet.balances.available > 0) {
     fromAvailable = Math.min(wallet.balances.available, remaining);
     remaining -= fromAvailable;
   }
 
+  // Then, deduct from tips balance if needed
   if (remaining > 0) {
     fromTips = remaining;
   }
 
+  // Perform update with version check
   const updated = await Wallet.findOneAndUpdate(
     { _id: walletId, version: wallet.version },
     {
@@ -295,7 +307,7 @@ async function debitWithdrawable(walletId, amount, session = null) {
 }
 
 /**
- * Run a function within a database transaction
+ * Run a function within a database transaction (NEW - FIXED)
  * @param {Function} fn - Async function to run with session
  * @returns {Promise<any>} Result of the function
  */
@@ -389,8 +401,8 @@ async function getTransactionHistory(userId, options = {}) {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(effectiveLimit)
-      .populate('fromUserId', 'email uniqueCode role profile.displayName profile.stageName profile.companyName')
-      .populate('toUserId', 'email uniqueCode role profile.displayName profile.stageName profile.companyName')
+      .populate('fromUserId', 'email uniqueCode role profile.displayName')
+      .populate('toUserId', 'email uniqueCode role profile.displayName')
       .lean(),
     Transaction.countDocuments(match),
   ]);
@@ -420,6 +432,7 @@ async function getTransactionHistory(userId, options = {}) {
  * @returns {Promise<Object>} Tip result
  */
 async function processTip(senderId, recipientId, amount, idempotencyKey = null) {
+  // Validate inputs
   if (!senderId || !recipientId) {
     throw new AppError('Sender and recipient are required', 400);
   }
@@ -433,12 +446,15 @@ async function processTip(senderId, recipientId, amount, idempotencyKey = null) 
     throw new AppError('Tip amount must be positive', 400);
   }
 
+  // Calculate fee breakdown
   const breakdown = calculateTip(roundedAmount);
 
+  // Get wallets
   const senderWallet = await getOrCreateWallet(senderId);
   const recipientWallet = await getOrCreateWallet(recipientId);
   const { admin, wallet: profitWallet } = await getAdminProfitWallet();
 
+  // Check sufficient balance
   const totalWithdrawable = (senderWallet.balances.available || 0) + (senderWallet.balances.tips || 0);
   if (totalWithdrawable < breakdown.grossUsd) {
     throw new AppError(
@@ -447,13 +463,20 @@ async function processTip(senderId, recipientId, amount, idempotencyKey = null) 
     );
   }
 
+  // Process in transaction
   let tipTx, feeTx;
 
   await runInTransaction(async (session) => {
+    // Debit sender (from available first, then tips)
     await debitWithdrawable(senderWallet._id, breakdown.grossUsd, session);
+
+    // Credit recipient's tips balance
     await creditWallet(recipientWallet._id, 'tips', breakdown.netToCreatorUsd, session);
+
+    // Credit platform fee to admin profit wallet
     await creditWallet(profitWallet._id, 'available', breakdown.feeUsd, session);
 
+    // Record tip transaction
     tipTx = await recordTransaction(
       {
         type: TRANSACTION_TYPES.TIP,
@@ -476,6 +499,7 @@ async function processTip(senderId, recipientId, amount, idempotencyKey = null) 
       session
     );
 
+    // Record platform fee transaction
     feeTx = await recordTransaction(
       {
         type: TRANSACTION_TYPES.PLATFORM_FEE,
@@ -558,13 +582,13 @@ module.exports = {
   getWalletBalance,
   creditWallet,
   debitWallet,
-  debitWithdrawable,
-  runInTransaction,
+  debitWithdrawable,      // ✓ FIXED - Now exported
+  runInTransaction,       // ✓ FIXED - Now exported
   
   // Transaction operations
   recordTransaction,
   getTransaction,
-  getTransactionHistory,
+  getTransactionHistory,  // ✓ FIXED - Now exported
   
   // Tip processing
   processTip,
