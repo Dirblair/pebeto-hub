@@ -195,7 +195,7 @@ const morganFormat = env.isProduction
   : 'dev';
 
 // ============================================
-// CORS Configuration (FIXED)
+// CORS Configuration - FIXED
 // ============================================
 
 const corsOptions = {
@@ -205,25 +205,25 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // List of allowed origins (add your frontend URLs here)
-    const allowedOrigins = [
-      'https://pebeto-new.onrender.com',
-      'https://pebeto-hub-1-v7pq.onrender.com',
-      'https://pebeto-hub-1.onrender.com',
-      'http://localhost:3000',
-      'http://localhost:5500',
-      'http://127.0.0.1:5500'
-    ];
-    
     // Allow any .onrender.com subdomain
     if (origin.includes('.onrender.com')) {
       console.log(`✅ CORS allowed: ${origin}`);
       return callback(null, true);
     }
     
-    // Check if origin is in allowed list
+    // List of allowed origins
+    const allowedOrigins = [
+      'https://pebeto-new.onrender.com',
+      'https://pebeto-hub-1-v7pq.onrender.com',
+      'https://pebeto-hub-1.onrender.com',
+      'https://pebeto-creators-hub.onrender.com',
+      'http://localhost:3000',
+      'http://localhost:5500',
+      'http://127.0.0.1:5500'
+    ];
+    
     if (allowedOrigins.includes(origin)) {
-      console.log(`✅ CORS allowed: ${origin}`);
+      console.log(`✅ CORS allowed (exact match): ${origin}`);
       return callback(null, true);
     }
     
@@ -233,7 +233,7 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // If corsAllowAll is true, allow everything
+    // If corsAllowAll is true, allow everything (development only)
     if (env.corsAllowAll) {
       console.log(`⚠️ CORS allowed all: ${origin}`);
       return callback(null, true);
@@ -243,10 +243,10 @@ const corsOptions = {
     callback(new Error(`CORS policy does not allow origin: ${origin}`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Accept'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['X-Request-ID'],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400 // 24 hours - cache preflight response
 };
 
 // ============================================
@@ -335,15 +335,19 @@ async function bootstrap() {
     
     // 7. Security and Standard Middleware
     app.use(helmet(helmetConfig));
+    
+    // 8. CORS Middleware - Apply before routes
     app.use(cors(corsOptions));
+    app.options('*', cors(corsOptions)); // Handle preflight requests
+    
     app.use(compression());
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     
-    // 8. Fee Service Middleware
+    // 9. Fee Service Middleware
     app.use(attachFeeService);
     
-    // 9. Health Check Endpoint (before auth)
+    // 10. Health Check Endpoint (before auth)
     app.get('/api/health', (req, res) => {
       const dbHealth = getDatabaseHealth();
       res.json({
@@ -359,7 +363,7 @@ async function bootstrap() {
       });
     });
     
-    // 10. API Routes
+    // 11. API Routes
     logger.info('Mounting routes...');
     
     // Auth routes (public)
@@ -443,7 +447,7 @@ async function bootstrap() {
       console.log('⚠️ Withdrawal routes skipped - file not found');
     }
     
-    // 11. Static Files (Client UI)
+    // 12. Static Files (Client UI)
     // Serve HTML files from root directory
     app.use(express.static(path.join(__dirname, '..'), {
       index: false, // Don't serve index.html automatically
@@ -456,7 +460,7 @@ async function bootstrap() {
       maxAge: env.isProduction ? '30d' : 0
     }));
     
-    // 12. SPA Fallback (for client-side routing)
+    // 13. SPA Fallback (for client-side routing)
     // But exclude API routes
     app.get('*', (req, res, next) => {
       // Skip API routes
@@ -502,13 +506,13 @@ async function bootstrap() {
       });
     });
     
-    // 13. 404 Handler (for unmatched routes)
+    // 14. 404 Handler (for unmatched routes)
     app.use(notFoundHandler);
     
-    // 14. Global Error Handler (last!)
+    // 15. Global Error Handler (last!)
     app.use(errorHandler);
     
-    // 15. Start Server
+    // 16. Start Server
     const PORT = env.port;
     const HOST = env.host;
     
@@ -570,7 +574,7 @@ async function bootstrap() {
       logger.warn('⚠️ Auto-release service disabled - server will continue running');
     }
     
-    // 16. Graceful Shutdown
+    // 17. Graceful Shutdown
     setupGracefulShutdown(server);
     
     return { app, server, io };
