@@ -529,40 +529,46 @@ async function bootstrap() {
     });
     
     // ============================================
-    // NEW: Setup Auto-Release Cron Job
-    // Runs every hour to check for campaigns pending auto-release
+    // FIXED: Setup Auto-Release Cron Job with proper error handling
     // ============================================
-    const { processAutoReleaseQueue, getAutoReleaseStats } = require('./services/autoReleaseService');
-    
-    // Run every hour at minute 0 (e.g., 1:00, 2:00, 3:00...)
-    const cronSchedule = process.env.AUTO_RELEASE_CRON_SCHEDULE || '0 * * * *';
-    
-    cron.schedule(cronSchedule, async () => {
-      logger.info('⏰ Running auto-release cron job...');
-      try {
-        const results = await processAutoReleaseQueue();
-        if (results.autoReleased > 0 || results.remindersSent > 0) {
-          logger.info(`Auto-release cron completed: ${results.autoReleased} released, ${results.remindersSent} reminders sent`);
+    try {
+      const { processAutoReleaseQueue, getAutoReleaseStats } = require('./services/autoReleaseService');
+      
+      // Run every hour at minute 0 (e.g., 1:00, 2:00, 3:00...)
+      const cronSchedule = process.env.AUTO_RELEASE_CRON_SCHEDULE || '0 * * * *';
+      
+      cron.schedule(cronSchedule, async () => {
+        logger.info('⏰ Running auto-release cron job...');
+        try {
+          const results = await processAutoReleaseQueue();
+          if (results && (results.autoReleased > 0 || results.remindersSent > 0)) {
+            logger.info(`Auto-release cron completed: ${results.autoReleased} released, ${results.remindersSent} reminders sent`);
+          }
+        } catch (error) {
+          logger.error('Auto-release cron job failed:', error.message);
         }
-      } catch (error) {
-        logger.error('Auto-release cron job failed:', error);
-      }
-    });
-    
-    logger.info(`✅ Auto-release cron job scheduled: ${cronSchedule}`);
-    
-    // Also run once on startup to catch any missed campaigns
-    setTimeout(async () => {
-      logger.info('🔄 Running initial auto-release check on startup...');
-      try {
-        const results = await processAutoReleaseQueue();
-        if (results.autoReleased > 0 || results.remindersSent > 0) {
-          logger.info(`Initial auto-release check: ${results.autoReleased} released, ${results.remindersSent} reminders sent`);
+      });
+      
+      logger.info(`✅ Auto-release cron job scheduled: ${cronSchedule}`);
+      
+      // Also run once on startup to catch any missed campaigns (with delay)
+      setTimeout(async () => {
+        try {
+          logger.info('🔄 Running initial auto-release check on startup...');
+          const results = await processAutoReleaseQueue();
+          if (results && (results.autoReleased > 0 || results.remindersSent > 0)) {
+            logger.info(`Initial auto-release check: ${results.autoReleased} released, ${results.remindersSent} reminders sent`);
+          }
+        } catch (error) {
+          logger.error('Initial auto-release check failed:', error.message);
         }
-      } catch (error) {
-        logger.error('Initial auto-release check failed:', error);
-      }
-    }, 30000); // Wait 30 seconds after server starts
+      }, 10000); // Wait 10 seconds after server starts
+      
+    } catch (error) {
+      // Auto-release is not critical for server startup - just log and continue
+      logger.error('Failed to initialize auto-release service:', error.message);
+      logger.warn('⚠️ Auto-release service disabled - server will continue running');
+    }
     
     // 16. Graceful Shutdown
     setupGracefulShutdown(server);
