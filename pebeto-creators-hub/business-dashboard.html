@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Business Dashboard - Pebeto</title>
+  <title>Brand Dashboard - Pebeto</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -624,7 +624,6 @@
     <button class="tab-btn" data-tab="activity">🔐 Activity Log</button>
     <button class="tab-btn" data-tab="security">🛡️ Security</button>
     <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
-    <button class="tab-btn" data-tab="api">🔑 API Keys</button>
   </div>
 
   <!-- My Campaigns Tab -->
@@ -819,25 +818,6 @@
     </div>
   </div>
 
-  <!-- API Keys Tab -->
-  <div id="tab-api" class="tab-content">
-    <div style="background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;">
-      <h3 style="margin-bottom: 20px;">🔑 API Access</h3>
-      <p>Use these keys to integrate Pebeto with your systems.</p>
-      <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px; margin: 15px 0;">
-        <p><strong>API Keys</strong></p>
-        <div id="api-keys-list"></div>
-        <button class="btn-action" onclick="createApiKey()" style="margin-top: 10px;">+ Create New API Key</button>
-      </div>
-      <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px;">
-        <p><strong>Webhooks</strong></p>
-        <p style="font-size: 13px; color: #a08070;">Receive real-time updates for campaign events.</p>
-        <div id="webhooks-list"></div>
-        <button class="btn-action" onclick="openAddWebhookModal()" style="margin-top: 10px;">+ Add Webhook URL</button>
-      </div>
-    </div>
-  </div>
-
   <div style="background: rgba(255,255,255,0.03); border-radius: 24px; padding: 24px; margin-top: 30px;">
     <h3>💸 Withdraw Funds</h3>
     <p>3% fee | Minimum $30 | Maximum $10,000 per day</p>
@@ -1026,24 +1006,6 @@
   </div>
 </div>
 
-<div id="add-webhook-modal" class="modal">
-  <div class="modal-content">
-    <h3>🔗 Add Webhook URL</h3>
-    <input type="url" id="webhook-url" placeholder="https://your-server.com/webhook">
-    <select id="webhook-events">
-      <option value="campaign.created">Campaign Created</option>
-      <option value="campaign.funded">Campaign Funded</option>
-      <option value="bid.received">Bid Received</option>
-      <option value="work.submitted">Work Submitted</option>
-      <option value="payment.released">Payment Released</option>
-    </select>
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="addWebhook()">Add Webhook</button>
-      <button class="cancel-btn" onclick="closeModal('add-webhook-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <div id="confirm-withdraw-modal" class="modal">
   <div class="modal-content">
     <h3>⚠️ Confirm Withdrawal</h3>
@@ -1085,19 +1047,11 @@
   </div>
 </div>
 
-<div id="api-key-modal" class="modal">
-  <div class="modal-content">
-    <h3>Create API Key</h3>
-    <input type="text" id="api-key-name" placeholder="Key Name (e.g., Production Server)">
-    <div class="modal-buttons">
-      <button class="save-btn" onclick="createApiKeySubmit()">Create</button>
-      <button class="cancel-btn" onclick="closeModal('api-key-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <script>
-  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  // ============================================
+  // UPDATED: New Render URL
+  // ============================================
+  const API_BASE = 'https://pebeto-creators-hub-h1j0.onrender.com';
   
   // ============================================
   // VARIABLE DECLARATIONS
@@ -1123,8 +1077,6 @@
   let ws = null;
   let dailyWithdrawalTotal = 0;
   let teamMembers = [];
-  let webhooks = [];
-  let apiKeys = [];
   let currentApproveCampaign = null;
 
   // ============================================
@@ -1177,7 +1129,7 @@
     const token = localStorage.getItem('pebeto_token');
     if (!token) return;
     try {
-      ws = new WebSocket(`wss://pebeto-creators-hub.onrender.com?token=${token}`);
+      ws = new WebSocket(`wss://pebeto-creators-hub-h1j0.onrender.com?token=${token}`);
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'balance_update') {
@@ -1952,7 +1904,7 @@
         
         const tbody = document.querySelector('#applications-table tbody');
         if (displayBids.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No applications found</div><\/td><\/tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No current applications</div><\/td><\/tr>';
         } else {
           tbody.innerHTML = displayBids.map(b => `
             <tr>
@@ -2467,102 +2419,6 @@
   }
 
   // ============================================
-  // API KEYS & WEBHOOKS
-  // ============================================
-  async function loadApiKeys() {
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/user/api-keys`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      const container = document.getElementById('api-keys-list');
-      if (data.success && data.data.apiKeys && data.data.apiKeys.length > 0) {
-        apiKeys = data.data.apiKeys;
-        container.innerHTML = apiKeys.map(key => `
-          <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <strong>${escapeHtml(key.name)}</strong>
-                <code style="display: block; font-size: 11px; color: #a08070; margin-top: 5px;">${key.key}</code>
-                <small>Created: ${formatDate(key.createdAt)}</small>
-              </div>
-              <div>
-                <button class="btn-action small" onclick="copyApiKey('${key.key}')">Copy</button>
-                <button class="btn-action danger small" onclick="deleteApiKey('${key.id}')">Delete</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      } else {
-        container.innerHTML = '<div class="empty-state">No API keys created yet</div>';
-      }
-    } catch(e) { console.error(e); }
-  }
-
-  function copyApiKey(key) { 
-    navigator.clipboard.writeText(key); 
-    showToast('API Key copied!', 'success'); 
-  }
-
-  function createApiKey() { 
-    document.getElementById('api-key-modal').style.display = 'flex'; 
-  }
-
-  async function createApiKeySubmit() {
-    const name = document.getElementById('api-key-name').value;
-    if (!name) { showToast('Enter key name', 'error'); return; }
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/user/api-keys`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast(`API Key created: ${data.data.key}`, 'success');
-        closeModal('api-key-modal');
-        loadApiKeys();
-        document.getElementById('api-key-name').value = '';
-      } else { showToast(data.message || 'Failed to create API key', 'error'); }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  async function deleteApiKey(keyId) {
-    if (!confirm('Delete this API key? This cannot be undone.')) return;
-    try {
-      const token = localStorage.getItem('pebeto_token');
-      const res = await fetch(`${API_BASE}/api/user/api-keys/${keyId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) { showToast('API key deleted', 'success'); loadApiKeys(); }
-      else { showToast('Failed to delete API key', 'error'); }
-    } catch(e) { showToast('Error', 'error'); }
-  }
-
-  function openAddWebhookModal() { document.getElementById('add-webhook-modal').style.display = 'flex'; }
-
-  function addWebhook() { 
-    const url = document.getElementById('webhook-url').value; 
-    if (!url) return showToast('Enter URL', 'error'); 
-    webhooks.push({ url, events: [document.getElementById('webhook-events').value] }); 
-    showToast('Webhook added!', 'success'); 
-    closeModal('add-webhook-modal'); 
-    loadWebhooks(); 
-  }
-
-  function loadWebhooks() { 
-    const container = document.getElementById('webhooks-list'); 
-    if (webhooks.length === 0) { 
-      container.innerHTML = '<div class="empty-state">No webhooks configured</div>'; 
-    } else { 
-      container.innerHTML = webhooks.map(w => `<div style="display:flex;justify-content:space-between;padding:10px 0;"><div><strong>${escapeHtml(w.url)}</strong><br><small>Events: ${w.events.join(', ')}</small></div><button class="btn-action danger" onclick="deleteWebhook('${w.url}')">Delete</button></div>`).join(''); 
-    } 
-  }
-
-  function deleteWebhook(url) { 
-    webhooks = webhooks.filter(w => w.url !== url); 
-    showToast('Webhook deleted', 'success'); 
-    loadWebhooks(); 
-  }
-
-  // ============================================
   // USER DATA
   // ============================================
   async function loadUserData() {
@@ -2601,7 +2457,6 @@
       if (btn.dataset.tab === 'active') loadActiveProjects();
       if (btn.dataset.tab === 'activity') loadActivityLog();
       if (btn.dataset.tab === 'analytics') loadCampaignPerformanceChart();
-      if (btn.dataset.tab === 'api') { loadApiKeys(); loadWebhooks(); }
     });
   });
 
@@ -2665,8 +2520,6 @@
   loadActiveSessions();
   loadTeamMembers();
   loadCampaignPerformanceChart();
-  loadApiKeys();
-  loadWebhooks();
   
   setTimeout(() => {
     const savedTheme = localStorage.getItem('pebeto_theme');
