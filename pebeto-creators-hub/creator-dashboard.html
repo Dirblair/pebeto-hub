@@ -1159,7 +1159,10 @@
 </div>
 
 <script>
-  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  // ============================================
+  // UPDATED: New Render URL
+  // ============================================
+  const API_BASE = 'https://pebeto-creators-hub-h1j0.onrender.com';
   
   // ============================================
   // VARIABLE DECLARATIONS
@@ -1263,7 +1266,7 @@
     const token = localStorage.getItem('pebeto_token');
     if (!token) return;
     try {
-      ws = new WebSocket(`wss://pebeto-creators-hub.onrender.com?token=${token}`);
+      ws = new WebSocket(`wss://pebeto-creators-hub-h1j0.onrender.com?token=${token}`);
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'balance_update') {
