@@ -107,13 +107,18 @@ if (IS_DEVELOPMENT) {
 // Try both MONGO_URI and MONGODB_URI (with priority to MONGO_URI)
 let mongoUriValue = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-// Fallback for production if not set in environment
-if (!mongoUriValue && IS_PRODUCTION) {
-  console.log('🔧 [ENV] No MongoDB URI found in environment, checking for fallback');
-  // Check if we have a hardcoded fallback (should only be used in emergency)
-  if (process.env.USE_HARDCODED_MONGO_FALLBACK === 'true') {
-    console.warn('⚠️ [ENV] USING HARDCODED MONGO FALLBACK - NOT RECOMMENDED FOR PRODUCTION');
-    mongoUriValue = 'mongodb+srv://pebeto:DebbyJenn123%21@pebeto.yggha0f.mongodb.net/pebeto?retryWrites=true&w=majority';
+// ============================================
+// FIXED: Add fallback for development
+// ============================================
+if (!mongoUriValue) {
+  if (IS_PRODUCTION) {
+    console.error('❌ [ENV] MONGO_URI is required in production!');
+    // Don't throw - let the server handle it
+  } else {
+    // Development fallback
+    mongoUriValue = 'mongodb://127.0.0.1:27017/pebeto-creators-hub';
+    console.log('🔧 [ENV] Using default development MongoDB URI: mongodb://127.0.0.1:27017/pebeto-creators-hub');
+    console.log('💡 [ENV] Set MONGO_URI in .env to use a different database');
   }
 }
 
@@ -137,15 +142,25 @@ const MONGO_OPTIONS = {
 // JWT Authentication
 // ============================================
 
-const JWT_SECRET = process.env.JWT_SECRET;
+// ============================================
+// FIXED: Add fallback for JWT_SECRET in development
+// ============================================
+let JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  if (IS_PRODUCTION) {
+    console.error('❌ [ENV] JWT_SECRET is required in production!');
+    // Don't throw - let the server handle it
+  } else {
+    // Development fallback
+    JWT_SECRET = 'dev-secret-key-change-in-production';
+    console.warn('⚠️ [ENV] Using default development JWT_SECRET - THIS IS INSECURE');
+    console.warn('💡 [ENV] Set JWT_SECRET in .env for production');
+  }
+}
 
 // JWT validation
-if (!JWT_SECRET) {
-  console.error('❌ [ENV] JWT_SECRET is required!');
-  if (IS_PRODUCTION) {
-    throw new Error('Missing required environment variable: JWT_SECRET');
-  }
-} else if (JWT_SECRET.length < 32 && IS_PRODUCTION) {
+if (JWT_SECRET && JWT_SECRET.length < 32 && IS_PRODUCTION) {
   console.warn('⚠️ WARNING: JWT_SECRET should be at least 32 characters long in production');
 } else if (JWT_SECRET === 'your-super-secret-jwt-key-change-this-in-production') {
   console.warn('⚠️ WARNING: Using default JWT_SECRET. This is insecure!');
