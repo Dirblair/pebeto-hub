@@ -91,63 +91,114 @@ router.post('/register', async (req, res) => {
 });
 
 // ============================================
-// LOGIN
+// LOGIN - FIXED
 // ============================================
 router.post('/login', async (req, res) => {
-  console.log('📝 LOGIN:', req.body.email);
+  console.log('📝 LOGIN ATTEMPT:', req.body.email);
   
   try {
     const { email, password } = req.body;
     
+    // Validate input
     if (!email || !password) {
+      console.log('❌ Login failed: Missing email or password');
       return res.status(400).json({ success: false, message: 'Email and password required' });
     }
     
-    const user = await User.findOne({ email }).select('+passwordHash');
-    
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    // Check if User model is available
+    if (!User) {
+      console.error('❌ User model not loaded!');
+      return res.status(500).json({ success: false, message: 'Server configuration error' });
     }
     
-    // Email verification check removed (all users are auto-verified)
-    // if (!user.emailVerified) { ... } - REMOVED
+    // Find user by email
+    let user;
+    try {
+      user = await User.findOne({ email }).select('+passwordHash');
+    } catch (dbError) {
+      console.error('❌ Database error during login:', dbError.message);
+      return res.status(500).json({ success: false, message: 'Database error. Please try again.' });
+    }
+    
+    // Check if user exists
+    if (!user) {
+      console.log('❌ Login failed: User not found -', email);
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
     
     // Check if account is locked
     if (user.isLocked) {
+      console.log('❌ Login failed: Account locked -', email);
       return res.status(401).json({ 
         success: false, 
         message: 'Account is temporarily locked due to too many failed attempts. Please try again later.' 
       });
     }
     
+    // Check password hash exists
     if (!user.passwordHash) {
       console.error('❌ No passwordHash found for user:', email);
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
     
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    // Verify password
+    let isValid = false;
+    try {
+      isValid = await bcrypt.compare(password, user.passwordHash);
+    } catch (bcryptError) {
+      console.error('❌ Bcrypt error:', bcryptError.message);
+      return res.status(500).json({ success: false, message: 'Authentication error. Please try again.' });
+    }
+    
     if (!isValid) {
-      await user.recordFailedLogin({ ipAddress: req.ip, userAgent: req.headers['user-agent'] });
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      console.log('❌ Login failed: Invalid password -', email);
+      try {
+        await user.recordFailedLogin({ ipAddress: req.ip, userAgent: req.headers['user-agent'] });
+      } catch (recordError) {
+        console.error('⚠️ Failed to record login attempt:', recordError.message);
+      }
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+    
+    // Check JWT secret
+    if (!env.jwtSecret) {
+      console.error('❌ JWT_SECRET is not configured!');
+      return res.status(500).json({ success: false, message: 'Server configuration error' });
     }
     
     // Send login alert if enabled (email service is disabled, will just log)
-    if (user.notificationPreferences?.emailOnLogin !== false) {
-      await sendLoginAlertEmail(user.email, {
-        time: new Date().toLocaleString(),
-        device: req.headers['user-agent'],
-        location: req.ip,
-        resetUrl: `${process.env.CLIENT_ORIGIN || 'https://pebeto.com'}/forgot-password`
-      });
+    try {
+      if (user.notificationPreferences?.emailOnLogin !== false) {
+        await sendLoginAlertEmail(user.email, {
+          time: new Date().toLocaleString(),
+          device: req.headers['user-agent'],
+          location: req.ip,
+          resetUrl: `${process.env.CLIENT_ORIGIN || 'https://pebeto.com'}/forgot-password`
+        });
+      }
+    } catch (emailError) {
+      console.log('⚠️ Login alert email failed:', emailError.message);
     }
     
-    await user.recordSuccessfulLogin({ ipAddress: req.ip, userAgent: req.headers['user-agent'] });
+    // Record successful login
+    try {
+      await user.recordSuccessfulLogin({ ipAddress: req.ip, userAgent: req.headers['user-agent'] });
+    } catch (recordError) {
+      console.error('⚠️ Failed to record successful login:', recordError.message);
+    }
     
-    const token = jwt.sign(
-      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
-      env.jwtSecret,
-      { expiresIn: '30d' }
-    );
+    // Generate JWT token
+    let token;
+    try {
+      token = jwt.sign(
+        { userId: user._id, role: user.role, tokenVersion: user.tokenVersion || 0 },
+        env.jwtSecret,
+        { expiresIn: '30d' }
+      );
+    } catch (jwtError) {
+      console.error('❌ JWT sign error:', jwtError.message);
+      return res.status(500).json({ success: false, message: 'Authentication error. Please try again.' });
+    }
     
     console.log('✅ LOGIN SUCCESS:', email);
     
@@ -164,8 +215,12 @@ router.post('/login', async (req, res) => {
     });
     
   } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    res.status(500).json({ success: false, message: err.message });
+    console.error('❌ LOGIN ERROR:', err.message);
+    console.error('Stack:', err.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error. Please try again later.' 
+    });
   }
 });
 
