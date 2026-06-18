@@ -85,6 +85,20 @@
       font-size: 12px;
       text-decoration: none;
     }
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #1a1208;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -96,7 +110,7 @@
   <input type="password" id="password" placeholder="Password" autocomplete="current-password">
   <div class="forgot-password"><a href="#">Forgot password?</a></div>
   
-  <button onclick="login()">Login</button>
+  <button onclick="login()" id="loginBtn">Login</button>
   <div id="message" class="message"></div>
   <div class="signup-link">Don't have an account? <a href="/signup.html">Sign Up</a></div>
 </div>
@@ -108,6 +122,10 @@
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const messageDiv = document.getElementById('message');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // Clear previous messages
+    messageDiv.className = 'message';
     
     if (!email || !password) {
       messageDiv.innerHTML = 'Please enter email and password';
@@ -115,21 +133,46 @@
       return;
     }
     
-    messageDiv.innerHTML = 'Logging in...';
+    // Show loading state
+    loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+    loginBtn.disabled = true;
+    messageDiv.innerHTML = 'Connecting to server...';
     messageDiv.className = 'message';
     
     try {
+      console.log('🔐 Attempting login for:', email);
+      console.log('📍 API URL:', `${API_BASE}/api/auth/login`);
+      
       const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
+      
+      console.log('📡 Response status:', response.status);
+      
+      // Check if response is OK before parsing JSON
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('❌ Server error response:', text);
+        
+        // Try to parse as JSON if possible
+        try {
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.message || `Server returned ${response.status}`);
+        } catch (e) {
+          throw new Error(`Server error (${response.status}). Please try again.`);
+        }
+      }
+      
       const data = await response.json();
+      console.log('📦 Response data:', data);
       
       if (data.success && data.token) {
         localStorage.setItem('pebeto_token', data.token);
         localStorage.setItem('pebeto_user', JSON.stringify(data.user));
-        messageDiv.innerHTML = 'Login successful! Redirecting...';
+        messageDiv.innerHTML = '✅ Login successful! Redirecting...';
         messageDiv.className = 'message success';
         
         setTimeout(() => {
@@ -146,13 +189,27 @@
       } else {
         messageDiv.innerHTML = data.message || 'Login failed. Check your email and password.';
         messageDiv.className = 'message error';
+        loginBtn.innerHTML = 'Login';
+        loginBtn.disabled = false;
       }
     } catch (error) {
-      console.error('Login error:', error);
-      messageDiv.innerHTML = 'Network error. Please try again.';
+      console.error('❌ Login error:', error);
+      messageDiv.innerHTML = error.message || 'Network error. Please try again.';
       messageDiv.className = 'message error';
+      loginBtn.innerHTML = 'Login';
+      loginBtn.disabled = false;
     }
   }
+
+  // Allow Enter key to trigger login
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.id === 'email' || activeElement.id === 'password')) {
+        login();
+      }
+    }
+  });
 </script>
 </body>
 </html>
