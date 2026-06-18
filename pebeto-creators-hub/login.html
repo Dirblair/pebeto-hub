@@ -116,7 +116,10 @@
 </div>
 
 <script>
-  const API_BASE = 'https://pebeto-creators-hub.onrender.com';
+  // ============================================
+  // UPDATED: New Render URL
+  // ============================================
+  const API_BASE = 'https://pebeto-creators-hub-h1j0.onrender.com';
 
   async function login() {
     const email = document.getElementById('email').value.trim();
@@ -124,7 +127,6 @@
     const messageDiv = document.getElementById('message');
     const loginBtn = document.getElementById('loginBtn');
     
-    // Clear previous messages
     messageDiv.className = 'message';
     
     if (!email || !password) {
@@ -133,7 +135,6 @@
       return;
     }
     
-    // Show loading state
     loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
     loginBtn.disabled = true;
     messageDiv.innerHTML = 'Connecting to server...';
@@ -152,12 +153,9 @@
       
       console.log('📡 Response status:', response.status);
       
-      // Check if response is OK before parsing JSON
       if (!response.ok) {
         const text = await response.text();
         console.error('❌ Server error response:', text);
-        
-        // Try to parse as JSON if possible
         try {
           const errorData = JSON.parse(text);
           throw new Error(errorData.message || `Server returned ${response.status}`);
@@ -201,7 +199,6 @@
     }
   }
 
-  // Allow Enter key to trigger login
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
       const activeElement = document.activeElement;
