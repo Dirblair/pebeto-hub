@@ -66,15 +66,12 @@ const cron = require('node-cron');
 const env = require('./config/env');
 const { connectDB, disconnectDB, getDatabaseHealth } = require('./config/db');
 const { errorHandler, notFoundHandler, catchAsync } = require('./middleware/errorHandler');
-// ============================================
-// CHANGED: Now importing from middleware/feeService.js instead of services/feeService.js
-// ============================================
 const attachFeeService = require('./middleware/feeService');
 const { initSockets } = require('./sockets');
 const logger = require('./utils/logger');
 
 // ============================================
-// DEBUG: Check service imports (ADDED)
+// DEBUG: Check service imports
 // ============================================
 console.log('\n🔍 CHECKING SERVICE IMPORTS...');
 console.log('='.repeat(40));
@@ -114,7 +111,7 @@ function safeRequire(modulePath, moduleName) {
 }
 
 // ============================================
-// Route imports with error handling (non-critical routes are optional)
+// Route imports with error handling
 // ============================================
 
 // Critical routes (must exist)
@@ -138,69 +135,19 @@ try {
   process.exit(1);
 }
 
-// ============================================
-// COMMUNITY ROUTES - FORCE LOAD (FIXED)
-// ============================================
-let communityRoutes = null;
-try {
-  // Check if the model exists
-  try {
-    const { CommunityPost } = require('./models/CommunityPost');
-    console.log('✅ CommunityPost model found');
-  } catch (modelError) {
-    console.error('❌ CommunityPost model missing:', modelError.message);
-    console.log('⚠️ Creating CommunityPost model from schema...');
-  }
-  
-  communityRoutes = require('./routes/community.routes');
-  console.log('✅✅✅ Community routes loaded successfully!');
-} catch (error) {
-  console.error('❌❌❌ FAILED to load community routes:', error.message);
-  console.error('   Stack:', error.stack);
-  // Create a fallback route so we know it failed
-  const fallbackRouter = require('express').Router();
-  fallbackRouter.get('/test', (req, res) => {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Community routes failed to load',
-      error: error.message 
-    });
-  });
-  communityRoutes = fallbackRouter;
-}
-
-// Other optional routes
+// Optional routes
+const communityRoutes = safeRequire('./routes/community.routes', 'community.routes');
 const exchangeRoutes = safeRequire('./routes/exchange.routes', 'exchange.routes');
 const withdrawalRoutes = safeRequire('./routes/withdrawal.routes', 'withdrawal.routes');
-
-// ============================================
-// NEW: Creator Routes Import
-// ============================================
 const creatorRoutes = safeRequire('./routes/creator.routes', 'creator.routes');
-
-// ============================================
-// NEW: User Routes Import (for activity, sessions, 2FA, API keys)
-// ============================================
 const userRoutes = safeRequire('./routes/user.routes', 'user.routes');
-
-// ============================================
-// NEW: Google Drive Routes Import
-// ============================================
 const driveRoutes = safeRequire('./routes/drive.routes', 'drive.routes');
-
-// ============================================
-// NEW: Messages Routes Import
-// ============================================
 const messagesRoutes = safeRequire('./routes/messages.routes', 'messages.routes');
 
 // ============================================
 // Request ID Middleware
 // ============================================
 
-/**
- * Generate unique request ID for each request
- * Used for tracing and logging
- */
 const requestIdMiddleware = (req, res, next) => {
   const requestId = crypto.randomBytes(8).toString('hex');
   req.id = requestId;
@@ -213,9 +160,6 @@ const requestIdMiddleware = (req, res, next) => {
 // Logging Middleware
 // ============================================
 
-/**
- * Custom morgan format with request ID and user info
- */
 morgan.token('request-id', (req) => req.id || '-');
 morgan.token('user-id', (req) => req.user?._id || '-');
 morgan.token('user-role', (req) => req.user?.role || '-');
@@ -225,23 +169,20 @@ const morganFormat = env.isProduction
   : 'dev';
 
 // ============================================
-// CORS Configuration - FIXED
+// CORS Configuration
 // ============================================
 
 const corsOptions = {
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl)
     if (!origin) {
       return callback(null, true);
     }
     
-    // Allow any .onrender.com subdomain
     if (origin.includes('.onrender.com')) {
       console.log(`✅ CORS allowed: ${origin}`);
       return callback(null, true);
     }
     
-    // List of allowed origins
     const allowedOrigins = [
       'https://pebeto-new.onrender.com',
       'https://pebeto-hub-1-v7pq.onrender.com',
@@ -257,13 +198,11 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // For production, also check env.clientOrigins
     if (env.clientOrigins && env.clientOrigins.includes(origin)) {
       console.log(`✅ CORS allowed (env): ${origin}`);
       return callback(null, true);
     }
     
-    // If corsAllowAll is true, allow everything (development only)
     if (env.corsAllowAll) {
       console.log(`⚠️ CORS allowed all: ${origin}`);
       return callback(null, true);
@@ -276,11 +215,11 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['X-Request-ID'],
-  maxAge: 86400 // 24 hours - cache preflight response
+  maxAge: 86400
 };
 
 // ============================================
-// Security Headers Configuration (UPDATED FOR SERVICE WORKERS)
+// Security Headers Configuration
 // ============================================
 
 const helmetConfig = {
@@ -298,10 +237,6 @@ const helmetConfig = {
       baseUri: ["'self'"],
       formAction: ["'self'"],
       upgradeInsecureRequests: env.isProduction ? [] : null,
-      
-      // ============================================
-      // FIX: Add these directives for Service Workers
-      // ============================================
       workerSrc: ["'self'", 'blob:'],
       childSrc: ["'self'", 'blob:'],
       manifestSrc: ["'self'"],
@@ -309,7 +244,6 @@ const helmetConfig = {
   },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  // Disable crossOriginOpenerPolicy to allow service worker registration
   crossOriginOpenerPolicy: false,
 };
 
@@ -321,7 +255,7 @@ async function bootstrap() {
   const startTime = Date.now();
   
   try {
-    // 1. Database Connection (Critical first step)
+    // 1. Database Connection
     logger.info('Connecting to database...');
     
     if (!env.mongoUri) {
@@ -351,7 +285,7 @@ async function bootstrap() {
     initSockets(io);
     app.set('io', io);
     
-    // 5. Request ID Middleware (first!)
+    // 5. Request ID Middleware
     app.use(requestIdMiddleware);
     
     // 6. Logging Middleware
@@ -365,19 +299,16 @@ async function bootstrap() {
     
     // 7. Security and Standard Middleware
     app.use(helmet(helmetConfig));
-    
-    // 8. CORS Middleware - Apply before routes
     app.use(cors(corsOptions));
-    app.options('*', cors(corsOptions)); // Handle preflight requests
-    
+    app.options('*', cors(corsOptions));
     app.use(compression());
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     
-    // 9. Fee Service Middleware
+    // 8. Fee Service Middleware
     app.use(attachFeeService);
     
-    // 10. Health Check Endpoint (before auth)
+    // 9. Health Check Endpoint
     app.get('/api/health', (req, res) => {
       const dbHealth = getDatabaseHealth();
       res.json({
@@ -392,14 +323,27 @@ async function bootstrap() {
         version: '1.0.0'
       });
     });
-    
-    // 11. API Routes
+
+    // ============================================
+    // DIRECT TEST ROUTE - EMERGENCY FIX
+    // ============================================
+    app.get('/api/community-test', (req, res) => {
+      res.json({ 
+        success: true, 
+        message: '✅ Server is alive! Community test route works!',
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // ============================================
+    // 10. API Routes
+    // ============================================
     logger.info('Mounting routes...');
     
-    // Auth routes (public)
+    // Auth routes
     app.use('/api/auth', authRoutes);
     
-    // Wallet routes (mix of public and protected)
+    // Wallet routes
     if (walletRoutes && walletRoutes.publicRouter) {
       app.use('/api/wallet', walletRoutes.publicRouter);
     }
@@ -407,15 +351,13 @@ async function bootstrap() {
       app.use('/api/wallet', walletRoutes.router);
     }
     
-    // Admin routes (protected)
+    // Admin routes
     app.use('/api/admin', adminRoutes);
     
     // Campaign routes
     app.use('/api/campaigns', campaignRoutes);
     
-    // ============================================
-    // NEW: User Routes (activity, sessions, 2FA, API keys, avatar)
-    // ============================================
+    // User routes
     if (userRoutes) {
       app.use('/api/user', userRoutes);
       console.log('✅ Mounted user routes (/api/user/*)');
@@ -423,9 +365,7 @@ async function bootstrap() {
       console.log('⚠️ User routes skipped - file not found');
     }
     
-    // ============================================
-    // NEW: Creator Routes (Social Media Links)
-    // ============================================
+    // Creator routes
     if (creatorRoutes) {
       app.use('/api', creatorRoutes);
       console.log('✅ Mounted creator routes (/api/creators, /api/creator/social-links)');
@@ -433,9 +373,7 @@ async function bootstrap() {
       console.log('⚠️ Creator routes skipped - file not found');
     }
     
-    // ============================================
-    // NEW: Google Drive Routes
-    // ============================================
+    // Google Drive routes
     if (driveRoutes) {
       app.use('/api/drive', driveRoutes);
       console.log('✅ Mounted Google Drive routes (/api/drive/*)');
@@ -443,9 +381,7 @@ async function bootstrap() {
       console.log('⚠️ Google Drive routes skipped - file not found');
     }
     
-    // ============================================
-    // NEW: Messages Routes
-    // ============================================
+    // Messages routes
     if (messagesRoutes) {
       app.use('/api/messages', messagesRoutes);
       console.log('✅ Mounted messages routes (/api/messages/*)');
@@ -453,21 +389,15 @@ async function bootstrap() {
       console.log('⚠️ Messages routes skipped - file not found');
     }
     
-    // ============================================
-    // COMMUNITY ROUTES - FORCE MOUNT (FIXED)
-    // ============================================
-    console.log('🔧 MOUNTING COMMUNITY ROUTES...');
+    // Community routes (from file)
     if (communityRoutes) {
       app.use('/api/community', communityRoutes);
-      console.log('✅✅✅ Community routes MOUNTED at /api/community');
-      console.log('   📍 GET  /api/community/test - Test endpoint');
-      console.log('   📍 POST /api/community/posts - Upload post');
-      console.log('   📍 GET  /api/community/posts - Get posts');
+      console.log('✅ Mounted community routes from file');
     } else {
-      console.error('❌❌❌ Community routes NOT mounted - communityRoutes is null');
+      console.log('⚠️ Community routes from file skipped - file not found');
     }
     
-    // Exchange rate routes (optional)
+    // Exchange routes
     if (exchangeRoutes) {
       app.use('/api/exchange', exchangeRoutes);
       console.log('✅ Mounted exchange routes');
@@ -475,39 +405,65 @@ async function bootstrap() {
       console.log('⚠️ Exchange routes skipped - file not found');
     }
     
-    // Withdrawal routes (optional)
+    // Withdrawal routes
     if (withdrawalRoutes) {
       app.use('/api/withdrawals', withdrawalRoutes);
       console.log('✅ Mounted withdrawal routes');
     } else {
       console.log('⚠️ Withdrawal routes skipped - file not found');
     }
+
+    // ============================================
+    // EMERGENCY COMMUNITY ROUTES - ALWAYS WORKS
+    // ============================================
+    console.log('🚨 MOUNTING EMERGENCY COMMUNITY ROUTES...');
+    try {
+      const emergencyRouter = require('express').Router();
+      
+      emergencyRouter.get('/test', (req, res) => {
+        res.json({ 
+          success: true, 
+          message: '✅ EMERGENCY community routes are working!',
+          timestamp: new Date().toISOString()
+        });
+      });
+      
+      emergencyRouter.post('/echo', (req, res) => {
+        res.json({ 
+          success: true, 
+          message: '✅ Echo route works!',
+          received: req.body,
+          timestamp: new Date().toISOString()
+        });
+      });
+      
+      app.use('/api/community', emergencyRouter);
+      console.log('✅✅✅ EMERGENCY community routes MOUNTED at /api/community');
+      console.log('   📍 GET  /api/community/test - Test endpoint');
+      console.log('   📍 POST /api/community/echo - Echo endpoint');
+    } catch (error) {
+      console.error('❌ EMERGENCY routes failed:', error.message);
+    }
     
-    // 12. Static Files (Client UI)
-    // Serve HTML files from root directory
+    // 11. Static Files
     app.use(express.static(path.join(__dirname, '..'), {
-      index: false, // Don't serve index.html automatically
+      index: false,
       maxAge: env.isProduction ? '1d' : 0
     }));
     
-    // Serve static assets from public directory if exists
     const publicPath = path.join(__dirname, '..', 'public');
     app.use('/public', express.static(publicPath, {
       maxAge: env.isProduction ? '30d' : 0
     }));
     
-    // 13. SPA Fallback (for client-side routing)
-    // But exclude API routes
+    // 12. SPA Fallback
     app.get('*', (req, res, next) => {
-      // Skip API routes
       if (req.path.startsWith('/api/')) {
         return next();
       }
-      // Serve index.html for all other routes (SPA support)
       const indexPath = path.join(__dirname, '..', 'index.html');
       res.sendFile(indexPath, (err) => {
         if (err && err.code === 'ENOENT') {
-          // If index.html doesn't exist, send a simple message
           res.status(200).send(`
             <!DOCTYPE html>
             <html>
@@ -517,22 +473,17 @@ async function bootstrap() {
                 body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.6; }
                 h1 { color: #333; }
                 .status { background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50; }
-                .endpoint { background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; }
               </style>
             </head>
             <body>
               <h1>🚀 Pebeto Creator's Hub API</h1>
-              <div class="status">
-                ✅ API is running in ${env.nodeEnv} mode
-              </div>
+              <div class="status">✅ API is running in ${env.nodeEnv} mode</div>
               <h2>Available Endpoints:</h2>
               <ul>
                 <li><a href="/api/health">GET /api/health</a> - Health check</li>
-                <li><a href="/api/creators">GET /api/creators</a> - View all creators</li>
-                <li>POST /api/auth/register - User registration</li>
-                <li>POST /api/auth/login - User login</li>
+                <li><a href="/api/community/test">GET /api/community/test</a> - Community test</li>
+                <li><a href="/api/community-test">GET /api/community-test</a> - Direct test</li>
               </ul>
-              <p>For full API documentation, please refer to the API docs.</p>
             </body>
             </html>
           `);
@@ -542,13 +493,13 @@ async function bootstrap() {
       });
     });
     
-    // 14. 404 Handler (for unmatched routes)
+    // 13. 404 Handler
     app.use(notFoundHandler);
     
-    // 15. Global Error Handler (last!)
+    // 14. Global Error Handler
     app.use(errorHandler);
     
-    // 16. Start Server
+    // 15. Start Server
     const PORT = env.port;
     const HOST = env.host;
     
@@ -559,22 +510,17 @@ async function bootstrap() {
       logger.info(`   Environment: ${env.nodeEnv}`);
       logger.info(`   Startup time: ${startupTime}ms`);
       logger.info(`   API Health: http://${HOST}:${PORT}/api/health`);
-      logger.info(`   Creators API: http://${HOST}:${PORT}/api/creators`);
+      logger.info(`   Community Test: http://${HOST}:${PORT}/api/community/test`);
       console.log('='.repeat(60));
       
-      // Log configuration summary (sanitized)
       if (env.logConfigSummary) {
         env.logConfigSummary();
       }
     });
     
-    // ============================================
-    // FIXED: Setup Auto-Release Cron Job with proper error handling
-    // ============================================
+    // Auto-release cron job
     try {
-      const { processAutoReleaseQueue, getAutoReleaseStats } = require('./services/autoReleaseService');
-      
-      // Run every hour at minute 0 (e.g., 1:00, 2:00, 3:00...)
+      const { processAutoReleaseQueue } = require('./services/autoReleaseService');
       const cronSchedule = process.env.AUTO_RELEASE_CRON_SCHEDULE || '0 * * * *';
       
       cron.schedule(cronSchedule, async () => {
@@ -591,7 +537,6 @@ async function bootstrap() {
       
       logger.info(`✅ Auto-release cron job scheduled: ${cronSchedule}`);
       
-      // Also run once on startup to catch any missed campaigns (with delay)
       setTimeout(async () => {
         try {
           logger.info('🔄 Running initial auto-release check on startup...');
@@ -602,15 +547,14 @@ async function bootstrap() {
         } catch (error) {
           logger.error('Initial auto-release check failed:', error.message);
         }
-      }, 10000); // Wait 10 seconds after server starts
+      }, 10000);
       
     } catch (error) {
-      // Auto-release is not critical for server startup - just log and continue
       logger.error('Failed to initialize auto-release service:', error.message);
       logger.warn('⚠️ Auto-release service disabled - server will continue running');
     }
     
-    // 17. Graceful Shutdown
+    // Graceful Shutdown
     setupGracefulShutdown(server);
     
     return { app, server, io };
@@ -621,16 +565,12 @@ async function bootstrap() {
     console.error(error);
     console.error('='.repeat(60));
     
-    // Provide helpful messages for common errors
     if (error.message.includes('MONGO_URI')) {
       console.error('\n💡 Database Configuration Error:');
       console.error('   Please ensure MONGO_URI is set in your environment variables');
-      console.error('   Example: MONGO_URI=mongodb://localhost:27017/pebeto');
-      console.error('   Or use MongoDB Atlas: mongodb+srv://<user>:<password>@cluster.mongodb.net/pebeto');
     } else if (error.message.includes('JWT_SECRET')) {
       console.error('\n💡 JWT Configuration Error:');
       console.error('   Please set JWT_SECRET in your environment variables');
-      console.error('   Generate a secure key using: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
     }
     
     process.exit(1);
@@ -643,10 +583,6 @@ async function bootstrap() {
 
 let isShuttingDown = false;
 
-/**
- * Setup graceful shutdown handlers for SIGTERM and SIGINT
- * @param {http.Server} server - HTTP server instance
- */
 function setupGracefulShutdown(server) {
   const shutdown = async (signal) => {
     if (isShuttingDown) {
@@ -662,22 +598,19 @@ function setupGracefulShutdown(server) {
       console.error('❌ Forced shutdown due to timeout');
       logger.error('Forced shutdown due to timeout');
       process.exit(1);
-    }, 30000); // 30 seconds timeout
+    }, 30000);
     
     try {
-      // Stop accepting new connections
       await new Promise((resolve) => {
         server.close(resolve);
       });
       console.log('✅ HTTP server closed');
       logger.info('HTTP server closed');
       
-      // Close database connection
       await disconnectDB();
       console.log('✅ Database connection closed');
       logger.info('Database connection closed');
       
-      // Clear timeout
       clearTimeout(shutdownTimeout);
       
       console.log('✅ Graceful shutdown completed');
@@ -690,26 +623,21 @@ function setupGracefulShutdown(server) {
     }
   };
   
-  // Handle process termination signals
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
   
-  // Handle uncaught exceptions (as a last resort)
   process.on('uncaughtException', (error) => {
     console.error('❌ Uncaught Exception:', error);
     logger.error('Uncaught Exception:', error);
-    // Give it a moment to log before shutting down
     setTimeout(() => {
       shutdown('uncaughtException');
     }, 1000);
   });
   
-  // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Unhandled Rejection at:', promise);
     console.error('   Reason:', reason);
     logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Don't exit immediately in development, but log clearly
     if (env.isProduction) {
       setTimeout(() => {
         shutdown('unhandledRejection');
@@ -722,14 +650,12 @@ function setupGracefulShutdown(server) {
 // Start Application
 // ============================================
 
-// Handle startup errors outside bootstrap
 bootstrap().catch((err) => {
   console.error('='.repeat(60));
   console.error('--- FATAL STARTUP ERROR ---');
   console.error(err);
   console.error('='.repeat(60));
   
-  // Provide helpful messages for common errors
   if (err.code === 'ECONNREFUSED') {
     console.error('\n💡 Database connection refused. Please check:');
     console.error('   1. MongoDB is running (mongod)');
@@ -744,9 +670,5 @@ bootstrap().catch((err) => {
   
   process.exit(1);
 });
-
-// ============================================
-// Exports (for testing)
-// ============================================
 
 module.exports = { bootstrap };
