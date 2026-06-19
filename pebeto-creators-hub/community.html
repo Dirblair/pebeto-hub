@@ -8,12 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         /* ===== RESET & BASE ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0a;
@@ -25,16 +20,9 @@
         }
 
         /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 140, 66, 0.3);
-            border-radius: 10px;
-        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 140, 66, 0.3); border-radius: 10px; }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
@@ -51,7 +39,6 @@
             z-index: 100;
             overflow-y: auto;
         }
-
         .sidebar-logo {
             font-size: 26px;
             font-weight: 800;
@@ -63,14 +50,8 @@
             align-items: center;
             gap: 10px;
         }
-
-        .sidebar-logo i {
-            font-size: 30px;
-        }
-        .sidebar-logo span {
-            color: #ffffff;
-            font-weight: 300;
-        }
+        .sidebar-logo i { font-size: 30px; }
+        .sidebar-logo span { color: #ffffff; font-weight: 300; }
 
         .sidebar-nav-item {
             display: flex;
@@ -86,23 +67,9 @@
             font-weight: 500;
             position: relative;
         }
-
-        .sidebar-nav-item:hover {
-            background: rgba(255, 140, 66, 0.08);
-            color: #ffffff;
-        }
-
-        .sidebar-nav-item.active {
-            color: #ff8c42;
-            background: rgba(255, 140, 66, 0.1);
-        }
-
-        .sidebar-nav-item i {
-            font-size: 22px;
-            width: 28px;
-            text-align: center;
-        }
-
+        .sidebar-nav-item:hover { background: rgba(255, 140, 66, 0.08); color: #ffffff; }
+        .sidebar-nav-item.active { color: #ff8c42; background: rgba(255, 140, 66, 0.1); }
+        .sidebar-nav-item i { font-size: 22px; width: 28px; text-align: center; }
         .sidebar-nav-item .badge {
             background: #ff3b30;
             color: white;
@@ -112,34 +79,16 @@
             border-radius: 20px;
             margin-left: auto;
         }
-
-        .sidebar-divider {
-            border-top: 1px solid rgba(255, 140, 66, 0.1);
-            margin: 12px 16px;
-        }
-
+        .sidebar-divider { border-top: 1px solid rgba(255, 140, 66, 0.1); margin: 12px 16px; }
         .sidebar-footer {
             padding: 12px 16px;
             font-size: 12px;
             color: #4a4a4a;
             margin-top: auto;
         }
-
-        .sidebar-footer a {
-            color: #4a4a4a;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 12px;
-        }
-
-        .sidebar-footer a:hover {
-            color: #ff8c42;
-        }
-
-        .sidebar-footer .copyright {
-            margin-top: 8px;
-            font-size: 11px;
-        }
+        .sidebar-footer a { color: #4a4a4a; text-decoration: none; display: inline-block; margin-right: 12px; }
+        .sidebar-footer a:hover { color: #ff8c42; }
+        .sidebar-footer .copyright { margin-top: 8px; font-size: 11px; }
 
         /* ===== MAIN CONTENT ===== */
         .main-content {
@@ -164,21 +113,8 @@
             top: 0;
             z-index: 50;
         }
-
-        .top-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .top-bar-left .mobile-logo {
-            display: none;
-            font-size: 22px;
-            font-weight: 800;
-            color: #ff8c42;
-            cursor: pointer;
-        }
-
+        .top-bar-left { display: flex; align-items: center; gap: 12px; }
+        .top-bar-left .mobile-logo { display: none; font-size: 22px; font-weight: 800; color: #ff8c42; cursor: pointer; }
         .top-bar-search {
             display: flex;
             align-items: center;
@@ -189,12 +125,7 @@
             border: 1px solid transparent;
             transition: all 0.3s;
         }
-
-        .top-bar-search:focus-within {
-            border-color: #ff8c42;
-            background: #121212;
-        }
-
+        .top-bar-search:focus-within { border-color: #ff8c42; background: #121212; }
         .top-bar-search input {
             background: transparent;
             border: none;
@@ -204,22 +135,10 @@
             outline: none;
             padding: 4px 8px;
         }
+        .top-bar-search input::placeholder { color: #6a6a6a; }
+        .top-bar-search i { color: #6a6a6a; font-size: 18px; }
 
-        .top-bar-search input::placeholder {
-            color: #6a6a6a;
-        }
-
-        .top-bar-search i {
-            color: #6a6a6a;
-            font-size: 18px;
-        }
-
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .top-bar-right { display: flex; align-items: center; gap: 8px; }
         .top-bar-right .icon-btn {
             background: none;
             border: none;
@@ -231,12 +150,7 @@
             transition: all 0.2s;
             position: relative;
         }
-
-        .top-bar-right .icon-btn:hover {
-            color: #ff8c42;
-            background: rgba(255, 140, 66, 0.08);
-        }
-
+        .top-bar-right .icon-btn:hover { color: #ff8c42; background: rgba(255, 140, 66, 0.08); }
         .top-bar-right .icon-btn .dot {
             position: absolute;
             top: 6px;
@@ -246,7 +160,6 @@
             background: #ff3b30;
             border-radius: 50%;
         }
-
         .top-bar-right .create-btn {
             background: #ff8c42;
             border: none;
@@ -261,12 +174,7 @@
             align-items: center;
             gap: 6px;
         }
-
-        .top-bar-right .create-btn:hover {
-            background: #e0662c;
-            transform: scale(1.02);
-        }
-
+        .top-bar-right .create-btn:hover { background: #e0662c; transform: scale(1.02); }
         .top-bar-right .avatar {
             width: 36px;
             height: 36px;
@@ -283,10 +191,7 @@
             border: 2px solid transparent;
             transition: border-color 0.2s;
         }
-
-        .top-bar-right .avatar:hover {
-            border-color: #ff8c42;
-        }
+        .top-bar-right .avatar:hover { border-color: #ff8c42; }
 
         /* ===== FEED CONTAINER ===== */
         .feed-container {
@@ -305,7 +210,6 @@
             padding-bottom: 8px;
             flex-wrap: wrap;
         }
-
         .feed-tab {
             padding: 8px 20px;
             border-radius: 40px;
@@ -320,20 +224,9 @@
             align-items: center;
             gap: 6px;
         }
-
-        .feed-tab:hover {
-            color: #ff8c42;
-            background: rgba(255, 140, 66, 0.08);
-        }
-
-        .feed-tab.active {
-            color: #ff8c42;
-            background: rgba(255, 140, 66, 0.12);
-        }
-
-        .feed-tab .tab-icon {
-            font-size: 16px;
-        }
+        .feed-tab:hover { color: #ff8c42; background: rgba(255, 140, 66, 0.08); }
+        .feed-tab.active { color: #ff8c42; background: rgba(255, 140, 66, 0.12); }
+        .feed-tab .tab-icon { font-size: 16px; }
 
         /* ===== POST CARDS ===== */
         .post-card {
@@ -344,11 +237,7 @@
             overflow: hidden;
             transition: all 0.3s;
         }
-
-        .post-card:hover {
-            border-color: rgba(255, 140, 66, 0.3);
-            transform: translateY(-2px);
-        }
+        .post-card:hover { border-color: rgba(255, 140, 66, 0.3); transform: translateY(-2px); }
 
         .post-header {
             display: flex;
@@ -357,7 +246,6 @@
             padding: 16px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
-
         .post-avatar {
             width: 44px;
             height: 44px;
@@ -375,39 +263,12 @@
             border: 2px solid transparent;
             transition: border-color 0.2s;
         }
-
-        .post-avatar:hover {
-            border-color: #ff8c42;
-        }
-
-        .post-user-info {
-            flex: 1;
-        }
-
-        .post-user-info .name {
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .post-user-info .name .verified {
-            color: #1da1f2;
-            font-size: 14px;
-        }
-
-        .post-user-info .username {
-            color: #a0a0a0;
-            font-size: 13px;
-        }
-
-        .post-user-info .time {
-            color: #6a6a6a;
-            font-size: 12px;
-            margin-left: auto;
-        }
-
+        .post-avatar:hover { border-color: #ff8c42; }
+        .post-user-info { flex: 1; }
+        .post-user-info .name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .post-user-info .name .verified { color: #1da1f2; font-size: 14px; }
+        .post-user-info .username { color: #a0a0a0; font-size: 13px; }
+        .post-user-info .time { color: #6a6a6a; font-size: 12px; margin-left: auto; }
         .post-follow-btn {
             background: transparent;
             border: 1px solid #ff8c42;
@@ -420,28 +281,15 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-
-        .post-follow-btn:hover {
-            background: #ff8c42;
-            color: #000000;
-        }
-
+        .post-follow-btn:hover { background: #ff8c42; color: #000000; }
         .post-follow-btn.following {
             background: rgba(255, 140, 66, 0.15);
             border-color: rgba(255, 140, 66, 0.3);
             color: #a0a0a0;
         }
+        .post-follow-btn.following:hover { background: rgba(255, 68, 68, 0.15); border-color: #ff4444; color: #ff4444; }
 
-        .post-follow-btn.following:hover {
-            background: rgba(255, 68, 68, 0.15);
-            border-color: #ff4444;
-            color: #ff4444;
-        }
-
-        .post-media {
-            padding: 0 20px 20px 20px;
-        }
-
+        .post-media { padding: 0 20px 20px 20px; }
         .post-media .media-container {
             border-radius: 16px;
             overflow: hidden;
@@ -449,7 +297,6 @@
             position: relative;
             cursor: pointer;
         }
-
         .post-media .media-container img,
         .post-media .media-container video {
             width: 100%;
@@ -457,7 +304,6 @@
             object-fit: cover;
             display: block;
         }
-
         .post-media .media-container .play-icon {
             position: absolute;
             top: 50%;
@@ -474,7 +320,6 @@
             color: #ffffff;
             pointer-events: none;
         }
-
         .post-media .media-container .views-badge {
             position: absolute;
             bottom: 12px;
@@ -494,15 +339,8 @@
             color: #d0d0d0;
             line-height: 1.6;
         }
-
-        .post-text .hashtag {
-            color: #ff8c42;
-            cursor: pointer;
-        }
-
-        .post-text .hashtag:hover {
-            text-decoration: underline;
-        }
+        .post-text .hashtag { color: #ff8c42; cursor: pointer; }
+        .post-text .hashtag:hover { text-decoration: underline; }
 
         /* ===== POST ACTIONS ===== */
         .post-actions {
@@ -513,7 +351,6 @@
             flex-wrap: wrap;
             border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
-
         .action-btn {
             background: none;
             border: none;
@@ -528,179 +365,22 @@
             transition: all 0.2s;
             font-weight: 500;
         }
-
-        .action-btn:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .action-btn.liked {
-            color: #ff3b30;
-        }
-
-        .action-btn.liked i {
-            font-weight: 900;
-        }
-
-        .action-btn.tip-btn {
-            color: #ff8c42;
-        }
-
-        .action-btn.tip-btn:hover {
-            background: rgba(255, 140, 66, 0.15);
-        }
-
-        .action-btn.hire-btn {
-            color: #4caf50;
-        }
-
-        .action-btn.hire-btn:hover {
-            background: rgba(76, 175, 80, 0.15);
-        }
-
-        .action-btn.dm-btn {
-            color: #3b82f6;
-        }
-
-        .action-btn.dm-btn:hover {
-            background: rgba(59, 130, 246, 0.15);
-        }
-
-        .action-btn.share-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .action-btn .count {
-            font-size: 12px;
-            font-weight: 400;
-        }
-
-        /* ===== CAMPAIGN CARD ===== */
-        .campaign-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 140, 66, 0.12);
-            border-radius: 20px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            transition: all 0.3s;
-            border-left: 4px solid #ff8c42;
-        }
-
-        .campaign-card:hover {
-            border-color: rgba(255, 140, 66, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .campaign-card .campaign-header {
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .campaign-card .campaign-header .brand-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 140, 66, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: #ff8c42;
-        }
-
-        .campaign-card .campaign-body {
-            padding: 16px 20px;
-        }
-
-        .campaign-card .campaign-body .campaign-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .campaign-card .campaign-body .campaign-desc {
-            color: #d0d0d0;
-            font-size: 14px;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-
-        .campaign-card .campaign-body .campaign-meta {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            font-size: 13px;
-            color: #a0a0a0;
-        }
-
-        .campaign-card .campaign-body .campaign-meta .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .campaign-card .campaign-body .campaign-meta .meta-item .highlight {
-            color: #4caf50;
-            font-weight: 600;
-        }
-
-        .campaign-card .campaign-footer {
-            padding: 12px 20px 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .campaign-card .campaign-footer .apply-btn {
-            background: #ff8c42;
-            border: none;
-            padding: 8px 24px;
-            border-radius: 40px;
-            color: #000000;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .campaign-card .campaign-footer .apply-btn:hover {
-            background: #e0662c;
-            transform: scale(1.02);
-        }
-
-        .campaign-card .campaign-footer .deadline {
-            font-size: 12px;
-            color: #6a6a6a;
-        }
-
-        .campaign-card .campaign-footer .deadline .urgent {
-            color: #ff3b30;
-            font-weight: 600;
-        }
+        .action-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.05); }
+        .action-btn.liked { color: #ff3b30; }
+        .action-btn.liked i { font-weight: 900; }
+        .action-btn.tip-btn { color: #ff8c42; }
+        .action-btn.tip-btn:hover { background: rgba(255, 140, 66, 0.15); }
+        .action-btn.hire-btn { color: #4caf50; }
+        .action-btn.hire-btn:hover { background: rgba(76, 175, 80, 0.15); }
+        .action-btn.dm-btn { color: #3b82f6; }
+        .action-btn.dm-btn:hover { background: rgba(59, 130, 246, 0.15); }
+        .action-btn.share-btn:hover { background: rgba(255, 255, 255, 0.05); }
+        .action-btn .count { font-size: 12px; font-weight: 400; }
 
         /* ===== EMPTY STATE ===== */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6a6a6a;
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 16px;
-            color: #2a2a2a;
-        }
-
-        .empty-state h3 {
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
+        .empty-state { text-align: center; padding: 60px 20px; color: #6a6a6a; }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; color: #2a2a2a; }
+        .empty-state h3 { color: #ffffff; margin-bottom: 8px; }
 
         /* ===== TOAST ===== */
         .toast {
@@ -720,26 +400,12 @@
             white-space: nowrap;
             max-width: 90%;
         }
-
-        .toast.success {
-            border-left: 4px solid #4caf50;
-        }
-        .toast.error {
-            border-left: 4px solid #f44336;
-        }
-        .toast.info {
-            border-left: 4px solid #ff8c42;
-        }
-
+        .toast.success { border-left: 4px solid #4caf50; }
+        .toast.error { border-left: 4px solid #f44336; }
+        .toast.info { border-left: 4px solid #ff8c42; }
         @keyframes slideUp {
-            from {
-                transform: translateX(-50%) translateY(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(-50%) translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
 
         /* ===== MODAL ===== */
@@ -756,7 +422,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .modal-content {
             background: #1a1510;
             border-radius: 28px;
@@ -767,15 +432,8 @@
             max-height: 85vh;
             overflow-y: auto;
         }
-
-        .modal-content h3 {
-            margin-bottom: 20px;
-            color: #ff8c42;
-        }
-
-        .modal-content input,
-        .modal-content select,
-        .modal-content textarea {
+        .modal-content h3 { margin-bottom: 20px; color: #ff8c42; }
+        .modal-content input, .modal-content select, .modal-content textarea {
             width: 100%;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 140, 66, 0.3);
@@ -784,20 +442,11 @@
             margin-bottom: 15px;
             color: white;
         }
-
-        .modal-content input:focus,
-        .modal-content select:focus,
-        .modal-content textarea:focus {
+        .modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus {
             outline: none;
             border-color: #ff8c42;
         }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .modal-buttons button {
             flex: 1;
             padding: 12px;
@@ -806,24 +455,184 @@
             cursor: pointer;
             font-weight: 600;
         }
+        .save-btn { background: #ff8c42; color: #000000; }
+        .save-btn:hover { background: #e0662c; }
+        .cancel-btn { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+        .cancel-btn:hover { background: rgba(255, 255, 255, 0.15); }
 
-        .save-btn {
+        /* ===== MESSAGES PANEL ===== */
+        .messages-panel {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 420px;
+            height: 80vh;
+            background: #1a1510;
+            border: 1px solid rgba(255, 140, 66, 0.2);
+            border-radius: 20px 20px 0 0;
+            z-index: 2000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .messages-panel.open { transform: translateY(0); }
+        .messages-panel .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .messages-panel .panel-header h3 { color: #ff8c42; font-size: 18px; }
+        .messages-panel .panel-header .close-btn {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .messages-panel .panel-header .close-btn:hover { color: #ffffff; }
+        .messages-panel .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+        .messages-panel .conversation-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .messages-panel .conversation-item:hover { background: rgba(255, 140, 66, 0.05); }
+        .messages-panel .conversation-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff8c42, #e0662c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+        .messages-panel .conversation-info { flex: 1; min-width: 0; }
+        .messages-panel .conversation-info .name { font-weight: 600; font-size: 14px; }
+        .messages-panel .conversation-info .last-msg {
+            font-size: 13px;
+            color: #a0a0a0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .messages-panel .conversation-info .time { font-size: 11px; color: #6a6a6a; }
+        .messages-panel .conversation-unread {
             background: #ff8c42;
             color: #000000;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            flex-shrink: 0;
         }
+        .messages-panel .empty-state { text-align: center; padding: 40px; color: #6a6a6a; }
 
-        .save-btn:hover {
-            background: #e0662c;
+        /* Chat View inside panel */
+        .messages-panel .chat-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
         }
-
-        .cancel-btn {
-            background: rgba(255, 255, 255, 0.1);
+        .messages-panel .chat-view.active { display: flex; }
+        .messages-panel .chat-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .messages-panel .chat-header .back-btn {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .messages-panel .chat-header .back-btn:hover { color: #ffffff; }
+        .messages-panel .chat-header .chat-name { font-weight: 600; font-size: 16px; }
+        .messages-panel .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .messages-panel .chat-message {
+            max-width: 80%;
+            padding: 10px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .messages-panel .chat-message.sent {
+            background: #ff8c42;
+            color: #000000;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .messages-panel .chat-message.received {
+            background: rgba(255, 255, 255, 0.08);
             color: #ffffff;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
         }
-
-        .cancel-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .messages-panel .chat-message .msg-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+            display: block;
         }
+        .messages-panel .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .messages-panel .chat-input-area input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 140, 66, 0.2);
+            padding: 10px 16px;
+            border-radius: 40px;
+            color: white;
+            outline: none;
+        }
+        .messages-panel .chat-input-area input:focus { border-color: #ff8c42; }
+        .messages-panel .chat-input-area .send-btn {
+            background: #ff8c42;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #000000;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .messages-panel .chat-input-area .send-btn:hover { background: #e0662c; }
 
         /* ===== RESPONSIVE ===== */
         .sidebar-overlay {
@@ -836,28 +645,18 @@
             background: rgba(0, 0, 0, 0.7);
             z-index: 99;
         }
-
-        .sidebar-overlay.show {
-            display: block;
-        }
-
+        .sidebar-overlay.show { display: block; }
         .sidebar.mobile-open {
             display: flex;
             width: 280px;
             z-index: 101;
             animation: slideIn 0.3s ease;
         }
-
         @keyframes slideIn {
-            from {
-                transform: translateX(-100%);
-            }
-            to {
-                transform: translateX(0);
-            }
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
         }
 
-        /* Bottom Nav (Mobile) */
         .bottom-nav {
             display: none;
             position: fixed;
@@ -871,7 +670,6 @@
             justify-content: space-around;
             z-index: 99;
         }
-
         .bottom-nav-item {
             display: flex;
             flex-direction: column;
@@ -883,17 +681,10 @@
             font-size: 10px;
             padding: 4px 8px;
             border-radius: 8px;
+            position: relative;
         }
-
-        .bottom-nav-item i {
-            font-size: 22px;
-        }
-
-        .bottom-nav-item.active,
-        .bottom-nav-item:hover {
-            color: #ff8c42;
-        }
-
+        .bottom-nav-item i { font-size: 22px; }
+        .bottom-nav-item.active, .bottom-nav-item:hover { color: #ff8c42; }
         .bottom-nav-item .nav-badge {
             background: #ff3b30;
             color: white;
@@ -901,14 +692,9 @@
             padding: 0px 6px;
             border-radius: 20px;
             position: absolute;
-            top: -4px;
-            right: -8px;
+            top: -2px;
+            right: -4px;
         }
-
-        .bottom-nav-item .nav-icon-wrap {
-            position: relative;
-        }
-
         .bottom-nav .create-nav-btn {
             background: #ff8c42;
             width: 44px;
@@ -923,110 +709,31 @@
             border: none;
             cursor: pointer;
         }
-
-        .bottom-nav .create-nav-btn:hover {
-            background: #e0662c;
-            transform: scale(1.05);
-        }
+        .bottom-nav .create-nav-btn:hover { background: #e0662c; transform: scale(1.05); }
 
         @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .top-bar-left .mobile-logo {
-                display: block;
-            }
-
-            .top-bar-search {
-                width: 160px;
-            }
-
-            .top-bar {
-                padding: 10px 16px;
-            }
-
-            .top-bar-right .create-btn span {
-                display: none;
-            }
-
-            .feed-container {
-                padding: 16px 16px 80px 16px;
-            }
-
-            .bottom-nav {
-                display: flex;
-            }
-
-            .post-actions {
-                justify-content: center;
-                gap: 2px;
-            }
-
-            .action-btn {
-                padding: 4px 10px;
-                font-size: 12px;
-            }
-
-            .campaign-card .campaign-footer {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .campaign-card .campaign-footer .apply-btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .feed-tabs {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                gap: 2px;
-                padding-bottom: 4px;
-            }
-
-            .feed-tab {
-                padding: 6px 14px;
-                font-size: 12px;
-                white-space: nowrap;
-            }
-
-            .post-header {
-                flex-wrap: wrap;
-            }
-
-            .post-follow-btn {
-                margin-left: auto;
-            }
-
-            .post-media .media-container img,
-            .post-media .media-container video {
-                max-height: 300px;
-            }
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .top-bar-left .mobile-logo { display: block; }
+            .top-bar-search { width: 160px; }
+            .top-bar { padding: 10px 16px; }
+            .top-bar-right .create-btn span { display: none; }
+            .feed-container { padding: 16px 16px 80px 16px; }
+            .bottom-nav { display: flex; }
+            .post-actions { justify-content: center; gap: 2px; }
+            .action-btn { padding: 4px 10px; font-size: 12px; }
+            .feed-tabs { flex-wrap: nowrap; overflow-x: auto; gap: 2px; padding-bottom: 4px; }
+            .feed-tab { padding: 6px 14px; font-size: 12px; white-space: nowrap; }
+            .post-header { flex-wrap: wrap; }
+            .post-follow-btn { margin-left: auto; }
+            .post-media .media-container img, .post-media .media-container video { max-height: 300px; }
+            .messages-panel { width: 100%; height: 90vh; border-radius: 0; }
         }
-
         @media (max-width: 480px) {
-            .top-bar-search {
-                width: 120px;
-            }
-
-            .top-bar-search input {
-                font-size: 12px;
-            }
-
-            .feed-tab {
-                font-size: 11px;
-                padding: 4px 10px;
-            }
-
-            .action-btn {
-                font-size: 11px;
-                padding: 4px 8px;
-            }
+            .top-bar-search { width: 120px; }
+            .top-bar-search input { font-size: 12px; }
+            .feed-tab { font-size: 11px; padding: 4px 10px; }
+            .action-btn { font-size: 11px; padding: 4px 8px; }
         }
     </style>
 </head>
@@ -1040,7 +747,6 @@
         <div class="sidebar-logo" onclick="window.location.href='/'">
             <i class="ri-fire-fill"></i> Pebeto<span>Hub</span>
         </div>
-
         <nav class="sidebar-nav">
             <div class="sidebar-nav-item active" onclick="switchFeedTab('foryou')">
                 <i class="ri-home-5-line"></i> For You
@@ -1054,36 +760,24 @@
             <div class="sidebar-nav-item" onclick="switchFeedTab('friends')">
                 <i class="ri-group-line"></i> Friends
             </div>
-            <div class="sidebar-nav-item" onclick="switchFeedTab('live')">
-                <i class="ri-live-line"></i> LIVE
-            </div>
-
             <div class="sidebar-divider"></div>
-
-            <div class="sidebar-nav-item" onclick="openMessages()">
+            <div class="sidebar-nav-item" onclick="openMessagesPanel()">
                 <i class="ri-message-3-line"></i> Messages
-                <span class="badge" id="msgBadge">0</span>
+                <span class="badge" id="sidebarMsgBadge">0</span>
             </div>
-            <div class="sidebar-nav-item" onclick="openActivity()">
+            <div class="sidebar-nav-item" onclick="openActivityPanel()">
                 <i class="ri-notification-3-line"></i> Activity
             </div>
-
             <div class="sidebar-divider"></div>
-
             <div class="sidebar-nav-item" onclick="goToDashboard()">
                 <i class="ri-user-3-line"></i> Profile
             </div>
-            <div class="sidebar-nav-item" onclick="openSettings()">
+            <div class="sidebar-nav-item" onclick="openSettingsPanel()">
                 <i class="ri-settings-4-line"></i> Settings
             </div>
         </nav>
-
         <div class="sidebar-footer">
-            <div>
-                <a href="#">About</a>
-                <a href="#">Terms</a>
-                <a href="#">Privacy</a>
-            </div>
+            <div><a href="#">About</a><a href="#">Terms</a><a href="#">Privacy</a></div>
             <div class="copyright">© 2026 Pebeto Hub</div>
         </div>
     </div>
@@ -1094,37 +788,26 @@
         <!-- ===== TOP BAR ===== -->
         <div class="top-bar">
             <div class="top-bar-left">
-                <div class="mobile-logo" onclick="toggleSidebar()">
-                    <i class="ri-fire-fill"></i> Pebeto
-                </div>
+                <div class="mobile-logo" onclick="toggleSidebar()"><i class="ri-fire-fill"></i> Pebeto</div>
                 <div class="top-bar-search">
                     <i class="ri-search-line"></i>
-                    <input type="text" id="searchInput" placeholder="Search creators..." onkeyup="handleSearch(event)">
+                    <input type="text" id="searchInput" placeholder="Search posts..." onkeyup="handleSearch(event)">
                 </div>
             </div>
-
             <div class="top-bar-right">
-                <button class="icon-btn" onclick="openUpload()" title="Create">
-                    <i class="ri-add-line"></i>
-                </button>
-                <button class="icon-btn" onclick="openMessages()" title="Messages">
+                <button class="icon-btn" onclick="openUploadModal()" title="Create"><i class="ri-add-line"></i></button>
+                <button class="icon-btn" onclick="openMessagesPanel()" title="Messages">
                     <i class="ri-message-3-line"></i>
-                    <span class="dot" id="msgDot"></span>
+                    <span class="dot" id="msgDot" style="display:none;"></span>
                 </button>
-                <button class="icon-btn" onclick="openActivity()" title="Activity">
-                    <i class="ri-notification-3-line"></i>
-                </button>
-                <button class="create-btn" onclick="openUpload()">
-                    <i class="ri-add-line"></i> <span>Create</span>
-                </button>
+                <button class="icon-btn" onclick="openActivityPanel()" title="Activity"><i class="ri-notification-3-line"></i></button>
+                <button class="create-btn" onclick="openUploadModal()"><i class="ri-add-line"></i> <span>Create</span></button>
                 <div class="avatar" id="navAvatar" onclick="goToDashboard()">U</div>
             </div>
         </div>
 
         <!-- ===== FEED CONTAINER ===== -->
         <div class="feed-container" id="feedContainer">
-
-            <!-- ===== FEED TABS ===== -->
             <div class="feed-tabs" id="feedTabs">
                 <button class="feed-tab active" data-tab="foryou" onclick="switchFeedTab('foryou')">
                     <span class="tab-icon">🔥</span> For You
@@ -1138,16 +821,9 @@
                 <button class="feed-tab" data-tab="friends" onclick="switchFeedTab('friends')">
                     <span class="tab-icon">👥</span> Friends
                 </button>
-                <button class="feed-tab" data-tab="live" onclick="switchFeedTab('live')">
-                    <span class="tab-icon">🔴</span> LIVE
-                </button>
             </div>
-
-            <!-- ===== FEED CONTENT ===== -->
             <div id="feedContent">
-                <!-- Posts will be rendered here -->
                 <div id="feedPosts"></div>
-                <!-- Infinite Scroll Trigger -->
                 <div id="infiniteScrollTrigger" style="height: 20px; margin: 20px 0; text-align: center; color: #4a4a4a;"></div>
             </div>
         </div>
@@ -1155,28 +831,97 @@
 
     <!-- ===== BOTTOM NAV (Mobile) ===== -->
     <div class="bottom-nav" id="bottomNav">
-        <div class="bottom-nav-item active" onclick="switchFeedTab('foryou')">
-            <i class="ri-home-5-line"></i>
-            <span>Home</span>
-        </div>
-        <div class="bottom-nav-item" onclick="switchFeedTab('whatsnew')">
-            <i class="ri-sparkle-line"></i>
-            <span>What's New</span>
-        </div>
-        <div class="bottom-nav-item" onclick="openUpload()">
+        <div class="bottom-nav-item active" onclick="switchFeedTab('foryou')"><i class="ri-home-5-line"></i><span>Home</span></div>
+        <div class="bottom-nav-item" onclick="switchFeedTab('whatsnew')"><i class="ri-sparkle-line"></i><span>What's New</span></div>
+        <div class="bottom-nav-item" onclick="openUploadModal()">
             <button class="create-nav-btn"><i class="ri-add-line"></i></button>
             <span style="margin-top: 4px;">Create</span>
         </div>
-        <div class="bottom-nav-item" onclick="openMessages()">
-            <div class="nav-icon-wrap">
-                <i class="ri-message-3-line"></i>
-                <span class="nav-badge" id="bottomMsgBadge" style="display:none;">0</span>
-            </div>
+        <div class="bottom-nav-item" onclick="openMessagesPanel()">
+            <i class="ri-message-3-line"></i>
+            <span class="nav-badge" id="bottomMsgBadge" style="display:none;">0</span>
             <span>Messages</span>
         </div>
-        <div class="bottom-nav-item" onclick="goToDashboard()">
-            <i class="ri-user-3-line"></i>
-            <span>Profile</span>
+        <div class="bottom-nav-item" onclick="goToDashboard()"><i class="ri-user-3-line"></i><span>Profile</span></div>
+    </div>
+
+    <!-- ===== MESSAGES PANEL ===== -->
+    <div class="messages-panel" id="messagesPanel">
+        <div class="panel-header">
+            <h3>💬 Messages</h3>
+            <button class="close-btn" onclick="closeMessagesPanel()">✕</button>
+        </div>
+        <div id="messagesContent">
+            <div class="conversations-list" id="conversationsList">
+                <div class="empty-state">Loading conversations...</div>
+            </div>
+            <div class="chat-view" id="chatView">
+                <div class="chat-header">
+                    <button class="back-btn" onclick="closeChatView()"><i class="ri-arrow-left-line"></i></button>
+                    <span class="chat-name" id="chatRecipientName">User</span>
+                </div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
+                    <button class="send-btn" onclick="sendChatMessage()"><i class="ri-send-plane-fill"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACTIVITY PANEL ===== -->
+    <div class="messages-panel" id="activityPanel" style="right: 440px; width: 380px;">
+        <div class="panel-header">
+            <h3>🔔 Activity</h3>
+            <button class="close-btn" onclick="closeActivityPanel()">✕</button>
+        </div>
+        <div id="activityContent" style="flex:1; overflow-y: auto; padding: 16px 20px;">
+            <div class="empty-state">Loading activity...</div>
+        </div>
+    </div>
+
+    <!-- ===== SETTINGS PANEL ===== -->
+    <div class="messages-panel" id="settingsPanel" style="right: 840px; width: 380px;">
+        <div class="panel-header">
+            <h3>⚙️ Settings</h3>
+            <button class="close-btn" onclick="closeSettingsPanel()">✕</button>
+        </div>
+        <div style="flex:1; overflow-y: auto; padding: 20px;">
+            <div style="margin-bottom: 20px;">
+                <label style="color: #a0a0a0; font-size: 13px;">Display Name</label>
+                <input type="text" id="settingsDisplayName" placeholder="Your display name" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:30px; color:white; margin-top:6px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="color: #a0a0a0; font-size: 13px;">Bio</label>
+                <textarea id="settingsBio" rows="3" placeholder="Tell us about yourself..." style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:16px; color:white; margin-top:6px;"></textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="color: #a0a0a0; font-size: 13px;">Niche</label>
+                <select id="settingsNiche" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:30px; color:white; margin-top:6px;">
+                    <option value="">Select your niche</option>
+                    <option value="Music">Music</option>
+                    <option value="Art">Art</option>
+                    <option value="Fitness">Fitness</option>
+                    <option value="Gaming">Gaming</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Education">Education</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                    <option value="Dance">Dance</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Food">Food</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Travel">Travel</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="color: #a0a0a0; font-size: 13px;">Profile Picture</label>
+                <input type="file" id="settingsAvatar" accept="image/jpeg,image/png,image/gif,image/webp" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,140,66,0.3); padding:12px; border-radius:30px; color:white; margin-top:6px;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="save-btn" onclick="saveSettings()" style="flex:1;">Save Settings</button>
+                <button class="cancel-btn" onclick="closeSettingsPanel()" style="flex:1;">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -1261,6 +1006,23 @@
             <p style="color: #a0a0a0; margin-bottom: 15px;">Upload a video or image to share with the community</p>
             <input type="file" id="uploadFile" accept="video/*,image/*" style="margin-bottom: 15px;">
             <input type="text" id="uploadCaption" placeholder="Caption...">
+            <input type="text" id="uploadTags" placeholder="Tags (comma separated)">
+            <select id="uploadCategory" style="margin-bottom: 15px;">
+                <option value="Other">Category</option>
+                <option value="Music">Music</option>
+                <option value="Art">Art</option>
+                <option value="Fitness">Fitness</option>
+                <option value="Gaming">Gaming</option>
+                <option value="Tech">Tech</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Education">Education</option>
+                <option value="Lifestyle">Lifestyle</option>
+                <option value="Dance">Dance</option>
+                <option value="Sports">Sports</option>
+                <option value="Food">Food</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Travel">Travel</option>
+            </select>
             <div class="modal-buttons">
                 <button class="save-btn" onclick="submitUpload()">Upload</button>
                 <button class="cancel-btn" onclick="closeModal('uploadModal')">Cancel</button>
@@ -1280,12 +1042,11 @@
         // ============================================
         let currentUser = null;
         let currentFeedTab = 'foryou';
-        let allCreators = [];
-        let filteredCreators = [];
+        let allPosts = [];
         let currentOffset = 0;
         let isLoading = false;
         let hasMore = true;
-        let currentCommentCreatorId = null;
+        let currentCommentPostId = null;
         let currentTipCreatorId = null;
         let currentHireCreatorId = null;
         let currentReportCreatorId = null;
@@ -1293,6 +1054,10 @@
         let likesMap = new Map();
         let notifications = [];
         let searchTimeout = null;
+        let ws = null;
+        let currentChatConversationId = null;
+        let currentChatRecipientId = null;
+        let currentChatRecipientName = '';
 
         // ============================================
         // DOM REFS
@@ -1300,7 +1065,7 @@
         const feedPosts = document.getElementById('feedPosts');
         const infiniteTrigger = document.getElementById('infiniteScrollTrigger');
         const navAvatar = document.getElementById('navAvatar');
-        const msgBadge = document.getElementById('msgBadge');
+        const sidebarMsgBadge = document.getElementById('sidebarMsgBadge');
         const bottomMsgBadge = document.getElementById('bottomMsgBadge');
 
         // ============================================
@@ -1373,179 +1138,536 @@
             } else { window.location.href = '/login.html'; }
         }
 
-        function openMessages() {
-            showToast('💬 Messages are stored in your inbox', 'info');
-            // TODO: Open messages panel
+        // ============================================
+        // MESSAGES PANEL
+        // ============================================
+        function openMessagesPanel() {
+            const panel = document.getElementById('messagesPanel');
+            panel.classList.add('open');
+            loadConversations();
         }
 
-        function openActivity() {
-            showToast('🔔 Your activity feed', 'info');
-            // TODO: Open activity panel
+        function closeMessagesPanel() {
+            document.getElementById('messagesPanel').classList.remove('open');
+            document.getElementById('chatView').classList.remove('active');
+            document.querySelector('.conversations-list').style.display = 'block';
         }
 
-        function openUpload() {
+        function loadConversations() {
+            const list = document.getElementById('conversationsList');
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { list.innerHTML = '<div class="empty-state">Please login to view messages</div>'; return; }
+
+            fetch(`${API_BASE}/api/messages/conversations`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data.conversations) {
+                    const convs = data.data.conversations;
+                    if (convs.length === 0) {
+                        list.innerHTML = '<div class="empty-state">No conversations yet</div>';
+                    } else {
+                        list.innerHTML = convs.map(c => {
+                            const other = c.participantDetails?.[0] || {};
+                            const name = other.profile?.stageName || other.profile?.companyName || other.uniqueCode || other.email?.split('@')[0] || 'User';
+                            const avatar = name.charAt(0).toUpperCase();
+                            const lastMsg = c.lastMessage?.content || 'No messages yet';
+                            const time = c.lastMessage?.sentAt ? formatTimeAgo(c.lastMessage.sentAt) : '';
+                            const unread = c.unreadCount || 0;
+                            const avatarUrl = other.profile?.avatarUrl || '';
+                            return `
+                                <div class="conversation-item" onclick="openChat('${c._id}', '${other._id}', '${escapeHtml(name)}')">
+                                    <div class="conversation-avatar" style="${avatarUrl ? `background-image: url(${avatarUrl});` : ''}">${!avatarUrl ? avatar : ''}</div>
+                                    <div class="conversation-info">
+                                        <div class="name">${escapeHtml(name)}</div>
+                                        <div class="last-msg">${escapeHtml(lastMsg)}</div>
+                                    </div>
+                                    ${unread > 0 ? `<div class="conversation-unread">${unread}</div>` : ''}
+                                    <div class="time">${time}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                    // Update badge
+                    const totalUnread = data.data.totalUnread || 0;
+                    updateMessageBadge(totalUnread);
+                } else {
+                    list.innerHTML = '<div class="empty-state">No conversations found</div>';
+                }
+            })
+            .catch(() => {
+                list.innerHTML = '<div class="empty-state">Failed to load conversations</div>';
+            });
+        }
+
+        function openChat(conversationId, recipientId, name) {
+            currentChatConversationId = conversationId;
+            currentChatRecipientId = recipientId;
+            currentChatRecipientName = name;
+
+            document.querySelector('.conversations-list').style.display = 'none';
+            const chatView = document.getElementById('chatView');
+            chatView.classList.add('active');
+            document.getElementById('chatRecipientName').textContent = name;
+
+            loadChatMessages(conversationId);
+            connectChatSocket();
+        }
+
+        function closeChatView() {
+            document.getElementById('chatView').classList.remove('active');
+            document.querySelector('.conversations-list').style.display = 'block';
+            if (chatSocket) { chatSocket.disconnect(); chatSocket = null; }
+        }
+
+        function loadChatMessages(conversationId) {
+            const container = document.getElementById('chatMessages');
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { container.innerHTML = '<div style="text-align:center;padding:20px;color:#6a6a6a;">Please login</div>'; return; }
+
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#6a6a6a;">Loading messages...</div>';
+
+            fetch(`${API_BASE}/api/messages/conversations/${conversationId}/messages`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data.messages) {
+                    const messages = data.data.messages;
+                    if (messages.length === 0) {
+                        container.innerHTML = '<div style="text-align:center;padding:20px;color:#6a6a6a;">No messages yet. Say hi!</div>';
+                    } else {
+                        const userId = currentUser?._id;
+                        container.innerHTML = messages.map(m => {
+                            const isSent = m.senderId === userId;
+                            return `
+                                <div class="chat-message ${isSent ? 'sent' : 'received'}">
+                                    ${escapeHtml(m.content)}
+                                    <span class="msg-time">${new Date(m.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                </div>
+                            `;
+                        }).join('');
+                        container.scrollTop = container.scrollHeight;
+                    }
+                    // Mark as read
+                    fetch(`${API_BASE}/api/messages/conversations/${conversationId}/read`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(() => loadConversations());
+                }
+            })
+            .catch(() => {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#6a6a6a;">Failed to load messages</div>';
+            });
+        }
+
+        let chatSocket = null;
+
+        function connectChatSocket() {
+            if (chatSocket) { chatSocket.disconnect(); }
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) return;
+
+            chatSocket = io(API_BASE, {
+                auth: { token },
+                transports: ['websocket', 'polling']
+            });
+
+            chatSocket.on('connect', () => {
+                if (currentChatConversationId) {
+                    chatSocket.emit('conversation:join', { conversationId: currentChatConversationId });
+                }
+            });
+
+            chatSocket.on('dm:new-message', (data) => {
+                if (data.conversationId === currentChatConversationId) {
+                    loadChatMessages(currentChatConversationId);
+                } else {
+                    loadConversations();
+                }
+            });
+
+            chatSocket.on('dm:typing', (data) => {
+                // Could show typing indicator here
+            });
+
+            chatSocket.on('dm:unread-update', (data) => {
+                updateMessageBadge(data.count);
+            });
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || !currentChatRecipientId) return;
+
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { showToast('Please login to send messages', 'error'); return; }
+
+            fetch(`${API_BASE}/api/messages/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    recipientId: currentChatRecipientId,
+                    content: message,
+                    clientMessageId: Date.now().toString()
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadChatMessages(currentChatConversationId);
+                    if (chatSocket) {
+                        chatSocket.emit('dm:typing', { conversationId: currentChatConversationId, isTyping: false });
+                    }
+                } else {
+                    showToast('Failed to send message', 'error');
+                }
+            })
+            .catch(() => showToast('Network error', 'error'));
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            } else {
+                if (chatSocket && currentChatConversationId) {
+                    chatSocket.emit('dm:typing', { conversationId: currentChatConversationId, isTyping: true });
+                    clearTimeout(window.chatTypingTimeout);
+                    window.chatTypingTimeout = setTimeout(() => {
+                        if (chatSocket) {
+                            chatSocket.emit('dm:typing', { conversationId: currentChatConversationId, isTyping: false });
+                        }
+                    }, 1000);
+                }
+            }
+        }
+
+        function updateMessageBadge(count) {
+            const badge = count > 0 ? count.toString() : '0';
+            sidebarMsgBadge.textContent = count > 9 ? '9+' : count;
+            bottomMsgBadge.textContent = count > 9 ? '9+' : count;
+            bottomMsgBadge.style.display = count > 0 ? 'inline' : 'none';
+            const dot = document.getElementById('msgDot');
+            dot.style.display = count > 0 ? 'block' : 'none';
+        }
+
+        // ============================================
+        // ACTIVITY PANEL
+        // ============================================
+        function openActivityPanel() {
+            const panel = document.getElementById('activityPanel');
+            panel.classList.add('open');
+            loadActivity();
+        }
+
+        function closeActivityPanel() {
+            document.getElementById('activityPanel').classList.remove('open');
+        }
+
+        function loadActivity() {
+            const container = document.getElementById('activityContent');
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { container.innerHTML = '<div class="empty-state">Please login to view activity</div>'; return; }
+
+            container.innerHTML = '<div class="empty-state">Loading activity...</div>';
+
+            fetch(`${API_BASE}/api/user/activity`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data.activities) {
+                    const activities = data.data.activities;
+                    if (activities.length === 0) {
+                        container.innerHTML = '<div class="empty-state">No activity yet</div>';
+                    } else {
+                        container.innerHTML = activities.slice(0, 20).map(a => `
+                            <div style="display:flex; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,140,66,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;">
+                                    ${a.type === 'login' ? '🔐' : a.type === 'transaction' ? '💰' : '📢'}
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="font-size:14px;">${escapeHtml(a.action)}</div>
+                                    <div style="font-size:11px;color:#6a6a6a;">${formatTimeAgo(a.createdAt)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    container.innerHTML = '<div class="empty-state">No activity found</div>';
+                }
+            })
+            .catch(() => {
+                container.innerHTML = '<div class="empty-state">Failed to load activity</div>';
+            });
+        }
+
+        // ============================================
+        // SETTINGS PANEL
+        // ============================================
+        function openSettingsPanel() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.add('open');
+            loadSettings();
+        }
+
+        function closeSettingsPanel() {
+            document.getElementById('settingsPanel').classList.remove('open');
+        }
+
+        function loadSettings() {
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) return;
+
+            fetch(`${API_BASE}/api/user/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const profile = data.data.profile || {};
+                    document.getElementById('settingsDisplayName').value = profile.stageName || profile.displayName || '';
+                    document.getElementById('settingsBio').value = profile.bio || '';
+                    document.getElementById('settingsNiche').value = profile.niche || '';
+                }
+            })
+            .catch(() => showToast('Failed to load settings', 'error'));
+        }
+
+        function saveSettings() {
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { showToast('Please login', 'error'); return; }
+
+            const displayName = document.getElementById('settingsDisplayName').value.trim();
+            const bio = document.getElementById('settingsBio').value.trim();
+            const niche = document.getElementById('settingsNiche').value;
+
+            // Handle avatar upload
+            const avatarFile = document.getElementById('settingsAvatar').files[0];
+            if (avatarFile) {
+                const formData = new FormData();
+                formData.append('avatar', avatarFile);
+                fetch(`${API_BASE}/api/user/avatar`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Profile picture updated!', 'success');
+                        if (currentUser) {
+                            currentUser.profile.avatarUrl = data.avatarUrl;
+                            localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+                        }
+                    }
+                })
+                .catch(() => showToast('Failed to update avatar', 'error'));
+            }
+
+            // Update profile
+            fetch(`${API_BASE}/api/user/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    profile: {
+                        stageName: displayName,
+                        displayName: displayName,
+                        bio: bio,
+                        niche: niche
+                    }
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Settings saved!', 'success');
+                    if (currentUser) {
+                        if (!currentUser.profile) currentUser.profile = {};
+                        currentUser.profile.stageName = displayName;
+                        currentUser.profile.bio = bio;
+                        currentUser.profile.niche = niche;
+                        localStorage.setItem('pebeto_user', JSON.stringify(currentUser));
+                    }
+                    closeSettingsPanel();
+                    loadUserData();
+                } else {
+                    showToast('Failed to save settings', 'error');
+                }
+            })
+            .catch(() => showToast('Network error', 'error'));
+        }
+
+        // ============================================
+        // UPLOAD
+        // ============================================
+        function openUploadModal() {
             document.getElementById('uploadModal').style.display = 'flex';
             document.getElementById('uploadFile').value = '';
             document.getElementById('uploadCaption').value = '';
+            document.getElementById('uploadTags').value = '';
         }
 
-        function openSettings() {
-            showToast('⚙️ Settings coming soon!', 'info');
-        }
+        async function submitUpload() {
+            const file = document.getElementById('uploadFile').files[0];
+            const caption = document.getElementById('uploadCaption').value.trim();
+            const tags = document.getElementById('uploadTags').value.trim();
+            const category = document.getElementById('uploadCategory').value;
 
-        // ============================================
-        // STORAGE HELPERS
-        // ============================================
-        function loadLikesFromStorage() {
-            const stored = localStorage.getItem('pebeto_likes');
-            if (stored) {
-                try {
-                    likesMap = new Map(JSON.parse(stored));
-                } catch (e) { likesMap = new Map(); }
-            }
-        }
+            if (!file) { showToast('Please select a file', 'error'); return; }
 
-        function saveLikesToStorage() {
-            localStorage.setItem('pebeto_likes', JSON.stringify([...likesMap]));
-        }
-
-        function loadFollowingFromStorage() {
-            const stored = localStorage.getItem('pebeto_following');
-            if (stored) {
-                try {
-                    following = new Set(JSON.parse(stored));
-                } catch (e) { following = new Set(); }
-            }
-        }
-
-        function saveFollowingToStorage() {
-            localStorage.setItem('pebeto_following', JSON.stringify([...following]));
-        }
-
-        // ============================================
-        // LOAD USER DATA
-        // ============================================
-        function loadUserData() {
-            const userStr = localStorage.getItem('pebeto_user');
-            if (userStr) {
-                try {
-                    currentUser = JSON.parse(userStr);
-                    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'U').toUpperCase();
-                    navAvatar.innerHTML = initial;
-                    if (currentUser.profile?.avatarUrl) {
-                        navAvatar.style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
-                        navAvatar.innerHTML = '';
-                    }
-                } catch (e) { console.error('Error parsing user data:', e); }
-            }
-        }
-
-        // ============================================
-        // API HELPERS
-        // ============================================
-        async function fetchJSON(url, options = {}) {
             const token = localStorage.getItem('pebeto_token');
-            const res = await fetch(url, {
-                ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : '',
-                    ...options.headers
-                }
-            });
-            return res.json();
-        }
+            if (!token) { showToast('Please login to upload', 'error'); return; }
 
-        // ============================================
-        // LOAD CREATORS
-        // ============================================
-        async function loadCreators() {
+            const formData = new FormData();
+            formData.append('media', file);
+            formData.append('caption', caption);
+            formData.append('category', category);
+            if (tags) formData.append('tags', tags);
+
+            showToast('Uploading...', 'info');
+
             try {
-                const data = await fetchJSON(`${API_BASE}/api/creators`);
-                if (data.success && data.creators && data.creators.length > 0) {
-                    allCreators = data.creators;
-                    loadLikesFromStorage();
-                    applyFiltersAndSort();
+                const response = await fetch(`${API_BASE}/api/community/posts`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Upload successful! 🎉', 'success');
+                    closeModal('uploadModal');
+                    loadFeed(currentFeedTab);
                 } else {
-                    allCreators = [];
-                    feedPosts.innerHTML =
-                        '<div class="empty-state"><i class="ri-user-search-line"></i><h3>No creators yet</h3><p>Tell creators to join Pebeto Hub!</p></div>';
+                    showToast(data.message || 'Upload failed', 'error');
                 }
             } catch (error) {
-                console.error('Error loading creators:', error);
-                feedPosts.innerHTML =
-                    '<div class="empty-state"><i class="ri-error-warning-line"></i><h3>Error loading feed</h3><p>Please refresh the page.</p></div>';
+                showToast('Network error', 'error');
             }
         }
 
         // ============================================
-        // APPLY FILTERS AND SORT
+        // FEED - REAL DATA
         // ============================================
-        function applyFiltersAndSort() {
-            let filtered = [...allCreators];
+        async function loadFeed(tab = 'foryou', append = false) {
+            if (isLoading) return;
+            isLoading = true;
 
-            if (currentFeedTab === 'following') {
-                filtered = filtered.filter(c => following.has(c._id));
-            } else if (currentFeedTab === 'friends') {
-                filtered = filtered.filter(c => following.has(c._id) && Math.random() > 0.5);
-            } else if (currentFeedTab === 'live') {
-                filtered = filtered.filter(c => Math.random() > 0.7);
-            } else if (currentFeedTab === 'whatsnew') {
-                filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-            } else {
-                filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+            const url = `${API_BASE}/api/community/feed?tab=${tab}&limit=${PAGE_SIZE}&skip=${append ? currentOffset : 0}`;
+            const token = localStorage.getItem('pebeto_token');
+
+            try {
+                const res = await fetch(url, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const posts = data.posts || [];
+                    if (!append) {
+                        allPosts = posts;
+                        currentOffset = posts.length;
+                        feedPosts.innerHTML = '';
+                    } else {
+                        allPosts = [...allPosts, ...posts];
+                        currentOffset += posts.length;
+                    }
+
+                    hasMore = posts.length === PAGE_SIZE;
+
+                    if (allPosts.length === 0) {
+                        feedPosts.innerHTML = `
+                            <div class="empty-state">
+                                <i class="ri-user-search-line"></i>
+                                <h3>Nothing to show</h3>
+                                <p>Follow creators or check back later!</p>
+                            </div>
+                        `;
+                    } else {
+                        if (!append) {
+                            feedPosts.innerHTML = allPosts.map(post => createPostCard(post)).join('');
+                        } else {
+                            feedPosts.innerHTML += posts.map(post => createPostCard(post)).join('');
+                        }
+                    }
+                    setupInfiniteScroll();
+                } else {
+                    feedPosts.innerHTML = `
+                        <div class="empty-state">
+                            <i class="ri-error-warning-line"></i>
+                            <h3>Failed to load feed</h3>
+                            <p>Please refresh the page.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Feed error:', error);
+                feedPosts.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ri-wifi-off-line"></i>
+                        <h3>Network error</h3>
+                        <p>Please check your connection.</p>
+                    </div>
+                `;
+            } finally {
+                isLoading = false;
             }
-
-            filteredCreators = filtered;
-            currentOffset = 0;
-            renderFeed();
         }
 
-        // ============================================
-        // RENDER FEED
-        // ============================================
-        function renderFeed() {
-            const toRender = filteredCreators.slice(0, PAGE_SIZE);
-            currentOffset = PAGE_SIZE;
-            hasMore = filteredCreators.length > PAGE_SIZE;
-
-            if (toRender.length === 0) {
-                feedPosts.innerHTML =
-                    '<div class="empty-state"><i class="ri-user-search-line"></i><h3>Nothing to show</h3><p>Follow creators or check back later!</p></div>';
-                return;
-            }
-
-            feedPosts.innerHTML = toRender.map(creator => createPostCard(creator)).join('');
-            setupInfiniteScroll();
-        }
-
-        function appendFeed(creators) {
-            creators.forEach(creator => {
-                feedPosts.innerHTML += createPostCard(creator);
-            });
-        }
-
-        function createPostCard(creator) {
-            const displayName = creator.profile?.stageName || creator.email?.split('@')[0] || 'Creator';
+        function createPostCard(post) {
+            const author = post.authorId || {};
+            const displayName = author.profile?.stageName || author.uniqueCode || author.email?.split('@')[0] || 'Unknown';
             const username = `@${displayName.toLowerCase().replace(/\s/g, '')}`;
-            const initial = (displayName[0] || 'C').toUpperCase();
-            const avatarUrl = creator.profile?.avatarUrl || '';
-            const isLiked = likesMap.has(creator._id);
-            const likeCount = likesMap.get(creator._id) || creator.likeCount || 0;
-            const isFollowing = following.has(creator._id);
-            const isVerified = creator.verified || false;
-            const viewCount = Math.floor(Math.random() * 50000) + 100;
+            const avatarUrl = author.profile?.avatarUrl || '';
+            const initial = (displayName[0] || 'U').toUpperCase();
+            const isLiked = post.isLikedByCurrentUser || false;
+            const likeCount = post.likeCount || 0;
+            const isFollowing = following.has(author._id);
+            const isVerified = author.verified || false;
+            const viewCount = post.views || 0;
+            const mediaUrl = post.mediaUrl || '';
+            const thumbnailUrl = post.thumbnailUrl || mediaUrl;
+            const mediaType = post.mediaType || 'video';
+            const commentCount = post.commentCount || 0;
 
-            // Random thumbnail
-            const videoThumb = `https://picsum.photos/seed/${creator._id}/800/500`;
+            let mediaHtml = '';
+            if (mediaType === 'video') {
+                mediaHtml = `
+                    <div class="media-container" onclick="viewCreatorProfile('${author._id}')">
+                        <video src="${mediaUrl}" poster="${thumbnailUrl}" preload="metadata" playsinline></video>
+                        <div class="play-icon"><i class="ri-play-fill"></i></div>
+                        <div class="views-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)}</div>
+                    </div>
+                `;
+            } else if (mediaType === 'image') {
+                mediaHtml = `
+                    <div class="media-container" onclick="viewCreatorProfile('${author._id}')">
+                        <img src="${mediaUrl}" alt="Post image" loading="lazy">
+                        <div class="views-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)}</div>
+                    </div>
+                `;
+            } else {
+                mediaHtml = `
+                    <div class="media-container" onclick="viewCreatorProfile('${author._id}')">
+                        <div style="padding:40px;text-align:center;color:#6a6a6a;">
+                            <i class="ri-file-music-line" style="font-size:40px;"></i>
+                            <p>Audio post</p>
+                            <audio controls style="width:100%;margin-top:10px;"><source src="${mediaUrl}"></audio>
+                        </div>
+                    </div>
+                `;
+            }
 
-            // Sample campaign data (in real app this comes from API)
-            const hasCampaign = Math.random() > 0.7;
+            // Tags
+            const tagsHtml = (post.tags || []).map(t => `<span class="hashtag">#${escapeHtml(t)}</span>`).join(' ');
 
-            let cardHtml = `
-                <div class="post-card" data-creator-id="${creator._id}">
+            return `
+                <div class="post-card" data-post-id="${post._id}">
                     <div class="post-header">
-                        <div class="post-avatar" style="${avatarUrl ? `background-image: url(${avatarUrl});` : ''}" onclick="viewCreatorProfile('${creator._id}')">
+                        <div class="post-avatar" style="${avatarUrl ? `background-image: url(${avatarUrl});` : ''}" onclick="viewCreatorProfile('${author._id}')">
                             ${!avatarUrl ? initial : ''}
                         </div>
                         <div class="post-user-info">
@@ -1555,89 +1677,46 @@
                             </div>
                             <div class="username">${escapeHtml(username)}</div>
                         </div>
-                        <button class="post-follow-btn ${isFollowing ? 'following' : ''}" onclick="event.stopPropagation();toggleFollow('${creator._id}', this)">
+                        <button class="post-follow-btn ${isFollowing ? 'following' : ''}" onclick="event.stopPropagation();toggleFollow('${author._id}', this)">
                             ${isFollowing ? 'Following' : 'Follow'}
                         </button>
-                        <span class="time">${formatTimeAgo(creator.createdAt || new Date())}</span>
+                        <span class="time">${formatTimeAgo(post.createdAt)}</span>
                     </div>
 
-                    <div class="post-media">
-                        <div class="media-container" onclick="viewCreatorProfile('${creator._id}')">
-                            <img src="${videoThumb}" alt="Video thumbnail" loading="lazy">
-                            <div class="play-icon"><i class="ri-play-fill"></i></div>
-                            <div class="views-badge"><i class="ri-eye-line"></i> ${formatNumber(viewCount)}</div>
-                        </div>
-                    </div>
+                    <div class="post-media">${mediaHtml}</div>
 
                     <div class="post-text">
-                        ${creator.profile?.bio || 'Check out my content on Pebeto Hub! 🎬'}
-                        ${Math.random() > 0.5 ? ' <span class="hashtag">#creator</span> <span class="hashtag">#pebeto</span>' : ''}
+                        ${escapeHtml(post.caption || '')}
+                        ${tagsHtml ? ' ' + tagsHtml : ''}
                     </div>
 
                     <div class="post-actions">
-                        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${creator._id}', this)">
+                        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post._id}', this)">
                             <i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
                             <span class="count">${formatNumber(likeCount)}</span>
                         </button>
-                        <button class="action-btn" onclick="openComments('${creator._id}', '${escapeHtml(displayName)}')">
+                        <button class="action-btn" onclick="openComments('${post._id}', '${escapeHtml(displayName)}')">
                             <i class="ri-chat-3-line"></i>
-                            <span class="count">${formatNumber(creator.commentCount || 0)}</span>
+                            <span class="count">${formatNumber(commentCount)}</span>
                         </button>
-                        <button class="action-btn share-btn" onclick="shareCreator('${creator._id}', '${escapeHtml(displayName)}')">
+                        <button class="action-btn share-btn" onclick="sharePost('${post._id}', '${escapeHtml(displayName)}')">
                             <i class="ri-share-line"></i>
                         </button>
-                        <button class="action-btn tip-btn" onclick="openTipModal('${creator._id}', '${escapeHtml(displayName)}')">
+                        <button class="action-btn tip-btn" onclick="openTipModal('${author._id}', '${escapeHtml(displayName)}')">
                             <i class="ri-coin-line"></i> Tip
                         </button>
-                        <button class="action-btn hire-btn" onclick="openHireModal('${creator._id}', '${escapeHtml(displayName)}')">
+                        <button class="action-btn hire-btn" onclick="openHireModal('${author._id}', '${escapeHtml(displayName)}')">
                             <i class="ri-handshake-line"></i> Hire
                         </button>
-                        <button class="action-btn dm-btn" onclick="openDMModal('${creator._id}', '${escapeHtml(displayName)}')">
+                        <button class="action-btn dm-btn" onclick="openDMModal('${author._id}', '${escapeHtml(displayName)}')">
                             <i class="ri-mail-line"></i>
                         </button>
-                        <button class="action-btn" onclick="openReportModal('${creator._id}', '${escapeHtml(displayName)}')" style="margin-left:auto; color:#6a6a6a;">
+                        <button class="action-btn" onclick="openReportModal('${author._id}', '${escapeHtml(displayName)}')" style="margin-left:auto; color:#6a6a6a;">
                             <i class="ri-flag-line"></i>
                         </button>
                     </div>
                 </div>
             `;
-
-            // Add campaign card randomly
-            if (hasCampaign) {
-                const brandNames = ['Nike Kenya', 'Safaricom', 'KCB Bank', 'Kenya Breweries', 'Samsung East Africa'];
-                const randomBrand = brandNames[Math.floor(Math.random() * brandNames.length)];
-                const budget = Math.floor(Math.random() * 500) + 100;
-                const spots = Math.floor(Math.random() * 5) + 1;
-                const daysLeft = Math.floor(Math.random() * 10) + 1;
-
-                cardHtml += `
-                    <div class="campaign-card">
-                        <div class="campaign-header">
-                            <div class="brand-icon"><i class="ri-building-4-line"></i></div>
-                            <div>
-                                <div style="font-weight:600;font-size:15px;">${randomBrand}</div>
-                                <div style="color:#a0a0a0;font-size:13px;">Sponsored Campaign</div>
-                            </div>
-                            <span style="margin-left:auto;background:rgba(255,140,66,0.15);padding:2px 12px;border-radius:20px;font-size:11px;color:#ff8c42;">${daysLeft} days left</span>
-                        </div>
-                        <div class="campaign-body">
-                            <div class="campaign-title">Looking for ${['Music', 'Art', 'Fitness', 'Gaming', 'Tech', 'Comedy', 'Education', 'Lifestyle'][Math.floor(Math.random() * 8)]} Creators</div>
-                            <div class="campaign-desc">${randomBrand} is looking for creative content creators to collaborate on an exciting campaign.</div>
-                            <div class="campaign-meta">
-                                <span class="meta-item"><i class="ri-coin-line" style="color:#4caf50;"></i> Budget: <span class="highlight">$${budget}</span></span>
-                                <span class="meta-item"><i class="ri-user-add-line"></i> ${spots} spots available</span>
-                                <span class="meta-item"><i class="ri-time-line"></i> Apply by ${new Date(Date.now() + daysLeft * 86400000).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                        <div class="campaign-footer">
-                            <span class="deadline">⏰ ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left to apply</span>
-                            <button class="apply-btn" onclick="showToast('📩 Application sent!', 'success')">📩 Apply Now</button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            return cardHtml;
         }
 
         // ============================================
@@ -1653,16 +1732,8 @@
         }
 
         function loadMore() {
-            if (isLoading || currentOffset >= filteredCreators.length) {
-                hasMore = false;
-                return;
-            }
-            isLoading = true;
-            const newCreators = filteredCreators.slice(currentOffset, currentOffset + PAGE_SIZE);
-            currentOffset += PAGE_SIZE;
-            hasMore = currentOffset < filteredCreators.length;
-            appendFeed(newCreators);
-            isLoading = false;
+            if (isLoading || !hasMore) return;
+            loadFeed(currentFeedTab, true);
         }
 
         // ============================================
@@ -1671,18 +1742,15 @@
         function switchFeedTab(tab) {
             currentFeedTab = tab;
 
-            // Update feed tabs
             document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`.feed-tab[data-tab="${tab}"]`).classList.add('active');
 
-            // Update sidebar
             document.querySelectorAll('.sidebar-nav-item').forEach(item => item.classList.remove('active'));
             const tabMap = {
                 'foryou': 'For You',
                 'whatsnew': "What's New",
                 'following': 'Following',
-                'friends': 'Friends',
-                'live': 'LIVE'
+                'friends': 'Friends'
             };
             document.querySelectorAll('.sidebar-nav-item').forEach(item => {
                 if (item.textContent.trim() === tabMap[tab]) {
@@ -1690,89 +1758,108 @@
                 }
             });
 
-            // Update bottom nav
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
-            const bottomMap = {
-                'foryou': 0,
-                'whatsnew': 1
-            };
+            const bottomMap = { 'foryou': 0, 'whatsnew': 1 };
             if (bottomMap[tab] !== undefined) {
                 const items = document.querySelectorAll('.bottom-nav-item');
                 if (items[bottomMap[tab]]) items[bottomMap[tab]].classList.add('active');
             }
 
-            applyFiltersAndSort();
+            loadFeed(tab);
             if (window.innerWidth <= 768) closeSidebar();
         }
 
         // ============================================
         // LIKE FUNCTION
         // ============================================
-        function toggleLike(creatorId, button) {
-            const isLiked = likesMap.has(creatorId);
-            const currentCount = likesMap.get(creatorId) || 0;
+        function toggleLike(postId, button) {
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { showToast('Please login to like', 'error'); return; }
 
+            const isLiked = button.classList.contains('liked');
+            const countSpan = button.querySelector('.count');
+            let currentCount = parseInt(countSpan.textContent.replace(/[^0-9]/g, '')) || 0;
+
+            // Optimistic update
             if (isLiked) {
-                likesMap.delete(creatorId);
                 button.classList.remove('liked');
-                button.innerHTML =
-                `<i class="ri-heart-line"></i> <span class="count">${formatNumber(Math.max(0, currentCount - 1))}</span>`;
+                button.innerHTML = `<i class="ri-heart-line"></i> <span class="count">${formatNumber(Math.max(0, currentCount - 1))}</span>`;
             } else {
-                likesMap.set(creatorId, currentCount + 1);
                 button.classList.add('liked');
-                button.innerHTML =
-                `<i class="ri-heart-fill"></i> <span class="count">${formatNumber(currentCount + 1)}</span>`;
+                button.innerHTML = `<i class="ri-heart-fill"></i> <span class="count">${formatNumber(currentCount + 1)}</span>`;
             }
-            saveLikesToStorage();
 
-            // Send to server
-            try {
-                const token = localStorage.getItem('pebeto_token');
-                if (token) {
-                    const method = isLiked ? 'DELETE' : 'POST';
-                    fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, {
-                        method,
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-                    }).catch(() => {});
+            fetch(`${API_BASE}/api/community/posts/${postId}/like`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update with server count
+                    const countSpan2 = button.querySelector('.count');
+                    countSpan2.textContent = formatNumber(data.likeCount || 0);
+                    if (data.liked) {
+                        button.classList.add('liked');
+                        button.innerHTML = `<i class="ri-heart-fill"></i> <span class="count">${formatNumber(data.likeCount || 0)}</span>`;
+                    } else {
+                        button.classList.remove('liked');
+                        button.innerHTML = `<i class="ri-heart-line"></i> <span class="count">${formatNumber(data.likeCount || 0)}</span>`;
+                    }
                 }
-            } catch (error) { console.error('Error toggling like:', error); }
+            })
+            .catch(() => {
+                // Revert on error - let user retry
+                showToast('Failed to update like', 'error');
+            });
         }
 
         // ============================================
         // FOLLOW FUNCTION
         // ============================================
         function toggleFollow(creatorId, button) {
-            if (following.has(creatorId)) {
-                following.delete(creatorId);
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) { showToast('Please login to follow', 'error'); return; }
+
+            const isFollowing = button.classList.contains('following');
+
+            if (isFollowing) {
                 button.textContent = 'Follow';
                 button.classList.remove('following');
+                following.delete(creatorId);
+                saveFollowingToStorage();
                 showToast('Unfollowed', 'info');
             } else {
-                following.add(creatorId);
                 button.textContent = 'Following';
                 button.classList.add('following');
+                following.add(creatorId);
+                saveFollowingToStorage();
                 showToast('Now following!', 'success');
             }
-            saveFollowingToStorage();
-            if (currentFeedTab === 'following') applyFiltersAndSort();
+
+            // Update server
+            fetch(`${API_BASE}/api/community/creators/${creatorId}/like`, {
+                method: isFollowing ? 'DELETE' : 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).catch(() => {});
         }
 
         // ============================================
         // COMMENTS
         // ============================================
-        function openComments(creatorId, creatorName) {
-            currentCommentCreatorId = creatorId;
+        function openComments(postId, creatorName) {
+            currentCommentPostId = postId;
             document.getElementById('commentsModal').style.display = 'flex';
             document.getElementById('commentsList').innerHTML =
                 '<div style="text-align:center;padding:20px;color:#6a6a6a;">Loading comments...</div>';
-            loadComments(creatorId);
+            loadComments(postId);
         }
 
-        async function loadComments(creatorId) {
+        async function loadComments(postId) {
             try {
                 const token = localStorage.getItem('pebeto_token');
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-                const response = await fetch(`${API_BASE}/api/community/creators/${creatorId}/comments`, { headers });
+                const response = await fetch(`${API_BASE}/api/community/posts/${postId}/comments`, { headers });
                 const data = await response.json();
                 const comments = data.comments || [];
                 const container = document.getElementById('commentsList');
@@ -1782,12 +1869,13 @@
                 } else {
                     container.innerHTML = comments.map(c => `
                         <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                            <div style="width:32px;height:32px;border-radius:50%;background:#ff8c42;display:flex;align-items:center;justify-content:center;font-size:12px;">${(c.author?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
+                            <div style="width:32px;height:32px;border-radius:50%;background:#ff8c42;display:flex;align-items:center;justify-content:center;font-size:12px;">${(c.authorId?.uniqueCode?.[0] || 'U').toUpperCase()}</div>
                             <div style="flex:1;">
-                                <strong>${escapeHtml(c.author?.uniqueCode || 'User')}</strong>
+                                <strong>${escapeHtml(c.authorId?.uniqueCode || c.authorId?.email?.split('@')[0] || 'User')}</strong>
                                 <p style="font-size:13px;color:#d0d0d0;">${escapeHtml(c.text)}</p>
                                 <small style="color:#6a6a6a;font-size:11px;">${formatTimeAgo(c.createdAt)}</small>
                             </div>
+                            ${c.authorId?._id === currentUser?._id ? `<button onclick="deleteComment('${c._id}')" style="background:none;border:none;color:#6a6a6a;cursor:pointer;">✕</button>` : ''}
                         </div>
                     `).join('');
                 }
@@ -1800,13 +1888,13 @@
         async function addComment() {
             const input = document.getElementById('commentInput');
             const text = input.value.trim();
-            if (!text || !currentCommentCreatorId) return;
+            if (!text || !currentCommentPostId) return;
 
             const token = localStorage.getItem('pebeto_token');
             if (!token) { showToast('Please login to comment', 'error'); return; }
 
             try {
-                const response = await fetch(`${API_BASE}/api/community/creators/${currentCommentCreatorId}/comments`, {
+                const response = await fetch(`${API_BASE}/api/community/posts/${currentCommentPostId}/comments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ text })
@@ -1814,13 +1902,32 @@
                 const data = await response.json();
                 if (data.success) {
                     input.value = '';
-                    loadComments(currentCommentCreatorId);
+                    loadComments(currentCommentPostId);
                     showToast('Comment added!', 'success');
+                    loadFeed(currentFeedTab);
                 } else {
                     showToast('Failed to add comment', 'error');
                 }
             } catch (error) {
                 showToast('Network error', 'error');
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm('Delete this comment?')) return;
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) return;
+
+            try {
+                await fetch(`${API_BASE}/api/community/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                loadComments(currentCommentPostId);
+                loadFeed(currentFeedTab);
+                showToast('Comment deleted', 'success');
+            } catch (error) {
+                showToast('Failed to delete comment', 'error');
             }
         }
 
@@ -1916,21 +2023,38 @@
         // DM / MESSAGE
         // ============================================
         function openDMModal(creatorId, creatorName) {
-            showToast(`💬 Messaging ${creatorName} - coming soon!`, 'info');
+            openMessagesPanel();
+            // Find or create conversation
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) return;
+
+            fetch(`${API_BASE}/api/messages/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ recipientId: creatorId, content: ' ' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    openChat(data.data.conversationId, creatorId, creatorName);
+                }
+            })
+            .catch(() => showToast('Failed to start conversation', 'error'));
         }
 
         // ============================================
         // SHARE
         // ============================================
-        function shareCreator(creatorId, creatorName) {
+        function sharePost(postId, creatorName) {
+            const url = `${window.location.origin}/post.html?id=${postId}`;
             if (navigator.share) {
                 navigator.share({
                     title: `${creatorName} on Pebeto Hub`,
-                    text: `Check out ${creatorName} on Pebeto Hub!`,
-                    url: `${window.location.origin}/creator-profile.html?id=${creatorId}`
+                    text: `Check out this post on Pebeto Hub!`,
+                    url: url
                 }).catch(() => {});
             } else {
-                navigator.clipboard.writeText(`${window.location.origin}/creator-profile.html?id=${creatorId}`);
+                navigator.clipboard.writeText(url);
                 showToast('📋 Link copied to clipboard!', 'success');
             }
         }
@@ -1990,37 +2114,74 @@
 
             searchTimeout = setTimeout(() => {
                 if (query.length < 2) {
-                    applyFiltersAndSort();
+                    loadFeed(currentFeedTab);
                     return;
                 }
 
-                const filtered = allCreators.filter(c =>
-                    (c.profile?.stageName || '').toLowerCase().includes(query) ||
-                    (c.profile?.companyName || '').toLowerCase().includes(query) ||
-                    (c.email || '').toLowerCase().includes(query) ||
-                    (c.uniqueCode || '').toLowerCase().includes(query)
-                );
-
-                filteredCreators = filtered;
-                currentOffset = 0;
-                renderFeed();
-            }, 300);
+                fetch(`${API_BASE}/api/community/search?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const posts = data.posts || [];
+                        if (posts.length === 0) {
+                            feedPosts.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="ri-search-line"></i>
+                                    <h3>No results found</h3>
+                                    <p>Try a different search term</p>
+                                </div>
+                            `;
+                        } else {
+                            feedPosts.innerHTML = posts.map(post => createPostCard(post)).join('');
+                        }
+                        hasMore = false;
+                    }
+                })
+                .catch(() => showToast('Search failed', 'error'));
+            }, 500);
         }
 
         // ============================================
-        // UPLOAD
+        // STORAGE HELPERS
         // ============================================
-        async function submitUpload() {
-            const file = document.getElementById('uploadFile').files[0];
-            const caption = document.getElementById('uploadCaption').value.trim();
+        function loadLikesFromStorage() {
+            const stored = localStorage.getItem('pebeto_likes');
+            if (stored) {
+                try { likesMap = new Map(JSON.parse(stored)); } catch (e) { likesMap = new Map(); }
+            }
+        }
 
-            if (!file) { showToast('Please select a file', 'error'); return; }
+        function saveLikesToStorage() {
+            localStorage.setItem('pebeto_likes', JSON.stringify([...likesMap]));
+        }
 
-            const token = localStorage.getItem('pebeto_token');
-            if (!token) { showToast('Please login to upload', 'error'); return; }
+        function loadFollowingFromStorage() {
+            const stored = localStorage.getItem('pebeto_following');
+            if (stored) {
+                try { following = new Set(JSON.parse(stored)); } catch (e) { following = new Set(); }
+            }
+        }
 
-            showToast('📤 Upload feature coming soon!', 'info');
-            closeModal('uploadModal');
+        function saveFollowingToStorage() {
+            localStorage.setItem('pebeto_following', JSON.stringify([...following]));
+        }
+
+        // ============================================
+        // LOAD USER DATA
+        // ============================================
+        function loadUserData() {
+            const userStr = localStorage.getItem('pebeto_user');
+            if (userStr) {
+                try {
+                    currentUser = JSON.parse(userStr);
+                    const initial = (currentUser.profile?.stageName?.[0] || currentUser.email[0] || 'U').toUpperCase();
+                    navAvatar.innerHTML = initial;
+                    if (currentUser.profile?.avatarUrl) {
+                        navAvatar.style.backgroundImage = `url(${currentUser.profile.avatarUrl})`;
+                        navAvatar.innerHTML = '';
+                    }
+                } catch (e) { console.error('Error parsing user data:', e); }
+            }
         }
 
         // ============================================
@@ -2029,9 +2190,27 @@
         function addNotification(message) {
             notifications.unshift({ message, time: new Date() });
             const count = notifications.length;
-            msgBadge.textContent = count > 9 ? '9+' : count;
+            sidebarMsgBadge.textContent = count > 9 ? '9+' : count;
             bottomMsgBadge.textContent = count > 9 ? '9+' : count;
             bottomMsgBadge.style.display = count > 0 ? 'inline' : 'none';
+        }
+
+        // ============================================
+        // WEBSOCKET - Real-time updates
+        // ============================================
+        function connectWebSocket() {
+            const token = localStorage.getItem('pebeto_token');
+            if (!token) return;
+            try {
+                ws = new WebSocket(`wss://pebeto-creators-hub-h1j0.onrender.com?token=${token}`);
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'post:new' || data.type === 'post:like' || data.type === 'post:comment') {
+                        loadFeed(currentFeedTab);
+                    }
+                };
+                ws.onclose = () => setTimeout(connectWebSocket, 5000);
+            } catch(e) { console.log('WebSocket connection failed'); }
         }
 
         // ============================================
@@ -2040,20 +2219,28 @@
         loadUserData();
         loadFollowingFromStorage();
         loadLikesFromStorage();
-        loadCreators();
+        loadFeed('foryou');
+        connectWebSocket();
 
-        // Sample notifications
-        addNotification('Welcome to Pebeto Hub! 🎉');
-        addNotification('Someone liked your post');
-
-        console.log('🔥 Pebeto Hub Community loaded!');
-
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                loadCreators();
+        // Load conversation count
+        setTimeout(() => {
+            const token = localStorage.getItem('pebeto_token');
+            if (token) {
+                fetch(`${API_BASE}/api/messages/unread/count`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updateMessageBadge(data.data.count || 0);
+                    }
+                })
+                .catch(() => {});
             }
-        }, 30000);
+        }, 2000);
+
+        addNotification('Welcome to Pebeto Hub! 🎉');
+        console.log('🔥 Pebeto Hub Community loaded!');
     </script>
 </body>
 </html>
