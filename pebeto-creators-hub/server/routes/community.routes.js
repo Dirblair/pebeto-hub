@@ -12,6 +12,18 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
+// ============================================
+// TEST ROUTE - Verify routes are working
+// ============================================
+router.get('/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: '✅ Community routes are working!',
+    cloudinaryConfigured: !!process.env.CLOUDINARY_CLOUD_NAME,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -176,6 +188,11 @@ router.get('/posts/:postId', optionalAuthenticate, async (req, res, next) => {
 // POST /api/community/posts - Create a new post (upload video/image/audio)
 router.post('/posts', authenticate, upload.single('media'), async (req, res, next) => {
   try {
+    console.log('📤 Upload request received');
+    console.log('User:', req.user?._id);
+    console.log('File:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'NO FILE');
+    console.log('Body:', req.body);
+
     if (!req.file) {
       throw new AppError('No media file uploaded', 400);
     }
@@ -196,6 +213,7 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
     else if (mediaType === 'audio') resourceType = 'video'; // Audio is treated as video by Cloudinary
     
     // Upload to Cloudinary
+    console.log('☁️ Uploading to Cloudinary...');
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -205,8 +223,13 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
           ...(mediaType === 'video' && { eager: [{ format: 'jpg', width: 720, height: 1280, crop: 'limit' }] })
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error('Cloudinary error:', error);
+            reject(error);
+          } else {
+            console.log('✅ Cloudinary upload success:', result.public_id);
+            resolve(result);
+          }
         }
       );
       streamifier.createReadStream(file.buffer).pipe(uploadStream);
@@ -244,6 +267,8 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
       commentCount: 0,
       views: 0
     });
+    
+    console.log('✅ Post created successfully:', post._id);
     
     const populatedPost = await CommunityPost.findById(post._id)
       .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl profile.niche');
