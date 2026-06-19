@@ -3,7 +3,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const { authenticate, optionalAuthenticate } = require('../middleware/auth');
-const CommunityPost = require('../models/CommunityPost');
+const { CommunityPost } = require('../models/CommunityPost');
 const CommunityComment = require('../models/CommunityComment');
 const User = require('../models/User');
 const { AppError } = require('../utils/errors');
@@ -40,7 +40,7 @@ const upload = multer({
 });
 
 // ============================================
-// NEW: FEED ENDPOINT - The main feed with tab filtering
+// FEED ENDPOINT - The main feed with tab filtering
 // ============================================
 
 /**
@@ -250,11 +250,11 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
     // Parse tags
     const tagArray = tags ? tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
     
-    // Create post
-    const post = await CommunityPost.create({
+    // Create post using your model
+    const post = new CommunityPost({
       authorId: req.user._id,
       mediaUrl: uploadResult.secure_url,
-      mediaType,
+      mediaType: mediaType,
       thumbnailUrl: thumbnailUrl || uploadResult.secure_url,
       caption: caption || '',
       category: category || 'Other',
@@ -265,9 +265,11 @@ router.post('/posts', authenticate, upload.single('media'), async (req, res, nex
       likes: [],
       likeCount: 0,
       commentCount: 0,
-      views: 0
+      views: 0,
+      shares: 0
     });
     
+    await post.save();
     console.log('✅ Post created successfully:', post._id);
     
     const populatedPost = await CommunityPost.findById(post._id)
@@ -480,11 +482,13 @@ router.post('/posts/:postId/comments', authenticate, async (req, res, next) => {
     const post = await CommunityPost.findById(postId);
     if (!post) throw new AppError('Post not found', 404);
     
-    const comment = await CommunityComment.create({
-      postId,
+    const comment = new CommunityComment({
+      postId: postId,
       authorId: req.user._id,
       text: text.trim()
     });
+    
+    await comment.save();
     
     post.commentCount += 1;
     await post.save();
@@ -676,11 +680,13 @@ router.post('/creators/:creatorId/comments', authenticate, async (req, res, next
       return res.status(404).json({ success: false, message: 'Creator not found' });
     }
     
-    const comment = await CommunityComment.create({
+    const comment = new CommunityComment({
       creatorId: creatorId,
       authorId: req.user._id,
       text: text.trim()
     });
+    
+    await comment.save();
     
     const populatedComment = await CommunityComment.findById(comment._id)
       .populate('authorId', 'email uniqueCode role profile.stageName profile.companyName profile.avatarUrl');
