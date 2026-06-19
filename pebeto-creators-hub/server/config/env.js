@@ -202,6 +202,20 @@ const CORS_CONFIG = {
 };
 
 // ============================================
+// Cloudinary Configuration - NEW
+// ============================================
+
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || '';
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '';
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
+
+if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+  console.warn('⚠️ [ENV] Cloudinary credentials not configured. Media uploads will not work.');
+} else {
+  console.log('✅ [ENV] Cloudinary configured');
+}
+
+// ============================================
 // Rate Limiting Configuration
 // ============================================
 
@@ -468,6 +482,13 @@ const config = {
     allowedTypes: UPLOAD_ALLOWED_TYPES,
   },
   
+  // Cloudinary
+  cloudinary: {
+    cloudName: CLOUDINARY_CLOUD_NAME,
+    apiKey: CLOUDINARY_API_KEY,
+    apiSecret: CLOUDINARY_API_SECRET,
+  },
+  
   // Logging
   logLevel: LOG_LEVEL,
   logFormat: LOG_FORMAT,
@@ -499,6 +520,11 @@ Object.assign(config, {
   
   WIRE_ACCOUNT_NUMBER: config.wire.accountNumber,
   WIRE_SWIFT_CODE: config.wire.swiftCode,
+  
+  // Cloudinary backward compatibility
+  CLOUDINARY_CLOUD_NAME: config.cloudinary.cloudName,
+  CLOUDINARY_API_KEY: config.cloudinary.apiKey,
+  CLOUDINARY_API_SECRET: config.cloudinary.apiSecret,
 });
 
 // ============================================
@@ -536,6 +562,11 @@ const configForLogging = {
     ...config.redis,
     password: config.redis.password ? '***' : undefined,
   },
+  cloudinary: {
+    cloudName: config.cloudinary.cloudName,
+    apiKey: config.cloudinary.apiKey ? sanitizeForLog(config.cloudinary.apiKey) : '***',
+    apiSecret: config.cloudinary.apiSecret ? '***' : undefined,
+  },
 };
 
 // ============================================
@@ -549,6 +580,7 @@ function logConfigSummary() {
   console.log(`🚀 Server: http://${HOST}:${PORT}`);
   console.log(`💾 MongoDB: ${MONGO_URI ? '✅ Configured' : '❌ Missing'}`);
   console.log(`🔐 JWT Secret: ${JWT_SECRET && JWT_SECRET.length >= 32 ? '✅ Strong' : JWT_SECRET ? '⚠️ Weak' : '❌ Missing'}`);
+  console.log(`☁️ Cloudinary: ${CLOUDINARY_CLOUD_NAME ? '✅ Configured' : '❌ Missing'}`);
   console.log(`🌐 CORS Origins: ${finalClientOrigins.length > 0 ? finalClientOrigins.join(', ') : '⚠️ None set'}`);
   
   console.log(`\n💳 Payment Gateways:`);
