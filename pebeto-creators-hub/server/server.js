@@ -143,14 +143,13 @@ try {
 // ============================================
 let communityRoutes = null;
 try {
-  // First check if the model exists
+  // Check if the model exists
   try {
-    require('./models/CommunityPost');
+    const { CommunityPost } = require('./models/CommunityPost');
     console.log('✅ CommunityPost model found');
   } catch (modelError) {
     console.error('❌ CommunityPost model missing:', modelError.message);
     console.log('⚠️ Creating CommunityPost model from schema...');
-    // The model will be created when the route file loads
   }
   
   communityRoutes = require('./routes/community.routes');
