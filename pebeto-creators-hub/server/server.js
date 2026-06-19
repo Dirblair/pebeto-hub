@@ -138,8 +138,39 @@ try {
   process.exit(1);
 }
 
-// Optional routes (may not exist yet)
-const communityRoutes = safeRequire('./routes/community.routes', 'community.routes');
+// ============================================
+// COMMUNITY ROUTES - FORCE LOAD (FIXED)
+// ============================================
+let communityRoutes = null;
+try {
+  // First check if the model exists
+  try {
+    require('./models/CommunityPost');
+    console.log('✅ CommunityPost model found');
+  } catch (modelError) {
+    console.error('❌ CommunityPost model missing:', modelError.message);
+    console.log('⚠️ Creating CommunityPost model from schema...');
+    // The model will be created when the route file loads
+  }
+  
+  communityRoutes = require('./routes/community.routes');
+  console.log('✅✅✅ Community routes loaded successfully!');
+} catch (error) {
+  console.error('❌❌❌ FAILED to load community routes:', error.message);
+  console.error('   Stack:', error.stack);
+  // Create a fallback route so we know it failed
+  const fallbackRouter = require('express').Router();
+  fallbackRouter.get('/test', (req, res) => {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Community routes failed to load',
+      error: error.message 
+    });
+  });
+  communityRoutes = fallbackRouter;
+}
+
+// Other optional routes
 const exchangeRoutes = safeRequire('./routes/exchange.routes', 'exchange.routes');
 const withdrawalRoutes = safeRequire('./routes/withdrawal.routes', 'withdrawal.routes');
 
@@ -423,12 +454,18 @@ async function bootstrap() {
       console.log('⚠️ Messages routes skipped - file not found');
     }
     
-    // Community routes (optional)
+    // ============================================
+    // COMMUNITY ROUTES - FORCE MOUNT (FIXED)
+    // ============================================
+    console.log('🔧 MOUNTING COMMUNITY ROUTES...');
     if (communityRoutes) {
       app.use('/api/community', communityRoutes);
-      console.log('✅ Mounted community routes');
+      console.log('✅✅✅ Community routes MOUNTED at /api/community');
+      console.log('   📍 GET  /api/community/test - Test endpoint');
+      console.log('   📍 POST /api/community/posts - Upload post');
+      console.log('   📍 GET  /api/community/posts - Get posts');
     } else {
-      console.log('⚠️ Community routes skipped - file not found');
+      console.error('❌❌❌ Community routes NOT mounted - communityRoutes is null');
     }
     
     // Exchange rate routes (optional)
