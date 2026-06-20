@@ -10,7 +10,7 @@ fetch('https://pebeto-creators-hub-h1j0.onrender.com/api/community/test')
   .then(data => console.log('Community test:', data))
   .catch(e => console.error('Error:', e));
 
-// Test 3: Upload (with token)
+// Test 3: Upload (run this in browser console)
 const token = localStorage.getItem('pebeto_token');
 const formData = new FormData();
 
