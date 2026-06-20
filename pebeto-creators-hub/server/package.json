@@ -6,6 +6,7 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
+    "postinstall": "npm install cloudinary streamifier --save",
     "start:prod": "NODE_ENV=production node server/server.js",
     "build": "npm install",
     "dev": "NODE_ENV=development node --watch server/server.js",
